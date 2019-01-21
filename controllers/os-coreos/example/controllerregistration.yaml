@@ -1,0 +1,16 @@
+---
+apiVersion: core.gardener.cloud/v1alpha1
+kind: ControllerRegistration
+metadata:
+  name: os-coreos
+spec:
+  resources:
+  - kind: OperatingSystemConfig
+    type: coreos
+  deployment:
+    type: helm
+    providerConfig:
+      chart: H4sIFAAAAAAA/ykAK2FIUjBjSE02THk5NWIzVjBkUzVpWlM5Nk9WVjZNV2xqYW5keVRRbz1IZWxtAOxZX2/bOBLPMz/FXPJyF5woyYnjg4F7yDreboFsGsRFgH0qaGoss6FIgqSculnvZ19Q8h/FDhI3wSZt4d+DJI8ozgzJ38yQzpnNUKGN8ItH5YRWkXYR1xa1i3tjZj2dskLuvQRJkiSddru6J0myfk9aR5299Oi4lR510uOT9l6SnnTS4z1IXqR1S5TOM7uXvFjXunM/CJgR12jDvHdhkhJmzPLnfkqTfZKh41YYX4lO4TeUBfCwLmCkLfgxwrv5EoKetvhhAD2tPBNBcC5U+QWWK4soVmAXHltyZLLQntCUJuSth+enx6P8nzBZontxAHiS/+k6/ztpO9nx/zUgCpZjlwBYNNoJr+20C1jSnFsqdLxcHsbqz8j9UhCvKAvgWd4FyTw6TwBMKeWlloJPu/B+dKH9pUWHyhNi0enScnRduJsRwrXipbWo/GCquOtCe8f318aj/PdYmGpa4wyN1NMC1XPKgSf430raR/f532olrc6O/6+BZv5nxrh4kpIbobIunC2nnBToWcY8C3GizuFN9geJM4xjF+7ugF6hROaQXizEMJsRAMmGKF3oAYIielMO0Sr06EKc2ewVYIyyoG4cV9XG+svNLoRynqmHrAgGOIN8Huak4MzVra7rBDcX9nSpfG2tQ4nca1vbWzDPx+cNB7Z14dvtBFiQbq66MfQB8p4V29vxHEsAFqNWPaOdCI6nnIdhunhQC1+UfksLowcWTI0688B+Yx4qEV1lIpjNuhuvPcthNtu/389lI+dsfLFKSAu/aluLgqlsNZQRxJtWRhBFqzwVuZCo/t/QsJbDmgpQTZqd1+Nw3j8961996p/3ex/ff7j4dHH6e39wedrrL1sCVGXXr1YX3YYQYCRQZlc4ui+dyy+ZH3eXq4UuOblsu8q9jc/v7iLw+g9WyAYX5u3gT1BCZag8pK3g11uHqh3+AWyZ/+2Q8WfvA57K/+lJupb/k3b7ZJf/XwNRFJFmDVBNNCv9WFvxlYVdP735X5UtloVBT5bOo73SEp+oDN4459tShnAXATPindWlqUyJVgcSji6WP+VSlxlZC5MRaIOWeaFyN3UeC67VSOTukVex88yXocUE7XDeS46+ukvh6ofbUFBUT2b5VJqMedy0dn9/0yyH3KLfXgu3GPpuqFnp3kph7V3BTO07TlCtq5/r+PbuFu+qgnE+7It5jySyLESnUI4JrR72+HZ9EBvevWh9/yJUJlT+nS9zLXFeFiyG/hE/CcAmjTe9cuUw7Pcr+tTtB/fqv2fvBN464O1wD1vm/3nxz+rJ/8ZK4Knzv6Pjzvr+/6SzO/97Fayd/z9I9Z9g+//Ww/zd4lH+0zAHIlfa4kt0PMX/dutk4/y/1drx/zVwAJfMe7TKgddQzzXcjlHBsBQyFD9gGL9hOTpKDuDjWDhwpTHaegdujFJCLvWwPiITKv8vWJTMiwmGAmzckDOVkQNQmFfVCPzbWByJL5jBrfBj+Nd/KHxQcgpaVV8Gk8CgBSkUUkLPBp8GXlskB9DTRaEVXPcGkAnrCM2Fj6trbT6hw682rq4LwTiPw2Xx001UvOpoyPhNaWAkJDpySN2tIYd0yG7IIfWFIYd/kQO4Zlbo0sH7s74jdP5nCKEiQxbX7az+TOjEcZ1hvAs3O+ywww+AvwMAAP//gPbj5AAkAAA=
+      values:
+        image:
+          tag: 0.1.0-dev

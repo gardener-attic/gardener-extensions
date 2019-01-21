@@ -18,9 +18,9 @@ helm package "$(dirname $0)/../charts/gardener-extension-os-coreos" --destinatio
 chart="$(cat $(dirname $0)/../gardener-extension-os-coreos-*.tgz | base64 | tr -d '\n')"
 rm -f "$(dirname $0)/../gardener-extension-os-coreos-"*.tgz
 
-cat <<EOF > "$(dirname $0)/../example/controllerregistration-os-coreos.yaml"
+cat <<EOF > "$(dirname $0)/../example/controllerregistration.yaml"
 ---
-apiVersion: gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1alpha1
 kind: ControllerRegistration
 metadata:
   name: os-coreos
@@ -34,5 +34,5 @@ spec:
       chart: $chart
       values:
         image:
-          tag: $(cat VERSION)
+          tag: $(cat ../../VERSION)
 EOF
