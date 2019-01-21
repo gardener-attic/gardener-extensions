@@ -1,0 +1,38 @@
+[[override]]
+  name = "github.com/gardener/gardener"
+  revision = "61c3e7c0a3f1587a1f2191c4695fa1819fbfe80e"
+  #version = "0.17.0"
+
+[[override]]
+  name = "sigs.k8s.io/controller-runtime"
+  version = "0.1.9"
+
+[[override]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.13.2"
+
+[[override]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.13.2"
+
+[[override]]
+  name = "k8s.io/client-go"
+  version = "kubernetes-1.13.2"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  version = "2.2.2"
+
+# Dependencies for testing purposes only
+[[constraint]]
+  name = "github.com/onsi/gomega"
+  version = "~1.3.0"
+
+[[constraint]]
+  name = "github.com/onsi/ginkgo"
+  version = "~1.4.0"
+
+[prune]
+  unused-packages = true
+  go-tests = true
+  non-go = true

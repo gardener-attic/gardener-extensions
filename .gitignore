@@ -1,0 +1,14 @@
+/.kube-secrets
+/tmp
+/dev
+
+.vscode
+.idea
+.DS_Store
+*~
+
+TODO
+
+# Virtual go & fuse
+.virtualgo
+.fuse_hidden*

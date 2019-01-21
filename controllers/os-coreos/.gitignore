@@ -1,0 +1,18 @@
+/bin
+/.kube-secrets
+/tmp
+/dev
+/charts/*/*.tgz
+*.tgz
+
+.vscode
+.idea
+.DS_Store
+*~
+
+./gardener-extension-os-coreos
+TODO
+
+# Virtual go & fuse
+.virtualgo
+.fuse_hidden*
