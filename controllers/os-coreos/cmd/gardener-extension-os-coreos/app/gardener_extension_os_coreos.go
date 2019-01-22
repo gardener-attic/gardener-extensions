@@ -48,7 +48,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-const controllerName = "os-coreos"
+const controllerName = "gardener-extension-os-coreos"
 
 var log = logf.Log.WithName(controllerName)
 
