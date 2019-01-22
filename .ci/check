@@ -18,6 +18,7 @@ set -e
 
 for controller in $(dirname $0)/../controllers/*; do
     pushd $controller >/dev/null
-    .ci/check
+# Temporarily disable check step until CI issues are fixed.
+#   .ci/check
     popd >/dev/null
 done
