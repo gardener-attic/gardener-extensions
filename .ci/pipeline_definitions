@@ -12,8 +12,8 @@ gardener-extensions:
           gardener-extension-os-coreos:
             registry: 'gcr-readwrite'
             image: 'eu.gcr.io/gardener-project/gardener/gardener-extension-os-coreos'
-            dockerfile: 'controllers/os-coreos/Dockerfile'
-            target_name: controller
+            dockerfile: 'Dockerfile'
+            target_name: os-coreos
     steps:
       check:
         image: 'golang:1.11.4'
