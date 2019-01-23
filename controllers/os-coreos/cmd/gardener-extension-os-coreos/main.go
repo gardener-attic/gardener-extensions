@@ -16,19 +16,18 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"runtime"
-
 	"github.com/gardener/gardener-extensions/controllers/os-coreos/cmd/gardener-extension-os-coreos/app"
+	"github.com/gardener/gardener-extensions/pkg/controller"
+	"os"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 func main() {
-	if len(os.Getenv("GOMAXPROCS")) == 0 {
-		runtime.GOMAXPROCS(runtime.NumCPU())
-	}
+	log.SetLogger(log.ZapLogger(false))
+	cmd := app.NewControllerCommand(controller.SetupSignalHandlerContext())
 
-	if err := app.NewCommandStartExtensionCoreOS(); err != nil {
-		fmt.Println(err)
+	if err := cmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 }

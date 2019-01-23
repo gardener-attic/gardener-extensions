@@ -9,16 +9,12 @@ gardener-extensions:
         inject_effective_version: true
       publish:
         dockerimages:
-          gardener-extension-os-coreos:
+          gardener-extension-hyper:
             registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/gardener-extension-os-coreos'
+            image: 'eu.gcr.io/gardener-project/gardener/gardener-extension-hyper'
             dockerfile: 'Dockerfile'
-            target_name: os-coreos
-    steps:
-      check:
-        image: 'golang:1.11.4'
-      test:
-        image: 'golang:1.11.4'
+            target_name: gardener-extension-hyper
+    steps: ~
   variants:
     head-update:
       traits:
@@ -42,5 +38,5 @@ gardener-extensions:
         component_descriptor: ~
         publish:
           dockerimages:
-            gardener-extension-os-coreos:
+            gardener-extension-hyper:
               tag_as_latest: true

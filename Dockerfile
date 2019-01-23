@@ -1,20 +1,39 @@
-#############      builder       #############
+#############      builder                                  #############
 FROM golang:1.11.4 AS builder
+
+ARG VERIFY=true
 
 WORKDIR /go/src/github.com/gardener/gardener-extensions
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install \
-  -ldflags "-X github.com/gardener/gardener-extensions/controllers/os-coreos/pkg/version.Version=$(cat VERSION)" \
-  ./controllers/os-coreos/cmd/gardener-extension-os-coreos
+RUN ./hack/install-requirements.sh
 
-#############      os-coreos     #############
-FROM alpine:3.8 AS os-coreos
+RUN make VERIFY=$VERIFY all
+
+#############      base                                     #############
+FROM alpine:3.8 AS base
 
 RUN apk add --update bash curl
 
-COPY --from=builder /go/bin/gardener-extension-os-coreos /gardener-extension-os-coreos
-
 WORKDIR /
 
+#############      gardener-extension-os-coreos             #############
+FROM base AS gardener-extension-os-coreos
+
+COPY --from=builder /go/bin/gardener-extension-os-coreos /gardener-extension-os-coreos
+
 ENTRYPOINT ["/gardener-extension-os-coreos"]
+
+#############      gardener-extension-os-coreos-alibaba     #############
+FROM base AS gardener-extension-os-coreos-alibaba
+
+COPY --from=builder /go/bin/gardener-extension-os-coreos-alibaba /gardener-extension-os-coreos-alibaba
+
+ENTRYPOINT ["/gardener-extension-os-coreos-alibaba"]
+
+#############      gardener-extension-hyper                 #############
+FROM base AS gardener-extension-hyper
+
+COPY --from=builder /go/bin/gardener-extension-hyper /gardener-extension-hyper
+
+ENTRYPOINT ["/gardener-extension-hyper"]

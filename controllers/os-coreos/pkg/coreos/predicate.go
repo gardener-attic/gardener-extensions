@@ -14,15 +14,5 @@
 
 package coreos
 
-import (
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-)
-
 // Type is the type of OperatingSystemConfigs the coreos actuator / predicate are built for.
 const Type = "coreos"
-
-// Predicate is the predicate that filters for Config related operating system configurations.
-func Predicate() predicate.Predicate {
-	return operatingsystemconfig.TypePredicate(Type)
-}

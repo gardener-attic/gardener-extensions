@@ -1,0 +1,7 @@
+image:
+  repository: eu.gcr.io/gardener-project/gardener/gardener-extension-os-coreos
+  pullPolicy: IfNotPresent
+
+resources: {}
+
+concurrentSyncs: 5

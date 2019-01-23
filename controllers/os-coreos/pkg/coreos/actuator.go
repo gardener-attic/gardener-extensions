@@ -111,7 +111,7 @@ func (c *actuator) reconcile(ctx context.Context, config *extensionsv1alpha1.Ope
 	}
 	if path := config.Spec.ReloadConfigFilePath; path != nil {
 		command := coreOSCloudInitCommand + *path
-		config.Status.Command = &command
+		config.Status.Command = command
 	}
 	config.Status.Units = units
 	config.Status.ObservedGeneration = config.Generation

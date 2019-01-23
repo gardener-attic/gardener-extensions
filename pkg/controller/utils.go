@@ -16,6 +16,7 @@ package controller
 
 import (
 	"context"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 
 	controllererror "github.com/gardener/gardener-extensions/pkg/controller/error"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -27,6 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+// ReconcileErr returns a reconcile.Result or an error, depending on whether the error is a
+// RequeueAfterError or not.
 func ReconcileErr(err error) (reconcile.Result, error) {
 	if requeueAfter, ok := err.(*controllererror.RequeueAfterError); ok {
 		return reconcile.Result{Requeue: true, RequeueAfter: requeueAfter.RequeueAfter}, nil
@@ -96,4 +99,9 @@ func CreateOrUpdate(ctx context.Context, c client.Client, obj runtime.Object, tr
 		return err
 	}
 	return c.Update(ctx, obj)
+}
+
+// SetupSignalHandlerContext sets up a context from signals.SetupSignalHandler stop channel.
+func SetupSignalHandlerContext() context.Context {
+	return ContextFromStopChannel(signals.SetupSignalHandler())
 }
