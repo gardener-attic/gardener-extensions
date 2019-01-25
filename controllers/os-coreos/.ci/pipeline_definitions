@@ -16,9 +16,9 @@ gardener-extension-os-coreos:
             target_name: controller
     steps:
       check:
-        image: 'golang:1.11.4'
+        image: 'golang:1.11.5'
       test:
-        image: 'golang:1.11.4'
+        image: 'golang:1.11.5'
   variants:
     head-update:
       traits:
