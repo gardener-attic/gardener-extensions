@@ -1,5 +1,6 @@
 image:
   repository: eu.gcr.io/gardener-project/gardener/gardener-extension-os-coreos-alibaba
+  tag: latest
   pullPolicy: IfNotPresent
 
 resources: {}

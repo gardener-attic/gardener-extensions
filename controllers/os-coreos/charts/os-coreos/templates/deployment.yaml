@@ -22,10 +22,11 @@ spec:
       serviceAccountName: gardener-extension-os-coreos
       containers:
       - name: gardener-extension-os-coreos
-        image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
-        - /gardener-extension-os-coreos
+        - /gardener-extension-hyper
+        - os-coreos-controller-manager
         - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
         env:
         - name: LEADER_ELECTION_NAMESPACE

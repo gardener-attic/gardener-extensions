@@ -25,7 +25,8 @@ spec:
         image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
-        - /gardener-extension-os-coreos-alibaba
+        - /gardener-extension-hyper
+        - os-coreos-alibaba-controller-manager
         - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
