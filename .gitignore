@@ -1,6 +1,7 @@
 /.kube-secrets
 /tmp
 /dev
+**/dev
 
 .vscode
 .idea

@@ -1,5 +1,5 @@
 #############      builder                                  #############
-FROM golang:1.11.4 AS builder
+FROM golang:1.11.5 AS builder
 
 ARG VERIFY=true
 
