@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh os-coreos-alibaba OperatingSystemConfig os-coreos-alibaba . ../../example/controller-registration.yaml
+//go:generate ../../../../hack/generate-controller-registration.sh os-coreos-alibaba OperatingSystemConfig coreos-alibaba . ../../example/controller-registration.yaml
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart

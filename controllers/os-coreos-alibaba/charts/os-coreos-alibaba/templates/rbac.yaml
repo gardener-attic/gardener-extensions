@@ -42,7 +42,7 @@ rules:
   resources:
   - configmaps
   resourceNames:
-  - gardener-extension-os-coreos-alibaba-leader-election
+  - os-coreos-alibaba-leader-election
   verbs:
   - get
   - watch

@@ -77,6 +77,9 @@ spec:
     type: helm
     providerConfig:
       chart: $chart
+      values:
+        image:
+          tag: $VERSION
 EOM
 
 echo "Successfully generated controller registration at $DEST"
