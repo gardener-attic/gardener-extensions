@@ -1,0 +1,50 @@
+#!/bin/bash
+
+{{- define "put-content" -}}
+cat << EOF | base64 -d > '{{ .Path }}'
+{{ .Content }}
+EOF
+{{- end -}}
+
+{{- if .Bootstrap }}
+#Disable locksmithd
+systemctl disable locksmithd
+systemctl stop locksmithd
+
+#Fix mis-configuration of dockerd
+mkdir -p /etc/docker
+echo '{ "storage-driver": "devicemapper" }' > /etc/docker/daemon.json
+sed -i '/Environment=DOCKER_SELINUX=--selinux-enabled=true/s/^/#/g' /run/systemd/system/docker.service
+{{- end }}
+
+{{ range $_, $file := .Files -}}
+mkdir -p '{{ $file.Dirname }}'
+{{ template "put-content" $file }}
+{{- if $file.Permissions }}
+chmod '{{ $file.Permissions }}' '{{ $file.Path }}'
+{{ end }}
+{{ end }}
+
+{{- range $_, $unit := .Units -}}
+{{ if $unit.Content -}}
+{{ template "put-content" $unit }}
+{{- end }}
+{{ if $unit.DropIns }}
+mkdir -p '{{ $unit.DropIns.Path }}'
+{{ range $_, $dropIn := $unit.DropIns.Items -}}
+{{ template "put-content" $dropIn }}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+{{ if .Bootstrap -}}
+META_EP=http://100.100.100.200/latest/meta-data
+PROVIDER_ID=`curl -s $META_EP/region-id`.`curl -s $META_EP/instance-id`
+echo PROVIDER_ID=$PROVIDER_ID > $DOWNLOAD_MAIN_PATH/provider-id
+echo PROVIDER_ID=$PROVIDER_ID >> /etc/environment
+
+systemctl daemon-reload
+{{ range $_, $unit := .Units -}}
+systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
+{{- end -}}
+{{- end -}}

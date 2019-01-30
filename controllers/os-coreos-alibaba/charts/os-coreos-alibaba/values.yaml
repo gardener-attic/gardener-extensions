@@ -1,0 +1,7 @@
+image:
+  repository: eu.gcr.io/gardener-project/gardener/gardener-extension-os-coreos-alibaba
+  pullPolicy: IfNotPresent
+
+resources: {}
+
+concurrentSyncs: 5

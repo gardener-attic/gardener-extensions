@@ -242,6 +242,16 @@ gopkg.in/yaml.v2.
 Copyright 2011-2016 Canonical Ltd.  
 Apache 2 license (https://github.com/go-yaml/yaml/blob/v2/LICENSE)
 
+Packr.
+https://github.com/gobuffalo/packr  
+Copyright (c) 2016 Mark Bates.  
+MIT license (https://github.com/gobuffalo/packr/blob/master/LICENSE.txt)
+
+Cobra.
+https://github.com/spf13/cobra  
+Copyright 2019 Steve Francia.  
+Apache 2 license (https://github.com/spf13/cobra/blob/master/LICENSE.txt)
+
 Ginkgo.  
 https://github.com/onsi/ginkgo.  
 Copyright (c) 2013-2014 Onsi Fakhouri.  

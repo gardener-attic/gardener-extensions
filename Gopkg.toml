@@ -23,6 +23,10 @@
   name = "gopkg.in/yaml.v2"
   version = "2.2.2"
 
+[[constraint]]
+  name = "github.com/gobuffalo/packr"
+  version = "1.21.9"
+
 # Dependencies for testing purposes only
 [[constraint]]
   name = "github.com/onsi/gomega"
@@ -36,3 +40,7 @@
   unused-packages = true
   go-tests = true
   non-go = true
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.3"
