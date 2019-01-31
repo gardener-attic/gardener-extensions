@@ -15,6 +15,7 @@
 # limitations under the License.
 set -e
 
+echo "Installing requirements"
 go get -u "gopkg.in/gobuffalo/packr.v1/v2/packr2"
 go get -u "gopkg.in/onsi/ginkgo.v1/ginkgo"
 go get -u "golang.org/x/lint/golint"

@@ -28,7 +28,9 @@ gardener-extensions:
       traits:
         version:
           preprocess: 'finalize'
-        release: ~
+        release:
+          nextversion: 'bump_minor'
+          release_callback: '.ci/prepare_release'
         slack:
           default_channel: 'internal_scp_workspace'
           channel_cfgs:
