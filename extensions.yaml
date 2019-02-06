@@ -1,0 +1,9 @@
+# List of extensions that are required for local Gardener development setup.
+
+extensions:
+- name: os-coreos
+  gitHubRepo: https://github.com/gardener/gardener-extensions
+  path: controllers/os-coreos
+- name: os-coreos-alibaba
+  gitHubRepo: https://github.com/gardener/gardener-extensions
+  path: controllers/os-coreos-alibaba
