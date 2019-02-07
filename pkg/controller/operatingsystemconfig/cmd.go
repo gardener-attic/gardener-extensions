@@ -263,7 +263,7 @@ func Run(ctx context.Context, config *CompletedConfig) error {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, GenerationChangedPredicate()); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, config.Controller.Predicates...); err != nil {
 		log.Error(err, "Could not watch operating system configs")
 		return err
 	}
