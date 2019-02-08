@@ -16,6 +16,7 @@ package operatingsystemconfig
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/version"
@@ -137,8 +138,6 @@ func (c *ControllerOptions) Config() (*ControllerConfig, error) {
 
 // CommandOptions are options used for creating an operating system config controller command.
 type CommandOptions struct {
-	Kubeconfig string
-	Master     string
 	Manager    *ManagerOptions
 	Controller *ControllerOptions
 }
@@ -151,8 +150,7 @@ func (c *CommandOptions) Flags() cmd.NamedFlagSet {
 	c.Controller.AddFlags(fss.FlagSet("controller"))
 
 	fs := fss.FlagSet("misc")
-	fs.StringVar(&c.Master, "master", c.Master, "The address of the Kubernetes API server (overrides any value in kubeconfig).")
-	fs.StringVar(&c.Kubeconfig, "kubeconfig", c.Kubeconfig, "Path to the Kubeconfig with authorization and master location information.")
+	fs.AddGoFlagSet(flag.CommandLine)
 
 	return fss
 }
