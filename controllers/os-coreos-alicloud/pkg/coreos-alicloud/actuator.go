@@ -17,6 +17,7 @@ package coreos
 import (
 	"context"
 	"fmt"
+
 	"github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/pkg/coreos-alicloud/internal"
 	"github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/pkg/coreos-alicloud/internal/cloudinit"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -106,7 +107,8 @@ func (a *actuator) reconcile(ctx context.Context, config *extensionsv1alpha1.Ope
 		},
 	}
 	if path := config.Spec.ReloadConfigFilePath; path != nil {
-		config.Status.Command = fmt.Sprintf("/usr/bin/env bash %s", *path)
+		cmd := fmt.Sprintf("/usr/bin/env bash %s", *path)
+		config.Status.Command = &cmd
 	}
 	config.Status.Units = operatingSystemConfigUnitNames(config)
 	config.Status.ObservedGeneration = config.Generation

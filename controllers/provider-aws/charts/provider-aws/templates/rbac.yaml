@@ -1,0 +1,69 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gardener-extension-provider-aws
+  labels:
+    app.kubernetes.io/name: gardener-extension-provider-aws
+    helm.sh/chart: gardener-extension-provider-aws
+    app.kubernetes.io/instance: {{ .Release.Name }}
+rules:
+- apiGroups:
+  - extensions.gardener.cloud
+  resources:
+  - infrastructure
+  - infrastructures
+  - workerpoolconfig
+  - workerpoolconfigs
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  - events
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - provider-aws-leader-election
+  verbs:
+  - get
+  - watch
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gardener-extension-provider-aws
+  labels:
+    app.kubernetes.io/name: gardener-extension-provider-aws
+    helm.sh/chart: gardener-extension-provider-aws
+    app.kubernetes.io/instance: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gardener-extension-provider-aws
+subjects:
+- kind: ServiceAccount
+  name: gardener-extension-provider-aws
+  namespace: {{ .Release.Namespace }}

@@ -83,3 +83,7 @@ start-os-coreos:
 .PHONY: start-os-coreos-alicloud
 start-os-coreos-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud
+
+.PHONY: start-provider-aws
+start-provider-aws:
+	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/provider-aws/cmd/gardener-extension-provider-aws

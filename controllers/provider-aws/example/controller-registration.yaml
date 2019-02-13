@@ -1,0 +1,16 @@
+---
+apiVersion: core.gardener.cloud/v1alpha1
+kind: ControllerRegistration
+metadata:
+  name: provider-aws
+spec:
+  resources:
+  - kind: Infrastructure
+    type: aws
+  deployment:
+    type: helm
+    providerConfig:
+      chart: H4sIAAAAAAAAAwMAAAAAAAAAAAA=
+      values:
+        image:
+          tag: 0.4.0-dev

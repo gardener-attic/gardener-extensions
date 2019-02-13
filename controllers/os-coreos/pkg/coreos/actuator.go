@@ -18,8 +18,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"strconv"
+
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
 
@@ -114,7 +115,7 @@ func (c *actuator) reconcile(ctx context.Context, config *extensionsv1alpha1.Ope
 	}
 	if path := config.Spec.ReloadConfigFilePath; path != nil {
 		command := coreOSCloudInitCommand + *path
-		config.Status.Command = command
+		config.Status.Command = &command
 	}
 	config.Status.Units = units
 	config.Status.ObservedGeneration = config.Generation

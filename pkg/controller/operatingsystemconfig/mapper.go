@@ -50,7 +50,6 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 	}
 
 	var requests []reconcile.Request
-
 	for _, osc := range oscList.Items {
 		if osc.Spec.Type != m.typeName {
 			continue
@@ -67,7 +66,6 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 			}
 		}
 	}
-
 	return requests
 }
 

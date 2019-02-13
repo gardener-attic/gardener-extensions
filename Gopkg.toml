@@ -1,7 +1,15 @@
+required = [
+  "k8s.io/code-generator/cmd/defaulter-gen",
+  "k8s.io/code-generator/cmd/deepcopy-gen",
+  "k8s.io/code-generator/cmd/conversion-gen",
+  "k8s.io/code-generator/cmd/client-gen",
+  "k8s.io/code-generator/cmd/lister-gen",
+  "k8s.io/code-generator/cmd/informer-gen"
+]
+
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "61c3e7c0a3f1587a1f2191c4695fa1819fbfe80e"
-  #version = "0.17.0"
+  revision = "33b9c9e2343bd7aef704f1d09b030e814e706cd6"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
@@ -19,6 +27,10 @@
   name = "k8s.io/client-go"
   version = "kubernetes-1.13.2"
 
+[[override]]
+  name = "k8s.io/code-generator"
+  version = "kubernetes-1.13.2"
+
 [[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.2"
@@ -26,6 +38,10 @@
 [[constraint]]
   name = "github.com/gobuffalo/packr"
   version = "1.21.9"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.3"
 
 # Dependencies for testing purposes only
 [[constraint]]
@@ -41,9 +57,11 @@
   go-tests = true
   non-go = true
 
-[[constraint]]
-  name = "github.com/spf13/cobra"
-  version = "0.0.3"
+  [[prune.project]]
+    name = "k8s.io/code-generator"
+    unused-packages = false
+    non-go = false
+
 
 [[constraint]]
   name = "github.com/golang/mock"

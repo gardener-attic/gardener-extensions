@@ -16,6 +16,7 @@ package operatingsystemconfig
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"

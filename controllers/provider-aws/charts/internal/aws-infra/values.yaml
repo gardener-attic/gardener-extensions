@@ -1,0 +1,42 @@
+aws:
+  region: eu-west-1
+
+create:
+  vpc: true
+
+sshPublicKey: sshkey-12345
+
+vpc:
+  id: ${aws_vpc.vpc.id}
+  cidr: 10.10.10.10/6
+  dhcpDomainName: eu-west-1.compute.internal
+  internetGatewayID: ${aws_internet_gateway.igw.id}
+
+clusterName: test-namespace
+
+initializeEmptyState: true
+
+
+outputkeys:
+  VPCIDKey                   : "vpc_id"
+  SubnetsPublic              : "subnet_public_utility_z0"
+  SubnetsNodes               : "subnet_nodes_z0"
+  SecurityGroupsNodes        : "security_group_nodes"
+  SSHKeyName                 : "keyName"
+  IAMInstanceProfileNodes    : "iamInstanceProfileNodes"
+  IAMInstanceProfileBastions : "iamInstanceProfileBastions"
+  NodesRole                  : "nodes_role_arn"
+  BastionsRole               : "bastions_role_arn"
+
+
+zones:
+- name: eu-west-1a
+  cidr:
+    worker: 10.250.0.0/19
+    public: 10.250.96.0/22
+    internal: 10.250.112.0/22
+- name: eu-west-1b
+  cidr:
+    worker: 10.250.0.0/19
+    public: 10.250.96.0/22
+    internal: 10.250.112.0/22

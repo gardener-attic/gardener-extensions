@@ -1,0 +1,5 @@
+images:
+- name: terraformer
+  sourceRepository: github.com/gardener/terraformer
+  repository: eu.gcr.io/gardener-project/gardener/terraformer
+  tag: "0.10.0"
