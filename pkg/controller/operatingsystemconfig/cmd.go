@@ -18,6 +18,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"time"
+
 	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/version"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -36,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"time"
 )
 
 // DefaultMaxConcurrentReconciles is the default number of maximum concurrent reconciles.
@@ -140,6 +141,7 @@ func (c *ControllerOptions) Config() (*ControllerConfig, error) {
 type CommandOptions struct {
 	Manager    *ManagerOptions
 	Controller *ControllerOptions
+	Mapper     *MapperOptions
 }
 
 // Flags yields a NamedFlagSet with all subcomponents relevant for an operating system config
@@ -153,6 +155,25 @@ func (c *CommandOptions) Flags() cmd.NamedFlagSet {
 	fs.AddGoFlagSet(flag.CommandLine)
 
 	return fss
+}
+
+// MapperOptions are options used for creating a secretToOSCMapper.
+type MapperOptions struct {
+	Type string
+}
+
+// NewMapperOptions creates new MapperOptions with the given name.
+func NewMapperOptions(typeName string) *MapperOptions {
+	return &MapperOptions{
+		Type: typeName,
+	}
+}
+
+// Config returns the MapperConfig for the MapperOptions.
+func (m *MapperOptions) Config() (*MapperConfig, error) {
+	return &MapperConfig{
+		Type: m.Type,
+	}, nil
 }
 
 // NewManagerOptions creates new ManagerOptions with the given name.
@@ -182,6 +203,7 @@ func NewCommandOptions(name, typeName string, actuatorFactory ActuatorFactory) *
 	return &CommandOptions{
 		Manager:    NewManagerOptions(name),
 		Controller: NewControllerOptions(name, typeName, actuatorFactory),
+		Mapper:     NewMapperOptions(typeName),
 	}
 }
 
@@ -202,10 +224,16 @@ func (c *CommandOptions) Config() (*CommandConfig, error) {
 		return nil, err
 	}
 
+	mapperConfig, err := c.Mapper.Config()
+	if err != nil {
+		return nil, err
+	}
+
 	return &CommandConfig{
 		REST:       restConfig,
 		Manager:    mgrConfig,
 		Controller: ctrlConfig,
+		Mapper:     mapperConfig,
 	}, nil
 }
 
@@ -222,11 +250,17 @@ type ControllerConfig struct {
 	Options    controller.Options
 }
 
+// MapperConfig is the configuration for creating the secretToOSCMapper.
+type MapperConfig struct {
+	Type string
+}
+
 // CommandConfig is the configuration for creating a operating system config command.
 type CommandConfig struct {
 	REST       *rest.Config
 	Manager    *ManagerConfig
 	Controller *ControllerConfig
+	Mapper     *MapperConfig
 }
 
 // Complete fills in any fields not set that are required to have valid data.
@@ -266,7 +300,7 @@ func Run(ctx context.Context, config *CompletedConfig) error {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToOSCMapper(mgr.GetClient())}); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToOSCMapper(mgr.GetClient(), config.Mapper.Type)}); err != nil {
 		log.Error(err, "Could not watch secrets")
 		return err
 	}

@@ -28,7 +28,8 @@ import (
 )
 
 type secretToOSCMapper struct {
-	client client.Client
+	client   client.Client
+	typeName string
 }
 
 func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
@@ -51,6 +52,10 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 	var requests []reconcile.Request
 
 	for _, osc := range oscList.Items {
+		if osc.Spec.Type != m.typeName {
+			continue
+		}
+
 		for _, file := range osc.Spec.Files {
 			if secretRef := file.Content.SecretRef; secretRef != nil && secretRef.Name == secret.Name {
 				requests = append(requests, reconcile.Request{
@@ -68,6 +73,9 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 
 // SecretToOSCMapper returns a mapper that returns requests for OperatingSystemConfigs whose
 // referenced secrets have been modified.
-func SecretToOSCMapper(client client.Client) handler.Mapper {
-	return &secretToOSCMapper{client: client}
+func SecretToOSCMapper(client client.Client, typeName string) handler.Mapper {
+	return &secretToOSCMapper{
+		client:   client,
+		typeName: typeName,
+	}
 }
