@@ -85,12 +85,14 @@ func (a *actuator) reconcile(ctx context.Context, config *extensionsv1alpha1.Ope
 
 	secret := &corev1.Secret{
 		ObjectMeta: secretObjectMetaForConfig(config),
-		Data: map[string][]byte{
-			extensionsv1alpha1.OperatingSystemConfigSecretDataKey: []byte(cloudConfig),
-		},
 	}
 
 	if err := controller.CreateOrUpdate(ctx, a.client, secret, func() error {
+		if secret.Data == nil {
+			secret.Data = make(map[string][]byte)
+		}
+		secret.Data[extensionsv1alpha1.OperatingSystemConfigSecretDataKey] = []byte(cloudConfig)
+
 		return controllerutil.SetControllerReference(config, secret, a.scheme)
 	}); err != nil {
 		config.Status.ObservedGeneration = config.Generation
