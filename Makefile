@@ -69,13 +69,13 @@ docker-image-hyper:
 docker-image-os-coreos:
 	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos:latest -f Dockerfile --target gardener-extension-os-coreos .
 
-.PHONY: docker-image-os-coreos-alibaba
-docker-image-os-coreos-alibaba:
-	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos-alibaba:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos-alibaba:$(VERSION) -f Dockerfile --target gardener-extension-os-coreos-alibaba .
+.PHONY: docker-image-os-coreos-alicloud
+docker-image-os-coreos-alicloud:
+	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos-alicloud:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos-alicloud:$(VERSION) -f Dockerfile --target gardener-extension-os-coreos-alicloud .
 
 
 .PHONY: docker-images
-docker-images: docker-image-hyper docker-image-os-coreos docker-image-os-coreos-alibaba
+docker-images: docker-image-hyper docker-image-os-coreos docker-image-os-coreos-alicloud
 
 ### Debug / Development commands
 
@@ -87,6 +87,6 @@ revendor:
 start-os-coreos:
 	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/os-coreos/cmd/gardener-extension-os-coreos
 
-.PHONY: start-os-coreos-alibaba
-start-os-coreos-alibaba:
-	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/os-coreos-alibaba/cmd/gardener-extension-os-coreos-alibaba
+.PHONY: start-os-coreos-alicloud
+start-os-coreos-alicloud:
+	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud

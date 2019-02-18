@@ -16,7 +16,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/os-coreos-alibaba/cmd/gardener-extension-os-coreos-alibaba/app"
+	"github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud/app"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"

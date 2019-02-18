@@ -17,8 +17,8 @@ package coreos
 import (
 	"context"
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/os-coreos-alibaba/pkg/coreos-alibaba/internal"
-	"github.com/gardener/gardener-extensions/controllers/os-coreos-alibaba/pkg/coreos-alibaba/internal/cloudinit"
+	"github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/pkg/coreos-alicloud/internal"
+	"github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/pkg/coreos-alicloud/internal/cloudinit"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -30,8 +30,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// Type is the type of operating system configs the CoreOS Alibaba controller monitors.
-const Type = "coreos-alibaba"
+// Type is the type of operating system configs the CoreOS Alicloud controller monitors.
+const Type = "coreos-alicloud"
 
 type actuator struct {
 	scheme *runtime.Scheme

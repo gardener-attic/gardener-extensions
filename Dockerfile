@@ -24,12 +24,12 @@ COPY --from=builder /go/bin/gardener-extension-os-coreos /gardener-extension-os-
 
 ENTRYPOINT ["/gardener-extension-os-coreos"]
 
-#############      gardener-extension-os-coreos-alibaba     #############
-FROM base AS gardener-extension-os-coreos-alibaba
+#############      gardener-extension-os-coreos-alicloud     #############
+FROM base AS gardener-extension-os-coreos-alicloud
 
-COPY --from=builder /go/bin/gardener-extension-os-coreos-alibaba /gardener-extension-os-coreos-alibaba
+COPY --from=builder /go/bin/gardener-extension-os-coreos-alicloud /gardener-extension-os-coreos-alicloud
 
-ENTRYPOINT ["/gardener-extension-os-coreos-alibaba"]
+ENTRYPOINT ["/gardener-extension-os-coreos-alicloud"]
 
 #############      gardener-extension-hyper                 #############
 FROM base AS gardener-extension-hyper
