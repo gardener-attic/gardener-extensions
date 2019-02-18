@@ -15,7 +15,7 @@
 package internal_test
 
 import (
-	. "github.com/gardener/gardener-extensions/controllers/os-coreos-alibaba/pkg/coreos-alibaba/internal"
+	. "github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/pkg/coreos-alicloud/internal"
 	"github.com/gobuffalo/packr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -17,28 +17,28 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/os-coreos-alibaba/pkg/coreos-alibaba"
+	"github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/pkg/coreos-alicloud"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
 	"github.com/spf13/cobra"
 	"os"
 )
 
-// Name is the name of the CoreOS Alibaba controller.
-const Name = "os-coreos-alibaba"
+// Name is the name of the CoreOS Alicloud controller.
+const Name = "os-coreos-alicloud"
 
-// ActuatorFactory is the factory to create a CoreOS Alibaba Actuator.
+// ActuatorFactory is the factory to create a CoreOS Alicloud Actuator.
 func ActuatorFactory(args *operatingsystemconfig.ActuatorArgs) (operatingsystemconfig.Actuator, error) {
 	return coreos.NewActuator(args.Log), nil
 }
 
-// NewControllerCommand creates a new command for running a CoreOS Alibaba controller.
+// NewControllerCommand creates a new command for running a CoreOS Alicloud controller.
 func NewControllerCommand(ctx context.Context) *cobra.Command {
 	opts := operatingsystemconfig.NewCommandOptions(Name, coreos.Type, ActuatorFactory)
 	opts.Manager.LeaderElection = true
 	opts.Manager.LeaderElectionNamespace = os.Getenv("LEADER_ELECTION_NAMESPACE")
 
 	cmd := &cobra.Command{
-		Use: "os-coreos-alibaba-controller-manager",
+		Use: "os-coreos-alicloud-controller-manager",
 
 		Run: func(cmd *cobra.Command, args []string) {
 			c, err := opts.Config()

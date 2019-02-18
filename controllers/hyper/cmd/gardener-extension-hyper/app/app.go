@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	coreosalibaba "github.com/gardener/gardener-extensions/controllers/os-coreos-alibaba/cmd/gardener-extension-os-coreos-alibaba/app"
+	coreosalicloud "github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud/app"
 	coreos "github.com/gardener/gardener-extensions/controllers/os-coreos/cmd/gardener-extension-os-coreos/app"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +15,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 
 	cmd.AddCommand(
 		coreos.NewControllerCommand(ctx),
-		coreosalibaba.NewControllerCommand(ctx),
+		coreosalicloud.NewControllerCommand(ctx),
 	)
 
 	return cmd
