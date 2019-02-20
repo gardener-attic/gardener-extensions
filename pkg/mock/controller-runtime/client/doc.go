@@ -12,29 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+//go:generate mockgen -destination=mocks.go -package=client sigs.k8s.io/controller-runtime/pkg/client Client
 
-import "github.com/spf13/pflag"
-
-// NamedFlagSet is a mapping of names to FlagSets.
-type NamedFlagSet struct {
-	FlagSets map[string]*pflag.FlagSet
-}
-
-// FlagSet retrieves the FlagSet with the given name.
-// If the FlagSets of this NamedFlagSet were not initialized, they are.
-// If the requested FlagSet did not exist yet, it's being initialized and stored
-// in the FlagSets of this NamedFlagSet.
-func (n *NamedFlagSet) FlagSet(name string) *pflag.FlagSet {
-	if n.FlagSets == nil {
-		n.FlagSets = make(map[string]*pflag.FlagSet)
-	}
-
-	flagSet, ok := n.FlagSets[name]
-	if !ok {
-		flagSet = pflag.NewFlagSet(name, pflag.ExitOnError)
-		n.FlagSets[name] = flagSet
-	}
-
-	return flagSet
-}
+package client

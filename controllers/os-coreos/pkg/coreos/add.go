@@ -14,5 +14,33 @@
 
 package coreos
 
+import (
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+)
+
 // Type is the type of OperatingSystemConfigs the coreos actuator / predicate are built for.
 const Type = "coreos"
+
+func init() {
+	addToManagerBuilder.Register(Add)
+}
+
+// Options are the default controller.Options for Add.
+var Options = controller.Options{}
+
+// AddWithOptions adds a controller with the given Options to the given manager.
+// The opts.Reconciler is being set with a newly instantiated actuator.
+func AddWithOptions(mgr manager.Manager, opts controller.Options) error {
+	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
+		Actuator:          NewActuator(),
+		Type:              Type,
+		ControllerOptions: opts,
+	})
+}
+
+// Add adds a controller with the default Options.
+func Add(mgr manager.Manager) error {
+	return AddWithOptions(mgr, Options)
+}

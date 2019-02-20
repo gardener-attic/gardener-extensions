@@ -16,8 +16,15 @@ package operatingsystemconfig
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/util"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	controllerutil "github.com/gardener/gardener-extensions/pkg/controller"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
@@ -25,7 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
@@ -33,11 +39,48 @@ import (
 const (
 	// FinalizerName is the name of the finalizer written by this controller.
 	FinalizerName = "extensions.gardener.cloud/operatingsystemconfigs"
+
+	name = "operatingsystemconfig-controller"
 )
 
-// operatingSystemConfigReconciler reconciles OperatingSystemConfig resources of Gardener's
+// AddArgs are arguments for adding an operatingsystemconfig controller to a manager.
+type AddArgs struct {
+	// Actuator is an operatingsystemconfig actuator.
+	Actuator Actuator
+	// Type is the operatingsystemconfig type the actuator supports.
+	Type string
+	// ControllerOptions are the controller options used for creating a controller.
+	// The options.Reconciler is always overridden with a reconciler created from the
+	// given actuator.
+	ControllerOptions controller.Options
+}
+
+// Add adds an operatingsystemconfig controller to the given manager using the given AddArgs.
+func Add(mgr manager.Manager, args AddArgs) error {
+	args.ControllerOptions.Reconciler = NewReconciler(args.Actuator)
+	return add(mgr, args.Type, args.ControllerOptions)
+}
+
+func add(mgr manager.Manager, typeName string, options controller.Options) error {
+	ctrl, err := controller.New("operatingsystemconfig-controller", mgr, options)
+	if err != nil {
+		return err
+	}
+
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, TypePredicate(typeName)); err != nil {
+		return err
+	}
+
+	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToOSCMapper(mgr.GetClient(), typeName)}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// reconciler reconciles OperatingSystemConfig resources of Gardener's
 // `extensions.gardener.cloud` API group.
-type operatingSystemConfigReconciler struct {
+type reconciler struct {
 	logger   logr.Logger
 	actuator Actuator
 
@@ -45,34 +88,35 @@ type operatingSystemConfigReconciler struct {
 	client client.Client
 }
 
-var _ reconcile.Reconciler = &operatingSystemConfigReconciler{}
+var _ reconcile.Reconciler = &reconciler{}
 
 // NewReconciler creates a new reconcile.Reconciler that reconciles
 // OperatingSystemConfig resources of Gardener's `extensions.gardener.cloud` API group.
-func NewReconciler(logger logr.Logger, actuator Actuator) reconcile.Reconciler {
-	return &operatingSystemConfigReconciler{logger: logger, actuator: actuator}
+func NewReconciler(actuator Actuator) reconcile.Reconciler {
+	logger := log.Log.WithName(name)
+	return &reconciler{logger: logger, actuator: actuator}
 }
 
 // InjectFunc enables dependency injection into the actuator.
-func (r *operatingSystemConfigReconciler) InjectFunc(f inject.Func) error {
+func (r *reconciler) InjectFunc(f inject.Func) error {
 	return f(r.actuator)
 }
 
 // InjectClient injects the controller runtime client into the reconciler.
-func (r *operatingSystemConfigReconciler) InjectClient(client client.Client) error {
+func (r *reconciler) InjectClient(client client.Client) error {
 	r.client = client
 	return nil
 }
 
 // InjectStopChannel is an implementation for getting the respective stop channel managed by the controller-runtime.
-func (r *operatingSystemConfigReconciler) InjectStopChannel(stopCh <-chan struct{}) error {
-	r.ctx = controller.ContextFromStopChannel(stopCh)
+func (r *reconciler) InjectStopChannel(stopCh <-chan struct{}) error {
+	r.ctx = util.ContextFromStopChannel(stopCh)
 	return nil
 }
 
 // Reconcile is the reconciler function that gets executed in case there are new events for the `OperatingSystemConfig`
 // resources.
-func (r *operatingSystemConfigReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	osc := &extensionsv1alpha1.OperatingSystemConfig{}
 	if err := r.client.Get(r.ctx, request.NamespacedName, osc); err != nil {
 		if apierrors.IsNotFound(err) {
@@ -88,14 +132,9 @@ func (r *operatingSystemConfigReconciler) Reconcile(request reconcile.Request) (
 	return r.reconcile(r.ctx, osc)
 }
 
-func (r *operatingSystemConfigReconciler) reconcile(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) (reconcile.Result, error) {
-	// Add finalizer to resource if not yet done.
-	if finalizers := sets.NewString(osc.Finalizers...); !finalizers.Has(FinalizerName) {
-		finalizers.Insert(FinalizerName)
-		osc.Finalizers = finalizers.UnsortedList()
-		if err := r.client.Update(ctx, osc); err != nil {
-			return reconcile.Result{}, err
-		}
+func (r *reconciler) reconcile(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) (reconcile.Result, error) {
+	if err := controllerutil.EnsureFinalizer(ctx, r.client, FinalizerName, osc); err != nil {
+		return reconcile.Result{}, err
 	}
 
 	exist, err := r.actuator.Exists(ctx, osc)
@@ -106,7 +145,7 @@ func (r *operatingSystemConfigReconciler) reconcile(ctx context.Context, osc *ex
 	if exist {
 		r.logger.Info("Reconciling operating system config triggers idempotent update.", "osc", osc.Name)
 		if err := r.actuator.Update(ctx, osc); err != nil {
-			return controller.ReconcileErr(err)
+			return controllerutil.ReconcileErr(err)
 		}
 		return reconcile.Result{}, nil
 	}
@@ -114,27 +153,30 @@ func (r *operatingSystemConfigReconciler) reconcile(ctx context.Context, osc *ex
 	r.logger.Info("Reconciling operating system config triggers idempotent create.", "osc", osc.Name)
 	if err := r.actuator.Create(ctx, osc); err != nil {
 		r.logger.Error(err, "Unable to create operating system config", "osc", osc.Name)
-		return controller.ReconcileErr(err)
+		return controllerutil.ReconcileErr(err)
 	}
 	return reconcile.Result{}, nil
 }
 
-func (r *operatingSystemConfigReconciler) delete(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) (reconcile.Result, error) {
-	finalizers := sets.NewString(osc.Finalizers...)
-	if !finalizers.Has(FinalizerName) {
+func (r *reconciler) delete(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) (reconcile.Result, error) {
+	hasFinalizer, err := controllerutil.HasFinalizer(osc, FinalizerName)
+	if err != nil {
+		r.logger.Error(err, "Could not instantiate finalizer deletion")
+		return reconcile.Result{}, err
+	}
+
+	if !hasFinalizer {
 		r.logger.Info("Reconciling operating system config causes a no-op as there is no finalizer.", "osc", osc.Name)
 		return reconcile.Result{}, nil
 	}
 
 	if err := r.actuator.Delete(ctx, osc); err != nil {
 		r.logger.Error(err, "Error deleting operating system config", "osc", osc.Name)
-		return controller.ReconcileErr(err)
+		return controllerutil.ReconcileErr(err)
 	}
 
 	r.logger.Info("Operating system config deletion successful, removing finalizer.", "osc", osc.Name)
-	finalizers.Delete(FinalizerName)
-	osc.Finalizers = finalizers.UnsortedList()
-	if err := r.client.Update(ctx, osc); err != nil {
+	if err := controllerutil.DeleteFinalizer(ctx, r.client, FinalizerName, osc); err != nil {
 		r.logger.Error(err, "Error removing finalizer from operating system config", "osc", osc.Name)
 		return reconcile.Result{}, err
 	}

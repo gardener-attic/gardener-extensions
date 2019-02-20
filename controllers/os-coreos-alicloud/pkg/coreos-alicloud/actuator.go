@@ -28,10 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
-
-// Type is the type of operating system configs the CoreOS Alicloud controller monitors.
-const Type = "coreos-alicloud"
 
 type actuator struct {
 	scheme *runtime.Scheme
@@ -40,10 +38,8 @@ type actuator struct {
 }
 
 // NewActuator creates a new actuator with the given logger.
-func NewActuator(logger logr.Logger) operatingsystemconfig.Actuator {
-	return &actuator{
-		logger: logger,
-	}
+func NewActuator() operatingsystemconfig.Actuator {
+	return &actuator{logger: log.Log.WithName("coreos-alicloud-operatingsystemconfig-actuator")}
 }
 
 func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
