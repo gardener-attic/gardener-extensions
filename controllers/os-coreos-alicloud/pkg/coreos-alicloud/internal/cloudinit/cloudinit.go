@@ -65,10 +65,8 @@ func (b64FileCodec) Encode(data []byte) ([]byte, error) {
 
 func (b64FileCodec) Decode(data []byte) ([]byte, error) {
 	dst := make([]byte, encoding.DecodedLen(len(data)))
-	if _, err := encoding.Decode(dst, data); err != nil {
-		return nil, err
-	}
-	return dst, nil
+	n, err := encoding.Decode(dst, data)
+	return dst[:n], err
 }
 
 type gzipFileCodec struct{}
@@ -114,7 +112,7 @@ func FileCodecForID(id FileCodecID) FileCodec {
 }
 
 // Decode decodes the given data using the codec from resolving the given codecIDString.
-// It's a shorhand for parsing the FileCodecID and calling the `Decode` method on the obtained
+// It's a shorthand for parsing the FileCodecID and calling the `Decode` method on the obtained
 // FileCodec.
 func Decode(codecIDString string, data []byte) ([]byte, error) {
 	id, err := ParseFileCodecID(codecIDString)
