@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"strconv"
 
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
@@ -44,8 +45,8 @@ type actuator struct {
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled OperatingSystemConfigs.
-func NewActuator(logger logr.Logger) operatingsystemconfig.Actuator {
-	return &actuator{logger: logger}
+func NewActuator() operatingsystemconfig.Actuator {
+	return &actuator{logger: log.Log.WithName("coreos-operatingsystemconfig-actuator")}
 }
 
 func (c *actuator) InjectScheme(scheme *runtime.Scheme) error {

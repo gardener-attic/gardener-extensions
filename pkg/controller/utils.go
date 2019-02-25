@@ -16,6 +16,10 @@ package controller
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/util"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 
 	controllererror "github.com/gardener/gardener-extensions/pkg/controller/error"
@@ -27,6 +31,29 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+import (
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
+)
+
+var (
+	localSchemeBuilder = runtime.NewSchemeBuilder(
+		scheme.AddToScheme,
+		extensionsv1alpha1.AddToScheme,
+	)
+
+	// AddToScheme adds the Kubernetes and extension scheme to the given scheme.
+	AddToScheme = localSchemeBuilder.AddToScheme
+
+	// ExtensionsScheme is the default scheme for extensions, consisting of all Kubernetes built-in
+	// schemes (client-go/kubernetes/scheme) and the extensions/v1alpha1 scheme.
+	ExtensionsScheme = runtime.NewScheme()
+)
+
+func init() {
+	utilruntime.Must(AddToScheme(ExtensionsScheme))
+}
 
 // ReconcileErr returns a reconcile.Result or an error, depending on whether the error is a
 // RequeueAfterError or not.
@@ -66,15 +93,85 @@ func ReconcileError(t extensionsv1alpha1.LastOperationType, description string, 
 	return LastOperation(t, extensionsv1alpha1.LastOperationStateError, progress, description), LastError(description, codes...)
 }
 
-// ContextFromStopChannel creates a new context from a given stop channel.
-func ContextFromStopChannel(stopCh <-chan struct{}) context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		defer cancel()
-		<-stopCh
-	}()
+// AddToManagerBuilder aggregates various AddToManager functions.
+type AddToManagerBuilder []func(manager.Manager) error
 
-	return ctx
+// NewAddToManagerBuilder creates a new AddToManagerBuilder and registers the given functions.
+func NewAddToManagerBuilder(funcs ...func(manager.Manager) error) AddToManagerBuilder {
+	var builder AddToManagerBuilder
+	builder.Register(funcs...)
+	return builder
+}
+
+// Register registers the given functions in this builder.
+func (a *AddToManagerBuilder) Register(funcs ...func(manager.Manager) error) {
+	*a = append(*a, funcs...)
+}
+
+// AddToManager traverses over all AddToManager-functions of this builder, sequentially applying
+// them. It exits on the first error and returns it.
+func (a *AddToManagerBuilder) AddToManager(m manager.Manager) error {
+	for _, f := range *a {
+		if err := f(m); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func finalizersAndAccessorOf(obj runtime.Object) (sets.String, metav1.Object, error) {
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sets.NewString(accessor.GetFinalizers()...), accessor, nil
+}
+
+// HasFinalizer checks if the given object has a finalizer with the given name.
+func HasFinalizer(obj runtime.Object, finalizerName string) (bool, error) {
+	finalizers, _, err := finalizersAndAccessorOf(obj)
+	if err != nil {
+		return false, err
+	}
+
+	return finalizers.Has(finalizerName), nil
+}
+
+// EnsureFinalizer ensures that a finalizer of the given name is set on the given object.
+// If the finalizer is not set, it adds it to the list of finalizers and updates the remote object.
+func EnsureFinalizer(ctx context.Context, client client.Client, finalizerName string, obj runtime.Object) error {
+	finalizers, accessor, err := finalizersAndAccessorOf(obj)
+	if err != nil {
+		return err
+	}
+
+	if finalizers.Has(finalizerName) {
+		return nil
+	}
+
+	finalizers.Insert(finalizerName)
+	accessor.SetFinalizers(finalizers.UnsortedList())
+
+	return client.Update(ctx, obj)
+}
+
+// DeleteFinalizer ensures that the given finalizer is not present anymore in the given object.
+// If it is set, it removes it and issues an update.
+func DeleteFinalizer(ctx context.Context, client client.Client, finalizerName string, obj runtime.Object) error {
+	finalizers, accessor, err := finalizersAndAccessorOf(obj)
+	if err != nil {
+		return err
+	}
+
+	if !finalizers.Has(finalizerName) {
+		return nil
+	}
+
+	finalizers.Delete(finalizerName)
+	accessor.SetFinalizers(finalizers.UnsortedList())
+
+	return client.Update(ctx, obj)
 }
 
 // CreateOrUpdate creates or updates the object. Optionally, it executes a transformation function before the
@@ -103,5 +200,5 @@ func CreateOrUpdate(ctx context.Context, c client.Client, obj runtime.Object, tr
 
 // SetupSignalHandlerContext sets up a context from signals.SetupSignalHandler stop channel.
 func SetupSignalHandlerContext() context.Context {
-	return ContextFromStopChannel(signals.SetupSignalHandler())
+	return util.ContextFromStopChannel(signals.SetupSignalHandler())
 }

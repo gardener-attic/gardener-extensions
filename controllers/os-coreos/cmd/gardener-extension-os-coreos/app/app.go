@@ -16,48 +16,62 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"github.com/gardener/gardener-extensions/controllers/os-coreos/pkg/coreos"
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
+	"github.com/gardener/gardener-extensions/pkg/controller"
+	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/spf13/cobra"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // Name is the name of the CoreOS controller.
 const Name = "os-coreos"
 
-// ActuatorFactory creates a new CoreOS operating system config actuator.
-func ActuatorFactory(args *operatingsystemconfig.ActuatorArgs) (operatingsystemconfig.Actuator, error) {
-	return coreos.NewActuator(args.Log), nil
-}
-
 // NewControllerCommand creates a new CoreOS controller command.
 func NewControllerCommand(ctx context.Context) *cobra.Command {
-	opts := operatingsystemconfig.NewCommandOptions(Name, coreos.Type, ActuatorFactory)
-	opts.Manager.LeaderElection = true
-	opts.Manager.LeaderElectionNamespace = os.Getenv("LEADER_ELECTION_NAMESPACE")
+	var (
+		restOpts = &controllercmd.RESTOptions{}
+		mgrOpts  = &controllercmd.ManagerOptions{
+			LeaderElection:          true,
+			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
+		}
+		ctrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, ctrlOpts)
+	)
 
 	cmd := &cobra.Command{
 		Use: "os-coreos-controller-manager",
 
 		Run: func(cmd *cobra.Command, args []string) {
-			c, err := opts.Config()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
+			if err := aggOption.Complete(); err != nil {
+				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
 
-			if err := operatingsystemconfig.Run(ctx, c.Complete()); err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-				os.Exit(1)
+			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
+			if err != nil {
+				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
+			}
+
+			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			ctrlOpts.Completed().Apply(&coreos.Options)
+
+			if err := coreos.AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add controller to manager")
+			}
+
+			if err := mgr.Start(ctx.Done()); err != nil {
+				controllercmd.LogErrAndExit(err, "Error running manager")
 			}
 		},
 	}
 
-	fs := cmd.Flags()
-	for _, f := range opts.Flags().FlagSets {
-		fs.AddFlagSet(f)
-	}
+	aggOption.AddFlags(cmd.Flags())
 
 	return cmd
 }
