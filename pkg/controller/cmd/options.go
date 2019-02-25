@@ -44,6 +44,11 @@ const (
 	MasterURLFlag = "master"
 )
 
+// LeaderElectionNameID returns a leader election ID for the given name.
+func LeaderElectionNameID(name string) string {
+	return fmt.Sprintf("%s-leader-election", name)
+}
+
 // Flagger adds flags to a given FlagSet.
 type Flagger interface {
 	// AddFlags adds the flags of this Flagger to the given FlagSet.

@@ -105,6 +105,10 @@ func (a *actuator) reconcile(ctx context.Context, config *extensionsv1alpha1.Ope
 			Namespace: secret.Namespace,
 		},
 	}
+	if path := config.Spec.ReloadConfigFilePath; path != nil {
+		config.Status.Command = fmt.Sprintf("/usr/bin/env bash %s", *path)
+	}
+	config.Status.Units = operatingSystemConfigUnitNames(config)
 	config.Status.ObservedGeneration = config.Generation
 	config.Status.LastOperation, config.Status.LastError = controller.ReconcileSucceeded(extensionsv1alpha1.LastOperationTypeReconcile, "Successfully generated cloud config")
 	return a.client.Status().Update(ctx, config)
@@ -153,6 +157,14 @@ func (a *actuator) dataForFileContent(ctx context.Context, namespace string, con
 	return secret.Data[content.SecretRef.DataKey], nil
 }
 
+func operatingSystemConfigUnitNames(config *extensionsv1alpha1.OperatingSystemConfig) []string {
+	unitNames := make([]string, 0, len(config.Spec.Units))
+	for _, unit := range config.Spec.Units {
+		unitNames = append(unitNames, unit.Name)
+	}
+	return unitNames
+}
+
 func (a *actuator) cloudConfigFromOperatingSystemConfig(ctx context.Context, config *extensionsv1alpha1.OperatingSystemConfig) ([]byte, error) {
 	files := make([]*internal.File, 0, len(config.Spec.Files))
 	for _, file := range config.Spec.Files {
@@ -178,5 +190,10 @@ func (a *actuator) cloudConfigFromOperatingSystemConfig(ctx context.Context, con
 		units = append(units, &internal.Unit{Name: unit.Name, Content: content, DropIns: dropIns})
 	}
 
-	return internal.NewCloudInitGenerator(internal.DefaultUnitsPath).Generate(&internal.OperatingSystemConfig{Files: files, Units: units})
+	return internal.NewCloudInitGenerator(internal.DefaultUnitsPath).
+		Generate(&internal.OperatingSystemConfig{
+			Bootstrap: config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeProvision,
+			Files:     files,
+			Units:     units,
+		})
 }
