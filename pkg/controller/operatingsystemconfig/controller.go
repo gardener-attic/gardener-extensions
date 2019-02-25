@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
@@ -53,21 +54,29 @@ type AddArgs struct {
 	// The options.Reconciler is always overridden with a reconciler created from the
 	// given actuator.
 	ControllerOptions controller.Options
+	// Predicates are the predicates to use.
+	// If unset, GenerationChangedPredicate will be used.
+	Predicates []predicate.Predicate
 }
 
 // Add adds an operatingsystemconfig controller to the given manager using the given AddArgs.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(args.Actuator)
-	return add(mgr, args.Type, args.ControllerOptions)
+	return add(mgr, args.Type, args.ControllerOptions, args.Predicates)
 }
 
-func add(mgr manager.Manager, typeName string, options controller.Options) error {
+func add(mgr manager.Manager, typeName string, options controller.Options, predicates []predicate.Predicate) error {
 	ctrl, err := controller.New("operatingsystemconfig-controller", mgr, options)
 	if err != nil {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, TypePredicate(typeName)); err != nil {
+	if predicates == nil {
+		predicates = append(predicates, GenerationChangedPredicate())
+	}
+	predicates = append(predicates, TypePredicate(typeName))
+
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err
 	}
 

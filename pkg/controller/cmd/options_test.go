@@ -110,6 +110,12 @@ var _ = Describe("Options", func() {
 		ctrl.Finish()
 	})
 
+	Describe("#LeaderElectionNameID", func() {
+		It("should return a leader election with the name", func() {
+			Expect(LeaderElectionNameID("foo")).To(Equal("foo-leader-election"))
+		})
+	})
+
 	Describe("#PrefixFlagger", func() {
 		const (
 			cmdName  = "test"

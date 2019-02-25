@@ -33,6 +33,7 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 		ctrlOpts = &controllercmd.ControllerOptions{
