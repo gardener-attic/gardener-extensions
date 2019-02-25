@@ -24,11 +24,15 @@ VERIFY           := true
 
 .PHONY: format
 format:
-	@go fmt ./pkg/... ./controllers/...
+	@./hack/format.sh
+
+.PHONY: clean
+clean:
+	@./hack/clean.sh
 
 .PHONY: generate
 generate:
-	@go generate ./pkg/... ./controllers/...
+	@./hack/generate.sh
 
 .PHONY: check
 check:
@@ -36,23 +40,21 @@ check:
 
 .PHONY: test
 test:
-	@ginkgo -r controllers pkg
+	@./hack/test.sh
 
 .PHONY: verify
-verify: check test
+verify: check generate test format
 
 .PHONY: install
 install:
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-		go install -ldflags $(LD_FLAGS) \
-		./controllers/...
+	@./hack/install.sh
 
 
 .PHONY: all
 ifeq ($(VERIFY),true)
-all: generate format verify install
+all: verify generate install
 else
-all: generate format install
+all: generate install
 endif
 
 ### Docker commands
@@ -65,17 +67,8 @@ docker-login:
 docker-image-hyper:
 	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-hyper:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-hyper:latest -f Dockerfile --target gardener-extension-hyper .
 
-.PHONY: docker-image-os-coreos
-docker-image-os-coreos:
-	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos:latest -f Dockerfile --target gardener-extension-os-coreos .
-
-.PHONY: docker-image-os-coreos-alicloud
-docker-image-os-coreos-alicloud:
-	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos-alicloud:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-os-coreos-alicloud:$(VERSION) -f Dockerfile --target gardener-extension-os-coreos-alicloud .
-
-
 .PHONY: docker-images
-docker-images: docker-image-hyper docker-image-os-coreos docker-image-os-coreos-alicloud
+docker-images: docker-image-hyper
 
 ### Debug / Development commands
 

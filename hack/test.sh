@@ -15,39 +15,10 @@
 # limitations under the License.
 set -e
 
+
 DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
 source "$DIRNAME/common.sh"
 
-header_text "Check"
+header_text "Test"
 
-echo "Executing check-generate"
-"$DIRNAME"/check-generate.sh
-
-echo "Executing go vet"
-go vet "${SOURCE_TREES[@]}"
-
-echo "Executing golint"
-golint -set_exit_status "${SOURCE_TREES[@]}"
-
-echo "Checking for format issues with gofmt"
-unformatted_files="$(gofmt -l controllers pkg)"
-if [[ "$unformatted_files" ]]; then
-    echo "Unformatted files detected:"
-    echo "$unformatted_files"
-    exit 1
-fi
-
-echo "Checking for chart symlink errors"
-BROKEN_SYMLINKS=$(find -L controllers/*/charts -type l)
-if [[ "$BROKEN_SYMLINKS" ]]; then
-   echo "Found broken symlinks:"
-   echo "$BROKEN_SYMLINKS"
-   exit 1
-fi
-
-echo "Checking whether all charts can be rendered"
-for chart_file in controllers/*/charts/*/Chart.yaml; do
-    helm template "$(dirname "$chart_file")" 1> /dev/null
-done
-
-echo "All checks successful"
+ginkgo "${SOURCE_TREES[@]}"
