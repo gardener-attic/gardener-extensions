@@ -2,39 +2,37 @@ package infrastructure
 
 import (
 	"context"
-	"fmt"
 
+	controllerutil "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/go-logr/logr"
+
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 const (
-	// Finalizer is the infrastructure controller finalizer.
-	Finalizer = "extensions.gardener.cloud/infrastructure"
-	name      = "infrastructure-controller"
+	// FinalizerName is the infrastructure controller finalizer.
+	FinalizerName = "extensions.gardener.cloud/infrastructure"
+	name          = "infrastructure-controller"
 )
 
 // NewReconciler creates a new reconcile.Reconciler that reconciles
 // infrastructure resources of Gardener's `extensions.gardener.cloud` API group.
 func NewReconciler(actuator Actuator) reconcile.Reconciler {
-	return &infrastructureReconciler{logger: log.Log.WithName(name), actuator: actuator}
+	return &reconciler{logger: log.Log.WithName(name), actuator: actuator}
 }
 
 // AddArgs are arguments for adding an infrastructure controller to a manager.
@@ -76,9 +74,9 @@ func add(mgr manager.Manager, typeName string, options controller.Options, predi
 	return nil
 }
 
-// infrastructureReconciler reconciles Infrastructure resources of Gardener's
+// reconciler reconciles Infrastructure resources of Gardener's
 // extensions.gardener.cloud` API group.
-type infrastructureReconciler struct {
+type reconciler struct {
 	logger   logr.Logger
 	actuator Actuator
 
@@ -87,25 +85,25 @@ type infrastructureReconciler struct {
 }
 
 // InjectFunc enables dependency injection into the actuator.
-func (i *infrastructureReconciler) InjectFunc(f inject.Func) error {
-	return f(i.actuator)
+func (r *reconciler) InjectFunc(f inject.Func) error {
+	return f(r.actuator)
 }
 
 // InjectClient injects the controller runtime client into the reconciler.
-func (i *infrastructureReconciler) InjectClient(client client.Client) error {
-	i.client = client
+func (r *reconciler) InjectClient(client client.Client) error {
+	r.client = client
 	return nil
 }
 
 // InjectStopChannel is an implementation for getting the respective stop channel managed by the controller-runtime.
-func (i *infrastructureReconciler) InjectStopChannel(stopCh <-chan struct{}) error {
-	i.ctx = util.ContextFromStopChannel(stopCh)
+func (r *reconciler) InjectStopChannel(stopCh <-chan struct{}) error {
+	r.ctx = util.ContextFromStopChannel(stopCh)
 	return nil
 }
 
-func (i *infrastructureReconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	infrastructure := &extensionsv1alpha1.Infrastructure{}
-	err := i.client.Get(i.ctx, request.NamespacedName, infrastructure)
+	err := r.client.Get(r.ctx, request.NamespacedName, infrastructure)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return reconcile.Result{}, nil
@@ -113,58 +111,59 @@ func (i *infrastructureReconciler) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
-	var (
-		name                 = infrastructure.Name
-		infraType            = infrastructure.Spec.Type
-		shootNamespaceInSeed = infrastructure.Namespace
+	if infrastructure.DeletionTimestamp != nil {
+		return r.delete(r.ctx, infrastructure)
+	}
+	return r.reconcile(r.ctx, infrastructure)
+}
 
-		finalizers = sets.NewString(infrastructure.Finalizers...)
-	)
-
-	i.logger.Info(fmt.Sprintf("Reconciling infrastructure of type: %s in namespace: %s", infraType, shootNamespaceInSeed))
-	// If the infrastructure resource has not been deleted (no timestamp) and contains no finalizers add one
-	if infrastructure.ObjectMeta.DeletionTimestamp.IsZero() && !finalizers.Has(Finalizer) {
-		finalizers.Insert(Finalizer)
-		infrastructure.Finalizers = finalizers.UnsortedList()
-		if err = i.client.Update(i.ctx, infrastructure); err != nil {
-			i.logger.Info("Failed to add finalizer to object %v due to err %v", name, err)
-			return reconcile.Result{}, err
-		}
-		return reconcile.Result{}, nil
+func (r *reconciler) reconcile(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) (reconcile.Result, error) {
+	if err := controllerutil.EnsureFinalizer(ctx, r.client, FinalizerName, infrastructure); err != nil {
+		return reconcile.Result{}, err
 	}
 
-	if !infrastructure.DeletionTimestamp.IsZero() {
-		if !finalizers.Has(Finalizer) {
-			return reconcile.Result{}, nil
-		}
-
-		if err := i.actuator.Delete(i.ctx, infrastructure); err != nil {
-			return reconcile.Result{}, err
-		}
-		i.logger.Info("Infrastructure deletion went through, removing finalizer!")
-		finalizers.Delete(Finalizer)
-		infrastructure.Finalizers = finalizers.UnsortedList()
-
-		if err = i.client.Update(i.ctx, infrastructure); err != nil {
-			return reconcile.Result{}, err
-		}
-		return reconcile.Result{}, nil
-	}
-
-	infraExists, err := i.actuator.Exists(i.ctx, infrastructure)
+	exist, err := r.actuator.Exists(ctx, infrastructure)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	i.logger.Info("reconciling infrastructure object")
-	if infraExists {
-		if err := i.actuator.Update(i.ctx, infrastructure); err != nil {
-			return extensionscontroller.ReconcileErr(err)
+	if exist {
+		r.logger.Info("Reconciling infrastructure triggers idempotent update.", "infrastructure", infrastructure.Name)
+		if err := r.actuator.Update(ctx, infrastructure); err != nil {
+			return controllerutil.ReconcileErr(err)
 		}
-	}
-	if err := i.actuator.Create(i.ctx, infrastructure); err != nil {
-		return extensionscontroller.ReconcileErr(err)
+		return reconcile.Result{}, nil
 	}
 
+	r.logger.Info("Reconciling infrastructure triggers idempotent create.", "infrastructure", infrastructure.Name)
+	if err := r.actuator.Create(ctx, infrastructure); err != nil {
+		r.logger.Error(err, "Unable to create infrastructure", "infrastructure", infrastructure.Name)
+		return controllerutil.ReconcileErr(err)
+	}
+	return reconcile.Result{}, nil
+}
+
+func (r *reconciler) delete(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) (reconcile.Result, error) {
+	hasFinalizer, err := controllerutil.HasFinalizer(infrastructure, FinalizerName)
+	if err != nil {
+		r.logger.Error(err, "Could not instantiate finalizer deletion")
+		return reconcile.Result{}, err
+	}
+
+	if !hasFinalizer {
+		r.logger.Info("Reconciling infrastructure causes a no-op as there is no finalizer.", "infrastructure", infrastructure.Name)
+		return reconcile.Result{}, nil
+	}
+
+	if err := r.actuator.Delete(r.ctx, infrastructure); err != nil {
+		r.logger.Error(err, "Error deleting infrastructure", "infrastructure", infrastructure.Name)
+		return reconcile.Result{}, err
+	}
+
+	r.logger.Info("Infrastructure deletion successful, removing finalizer.", "infrastructure", infrastructure.Name)
+	if err := controllerutil.DeleteFinalizer(ctx, r.client, FinalizerName, infrastructure); err != nil {
+		r.logger.Error(err, "Error removing finalizer from Infrastructure", "infrastructure", infrastructure.Name)
+		return reconcile.Result{}, err
+	}
 	return reconcile.Result{}, nil
 }
