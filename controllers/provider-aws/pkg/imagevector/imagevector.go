@@ -12,22 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infrastructure
+package imagevector
 
 import (
-	"context"
+	"path/filepath"
 
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/utils/imagevector"
+	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
-// Actuator acts upon Infrastructure resources.
-type Actuator interface {
-	// Create the Infrastructure config.
-	Create(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error
-	// Delete the Infrastructure config.
-	Delete(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error
-	// Update the Infrastructure config.
-	Update(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error
-	// Exists checks whether the given Infrastructure currently exists.
-	Exists(ctx context.Context, config *extensionsv1alpha1.Infrastructure) (bool, error)
+// ImageVector is the image vector that contains al the needed images
+var ImageVector imagevector.ImageVector
+
+func init() {
+	var err error
+	ImageVector, err = imagevector.ReadImageVector(filepath.Join("controllers", "provider-aws", "charts", "images.yaml"))
+	runtime.Must(err)
 }

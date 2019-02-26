@@ -9,9 +9,6 @@ spec:
     apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig
     networks:
-      nodes: 10.250.0.0/16
-      pods: 100.96.0.0/11
-      services: 100.64.0.0/13
       vpc:
         cidr: 10.250.0.0/16
       internal:
@@ -22,8 +19,6 @@ spec:
         - 10.250.0.0/19
   zones:
     - eu-west-1a
-  dns:
-    apiserver: api.aws-01.core.example.com
   region: eu-west-1
   secretRef:
     name: cloudprovider

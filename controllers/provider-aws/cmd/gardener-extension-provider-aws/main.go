@@ -25,7 +25,7 @@ import (
 
 func main() {
 	log.SetLogger(log.ZapLogger(false))
-	cmd := app.NewControllerCommand(controller.SetupSignalHandlerContext())
+	cmd := app.NewControllerManagerCommand(controller.SetupSignalHandlerContext())
 
 	if err := cmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)

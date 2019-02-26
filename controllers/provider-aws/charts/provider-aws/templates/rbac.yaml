@@ -11,10 +11,7 @@ rules:
 - apiGroups:
   - extensions.gardener.cloud
   resources:
-  - infrastructure
   - infrastructures
-  - workerpoolconfig
-  - workerpoolconfigs
   verbs:
   - get
   - list

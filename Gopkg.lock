@@ -113,7 +113,7 @@
   revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
 
 [[projects]]
-  digest = "1:9e0e975e42dd4183f1b170e354f137ff101ea88981d1725c8bd1fe4c2cef2aa0"
+  digest = "1:a62081b7f0aebdcd4049e3ec5fab2c389cfc4f2d941d2dca1ab739587c54b75f"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -123,7 +123,6 @@
     "pkg/apis/garden",
     "pkg/apis/garden/v1beta1",
     "pkg/chartrenderer",
-    "pkg/client/aws",
     "pkg/client/core/clientset/versioned",
     "pkg/client/core/clientset/versioned/scheme",
     "pkg/client/core/clientset/versioned/typed/core/v1alpha1",
@@ -140,6 +139,7 @@
     "pkg/operation/common",
     "pkg/operation/terraformer",
     "pkg/utils",
+    "pkg/utils/flow",
     "pkg/utils/imagevector",
     "pkg/utils/kubernetes",
   ]
@@ -1224,12 +1224,20 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/awserr",
+    "github.com/aws/aws-sdk-go/aws/credentials",
+    "github.com/aws/aws-sdk-go/aws/session",
+    "github.com/aws/aws-sdk-go/service/ec2",
+    "github.com/aws/aws-sdk-go/service/elb",
+    "github.com/aws/aws-sdk-go/service/sts",
+    "github.com/gardener/gardener/pkg/apis/core",
+    "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1",
     "github.com/gardener/gardener/pkg/chartrenderer",
-    "github.com/gardener/gardener/pkg/client/aws",
     "github.com/gardener/gardener/pkg/logger",
-    "github.com/gardener/gardener/pkg/operation/common",
     "github.com/gardener/gardener/pkg/operation/terraformer",
+    "github.com/gardener/gardener/pkg/utils/flow",
     "github.com/gardener/gardener/pkg/utils/imagevector",
     "github.com/gardener/gardener/pkg/utils/kubernetes",
     "github.com/go-logr/logr",
@@ -1240,7 +1248,6 @@
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
     "github.com/onsi/gomega",
-    "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "gopkg.in/yaml.v2",

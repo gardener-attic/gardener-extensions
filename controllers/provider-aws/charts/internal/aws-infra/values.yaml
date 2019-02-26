@@ -16,18 +16,16 @@ clusterName: test-namespace
 
 initializeEmptyState: true
 
-
-outputkeys:
-  VPCIDKey                   : "vpc_id"
-  SubnetsPublic              : "subnet_public_utility_z0"
-  SubnetsNodes               : "subnet_nodes_z0"
-  SecurityGroupsNodes        : "security_group_nodes"
-  SSHKeyName                 : "keyName"
-  IAMInstanceProfileNodes    : "iamInstanceProfileNodes"
-  IAMInstanceProfileBastions : "iamInstanceProfileBastions"
-  NodesRole                  : "nodes_role_arn"
-  BastionsRole               : "bastions_role_arn"
-
+outputKeys:
+  vpcIdKey                   : "vpc_id"
+  subnetsPublicPrefix        : "subnet_public_utility_z"
+  subnetsNodesPrefix         : "subnet_nodes_z"
+  securityGroupsNodes        : "security_group_nodes"
+  sshKeyName                 : "keyName"
+  iamInstanceProfileNodes    : "iamInstanceProfileNodes"
+  iamInstanceProfileBastions : "iamInstanceProfileBastions"
+  nodesRole                  : "nodes_role_arn"
+  bastionsRole               : "bastions_role_arn"
 
 zones:
 - name: eu-west-1a

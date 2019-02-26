@@ -16,24 +16,34 @@ package infrastructure
 
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
+var (
+	// Options are the default controller.Options for Add.
+	Options = controller.Options{}
+	// TerraformerImage is the image repository and tag for the Terraformer.
+	TerraformerImage string
+)
+
 func init() {
 	addToManagerBuilder.Register(Add)
-}
+	terraformerImage, err := imagevector.ImageVector.FindImage(aws.TerraformerImageName, "", "")
+	runtime.Must(err)
 
-// Options are the default controller.Options for Add.
-var Options = controller.Options{}
+	TerraformerImage = terraformerImage.String()
+}
 
 // AddWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddWithOptions(mgr manager.Manager, opts controller.Options) error {
+func AddWithOptions(mgr manager.Manager, opts controller.Options, terraformerImage string) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
-		Actuator:          NewActuator(),
+		Actuator:          NewActuator(mgr.GetRecorder(infrastructure.ControllerName), terraformerImage),
 		Type:              aws.Type,
 		ControllerOptions: opts,
 	})
@@ -41,5 +51,5 @@ func AddWithOptions(mgr manager.Manager, opts controller.Options) error {
 
 // Add adds a controller with the default Options.
 func Add(mgr manager.Manager) error {
-	return AddWithOptions(mgr, Options)
+	return AddWithOptions(mgr, Options, TerraformerImage)
 }

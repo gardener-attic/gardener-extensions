@@ -28,10 +28,10 @@ import (
 )
 
 // Name is the name of the Infrastructure controller.
-const Name = "provider-aws-controller"
+const Name = "provider-aws"
 
-// NewControllerCommand creates a new command for running a Infrastructure AWS controller.
-func NewControllerCommand(ctx context.Context) *cobra.Command {
+// NewControllerManagerCommand creates a new command for running a Infrastructure AWS controller.
+func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
@@ -46,7 +46,7 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {

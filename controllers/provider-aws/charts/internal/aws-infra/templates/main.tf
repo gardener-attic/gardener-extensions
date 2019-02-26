@@ -136,7 +136,7 @@ resource "aws_subnet" "nodes_z{{ $index }}" {
 {{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" (print "nodes-z" $index)) }}
 }
 
-output "subnet_nodes_z{{ $index }}" {
+output "{{ $.Values.outputKeys.subnetsNodesPrefix }}{{ $index }}" {
   value = "${aws_subnet.nodes_z{{ $index }}.id}"
 }
 
@@ -182,7 +182,7 @@ resource "aws_subnet" "public_utility_z{{ $index }}" {
   }
 }
 
-output "subnet_public_utility_z{{ $index }}" {
+output "{{ $.Values.outputKeys.subnetsPublicPrefix }}{{ $index }}" {
   value = "${aws_subnet.public_utility_z{{ $index }}.id}"
 }
 
@@ -377,23 +377,23 @@ resource "aws_key_pair" "kubernetes" {
 //= Output variables
 //=====================================================================
 
-output "vpc_id" {
+output "{{ .Values.outputKeys.vpcIdKey }}" {
   value = "{{ required "vpc.id is required" .Values.vpc.id }}"
 }
 
-output "iamInstanceProfileNodes" {
+output "{{ .Values.outputKeys.iamInstanceProfileNodes }}" {
   value = "${aws_iam_instance_profile.nodes.name}"
 }
 
-output "keyName" {
+output "{{ .Values.outputKeys.sshKeyName }}" {
   value = "${aws_key_pair.kubernetes.key_name}"
 }
 
-output "security_group_nodes" {
+output "{{ .Values.outputKeys.securityGroupsNodes }}" {
   value = "${aws_security_group.nodes.id}"
 }
 
-output "nodes_role_arn" {
+output "{{ .Values.outputKeys.nodesRole }}" {
   value = "${aws_iam_role.nodes.arn}"
 }
 

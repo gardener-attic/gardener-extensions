@@ -16,15 +16,23 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
+	"time"
+
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/awsclient"
+
+	gardenerLogger "github.com/gardener/gardener/pkg/logger"
+	"k8s.io/apimachinery/pkg/version"
+	"k8s.io/client-go/tools/record"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
-	awstypes "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"github.com/gardener/gardener/pkg/utils/flow"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-	"github.com/gardener/gardener/pkg/client/aws"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
@@ -40,64 +48,85 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
+var (
+	loggerName    = "infrastructure-actuator"
+	accessKeysMap = map[string]string{
+		"ACCESS_KEY_ID":     aws.AccessKeyID,
+		"SECRET_ACCESS_KEY": aws.SecretAccessKey,
+	}
+)
+
 type actuator struct {
-	config     *rest.Config
-	client     client.Client
-	kubernetes kubernetes.Interface
-	scheme     *runtime.Scheme
-	logger     logr.Logger
-	decoder    runtime.Decoder
-	encoder    runtime.Encoder
+	config           *rest.Config
+	recorder         record.EventRecorder
+	client           client.Client
+	kubernetes       kubernetes.Interface
+	scheme           *runtime.Scheme
+	logger           logr.Logger
+	decoder          runtime.Decoder
+	encoder          runtime.Encoder
+	serverVersion    *version.Info
+	terraformerImage string
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled Infrastructure resources.
-func NewActuator() infrastructure.Actuator {
-	return &actuator{logger: log.Log.WithName("infrastructure-aws-actuator")}
+func NewActuator(eventRecorder record.EventRecorder, terraformerImage string) infrastructure.Actuator {
+	return &actuator{
+		logger:           log.Log.WithName(loggerName),
+		recorder:         eventRecorder,
+		terraformerImage: terraformerImage,
+	}
 }
 
-func (c *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	c.scheme = scheme
-	c.decoder = serializer.NewCodecFactory(c.scheme).UniversalDecoder()
-	c.encoder = serializer.NewCodecFactory(c.scheme).EncoderForVersion(c.encoder, extensionsv1alpha1.SchemeGroupVersion)
+func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
+	a.scheme = scheme
+	a.decoder = serializer.NewCodecFactory(a.scheme).UniversalDecoder()
+	a.encoder = serializer.NewCodecFactory(a.scheme).EncoderForVersion(a.encoder, extensionsv1alpha1.SchemeGroupVersion)
 	return nil
 }
 
-func (c *actuator) InjectConfig(config *rest.Config) error {
-	c.config = config
+func (a *actuator) InjectConfig(config *rest.Config) error {
+	a.config = config
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return err
 	}
-	c.kubernetes = clientset
+	a.kubernetes = clientset
+	serverVersion, err := a.kubernetes.Discovery().ServerVersion()
+	if err != nil {
+		return err
+	}
+	a.serverVersion = serverVersion
+
 	return nil
 }
 
-func (c *actuator) InjectClient(client client.Client) error {
-	c.client = client
+func (a *actuator) InjectClient(client client.Client) error {
+	a.client = client
 	return nil
 }
 
-func (c *actuator) Exists(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) (bool, error) {
+func (a *actuator) Exists(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) (bool, error) {
 	return infrastructure.Status.LastOperation != nil, nil
 }
 
-func (c *actuator) Create(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error {
-	return c.reconcile(ctx, config)
+func (a *actuator) Create(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error {
+	return a.reconcile(ctx, config)
 }
 
-func (c *actuator) Update(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error {
-	return c.reconcile(ctx, config)
+func (a *actuator) Update(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error {
+	return a.reconcile(ctx, config)
 }
 
-func (c *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error {
-	return c.delete(ctx, config)
+func (a *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error {
+	return a.delete(ctx, config)
 }
 
-func (c *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) error {
+func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) error {
 	infrastructureConfig := &v1alpha1.InfrastructureConfig{}
-	_, _, err := c.decoder.Decode(infrastructure.Spec.ProviderConfig.Raw, nil, infrastructureConfig)
+	_, _, err := a.decoder.Decode(infrastructure.Spec.ProviderConfig.Raw, nil, infrastructureConfig)
 	if err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not decode providerConfig", 10, err)
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not decode providerConfig", 10, err)
 		return err
 	}
 
@@ -107,123 +136,120 @@ func (c *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 	)
 
 	providerSecret := &corev1.Secret{}
-	if err := c.client.Get(ctx, kutil.Key(namespace, name), providerSecret); err != nil {
+	if err := a.client.Get(ctx, kutil.Key(namespace, name), providerSecret); err != nil {
 		return err
 	}
-	var (
-		createVPC         = true
-		vpcID             = "${aws_vpc.vpc.id}"
-		internetGatewayID = "${aws_internet_gateway.igw.id}"
-		dhcpDomainName    = "ec2.internal"
-		vpcCIDR           = infrastructureConfig.Networks.VPC.CIDR
-		region            = infrastructure.Spec.Region
-	)
 
-	awsClient := aws.NewClient(string(providerSecret.Data[awstypes.AccessKeyID]), string(providerSecret.Data[awstypes.SecretAccessKey]), region)
-
-	// check if we should use an existing VPC or create a new one
-	if len(infrastructureConfig.Networks.VPC.ID) > 0 {
-		createVPC = false
-		vpcID = infrastructureConfig.Networks.VPC.ID
-		igwID, err := awsClient.GetInternetGateway(vpcID)
-		if err != nil {
-			return err
-		}
-		internetGatewayID = igwID
-	} else if len(infrastructureConfig.Networks.VPC.CIDR) > 0 {
-		vpcCIDR = infrastructureConfig.Networks.VPC.CIDR
-	}
-
-	values := map[string]interface{}{
-		"aws": map[string]interface{}{
-			"region": infrastructure.Spec.Region,
-		},
-		"create": map[string]interface{}{
-			"vpc": createVPC,
-		},
-		"sshPublicKey": string(infrastructure.Spec.SSHPublicKey),
-		"vpc": map[string]interface{}{
-			"id":                vpcID,
-			"cidr":              vpcCIDR,
-			"dhcpDomainName":    dhcpDomainName,
-			"internetGatewayID": internetGatewayID,
-		},
-		"clusterName": infrastructure.Spec.SecretRef.Namespace,
-		"zones":       getZones(infrastructure, infrastructureConfig),
-	}
-
-	chartRenderer, err := chartrenderer.New(c.kubernetes)
+	chartRenderer, err := chartrenderer.New(a.kubernetes)
 	if err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not create chart renderer", 30, err)
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not create chart renderer", 30, err)
 		return err
 	}
 
-	release, err := chartRenderer.Render(filepath.Join(awstypes.TerraformersChartsPath, "aws-infra"), "aws-infra", namespace, values)
+	chartValues, err := generateTerraformInfraConfigValues(ctx, infrastructure, infrastructureConfig, providerSecret)
 	if err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not render chart", 50, err)
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "failed to generate terraform config values", 40, err)
 		return err
 	}
 
-	tf, err := c.getTerraformer(awstypes.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
+	release, err := chartRenderer.Render(filepath.Join(aws.TerraformersChartsPath, "aws-infra"), "aws-infra", namespace, chartValues)
 	if err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not create terraformer object", 70, err)
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not render chart", 50, err)
 		return err
 	}
 
-	if err = tf.SetVariablesEnvironment(terraformer.GenerateVariablesEnvironment(providerSecret, map[string]string{
-		"ACCESS_KEY_ID":     awstypes.AccessKeyID,
-		"SECRET_ACCESS_KEY": awstypes.SecretAccessKey,
-	})).InitializeWith(terraformer.DefaultInitializer(c.client,
-		release.FileContent("main.tf"),
-		release.FileContent("variables.tf"),
-		[]byte(release.FileContent("terraform.tfvars")))).Apply(); err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not apply terraform config", 80, err)
+	tf, err := a.getTerraformer(aws.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
+	if err != nil {
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not create terraformer object", 70, err)
 		return err
 	}
 
-	if err = c.injectProviderStateIntoStatus(context.TODO(), tf, infrastructure); err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "failed to update status with the provider state", 90, err)
+	a.recorder.Event(infrastructure, corev1.EventTypeNormal, v1alpha1.EventReasonCreation, "Applying Terraform config")
+
+	if err := tf.SetVariablesEnvironment(terraformer.GenerateVariablesEnvironment(providerSecret, accessKeysMap)).
+		InitializeWith(terraformer.DefaultInitializer(a.client,
+			release.FileContent("main.tf"),
+			release.FileContent("variables.tf"),
+			[]byte(release.FileContent("terraform.tfvars")))).
+		Apply(); err != nil {
+		a.recorder.Event(infrastructure, corev1.EventTypeWarning, v1alpha1.EventReasonCreation, fmt.Sprintf("Applying Terraform config %s", err))
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "could not apply terraform config", 80, err)
 		return err
 	}
 
-	return c.injectStatusSuccess(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "successfully reconciled infrastructure")
+	if err := a.injectProviderStateIntoStatus(ctx, tf, infrastructure); err != nil {
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "failed to update status with the provider state", 90, err)
+		return err
+	}
+
+	a.recorder.Event(infrastructure, corev1.EventTypeNormal, v1alpha1.EventReasonCreation, "Infrastructure was provisioned successfully")
+	return a.updateStatusSuccess(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeReconcile, "successfully reconciled infrastructure")
 }
 
-func (c *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) error {
-	c.logger.Info("Destroying Infrastructure")
-
-	tf, err := c.getTerraformer(awstypes.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
+func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) error {
+	a.logger.Info("Destroying Infrastructure")
+	tf, err := a.getTerraformer(aws.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
 	if err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "could not create terraformer object", 30, err)
+		a.recorder.Event(infrastructure, corev1.EventTypeWarning, v1alpha1.EventReasonDestruction, fmt.Sprintf("could not create terraformer object: %s", err))
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "could not create terraformer object", 30, err)
 		return err
 	}
 
 	configExists, err := tf.ConfigExists()
 	if err != nil {
-		c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "terraform configuration was not found on seed", 60, err)
+		a.recorder.Event(infrastructure, corev1.EventTypeWarning, v1alpha1.EventReasonDestruction, fmt.Sprintf("Terraform config does not exist %s", err))
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "terraform configuration was not found", 60, err)
 		return err
 	}
 
-	if configExists {
-		var (
-			namespace = infrastructure.Spec.SecretRef.Namespace
-			name      = infrastructure.Spec.SecretRef.Name
-			region    = infrastructure.Spec.Region
-		)
+	var (
+		namespace = infrastructure.Spec.SecretRef.Namespace
+		name      = infrastructure.Spec.SecretRef.Name
+		region    = infrastructure.Spec.Region
+		vpcIDKey  = "vpc_id"
+	)
 
-		providerSecret := &corev1.Secret{}
-		if err := c.client.Get(ctx, kutil.Key(namespace, name), providerSecret); err != nil {
-			return err
-		}
-
-		awsClient := aws.NewClient(string(providerSecret.Data[awstypes.AccessKeyID]), string(providerSecret.Data[awstypes.SecretAccessKey]), region)
-
-		c.logger.Info("Destroying Kubernetes load balancers and security groups")
-		err := c.destroyKubernetesLoadBalancersAndSecurityGroups(namespace, tf, awsClient)
-		if err != nil {
-			c.injectStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "failed to destroy kubernetes load balancers and security groups", 80, err)
-		}
+	providerSecret := &corev1.Secret{}
+	if err := a.client.Get(ctx, kutil.Key(namespace, name), providerSecret); err != nil {
+		return err
 	}
 
-	return c.injectStatusSuccess(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "successfully deleted infrastructure")
+	awsClient, err := awsclient.NewClient(string(providerSecret.Data[aws.AccessKeyID]), string(providerSecret.Data[aws.SecretAccessKey]), region)
+	if err != nil {
+		return err
+	}
+
+	var (
+		g                                               = flow.NewGraph("AWS infrastructure destruction")
+		destroyKubernetesLoadBalancersAndSecurityGroups = g.Add(flow.Task{
+			Name: "Destroying Kubernetes load balancers and security groups",
+			Fn: flow.SimpleTaskFn(func() error {
+				err := a.destroyKubernetesLoadBalancersAndSecurityGroups(ctx, vpcIDKey, namespace, tf, awsClient)
+				if err != nil {
+					a.recorder.Event(infrastructure, corev1.EventTypeWarning, v1alpha1.EventReasonDestruction, fmt.Sprintf("failed to destroy kubernetes load balancers and security groups %s", err))
+					a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "failed to destroy kubernetes load balancers and security groups", 80, err)
+					return err
+				}
+				return nil
+			}).RetryUntilTimeout(10*time.Second, 5*time.Minute).DoIf(configExists),
+		})
+
+		_ = g.Add(flow.Task{
+			Name:         "Destroying Shoot infrastructure",
+			Fn:           flow.SimpleTaskFn(tf.SetVariablesEnvironment(terraformer.GenerateVariablesEnvironment(providerSecret, accessKeysMap)).Destroy),
+			Dependencies: flow.NewTaskIDs(destroyKubernetesLoadBalancersAndSecurityGroups),
+		})
+
+		f = g.Compile()
+	)
+
+	a.recorder.Event(infrastructure, corev1.EventTypeNormal, v1alpha1.EventReasonDestruction, "Destroying Infrastructure")
+	err = f.Run(flow.Opts{Logger: gardenerLogger.NewFieldLogger(gardenerLogger.NewLogger("info"), loggerName, "destroyInfrastructure")})
+	if err != nil {
+		a.recorder.Event(infrastructure, corev1.EventTypeWarning, v1alpha1.EventReasonDestruction, fmt.Sprintf("failed to run the infrastructure destruction task %s", err))
+		a.updateStatusError(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "failed to run the infrastructure destruction tasks", 70, err)
+	}
+
+	a.recorder.Event(infrastructure, corev1.EventTypeNormal, v1alpha1.EventReasonDestruction, "successfully deleted infrastructure")
+	return a.updateStatusSuccess(ctx, infrastructure, extensionsv1alpha1.LastOperationTypeDelete, "successfully deleted infrastructure")
 }

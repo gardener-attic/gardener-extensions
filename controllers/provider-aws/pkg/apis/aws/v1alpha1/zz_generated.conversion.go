@@ -264,10 +264,6 @@ func Convert_aws_InstanceProfile_To_v1alpha1_InstanceProfile(in *aws.InstancePro
 }
 
 func autoConvert_v1alpha1_Networks_To_aws_Networks(in *Networks, out *aws.Networks, s conversion.Scope) error {
-	// TODO: Inefficient conversion - can we improve it?
-	if err := s.Convert(&in.K8SNetworks, &out.K8SNetworks, 0); err != nil {
-		return err
-	}
 	if err := Convert_v1alpha1_VPC_To_aws_VPC(&in.VPC, &out.VPC, s); err != nil {
 		return err
 	}
@@ -283,10 +279,6 @@ func Convert_v1alpha1_Networks_To_aws_Networks(in *Networks, out *aws.Networks, 
 }
 
 func autoConvert_aws_Networks_To_v1alpha1_Networks(in *aws.Networks, out *Networks, s conversion.Scope) error {
-	// TODO: Inefficient conversion - can we improve it?
-	if err := s.Convert(&in.K8SNetworks, &out.K8SNetworks, 0); err != nil {
-		return err
-	}
 	if err := Convert_aws_VPC_To_v1alpha1_VPC(&in.VPC, &out.VPC, s); err != nil {
 		return err
 	}
