@@ -42,6 +42,7 @@ func (m *MockManager) EXPECT() *MockManagerMockRecorder {
 
 // Add mocks base method
 func (m *MockManager) Add(arg0 manager.Runnable) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Add", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -49,11 +50,13 @@ func (m *MockManager) Add(arg0 manager.Runnable) error {
 
 // Add indicates an expected call of Add
 func (mr *MockManagerMockRecorder) Add(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockManager)(nil).Add), arg0)
 }
 
 // GetAdmissionDecoder mocks base method
 func (m *MockManager) GetAdmissionDecoder() types.Decoder {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAdmissionDecoder")
 	ret0, _ := ret[0].(types.Decoder)
 	return ret0
@@ -61,11 +64,13 @@ func (m *MockManager) GetAdmissionDecoder() types.Decoder {
 
 // GetAdmissionDecoder indicates an expected call of GetAdmissionDecoder
 func (mr *MockManagerMockRecorder) GetAdmissionDecoder() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAdmissionDecoder", reflect.TypeOf((*MockManager)(nil).GetAdmissionDecoder))
 }
 
 // GetCache mocks base method
 func (m *MockManager) GetCache() cache.Cache {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCache")
 	ret0, _ := ret[0].(cache.Cache)
 	return ret0
@@ -73,11 +78,13 @@ func (m *MockManager) GetCache() cache.Cache {
 
 // GetCache indicates an expected call of GetCache
 func (mr *MockManagerMockRecorder) GetCache() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCache", reflect.TypeOf((*MockManager)(nil).GetCache))
 }
 
 // GetClient mocks base method
 func (m *MockManager) GetClient() client.Client {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetClient")
 	ret0, _ := ret[0].(client.Client)
 	return ret0
@@ -85,11 +92,13 @@ func (m *MockManager) GetClient() client.Client {
 
 // GetClient indicates an expected call of GetClient
 func (mr *MockManagerMockRecorder) GetClient() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetClient", reflect.TypeOf((*MockManager)(nil).GetClient))
 }
 
 // GetConfig mocks base method
 func (m *MockManager) GetConfig() *rest.Config {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConfig")
 	ret0, _ := ret[0].(*rest.Config)
 	return ret0
@@ -97,11 +106,13 @@ func (m *MockManager) GetConfig() *rest.Config {
 
 // GetConfig indicates an expected call of GetConfig
 func (mr *MockManagerMockRecorder) GetConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfig", reflect.TypeOf((*MockManager)(nil).GetConfig))
 }
 
 // GetFieldIndexer mocks base method
 func (m *MockManager) GetFieldIndexer() client.FieldIndexer {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetFieldIndexer")
 	ret0, _ := ret[0].(client.FieldIndexer)
 	return ret0
@@ -109,11 +120,13 @@ func (m *MockManager) GetFieldIndexer() client.FieldIndexer {
 
 // GetFieldIndexer indicates an expected call of GetFieldIndexer
 func (mr *MockManagerMockRecorder) GetFieldIndexer() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFieldIndexer", reflect.TypeOf((*MockManager)(nil).GetFieldIndexer))
 }
 
 // GetRESTMapper mocks base method
 func (m *MockManager) GetRESTMapper() meta.RESTMapper {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRESTMapper")
 	ret0, _ := ret[0].(meta.RESTMapper)
 	return ret0
@@ -121,11 +134,13 @@ func (m *MockManager) GetRESTMapper() meta.RESTMapper {
 
 // GetRESTMapper indicates an expected call of GetRESTMapper
 func (mr *MockManagerMockRecorder) GetRESTMapper() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRESTMapper", reflect.TypeOf((*MockManager)(nil).GetRESTMapper))
 }
 
 // GetRecorder mocks base method
 func (m *MockManager) GetRecorder(arg0 string) record.EventRecorder {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetRecorder", arg0)
 	ret0, _ := ret[0].(record.EventRecorder)
 	return ret0
@@ -133,11 +148,13 @@ func (m *MockManager) GetRecorder(arg0 string) record.EventRecorder {
 
 // GetRecorder indicates an expected call of GetRecorder
 func (mr *MockManagerMockRecorder) GetRecorder(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecorder", reflect.TypeOf((*MockManager)(nil).GetRecorder), arg0)
 }
 
 // GetScheme mocks base method
 func (m *MockManager) GetScheme() *runtime.Scheme {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetScheme")
 	ret0, _ := ret[0].(*runtime.Scheme)
 	return ret0
@@ -145,11 +162,13 @@ func (m *MockManager) GetScheme() *runtime.Scheme {
 
 // GetScheme indicates an expected call of GetScheme
 func (mr *MockManagerMockRecorder) GetScheme() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetScheme", reflect.TypeOf((*MockManager)(nil).GetScheme))
 }
 
 // SetFields mocks base method
 func (m *MockManager) SetFields(arg0 interface{}) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetFields", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -157,11 +176,13 @@ func (m *MockManager) SetFields(arg0 interface{}) error {
 
 // SetFields indicates an expected call of SetFields
 func (mr *MockManagerMockRecorder) SetFields(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetFields", reflect.TypeOf((*MockManager)(nil).SetFields), arg0)
 }
 
 // Start mocks base method
 func (m *MockManager) Start(arg0 <-chan struct{}) error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Start", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -169,5 +190,6 @@ func (m *MockManager) Start(arg0 <-chan struct{}) error {
 
 // Start indicates an expected call of Start
 func (mr *MockManagerMockRecorder) Start(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockManager)(nil).Start), arg0)
 }

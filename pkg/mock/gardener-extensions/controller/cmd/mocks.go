@@ -35,6 +35,7 @@ func (m *MockCompleter) EXPECT() *MockCompleterMockRecorder {
 
 // Complete mocks base method
 func (m *MockCompleter) Complete() error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Complete")
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -42,6 +43,7 @@ func (m *MockCompleter) Complete() error {
 
 // Complete indicates an expected call of Complete
 func (mr *MockCompleterMockRecorder) Complete() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Complete", reflect.TypeOf((*MockCompleter)(nil).Complete))
 }
 
@@ -70,16 +72,19 @@ func (m *MockOption) EXPECT() *MockOptionMockRecorder {
 
 // AddFlags mocks base method
 func (m *MockOption) AddFlags(arg0 *pflag.FlagSet) {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AddFlags", arg0)
 }
 
 // AddFlags indicates an expected call of AddFlags
 func (mr *MockOptionMockRecorder) AddFlags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFlags", reflect.TypeOf((*MockOption)(nil).AddFlags), arg0)
 }
 
 // Complete mocks base method
 func (m *MockOption) Complete() error {
+	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Complete")
 	ret0, _ := ret[0].(error)
 	return ret0
@@ -87,6 +92,7 @@ func (m *MockOption) Complete() error {
 
 // Complete indicates an expected call of Complete
 func (mr *MockOptionMockRecorder) Complete() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Complete", reflect.TypeOf((*MockOption)(nil).Complete))
 }
 
@@ -115,10 +121,12 @@ func (m *MockFlagger) EXPECT() *MockFlaggerMockRecorder {
 
 // AddFlags mocks base method
 func (m *MockFlagger) AddFlags(arg0 *pflag.FlagSet) {
+	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "AddFlags", arg0)
 }
 
 // AddFlags indicates an expected call of AddFlags
 func (mr *MockFlaggerMockRecorder) AddFlags(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddFlags", reflect.TypeOf((*MockFlagger)(nil).AddFlags), arg0)
 }

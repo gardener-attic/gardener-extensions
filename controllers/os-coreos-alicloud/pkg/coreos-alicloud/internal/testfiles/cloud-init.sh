@@ -29,4 +29,5 @@ echo PROVIDER_ID=$PROVIDER_ID > $DOWNLOAD_MAIN_PATH/provider-id
 echo PROVIDER_ID=$PROVIDER_ID >> /etc/environment
 
 systemctl daemon-reload
+systemctl restart docker
 systemctl enable 'docker.service' && systemctl restart 'docker.service'

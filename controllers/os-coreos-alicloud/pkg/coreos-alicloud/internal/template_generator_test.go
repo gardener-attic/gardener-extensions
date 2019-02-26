@@ -62,6 +62,7 @@ var _ = Describe("#TemplateBashGenerator", func() {
 			},
 			Bootstrap: true,
 		})
+
 		Expect(err).NotTo(HaveOccurred())
 		Expect(cloudInit).To(Equal(ExpectedCloudInit))
 	})
