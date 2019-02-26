@@ -18,33 +18,26 @@ import (
 	"context"
 	"path/filepath"
 
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-
-	"github.com/gardener/gardener/pkg/client/aws"
-
-	"github.com/gardener/gardener/pkg/chartrenderer"
-
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
-	corev1 "k8s.io/api/core/v1"
-
-	awstypes "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
-
+	awstypes "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/chartrenderer"
+	"github.com/gardener/gardener/pkg/client/aws"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	"github.com/go-logr/logr"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 type actuator struct {
@@ -57,7 +50,7 @@ type actuator struct {
 	encoder    runtime.Encoder
 }
 
-// NewActuator creates a new Actuator that updates the status of the handled WorkerPoolConfigs.
+// NewActuator creates a new Actuator that updates the status of the handled Infrastructure resources.
 func NewActuator() infrastructure.Actuator {
 	return &actuator{logger: log.Log.WithName("infrastructure-aws-actuator")}
 }
@@ -197,7 +190,7 @@ func (c *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 }
 
 func (c *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure) error {
-	c.logger.Info("Destroying Shoot infrastructure")
+	c.logger.Info("Destroying Infrastructure")
 
 	tf, err := c.getTerraformer(awstypes.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
 	if err != nil {

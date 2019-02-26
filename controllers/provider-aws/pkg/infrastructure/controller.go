@@ -19,6 +19,6 @@ import "github.com/gardener/gardener-extensions/pkg/controller"
 var (
 	addToManagerBuilder = controller.NewAddToManagerBuilder()
 
-	// AddToManager adds all infrastrucutre controllers to the given manager.
+	// AddToManager adds all Infrastructure controllers to the given manager.
 	AddToManager = addToManagerBuilder.AddToManager
 )

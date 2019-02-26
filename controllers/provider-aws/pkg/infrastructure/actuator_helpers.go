@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/gardener/gardener/pkg/client/aws"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
 	awstypes "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/client/aws"
 	"github.com/gardener/gardener/pkg/logger"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
+
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
@@ -58,7 +59,7 @@ func (c *actuator) getTerraformer(purpose, namespace, name string) (*terraformer
 	return terraformer.NewForConfig(logger.NewLogger("info"), c.config, purpose, namespace, name, tfImage.String())
 }
 
-func (c *actuator) destroyKubernetesLoadBalancersAndSecurityGroups(seedShootNamespace string, tf *terraformer.Terraformer, awsClient aws.ClientInterface) error {
+func (c *actuator) destroyKubernetesLoadBalancersAndSecurityGroups(namespace string, tf *terraformer.Terraformer, awsClient aws.ClientInterface) error {
 	if _, err := tf.GetState(); err != nil {
 		if apierrors.IsNotFound(err) {
 			return nil
@@ -77,11 +78,11 @@ func (c *actuator) destroyKubernetesLoadBalancersAndSecurityGroups(seedShootName
 	}
 	vpcID := stateVariables[vpcIDKey]
 	// Find load balancers and security groups.
-	loadBalancers, err := awsClient.ListKubernetesELBs(vpcID, seedShootNamespace)
+	loadBalancers, err := awsClient.ListKubernetesELBs(vpcID, namespace)
 	if err != nil {
 		return err
 	}
-	securityGroups, err := awsClient.ListKubernetesSecurityGroups(vpcID, seedShootNamespace)
+	securityGroups, err := awsClient.ListKubernetesSecurityGroups(vpcID, namespace)
 	if err != nil {
 		return err
 	}

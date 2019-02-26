@@ -45,7 +45,8 @@ type AddArgs struct {
 	// The options.Reconciler is always overridden with a reconciler created from the
 	// given actuator.
 	ControllerOptions controller.Options
-
+	// Predicates are the predicates to use.
+	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
 }
 

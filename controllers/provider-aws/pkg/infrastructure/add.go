@@ -17,11 +17,10 @@ package infrastructure
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
-
-// Type is the type of operating system configs the CoreOS Alicloud controller monitors.
 
 func init() {
 	addToManagerBuilder.Register(Add)
