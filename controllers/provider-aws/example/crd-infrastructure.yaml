@@ -6,9 +6,9 @@ metadata:
 spec:
   group: extensions.gardener.cloud
   versions:
-    - name: v1alpha1
-      served: true
-      storage: true
+  - name: v1alpha1
+    served: true
+    storage: true
   version: v1alpha1
   scope: Namespaced
   names:
@@ -16,11 +16,18 @@ spec:
     singular: infrastructure
     kind: Infrastructure
     shortNames:
-      - infra
+    - infra
   additionalPrinterColumns:
-    - name: Type
-      type: string
-      description: The type of the cloud provider for this infrastructure  resource.
-      JSONPath: .spec.type
+  - name: Type
+    type: string
+    description: The type of the cloud provider for this resource.
+    JSONPath: .spec.type
+  - name: Region
+    type: string
+    description: The region into which the infrastructure should be deployed.
+    JSONPath: .spec.region
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
   subresources:
     status: {}

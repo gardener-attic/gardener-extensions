@@ -6,7 +6,7 @@ metadata:
 spec:
   type: aws
   providerConfig:
-    apiVersion: aws.provider.extensions.gardener.cloud
+    apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig
     networks:
       nodes: 10.250.0.0/16
