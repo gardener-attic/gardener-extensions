@@ -89,7 +89,9 @@ if which git &>/dev/null; then
     old_status="$(git status -s)"
     "$DIRNAME/clean.sh" &>/dev/null
     generated=true
-    NO_PIPELINE=true "$DIRNAME/generate.sh" &>/dev/null
+    # We are using VERSIONFILE_VERSION since we want to check with respect to
+    # the content of the source state.
+    VERSION="$VERSIONFILE_VERSION" "$DIRNAME/generate.sh" &>/dev/null
     new_status="$(git status -s)"
 
     if [[ "$old_status" != "$new_status" ]]; then

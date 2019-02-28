@@ -21,9 +21,4 @@ source "$DIRNAME/common.sh"
 
 header_text "Generate"
 
-if [[ -f "$ROOT/PIPELINE_VERSION" && "$NO_PIPELINE" != "true" ]]; then
-    echo "Detected PIPELINE_VERSION, overriding current VERSION"
-    cp "$ROOT/PIPELINE_VERSION" "$ROOT/VERSION"
-fi
-
 go generate "${SOURCE_TREES[@]}"
