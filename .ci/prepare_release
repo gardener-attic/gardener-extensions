@@ -46,4 +46,5 @@ wget -O - "https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz" | tar zx -C /usr/
 
 "$REPO_DIR"/hack/install-requirements.sh
 
+echo "$EFFECTIVE_VERSION" > "$REPO_DIR/VERSION"
 make -C "$REPO_DIR" generate
