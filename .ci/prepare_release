@@ -43,8 +43,18 @@ export \
     PATH="$GOBIN:$PATH"
 
 wget -O - "https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz" | tar zx -C /usr/local
+cd /usr/local/go/src
+./make.bash
 
-"$REPO_DIR"/hack/install-requirements.sh
+export GOPATH="$(mktemp -d)"
+REPO_BASE="$GOPATH/src/github.com/gardener"
+mkdir -p "$REPO_BASE"
+REPO_PATH="$REPO_BASE/gardener-extensions"
+cp -R "$REPO_DIR" "$REPO_PATH"
 
-echo "$EFFECTIVE_VERSION" > "$REPO_DIR/VERSION"
-make -C "$REPO_DIR" generate
+"$REPO_PATH"/hack/install-requirements.sh
+
+echo "$EFFECTIVE_VERSION" > "$REPO_PATH/VERSION"
+make -C "$REPO_PATH" generate
+rm -rf "$REPO_DIR"
+cp -R "$REPO_PATH" "$REPO_DIR"
