@@ -21,24 +21,29 @@ source "$DIRNAME/common.sh"
 function usage {
     cat <<EOM
 Usage:
-generate-controller-registration <name> <kind> <type> <chart-dir> <dest>
+generate-controller-registration <name> <chart-dir> <dest> <kind-and-type> [kinds-and-types ...]
 
-    <name>          Name of the controller registration to generate.
-    <kind>          Kind of the controller registration.
-    <type>          Type of the controller registration.
-    <chart-dir>     Location of the chart directory.
-    <dest>          The destination file to write the registration YAML to.
+    <name>            Name of the controller registration to generate.
+    <type>            Type of the controller registration.
+    <chart-dir>       Location of the chart directory.
+    <dest>            The destination file to write the registration YAML to.
+    <kind-and-type>   A tuple of kind and type of the controller registration to generate.
+                      Separated by ':'.
+                      Example: OperatingSystemConfig:os-coreos
+    <kinds-and-types> Further tuples of kind and type of the controller registration to generate.
+                      Separated by ':'.
 EOM
     exit 0
 }
 
 NAME="$1"
-KIND="$2"
-TYPE="$3"
-CHART_DIR="$4"
-DEST="$5"
+CHART_DIR="$2"
+DEST="$3"
+KIND_AND_TYPE="$4"
 
-( [[ -z "$NAME" ]] || [[ -z "$KIND" ]] || [[ -z "$TYPE" ]] || [[ -z "$CHART_DIR" ]] || [[ -z "$DEST" ]] ) && usage
+( [[ -z "$NAME" ]] || [[ -z "$CHART_DIR" ]] || [[ -z "$DEST" ]] || [[ -z "$KIND_AND_TYPE" ]]) && usage
+
+KINDS_AND_TYPES=("$KIND_AND_TYPE" "${@:5}")
 
 # The following code is to make `helm package` idempotent: Usually, everytime `helm package` is invoked,
 # it produces a different `.tgz` due to modification timestamps and some special shasums of gzip. We
@@ -70,8 +75,18 @@ metadata:
   name: $NAME
 spec:
   resources:
+EOM
+
+for kind_and_type in "${KINDS_AND_TYPES[@]}"; do
+  KIND="$(echo "$kind_and_type" | cut -d ':' -f 1)"
+  TYPE="$(echo "$kind_and_type" | cut -d ':' -f 2)"
+  cat <<EOM >> "$DEST"
   - kind: $KIND
     type: $TYPE
+EOM
+done
+
+cat <<EOM >> "$DEST"
   deployment:
     type: helm
     providerConfig:
