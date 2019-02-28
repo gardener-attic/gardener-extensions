@@ -29,12 +29,10 @@ outputKeys:
 
 zones:
 - name: eu-west-1a
-  cidr:
-    worker: 10.250.0.0/19
-    public: 10.250.96.0/22
-    internal: 10.250.112.0/22
+  worker: 10.250.0.0/19
+  public: 10.250.96.0/22
+  internal: 10.250.112.0/22
 - name: eu-west-1b
-  cidr:
-    worker: 10.250.0.0/19
-    public: 10.250.96.0/22
-    internal: 10.250.112.0/22
+  worker: 10.250.0.0/19
+  public: 10.250.96.0/22
+  internal: 10.250.112.0/22

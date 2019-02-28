@@ -20,25 +20,22 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
+const (
+	// EventReasonDestruction an event describing infrastructure destruction
+	EventReasonDestruction string = "InfrastructureDestruction"
+	// EventReasonCreation an event describing infrastructure creation
+	EventReasonCreation string = "InfrastructureCreation"
+
+	// PurposeNodes is the purpose for nodes
+	PurposeNodes string = "nodes"
+)
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
 // InfrastructureConfig infrastructure configuration resource
 type InfrastructureConfig struct {
 	metav1.TypeMeta `json:",inline"`
 	Networks        Networks `json:"networks"`
-}
-
-// CIDR is a string alias.
-type CIDR string
-
-// Networks holds information about the Kubernetes and infrastructure networks.
-type Networks struct {
-	// VPC indicates whether to use an existing VPC or create a new one.
-	VPC VPC `json:"vpc"`
-	// Internal is a list of private subnets to create (used for internal load balancers).
-	Internal []CIDR `json:"internal"`
-	// Public is sa list of public subnets to create (used for bastion and load balancers).
-	Public []CIDR `json:"public"`
-	// Workers is a list of worker subnets (private) to create (used for the VMs).
-	Workers []CIDR `json:"workers"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -52,16 +49,39 @@ type InfrastructureStatus struct {
 	// IAM contains information about the created AWS IAM resources.
 	IAM IAM `json:"iam"`
 	// VPC contains information about the created AWS VPC and some related resources.
-	VPC VPC `json:"vpc"`
+	VPC VPCStatus `json:"vpc"`
 }
 
-// EC2 contains information about the created AWS EC2 resources.
+// CIDR is a string alias.
+type CIDR string
+
+// Networks holds information about the Kubernetes and infrastructure networks.
+type Networks struct {
+	// VPC indicates whether to use an existing VPC or create a new one.
+	VPC VPC `json:"vpc"`
+	// Zones belonging to the same region
+	Zones []Zone `json:"zones"`
+}
+
+// Zone describes the properties of a zone
+type Zone struct {
+	// Name is the name for this zone.
+	Name string `json:"name"`
+	// Internal is  the  private subnet range to create (used for internal load balancers).
+	Internal CIDR `json:"internal"`
+	// Public is the  public subnet range to create (used for bastion and load balancers).
+	Public CIDR `json:"public"`
+	// Workers is the  workers  subnet range  to create (used for the VMs).
+	Workers CIDR `json:"workers"`
+}
+
+// EC2 contains information about the  AWS EC2 resources.
 type EC2 struct {
-	// KeyName is the name of the SSH key that has been created.
+	// KeyName is the name of the SSH key.
 	KeyName string `json:"keyName"`
 }
 
-// IAM contains information about the created AWS IAM resources.
+// IAM contains information about the AWS IAM resources.
 type IAM struct {
 	// InstanceProfiles is a list of AWS IAM instance profiles.
 	InstanceProfiles []InstanceProfile `json:"instanceProfiles"`
@@ -69,12 +89,20 @@ type IAM struct {
 	Roles []Role `json:"roles"`
 }
 
-// VPC contains information about the created AWS VPC and some related resources.
+// VPC contains information about the AWS VPC and some related resources.
 type VPC struct {
 	// ID is the VPC id.
-	ID string `json:"id"`
+	// +optional
+	ID *string `json:"id,omitempty"`
 	// CIDR is the VPC CIDR
-	CIDR CIDR `json:"cidr"`
+	// +optional
+	CIDR *CIDR `json:"cidr,omitempty"`
+}
+
+// VPCStatus vpc operation results that will be part of the status
+type VPCStatus struct {
+	// ID is the VPC id.
+	ID string `json:"id"`
 	// Subnets is a list of subnets that have been created.
 	Subnets []Subnet `json:"subnets"`
 	// SecurityGroups is a list of security groups that have been created.
@@ -84,7 +112,8 @@ type VPC struct {
 // InstanceProfile is an AWS IAM instance profile.
 type InstanceProfile struct {
 	// Purpose is a logical description of the instance profile.
-	Purpose string `json:"purpose"`
+	// +optional
+	Purpose *string `json:"purpose"`
 	// Name is the name for this instance profile.
 	Name string `json:"name"`
 }
@@ -92,7 +121,8 @@ type InstanceProfile struct {
 // Role is an AWS IAM role.
 type Role struct {
 	// Purpose is a logical description of the role.
-	Purpose string `json:"purpose"`
+	// +optional
+	Purpose *string `json:"purpose"`
 	// ARN is the AWS Resource Name for this role.
 	ARN string `json:"arn"`
 }
@@ -109,6 +139,9 @@ type Subnet struct {
 
 // SecurityGroup is an AWS security group related to a VPC.
 type SecurityGroup struct {
+	// Purpose is a logical description of the security group.
+	// +optional
+	Purpose *string `json:"purpose"`
 	// Name is a logical name of the subnet.
 	Name string `json:"name"`
 	// ID is the subnet id.

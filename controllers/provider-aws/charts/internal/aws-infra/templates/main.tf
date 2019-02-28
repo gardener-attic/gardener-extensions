@@ -130,7 +130,7 @@ resource "aws_security_group_rule" "nodes_egress_all" {
 {{ range $index, $zone := .Values.zones }}
 resource "aws_subnet" "nodes_z{{ $index }}" {
   vpc_id            = "{{ required "vpc.id is required" $.Values.vpc.id }}"
-  cidr_block        = "{{ required "zone.cidr.worker is required" $zone.cidr.worker }}"
+  cidr_block        = "{{ required "zone.worker is required" $zone.worker }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 
 {{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" (print "nodes-z" $index)) }}
@@ -142,7 +142,7 @@ output "{{ $.Values.outputKeys.subnetsNodesPrefix }}{{ $index }}" {
 
 resource "aws_subnet" "private_utility_z{{ $index }}" {
   vpc_id            = "{{ required "vpc.id is required" $.Values.vpc.id }}"
-  cidr_block        = "{{ required "zone.cidr.internal is required" $zone.cidr.internal }}"
+  cidr_block        = "{{ required "zone.internal is required" $zone.internal }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 
   tags {
@@ -157,7 +157,7 @@ resource "aws_security_group_rule" "nodes_tcp_internal_z{{ $index }}" {
   from_port         = 30000
   to_port           = 32767
   protocol          = "tcp"
-  cidr_blocks       = ["{{ required "zone.cidr.internal is required" $zone.cidr.internal }}"]
+  cidr_blocks       = ["{{ required "zone.internal is required" $zone.internal }}"]
   security_group_id = "${aws_security_group.nodes.id}"
 }
 
@@ -166,13 +166,13 @@ resource "aws_security_group_rule" "nodes_udp_internal_z{{ $index }}" {
   from_port         = 30000
   to_port           = 32767
   protocol          = "udp"
-  cidr_blocks       = ["{{ required "zone.cidr.internal is required" $zone.cidr.internal }}"]
+  cidr_blocks       = ["{{ required "zone.internal is required" $zone.internal }}"]
   security_group_id = "${aws_security_group.nodes.id}"
 }
 
 resource "aws_subnet" "public_utility_z{{ $index }}" {
   vpc_id            = "{{ required "vpc.id is required" $.Values.vpc.id }}"
-  cidr_block        = "{{ required "zone.cidr.public is required" $zone.cidr.public }}"
+  cidr_block        = "{{ required "zone.public is required" $zone.public }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 
   tags {
@@ -191,7 +191,7 @@ resource "aws_security_group_rule" "nodes_tcp_public_z{{ $index }}" {
   from_port         = 30000
   to_port           = 32767
   protocol          = "tcp"
-  cidr_blocks       = ["{{ required "zone.cidr.public is required" $zone.cidr.public }}"]
+  cidr_blocks       = ["{{ required "zone.public is required" $zone.public }}"]
   security_group_id = "${aws_security_group.nodes.id}"
 }
 
@@ -200,7 +200,7 @@ resource "aws_security_group_rule" "nodes_udp_public_z{{ $index }}" {
   from_port         = 30000
   to_port           = 32767
   protocol          = "udp"
-  cidr_blocks       = ["{{ required "zone.cidr.public is required" $zone.cidr.public }}"]
+  cidr_blocks       = ["{{ required "zone.public is required" $zone.public }}"]
   security_group_id = "${aws_security_group.nodes.id}"
 }
 

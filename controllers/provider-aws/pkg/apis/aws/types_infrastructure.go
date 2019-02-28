@@ -15,7 +15,6 @@
 package aws
 
 import (
-	"github.com/gardener/gardener/pkg/apis/core"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -25,18 +24,6 @@ import (
 type InfrastructureConfig struct {
 	metav1.TypeMeta
 	Networks Networks
-}
-
-// Networks holds information about the Kubernetes and infrastructure networks.
-type Networks struct {
-	// VPC indicates whether to use an existing VPC or create a new one.
-	VPC VPC
-	// Internal is a list of private subnets to create (used for internal load balancers).
-	Internal []core.CIDR
-	// Public is a list of public subnets to create (used for bastion and load balancers).
-	Public []core.CIDR
-	// Workers is a list of worker subnets (private) to create (used for the VMs).
-	Workers []core.CIDR
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -50,16 +37,39 @@ type InfrastructureStatus struct {
 	// IAM contains information about the created AWS IAM resources.
 	IAM IAM
 	// VPC contains information about the created AWS VPC and some related resources.
-	VPC VPC
+	VPC VPCStatus
 }
 
-// EC2 contains information about the created AWS EC2 resources.
+// CIDR is a string alias.
+type CIDR string
+
+// Networks holds information about the Kubernetes and infrastructure networks.
+type Networks struct {
+	// VPC indicates whether to use an existing VPC or create a new one.
+	VPC VPC
+	// Zones belonging to the same region
+	Zones []Zone
+}
+
+// Zone describes the properties of a zone
+type Zone struct {
+	// Name is the name for this zone.
+	Name string
+	// Internal is the private subnet range to create (used for internal load balancers).
+	Internal CIDR
+	// Public is the public subnet range to create (used for bastion and load balancers).
+	Public CIDR
+	// Workers isis the workers subnet range to create  (used for the VMs).
+	Workers CIDR
+}
+
+// EC2 contains information about the AWS EC2 resources.
 type EC2 struct {
-	// KeyName is the name of the SSH key that has been created.
+	// KeyName is the name of the SSH key.
 	KeyName string
 }
 
-// IAM contains information about the created AWS IAM resources.
+// IAM contains information about the AWS IAM resources.
 type IAM struct {
 	// InstanceProfiles is a list of AWS IAM instance profiles.
 	InstanceProfiles []InstanceProfile
@@ -67,12 +77,20 @@ type IAM struct {
 	Roles []Role
 }
 
-// VPC contains information about the created AWS VPC and some related resources.
+// VPC contains information about the AWS VPC and some related resources.
 type VPC struct {
 	// ID is the VPC id.
+	// +optional
 	ID string
 	// CIDR is the VPC CIDR
-	CIDR core.CIDR
+	// +optional
+	CIDR *CIDR
+}
+
+// VPCStatus vpc operation results that will be part of the status
+type VPCStatus struct {
+	// ID is the VPC id.
+	ID string
 	// Subnets is a list of subnets that have been created.
 	Subnets []Subnet
 	// SecurityGroups is a list of security groups that have been created.
@@ -82,7 +100,8 @@ type VPC struct {
 // InstanceProfile is an AWS IAM instance profile.
 type InstanceProfile struct {
 	// Purpose is a logical description of the instance profile.
-	Purpose string
+	// +optional
+	Purpose *string
 	// Name is the name for this instance profile.
 	Name string
 }
@@ -90,7 +109,8 @@ type InstanceProfile struct {
 // Role is an AWS IAM role.
 type Role struct {
 	// Purpose is a logical description of the role.
-	Purpose string
+	// +optional
+	Purpose *string
 	// ARN is the AWS Resource Name for this role.
 	ARN string
 }
@@ -107,6 +127,9 @@ type Subnet struct {
 
 // SecurityGroup is an AWS security group related to a VPC.
 type SecurityGroup struct {
+	// Purpose is a logical description of the security group.
+	// +optional
+	Purpose string
 	// Name is a logical name of the subnet.
 	Name string
 	// ID is the subnet id.

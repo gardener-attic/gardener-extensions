@@ -24,7 +24,7 @@ import (
 	unsafe "unsafe"
 
 	aws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	core "github.com/gardener/gardener/pkg/apis/core"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -136,6 +136,26 @@ func RegisterConversions(s *runtime.Scheme) error {
 	}); err != nil {
 		return err
 	}
+	if err := s.AddGeneratedConversionFunc((*VPCStatus)(nil), (*aws.VPCStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_VPCStatus_To_aws_VPCStatus(a.(*VPCStatus), b.(*aws.VPCStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*aws.VPCStatus)(nil), (*VPCStatus)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_aws_VPCStatus_To_v1alpha1_VPCStatus(a.(*aws.VPCStatus), b.(*VPCStatus), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*Zone)(nil), (*aws.Zone)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_v1alpha1_Zone_To_aws_Zone(a.(*Zone), b.(*aws.Zone), scope)
+	}); err != nil {
+		return err
+	}
+	if err := s.AddGeneratedConversionFunc((*aws.Zone)(nil), (*Zone)(nil), func(a, b interface{}, scope conversion.Scope) error {
+		return Convert_aws_Zone_To_v1alpha1_Zone(a.(*aws.Zone), b.(*Zone), scope)
+	}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -212,7 +232,7 @@ func autoConvert_v1alpha1_InfrastructureStatus_To_aws_InfrastructureStatus(in *I
 	if err := Convert_v1alpha1_IAM_To_aws_IAM(&in.IAM, &out.IAM, s); err != nil {
 		return err
 	}
-	if err := Convert_v1alpha1_VPC_To_aws_VPC(&in.VPC, &out.VPC, s); err != nil {
+	if err := Convert_v1alpha1_VPCStatus_To_aws_VPCStatus(&in.VPC, &out.VPC, s); err != nil {
 		return err
 	}
 	return nil
@@ -230,7 +250,7 @@ func autoConvert_aws_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *a
 	if err := Convert_aws_IAM_To_v1alpha1_IAM(&in.IAM, &out.IAM, s); err != nil {
 		return err
 	}
-	if err := Convert_aws_VPC_To_v1alpha1_VPC(&in.VPC, &out.VPC, s); err != nil {
+	if err := Convert_aws_VPCStatus_To_v1alpha1_VPCStatus(&in.VPC, &out.VPC, s); err != nil {
 		return err
 	}
 	return nil
@@ -242,7 +262,7 @@ func Convert_aws_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *aws.I
 }
 
 func autoConvert_v1alpha1_InstanceProfile_To_aws_InstanceProfile(in *InstanceProfile, out *aws.InstanceProfile, s conversion.Scope) error {
-	out.Purpose = in.Purpose
+	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
 	out.Name = in.Name
 	return nil
 }
@@ -253,7 +273,7 @@ func Convert_v1alpha1_InstanceProfile_To_aws_InstanceProfile(in *InstanceProfile
 }
 
 func autoConvert_aws_InstanceProfile_To_v1alpha1_InstanceProfile(in *aws.InstanceProfile, out *InstanceProfile, s conversion.Scope) error {
-	out.Purpose = in.Purpose
+	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
 	out.Name = in.Name
 	return nil
 }
@@ -267,9 +287,7 @@ func autoConvert_v1alpha1_Networks_To_aws_Networks(in *Networks, out *aws.Networ
 	if err := Convert_v1alpha1_VPC_To_aws_VPC(&in.VPC, &out.VPC, s); err != nil {
 		return err
 	}
-	out.Internal = *(*[]core.CIDR)(unsafe.Pointer(&in.Internal))
-	out.Public = *(*[]core.CIDR)(unsafe.Pointer(&in.Public))
-	out.Workers = *(*[]core.CIDR)(unsafe.Pointer(&in.Workers))
+	out.Zones = *(*[]aws.Zone)(unsafe.Pointer(&in.Zones))
 	return nil
 }
 
@@ -282,9 +300,7 @@ func autoConvert_aws_Networks_To_v1alpha1_Networks(in *aws.Networks, out *Networ
 	if err := Convert_aws_VPC_To_v1alpha1_VPC(&in.VPC, &out.VPC, s); err != nil {
 		return err
 	}
-	out.Internal = *(*[]CIDR)(unsafe.Pointer(&in.Internal))
-	out.Public = *(*[]CIDR)(unsafe.Pointer(&in.Public))
-	out.Workers = *(*[]CIDR)(unsafe.Pointer(&in.Workers))
+	out.Zones = *(*[]Zone)(unsafe.Pointer(&in.Zones))
 	return nil
 }
 
@@ -294,7 +310,7 @@ func Convert_aws_Networks_To_v1alpha1_Networks(in *aws.Networks, out *Networks, 
 }
 
 func autoConvert_v1alpha1_Role_To_aws_Role(in *Role, out *aws.Role, s conversion.Scope) error {
-	out.Purpose = in.Purpose
+	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
 	out.ARN = in.ARN
 	return nil
 }
@@ -305,7 +321,7 @@ func Convert_v1alpha1_Role_To_aws_Role(in *Role, out *aws.Role, s conversion.Sco
 }
 
 func autoConvert_aws_Role_To_v1alpha1_Role(in *aws.Role, out *Role, s conversion.Scope) error {
-	out.Purpose = in.Purpose
+	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
 	out.ARN = in.ARN
 	return nil
 }
@@ -316,6 +332,9 @@ func Convert_aws_Role_To_v1alpha1_Role(in *aws.Role, out *Role, s conversion.Sco
 }
 
 func autoConvert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(in *SecurityGroup, out *aws.SecurityGroup, s conversion.Scope) error {
+	if err := v1.Convert_Pointer_string_To_string(&in.Purpose, &out.Purpose, s); err != nil {
+		return err
+	}
 	out.Name = in.Name
 	out.ID = in.ID
 	return nil
@@ -327,6 +346,9 @@ func Convert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(in *SecurityGroup, out 
 }
 
 func autoConvert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(in *aws.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
+	if err := v1.Convert_string_To_Pointer_string(&in.Purpose, &out.Purpose, s); err != nil {
+		return err
+	}
 	out.Name = in.Name
 	out.ID = in.ID
 	return nil
@@ -362,10 +384,10 @@ func Convert_aws_Subnet_To_v1alpha1_Subnet(in *aws.Subnet, out *Subnet, s conver
 }
 
 func autoConvert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) error {
-	out.ID = in.ID
-	out.CIDR = core.CIDR(in.CIDR)
-	out.Subnets = *(*[]aws.Subnet)(unsafe.Pointer(&in.Subnets))
-	out.SecurityGroups = *(*[]aws.SecurityGroup)(unsafe.Pointer(&in.SecurityGroups))
+	if err := v1.Convert_Pointer_string_To_string(&in.ID, &out.ID, s); err != nil {
+		return err
+	}
+	out.CIDR = (*aws.CIDR)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -375,14 +397,84 @@ func Convert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) 
 }
 
 func autoConvert_aws_VPC_To_v1alpha1_VPC(in *aws.VPC, out *VPC, s conversion.Scope) error {
-	out.ID = in.ID
-	out.CIDR = CIDR(in.CIDR)
-	out.Subnets = *(*[]Subnet)(unsafe.Pointer(&in.Subnets))
-	out.SecurityGroups = *(*[]SecurityGroup)(unsafe.Pointer(&in.SecurityGroups))
+	if err := v1.Convert_string_To_Pointer_string(&in.ID, &out.ID, s); err != nil {
+		return err
+	}
+	out.CIDR = (*CIDR)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
 // Convert_aws_VPC_To_v1alpha1_VPC is an autogenerated conversion function.
 func Convert_aws_VPC_To_v1alpha1_VPC(in *aws.VPC, out *VPC, s conversion.Scope) error {
 	return autoConvert_aws_VPC_To_v1alpha1_VPC(in, out, s)
+}
+
+func autoConvert_v1alpha1_VPCStatus_To_aws_VPCStatus(in *VPCStatus, out *aws.VPCStatus, s conversion.Scope) error {
+	out.ID = in.ID
+	out.Subnets = *(*[]aws.Subnet)(unsafe.Pointer(&in.Subnets))
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = make([]aws.SecurityGroup, len(*in))
+		for i := range *in {
+			if err := Convert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
+	return nil
+}
+
+// Convert_v1alpha1_VPCStatus_To_aws_VPCStatus is an autogenerated conversion function.
+func Convert_v1alpha1_VPCStatus_To_aws_VPCStatus(in *VPCStatus, out *aws.VPCStatus, s conversion.Scope) error {
+	return autoConvert_v1alpha1_VPCStatus_To_aws_VPCStatus(in, out, s)
+}
+
+func autoConvert_aws_VPCStatus_To_v1alpha1_VPCStatus(in *aws.VPCStatus, out *VPCStatus, s conversion.Scope) error {
+	out.ID = in.ID
+	out.Subnets = *(*[]Subnet)(unsafe.Pointer(&in.Subnets))
+	if in.SecurityGroups != nil {
+		in, out := &in.SecurityGroups, &out.SecurityGroups
+		*out = make([]SecurityGroup, len(*in))
+		for i := range *in {
+			if err := Convert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(&(*in)[i], &(*out)[i], s); err != nil {
+				return err
+			}
+		}
+	} else {
+		out.SecurityGroups = nil
+	}
+	return nil
+}
+
+// Convert_aws_VPCStatus_To_v1alpha1_VPCStatus is an autogenerated conversion function.
+func Convert_aws_VPCStatus_To_v1alpha1_VPCStatus(in *aws.VPCStatus, out *VPCStatus, s conversion.Scope) error {
+	return autoConvert_aws_VPCStatus_To_v1alpha1_VPCStatus(in, out, s)
+}
+
+func autoConvert_v1alpha1_Zone_To_aws_Zone(in *Zone, out *aws.Zone, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Internal = aws.CIDR(in.Internal)
+	out.Public = aws.CIDR(in.Public)
+	out.Workers = aws.CIDR(in.Workers)
+	return nil
+}
+
+// Convert_v1alpha1_Zone_To_aws_Zone is an autogenerated conversion function.
+func Convert_v1alpha1_Zone_To_aws_Zone(in *Zone, out *aws.Zone, s conversion.Scope) error {
+	return autoConvert_v1alpha1_Zone_To_aws_Zone(in, out, s)
+}
+
+func autoConvert_aws_Zone_To_v1alpha1_Zone(in *aws.Zone, out *Zone, s conversion.Scope) error {
+	out.Name = in.Name
+	out.Internal = CIDR(in.Internal)
+	out.Public = CIDR(in.Public)
+	out.Workers = CIDR(in.Workers)
+	return nil
+}
+
+// Convert_aws_Zone_To_v1alpha1_Zone is an autogenerated conversion function.
+func Convert_aws_Zone_To_v1alpha1_Zone(in *aws.Zone, out *Zone, s conversion.Scope) error {
+	return autoConvert_aws_Zone_To_v1alpha1_Zone(in, out, s)
 }
