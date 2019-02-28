@@ -28,6 +28,8 @@ const (
 
 	// PurposeNodes is the purpose for nodes
 	PurposeNodes string = "nodes"
+	// PurposePublic is the purpose for public
+	PurposePublic string = "public"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -112,8 +114,7 @@ type VPCStatus struct {
 // InstanceProfile is an AWS IAM instance profile.
 type InstanceProfile struct {
 	// Purpose is a logical description of the instance profile.
-	// +optional
-	Purpose *string `json:"purpose"`
+	Purpose string `json:"purpose"`
 	// Name is the name for this instance profile.
 	Name string `json:"name"`
 }
@@ -121,14 +122,15 @@ type InstanceProfile struct {
 // Role is an AWS IAM role.
 type Role struct {
 	// Purpose is a logical description of the role.
-	// +optional
-	Purpose *string `json:"purpose"`
+	Purpose string `json:"purpose"`
 	// ARN is the AWS Resource Name for this role.
 	ARN string `json:"arn"`
 }
 
 // Subnet is an AWS subnet related to a VPC.
 type Subnet struct {
+	// Purpose is a logical description of the subnet.
+	Purpose string `json:"purpose"`
 	// Name is a logical name of the subnet.
 	Name string `json:"name"`
 	// ID is the subnet id.
@@ -140,8 +142,7 @@ type Subnet struct {
 // SecurityGroup is an AWS security group related to a VPC.
 type SecurityGroup struct {
 	// Purpose is a logical description of the security group.
-	// +optional
-	Purpose *string `json:"purpose"`
+	Purpose string `json:"purpose"`
 	// Name is a logical name of the subnet.
 	Name string `json:"name"`
 	// ID is the subnet id.

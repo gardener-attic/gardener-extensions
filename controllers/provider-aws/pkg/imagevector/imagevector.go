@@ -17,8 +17,11 @@ package imagevector
 import (
 	"path/filepath"
 
-	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"k8s.io/apimachinery/pkg/util/runtime"
+
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+
+	"github.com/gardener/gardener/pkg/utils/imagevector"
 )
 
 // ImageVector is the image vector that contains al the needed images
@@ -26,6 +29,6 @@ var ImageVector imagevector.ImageVector
 
 func init() {
 	var err error
-	ImageVector, err = imagevector.ReadImageVector(filepath.Join("controllers", "provider-aws", "charts", "images.yaml"))
+	ImageVector, err = imagevector.ReadImageVector(filepath.Join(aws.ChartsPath, "images.yaml"))
 	runtime.Must(err)
 }

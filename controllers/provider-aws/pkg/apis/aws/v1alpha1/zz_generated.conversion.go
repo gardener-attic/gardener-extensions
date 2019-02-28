@@ -24,7 +24,6 @@ import (
 	unsafe "unsafe"
 
 	aws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -262,7 +261,7 @@ func Convert_aws_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *aws.I
 }
 
 func autoConvert_v1alpha1_InstanceProfile_To_aws_InstanceProfile(in *InstanceProfile, out *aws.InstanceProfile, s conversion.Scope) error {
-	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
+	out.Purpose = in.Purpose
 	out.Name = in.Name
 	return nil
 }
@@ -273,7 +272,7 @@ func Convert_v1alpha1_InstanceProfile_To_aws_InstanceProfile(in *InstanceProfile
 }
 
 func autoConvert_aws_InstanceProfile_To_v1alpha1_InstanceProfile(in *aws.InstanceProfile, out *InstanceProfile, s conversion.Scope) error {
-	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
+	out.Purpose = in.Purpose
 	out.Name = in.Name
 	return nil
 }
@@ -310,7 +309,7 @@ func Convert_aws_Networks_To_v1alpha1_Networks(in *aws.Networks, out *Networks, 
 }
 
 func autoConvert_v1alpha1_Role_To_aws_Role(in *Role, out *aws.Role, s conversion.Scope) error {
-	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
+	out.Purpose = in.Purpose
 	out.ARN = in.ARN
 	return nil
 }
@@ -321,7 +320,7 @@ func Convert_v1alpha1_Role_To_aws_Role(in *Role, out *aws.Role, s conversion.Sco
 }
 
 func autoConvert_aws_Role_To_v1alpha1_Role(in *aws.Role, out *Role, s conversion.Scope) error {
-	out.Purpose = (*string)(unsafe.Pointer(in.Purpose))
+	out.Purpose = in.Purpose
 	out.ARN = in.ARN
 	return nil
 }
@@ -332,9 +331,7 @@ func Convert_aws_Role_To_v1alpha1_Role(in *aws.Role, out *Role, s conversion.Sco
 }
 
 func autoConvert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(in *SecurityGroup, out *aws.SecurityGroup, s conversion.Scope) error {
-	if err := v1.Convert_Pointer_string_To_string(&in.Purpose, &out.Purpose, s); err != nil {
-		return err
-	}
+	out.Purpose = in.Purpose
 	out.Name = in.Name
 	out.ID = in.ID
 	return nil
@@ -346,9 +343,7 @@ func Convert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(in *SecurityGroup, out 
 }
 
 func autoConvert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(in *aws.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
-	if err := v1.Convert_string_To_Pointer_string(&in.Purpose, &out.Purpose, s); err != nil {
-		return err
-	}
+	out.Purpose = in.Purpose
 	out.Name = in.Name
 	out.ID = in.ID
 	return nil
@@ -360,6 +355,7 @@ func Convert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(in *aws.SecurityGroup, 
 }
 
 func autoConvert_v1alpha1_Subnet_To_aws_Subnet(in *Subnet, out *aws.Subnet, s conversion.Scope) error {
+	out.Purpose = in.Purpose
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Zone = in.Zone
@@ -372,6 +368,7 @@ func Convert_v1alpha1_Subnet_To_aws_Subnet(in *Subnet, out *aws.Subnet, s conver
 }
 
 func autoConvert_aws_Subnet_To_v1alpha1_Subnet(in *aws.Subnet, out *Subnet, s conversion.Scope) error {
+	out.Purpose = in.Purpose
 	out.Name = in.Name
 	out.ID = in.ID
 	out.Zone = in.Zone
@@ -384,9 +381,7 @@ func Convert_aws_Subnet_To_v1alpha1_Subnet(in *aws.Subnet, out *Subnet, s conver
 }
 
 func autoConvert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) error {
-	if err := v1.Convert_Pointer_string_To_string(&in.ID, &out.ID, s); err != nil {
-		return err
-	}
+	out.ID = (*string)(unsafe.Pointer(in.ID))
 	out.CIDR = (*aws.CIDR)(unsafe.Pointer(in.CIDR))
 	return nil
 }
@@ -397,9 +392,7 @@ func Convert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) 
 }
 
 func autoConvert_aws_VPC_To_v1alpha1_VPC(in *aws.VPC, out *VPC, s conversion.Scope) error {
-	if err := v1.Convert_string_To_Pointer_string(&in.ID, &out.ID, s); err != nil {
-		return err
-	}
+	out.ID = (*string)(unsafe.Pointer(in.ID))
 	out.CIDR = (*CIDR)(unsafe.Pointer(in.CIDR))
 	return nil
 }
@@ -412,17 +405,7 @@ func Convert_aws_VPC_To_v1alpha1_VPC(in *aws.VPC, out *VPC, s conversion.Scope) 
 func autoConvert_v1alpha1_VPCStatus_To_aws_VPCStatus(in *VPCStatus, out *aws.VPCStatus, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Subnets = *(*[]aws.Subnet)(unsafe.Pointer(&in.Subnets))
-	if in.SecurityGroups != nil {
-		in, out := &in.SecurityGroups, &out.SecurityGroups
-		*out = make([]aws.SecurityGroup, len(*in))
-		for i := range *in {
-			if err := Convert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.SecurityGroups = nil
-	}
+	out.SecurityGroups = *(*[]aws.SecurityGroup)(unsafe.Pointer(&in.SecurityGroups))
 	return nil
 }
 
@@ -434,17 +417,7 @@ func Convert_v1alpha1_VPCStatus_To_aws_VPCStatus(in *VPCStatus, out *aws.VPCStat
 func autoConvert_aws_VPCStatus_To_v1alpha1_VPCStatus(in *aws.VPCStatus, out *VPCStatus, s conversion.Scope) error {
 	out.ID = in.ID
 	out.Subnets = *(*[]Subnet)(unsafe.Pointer(&in.Subnets))
-	if in.SecurityGroups != nil {
-		in, out := &in.SecurityGroups, &out.SecurityGroups
-		*out = make([]SecurityGroup, len(*in))
-		for i := range *in {
-			if err := Convert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(&(*in)[i], &(*out)[i], s); err != nil {
-				return err
-			}
-		}
-	} else {
-		out.SecurityGroups = nil
-	}
+	out.SecurityGroups = *(*[]SecurityGroup)(unsafe.Pointer(&in.SecurityGroups))
 	return nil
 }
 

@@ -18,6 +18,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	// EventReasonDestruction an event describing infrastructure destruction
+	EventReasonDestruction string = "InfrastructureDestruction"
+	// EventReasonCreation an event describing infrastructure creation
+	EventReasonCreation string = "InfrastructureCreation"
+
+	// PurposeNodes is the purpose for nodes
+	PurposeNodes string = "nodes"
+	// PurposePublic is the purpose for public
+	PurposePublic string = "public"
+)
+
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // InfrastructureConfig infrastructure configuration resource
@@ -80,10 +92,8 @@ type IAM struct {
 // VPC contains information about the AWS VPC and some related resources.
 type VPC struct {
 	// ID is the VPC id.
-	// +optional
-	ID string
+	ID *string
 	// CIDR is the VPC CIDR
-	// +optional
 	CIDR *CIDR
 }
 
@@ -100,8 +110,7 @@ type VPCStatus struct {
 // InstanceProfile is an AWS IAM instance profile.
 type InstanceProfile struct {
 	// Purpose is a logical description of the instance profile.
-	// +optional
-	Purpose *string
+	Purpose string
 	// Name is the name for this instance profile.
 	Name string
 }
@@ -109,14 +118,15 @@ type InstanceProfile struct {
 // Role is an AWS IAM role.
 type Role struct {
 	// Purpose is a logical description of the role.
-	// +optional
-	Purpose *string
+	Purpose string
 	// ARN is the AWS Resource Name for this role.
 	ARN string
 }
 
 // Subnet is an AWS subnet related to a VPC.
 type Subnet struct {
+	// Purpose is a logical description of the subnet.
+	Purpose string
 	// Name is a logical name of the subnet.
 	Name string
 	// ID is the subnet id.
@@ -128,7 +138,6 @@ type Subnet struct {
 // SecurityGroup is an AWS security group related to a VPC.
 type SecurityGroup struct {
 	// Purpose is a logical description of the security group.
-	// +optional
 	Purpose string
 	// Name is a logical name of the subnet.
 	Name string

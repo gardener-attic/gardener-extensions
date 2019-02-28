@@ -50,6 +50,8 @@ const (
 )
 
 var (
-	// TerraformersChartsPath is the terraform charts path
-	TerraformersChartsPath = filepath.Join("controllers", "provider-aws", "charts", "internal")
+	// ChartsPath is the path to the charts
+	ChartsPath = filepath.Join("controllers", "provider-aws", "charts")
+	// InternalChartsPath is the path to the internal charts
+	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )

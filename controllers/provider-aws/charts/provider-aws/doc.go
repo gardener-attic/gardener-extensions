@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-aws Infrastructure aws . ../../example/controller-registration.yaml
+//go:generate ../../../../hack/generate-controller-registration.sh provider-aws . ../../example/controller-registration.yaml Infrastructure:aws
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart

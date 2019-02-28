@@ -19,8 +19,9 @@ import (
 	"fmt"
 	"os"
 
+	awsapis "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	awsv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/infrastructure"
-
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/spf13/cobra"
@@ -62,8 +63,13 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			if err := awsapis.AddToScheme(mgr.GetScheme()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme with internal AWS API scheme")
+			}
+			if err := awsv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme with v1alpha1 AWS API scheme")
+			}
 			ctrlOpts.Completed().Apply(&infrastructure.Options)
-
 			if err := infrastructure.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controller to manager")
 			}

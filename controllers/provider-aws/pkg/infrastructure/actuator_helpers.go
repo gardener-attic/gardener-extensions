@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	awsapi "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/awsclient"
 
@@ -95,7 +96,7 @@ func (a *actuator) destroyKubernetesLoadBalancersAndSecurityGroups(ctx context.C
 	return nil
 }
 
-func (a *actuator) injectProviderStateIntoStatus(ctx context.Context, tf *terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure) error {
+func (a *actuator) injectProviderStateIntoStatus(ctx context.Context, tf *terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *awsapi.InfrastructureConfig) error {
 	outputVarKeys := []string{
 		aws.VPCIDKey,
 		aws.SSHKeyName,
@@ -104,7 +105,7 @@ func (a *actuator) injectProviderStateIntoStatus(ctx context.Context, tf *terraf
 		aws.SecurityGroupsNodes,
 	}
 
-	for zoneIndex := range infrastructure.Spec.Zones {
+	for zoneIndex := range infrastructureConfig.Networks.Zones {
 		outputVarKeys = append(outputVarKeys, fmt.Sprintf("%s%d", aws.SubnetNodesPrefix, zoneIndex))
 		outputVarKeys = append(outputVarKeys, fmt.Sprintf("%s%d", aws.SubnetPublicPrefix, zoneIndex))
 	}
@@ -114,22 +115,22 @@ func (a *actuator) injectProviderStateIntoStatus(ctx context.Context, tf *terraf
 		return err
 	}
 
-	subnets, err := getSubnets(infrastructure, values)
+	subnets, err := getSubnets(infrastructureConfig, values)
 	if err != nil {
 		return err
 	}
 
 	var (
-		purpose          = v1alpha1.PurposeNodes
+		purpose          = awsapi.PurposeNodes
 		instanceProfiles = []v1alpha1.InstanceProfile{
 			{
-				Purpose: &purpose,
+				Purpose: purpose,
 				Name:    values[aws.IAMInstanceProfileNodes],
 			},
 		}
 		roles = []v1alpha1.Role{
 			{
-				Purpose: &purpose,
+				Purpose: purpose,
 				ARN:     values[aws.NodesRole],
 			},
 		}
@@ -162,7 +163,7 @@ func (a *actuator) injectProviderStateIntoStatus(ctx context.Context, tf *terraf
 
 // generateTerraformInfraConfigValues creates the Terraform variables and the Terraform config (for the infrastructure)
 // and returns them (these values will be stored as a ConfigMap and a Secret in the Garden cluster.
-func generateTerraformInfraConfigValues(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *v1alpha1.InfrastructureConfig, providerSecret *corev1.Secret) (map[string]interface{}, error) {
+func generateTerraformInfraConfigValues(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *awsapi.InfrastructureConfig, providerSecret *corev1.Secret) (map[string]interface{}, error) {
 	var (
 		dhcpDomainName    = "ec2.internal"
 		createVPC         = true
@@ -223,7 +224,7 @@ func generateTerraformInfraConfigValues(ctx context.Context, infrastructure *ext
 	}, nil
 }
 
-func getZones(infraProviderConfig *v1alpha1.InfrastructureConfig) []map[string]interface{} {
+func getZones(infraProviderConfig *awsapi.InfrastructureConfig) []map[string]interface{} {
 	var zones []map[string]interface{}
 	for _, zone := range infraProviderConfig.Networks.Zones {
 		zones = append(zones, map[string]interface{}{
@@ -236,31 +237,32 @@ func getZones(infraProviderConfig *v1alpha1.InfrastructureConfig) []map[string]i
 	return zones
 }
 
-func getSubnets(infrastructure *extensionsv1alpha1.Infrastructure, values map[string]string) ([]v1alpha1.Subnet, error) {
+func getSubnets(infrastructure *awsapi.InfrastructureConfig, values map[string]string) ([]v1alpha1.Subnet, error) {
 	var subnetsToReturn []v1alpha1.Subnet
 	for key, value := range values {
+		var prefix, purpose string
 		if strings.HasPrefix(key, aws.SubnetPublicPrefix) {
-			zoneID, err := strconv.Atoi(strings.TrimPrefix(key, aws.SubnetPublicPrefix))
-			if err != nil {
-				return nil, err
-			}
-			subnetsToReturn = append(subnetsToReturn, v1alpha1.Subnet{
-				Name: key,
-				ID:   value,
-				Zone: infrastructure.Spec.Zones[zoneID],
-			})
+			prefix = aws.SubnetPublicPrefix
+			purpose = awsapi.PurposePublic
 		}
 		if strings.HasPrefix(key, aws.SubnetNodesPrefix) {
-			zoneID, err := strconv.Atoi(strings.TrimPrefix(key, aws.SubnetNodesPrefix))
-			if err != nil {
-				return nil, err
-			}
-			subnetsToReturn = append(subnetsToReturn, v1alpha1.Subnet{
-				Name: key,
-				ID:   value,
-				Zone: infrastructure.Spec.Zones[zoneID],
-			})
+			prefix = aws.SubnetNodesPrefix
+			purpose = v1alpha1.PurposeNodes
 		}
+
+		if len(prefix) == 0 {
+			continue
+		}
+
+		zoneID, err := strconv.Atoi(strings.TrimPrefix(key, prefix))
+		if err != nil {
+			return nil, err
+		}
+		subnetsToReturn = append(subnetsToReturn, v1alpha1.Subnet{
+			ID:      value,
+			Purpose: purpose,
+			Zone:    infrastructure.Networks.Zones[zoneID].Name,
+		})
 	}
 	return subnetsToReturn, nil
 }
