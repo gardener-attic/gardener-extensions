@@ -4,9 +4,7 @@ gardener-extensions:
     repo: ~
     traits:
       version:
-        preprocess:
-          'noop'
-        inject_effective_version: true
+        preprocess: 'inject-commit-hash'
       publish:
         dockerimages:
           gardener-extension-hyper:
