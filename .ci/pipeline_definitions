@@ -5,8 +5,7 @@ gardener-extensions:
     traits:
       version:
         preprocess:
-          'inject-commit-hash'
-        versionfile: 'PIPELINE_VERSION'
+          'noop'
         inject_effective_version: true
       publish:
         dockerimages:

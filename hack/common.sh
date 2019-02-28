@@ -47,4 +47,5 @@ function header_text {
 SOURCE_TREES=(./pkg/... ./controllers/...)
 CMD_TREES=(./controllers/...)
 
-VERSION="$(cat "$DIRNAME/../VERSION")"
+VERSIONFILE_VERSION="$(cat "$DIRNAME/../VERSION")"
+VERSION="${VERSION:-${EFFECTIVE_VERSION:-"$VERSIONFILE_VERSION"}}"

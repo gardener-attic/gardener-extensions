@@ -16,7 +16,7 @@ REGISTRY         := eu.gcr.io/gardener-project
 IMAGE_PREFIX     := $(REGISTRY)/gardener-extension-os-coreos
 REPO_ROOT        := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR         := $(REPO_ROOT)/hack
-VERSION          := $(shell cat $(REPO_ROOT)/VERSION)
+VERSION          := $(shell bash -c 'source $(HACK_DIR)/common.sh && echo $$VERSION')
 LD_FLAGS         := "-w -X github.com/gardener/gardener-extensions/gardener-extension-os-coreos/pkg/version.Version=$(IMAGE_TAG)"
 VERIFY           := true
 

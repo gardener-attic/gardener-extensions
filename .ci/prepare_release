@@ -30,10 +30,6 @@ apk add --no-cache \
     gcc \
     sed
 
-export \
-    REPO_DIR="$(readlink -f "$REPO_DIR")" \
-    REPO_VERSION="${EFFECTIVE_VERSION}"
-
 GOLANG_VERSION="$(sed -rn 's/FROM golang:([^ ]+).*/\1/p' < "$REPO_DIR/Dockerfile")"
 
 export \

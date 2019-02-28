@@ -15,7 +15,8 @@
 # limitations under the License.
 set -e
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
+source "$DIRNAME/common.sh"
 
 function usage {
     cat <<EOM
@@ -39,10 +40,6 @@ DEST="$5"
 
 ( [[ -z "$NAME" ]] || [[ -z "$KIND" ]] || [[ -z "$TYPE" ]] || [[ -z "$CHART_DIR" ]] || [[ -z "$DEST" ]] ) && usage
 
-if [[ -z "$REPO_VERSION" ]]; then
-    REPO_VERSION="$(cat "$DIR/../VERSION")"
-fi
-
 # The following code is to make `helm package` idempotent: Usually, everytime `helm package` is invoked,
 # it produces a different `.tgz` due to modification timestamps and some special shasums of gzip. We
 # resolve this by unarchiving the `.tgz`, compressing it again with a constant `mtime` and no gzip
@@ -59,7 +56,7 @@ trap cleanup EXIT ERR INT TERM
 
 export HELM_HOME="$temp_helm_home"
 helm init --client-only > /dev/null 2>&1
-helm package "$CHART_DIR" --version "$REPO_VERSION" --app-version "$REPO_VERSION" --destination "$temp_dir" > /dev/null
+helm package "$CHART_DIR" --version "$VERSION" --app-version "$VERSION" --destination "$temp_dir" > /dev/null
 tar -xzm -C "$temp_extract_dir" -f "$temp_dir"/*
 chart="$(tar --sort=name -c --owner=root:0 --group=root:0 --mtime='UTC 2019-01-01' -C "$temp_extract_dir" "$(basename "$temp_extract_dir"/*)" | gzip -n | base64 | tr -d '\n')"
 
@@ -81,7 +78,7 @@ spec:
       chart: $chart
       values:
         image:
-          tag: $REPO_VERSION
+          tag: $VERSION
 EOM
 
 echo "Successfully generated controller registration at $DEST"
