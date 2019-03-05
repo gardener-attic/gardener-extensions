@@ -15,19 +15,9 @@
 package aws
 
 import (
+	gardencore "github.com/gardener/gardener/pkg/apis/core"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-const (
-	// EventReasonDestruction an event describing infrastructure destruction
-	EventReasonDestruction string = "InfrastructureDestruction"
-	// EventReasonCreation an event describing infrastructure creation
-	EventReasonCreation string = "InfrastructureCreation"
-
-	// PurposeNodes is the purpose for nodes
-	PurposeNodes string = "nodes"
-	// PurposePublic is the purpose for public
-	PurposePublic string = "public"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -35,6 +25,8 @@ const (
 // InfrastructureConfig infrastructure configuration resource
 type InfrastructureConfig struct {
 	metav1.TypeMeta
+
+	// Networks is the AWS specific network configuration (VPC, subnets, etc.)
 	Networks Networks
 }
 
@@ -52,9 +44,6 @@ type InfrastructureStatus struct {
 	VPC VPCStatus
 }
 
-// CIDR is a string alias.
-type CIDR string
-
 // Networks holds information about the Kubernetes and infrastructure networks.
 type Networks struct {
 	// VPC indicates whether to use an existing VPC or create a new one.
@@ -68,11 +57,11 @@ type Zone struct {
 	// Name is the name for this zone.
 	Name string
 	// Internal is the private subnet range to create (used for internal load balancers).
-	Internal CIDR
+	Internal gardencore.CIDR
 	// Public is the public subnet range to create (used for bastion and load balancers).
-	Public CIDR
+	Public gardencore.CIDR
 	// Workers isis the workers subnet range to create  (used for the VMs).
-	Workers CIDR
+	Workers gardencore.CIDR
 }
 
 // EC2 contains information about the AWS EC2 resources.
@@ -94,10 +83,10 @@ type VPC struct {
 	// ID is the VPC id.
 	ID *string
 	// CIDR is the VPC CIDR
-	CIDR *CIDR
+	CIDR *gardencore.CIDR
 }
 
-// VPCStatus vpc operation results that will be part of the status
+// VPCStatus contains information about a generated VPC or resources inside an existing VPC.
 type VPCStatus struct {
 	// ID is the VPC id.
 	ID string
@@ -106,6 +95,15 @@ type VPCStatus struct {
 	// SecurityGroups is a list of security groups that have been created.
 	SecurityGroups []SecurityGroup
 }
+
+const (
+	// PurposeNodes is a constant describing that the respective resource is used for nodes.
+	PurposeNodes string = "nodes"
+	// PurposePublic is a constant describing that the respective resource is used for public load balancers.
+	PurposePublic string = "public"
+	// PurposeInternal is a constant describing that the respective resource is used for internal load balancers.
+	PurposeInternal string = "internal"
+)
 
 // InstanceProfile is an AWS IAM instance profile.
 type InstanceProfile struct {
@@ -127,8 +125,6 @@ type Role struct {
 type Subnet struct {
 	// Purpose is a logical description of the subnet.
 	Purpose string
-	// Name is a logical name of the subnet.
-	Name string
 	// ID is the subnet id.
 	ID string
 	// Zone is the availability zone into which the subnet has been created.
@@ -139,8 +135,6 @@ type Subnet struct {
 type SecurityGroup struct {
 	// Purpose is a logical description of the security group.
 	Purpose string
-	// Name is a logical name of the subnet.
-	Name string
 	// ID is the subnet id.
 	ID string
 }

@@ -48,8 +48,6 @@ An example for a `ControllerRegistration` resource that can be used to register 
 
 Please find more information regarding the extensibility concepts and a detailed proposal [here](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md).
 
-:warning: Be aware that this repository contains packages and functions that might be moved to another repository for better re-usability soon.
-
 ----
 
 ## How to start using or developing this extension controller locally

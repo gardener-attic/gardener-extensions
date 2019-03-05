@@ -22,12 +22,8 @@ import (
 
 // Actuator acts upon OperatingSystemConfig resources.
 type Actuator interface {
-	// Create the operating system config.
-	Create(ctx context.Context, config *extensionsv1alpha1.OperatingSystemConfig) error
+	// Reconcile the operating system config.
+	Reconcile(context.Context, *extensionsv1alpha1.OperatingSystemConfig) ([]byte, *string, []string, error)
 	// Delete the operating system config.
-	Delete(ctx context.Context, config *extensionsv1alpha1.OperatingSystemConfig) error
-	// Update the operating system config.
-	Update(ctx context.Context, config *extensionsv1alpha1.OperatingSystemConfig) error
-	// Exists checks whether the given config currently exists.
-	Exists(ctx context.Context, config *extensionsv1alpha1.OperatingSystemConfig) (bool, error)
+	Delete(context.Context, *extensionsv1alpha1.OperatingSystemConfig) error
 }

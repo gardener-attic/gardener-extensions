@@ -77,6 +77,8 @@ type WorkerPool struct {
 	MachineImage MachineImage `json:"machineImage,omitempty"`
 	// Minimum is the minimum size of the worker pool.
 	Minimum int `json:"minimum"`
+	// Name is the name of this worker pool.
+	Name string `json:"name"`
 	// ProviderConfig is a provider specific configuration for the worker pool.
 	// +optional
 	ProviderConfig *runtime.RawExtension `json:"providerConfig,omitempty"`
@@ -113,4 +115,18 @@ type Volume struct {
 type WorkerStatus struct {
 	// DefaultStatus is a structure containing common fields used by all extension resources.
 	DefaultStatus `json:",inline"`
+
+	// MachineDeployments is a list of created machine deployments. It will be used to e.g. configure
+	// the cluster-autoscaler properly.
+	MachineDeployments []MachineDeployment `json:"machineDeployments,omitempty"`
+}
+
+// MachineDeployments is a created machine deployments.
+type MachineDeployment struct {
+	// Name is the name of the `MachineDeployment` resource.
+	Name string `json:"name"`
+	// Minimum is the minimum number for this machine deployment.
+	Minimum int `json:"minimum"`
+	// Maximum is the maximum number for this machine deployment.
+	Maximum int `json:"maximum"`
 }

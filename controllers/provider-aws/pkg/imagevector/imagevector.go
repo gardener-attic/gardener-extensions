@@ -17,11 +17,10 @@ package imagevector
 import (
 	"path/filepath"
 
-	"k8s.io/apimachinery/pkg/util/runtime"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-
 	"github.com/gardener/gardener/pkg/utils/imagevector"
+
+	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
 // ImageVector is the image vector that contains al the needed images

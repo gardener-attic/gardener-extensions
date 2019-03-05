@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"os"
+
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
@@ -28,6 +29,6 @@ var (
 
 // LogErrAndExit logs the given error with msg and keysAndValues and calls `os.Exit(1)`.
 func LogErrAndExit(err error, msg string, keysAndValues ...interface{}) {
-	Log.Error(err, msg, keysAndValues)
+	Log.Error(err, msg, keysAndValues...)
 	Exit(1)
 }

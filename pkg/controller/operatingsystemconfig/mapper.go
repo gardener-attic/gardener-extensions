@@ -17,6 +17,8 @@ package operatingsystemconfig
 import (
 	"context"
 
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
@@ -24,12 +26,13 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 type secretToOSCMapper struct {
-	client   client.Client
-	typeName string
+	client     client.Client
+	predicates []predicate.Predicate
 }
 
 func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
@@ -43,15 +46,13 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 	}
 
 	oscList := &extensions1alpha1.OperatingSystemConfigList{}
-	if err := m.client.List(context.TODO(), &client.ListOptions{
-		Namespace: secret.Namespace,
-	}, oscList); err != nil {
+	if err := m.client.List(context.TODO(), client.InNamespace(secret.Namespace), oscList); err != nil {
 		return nil
 	}
 
 	var requests []reconcile.Request
 	for _, osc := range oscList.Items {
-		if osc.Spec.Type != m.typeName {
+		if !extensionscontroller.PredicatesMatch(m.predicates, &osc) {
 			continue
 		}
 
@@ -71,9 +72,6 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 
 // SecretToOSCMapper returns a mapper that returns requests for OperatingSystemConfigs whose
 // referenced secrets have been modified.
-func SecretToOSCMapper(client client.Client, typeName string) handler.Mapper {
-	return &secretToOSCMapper{
-		client:   client,
-		typeName: typeName,
-	}
+func SecretToOSCMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
+	return &secretToOSCMapper{client, predicates}
 }

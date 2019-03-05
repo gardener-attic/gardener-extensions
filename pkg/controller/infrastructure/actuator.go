@@ -18,16 +18,14 @@ import (
 	"context"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 )
 
 // Actuator acts upon Infrastructure resources.
 type Actuator interface {
-	// Create the Infrastructure config.
-	Create(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error
+	// Reconcile the Infrastructure config.
+	Reconcile(context.Context, *extensionsv1alpha1.Infrastructure, *extensionscontroller.Cluster) error
 	// Delete the Infrastructure config.
-	Delete(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error
-	// Update the Infrastructure config.
-	Update(ctx context.Context, config *extensionsv1alpha1.Infrastructure) error
-	// Exists checks whether the given Infrastructure currently exists.
-	Exists(ctx context.Context, config *extensionsv1alpha1.Infrastructure) (bool, error)
+	Delete(context.Context, *extensionsv1alpha1.Infrastructure, *extensionscontroller.Cluster) error
 }

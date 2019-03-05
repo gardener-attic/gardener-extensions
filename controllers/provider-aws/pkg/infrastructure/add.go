@@ -17,7 +17,9 @@ package infrastructure
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+
 	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -25,10 +27,16 @@ import (
 )
 
 var (
+	addToManagerBuilder = extensionscontroller.NewAddToManagerBuilder()
+	// AddToManager adds all Infrastructure controllers to the given manager.
+	AddToManager = addToManagerBuilder.AddToManager
+
 	// Options are the default controller.Options for Add.
 	Options = controller.Options{}
 	// TerraformerImage is the image repository and tag for the Terraformer.
 	TerraformerImage string
+	// IgnoreOperationAnnotation defines whether to ignore the operation annotation.
+	IgnoreOperationAnnotation bool
 )
 
 func init() {
@@ -41,15 +49,16 @@ func init() {
 
 // AddWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddWithOptions(mgr manager.Manager, opts controller.Options, terraformerImage string) error {
+func AddWithOptions(mgr manager.Manager, opts controller.Options, terraformerImage string, ignoreOperationAnnotation bool) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
-		Actuator:          NewActuator(mgr.GetRecorder(infrastructure.ControllerName), terraformerImage),
-		Type:              aws.Type,
-		ControllerOptions: opts,
+		Actuator:                  NewActuator(terraformerImage),
+		Type:                      aws.Type,
+		ControllerOptions:         opts,
+		IgnoreOperationAnnotation: ignoreOperationAnnotation,
 	})
 }
 
 // Add adds a controller with the default Options.
 func Add(mgr manager.Manager) error {
-	return AddWithOptions(mgr, Options, TerraformerImage)
+	return AddWithOptions(mgr, Options, TerraformerImage, IgnoreOperationAnnotation)
 }

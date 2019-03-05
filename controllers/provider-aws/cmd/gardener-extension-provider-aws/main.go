@@ -20,6 +20,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/cmd/gardener-extension-provider-aws/app"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 

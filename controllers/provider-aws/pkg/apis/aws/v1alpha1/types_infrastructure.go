@@ -15,21 +15,9 @@
 package v1alpha1
 
 import (
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-const (
-	// EventReasonDestruction an event describing infrastructure destruction
-	EventReasonDestruction string = "InfrastructureDestruction"
-	// EventReasonCreation an event describing infrastructure creation
-	EventReasonCreation string = "InfrastructureCreation"
-
-	// PurposeNodes is the purpose for nodes
-	PurposeNodes string = "nodes"
-	// PurposePublic is the purpose for public
-	PurposePublic string = "public"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -37,7 +25,9 @@ const (
 // InfrastructureConfig infrastructure configuration resource
 type InfrastructureConfig struct {
 	metav1.TypeMeta `json:",inline"`
-	Networks        Networks `json:"networks"`
+
+	// Networks is the AWS specific network configuration (VPC, subnets, etc.)
+	Networks Networks `json:"networks"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -54,9 +44,6 @@ type InfrastructureStatus struct {
 	VPC VPCStatus `json:"vpc"`
 }
 
-// CIDR is a string alias.
-type CIDR string
-
 // Networks holds information about the Kubernetes and infrastructure networks.
 type Networks struct {
 	// VPC indicates whether to use an existing VPC or create a new one.
@@ -70,11 +57,11 @@ type Zone struct {
 	// Name is the name for this zone.
 	Name string `json:"name"`
 	// Internal is  the  private subnet range to create (used for internal load balancers).
-	Internal CIDR `json:"internal"`
+	Internal gardencorev1alpha1.CIDR `json:"internal"`
 	// Public is the  public subnet range to create (used for bastion and load balancers).
-	Public CIDR `json:"public"`
+	Public gardencorev1alpha1.CIDR `json:"public"`
 	// Workers is the  workers  subnet range  to create (used for the VMs).
-	Workers CIDR `json:"workers"`
+	Workers gardencorev1alpha1.CIDR `json:"workers"`
 }
 
 // EC2 contains information about the  AWS EC2 resources.
@@ -96,12 +83,12 @@ type VPC struct {
 	// ID is the VPC id.
 	// +optional
 	ID *string `json:"id,omitempty"`
-	// CIDR is the VPC CIDR
+	// gardencorev1alpha1.CIDR is the VPC gardencorev1alpha1.CIDR
 	// +optional
-	CIDR *CIDR `json:"cidr,omitempty"`
+	CIDR *gardencorev1alpha1.CIDR `json:"cidr,omitempty"`
 }
 
-// VPCStatus vpc operation results that will be part of the status
+// VPCStatus contains information about a generated VPC or resources inside an existing VPC.
 type VPCStatus struct {
 	// ID is the VPC id.
 	ID string `json:"id"`
@@ -110,6 +97,15 @@ type VPCStatus struct {
 	// SecurityGroups is a list of security groups that have been created.
 	SecurityGroups []SecurityGroup `json:"securityGroups"`
 }
+
+const (
+	// PurposeNodes is a constant describing that the respective resource is used for nodes.
+	PurposeNodes string = "nodes"
+	// PurposePublic is a constant describing that the respective resource is used for public load balancers.
+	PurposePublic string = "public"
+	// PurposeInternal is a constant describing that the respective resource is used for internal load balancers.
+	PurposeInternal string = "internal"
+)
 
 // InstanceProfile is an AWS IAM instance profile.
 type InstanceProfile struct {
@@ -131,8 +127,6 @@ type Role struct {
 type Subnet struct {
 	// Purpose is a logical description of the subnet.
 	Purpose string `json:"purpose"`
-	// Name is a logical name of the subnet.
-	Name string `json:"name"`
 	// ID is the subnet id.
 	ID string `json:"id"`
 	// Zone is the availability zone into which the subnet has been created.
@@ -143,8 +137,6 @@ type Subnet struct {
 type SecurityGroup struct {
 	// Purpose is a logical description of the security group.
 	Purpose string `json:"purpose"`
-	// Name is a logical name of the subnet.
-	Name string `json:"name"`
 	// ID is the subnet id.
 	ID string `json:"id"`
 }

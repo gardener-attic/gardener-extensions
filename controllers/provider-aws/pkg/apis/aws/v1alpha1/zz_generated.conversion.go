@@ -24,6 +24,8 @@ import (
 	unsafe "unsafe"
 
 	aws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	core "github.com/gardener/gardener/pkg/apis/core"
+	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -332,7 +334,6 @@ func Convert_aws_Role_To_v1alpha1_Role(in *aws.Role, out *Role, s conversion.Sco
 
 func autoConvert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(in *SecurityGroup, out *aws.SecurityGroup, s conversion.Scope) error {
 	out.Purpose = in.Purpose
-	out.Name = in.Name
 	out.ID = in.ID
 	return nil
 }
@@ -344,7 +345,6 @@ func Convert_v1alpha1_SecurityGroup_To_aws_SecurityGroup(in *SecurityGroup, out 
 
 func autoConvert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(in *aws.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
 	out.Purpose = in.Purpose
-	out.Name = in.Name
 	out.ID = in.ID
 	return nil
 }
@@ -356,7 +356,6 @@ func Convert_aws_SecurityGroup_To_v1alpha1_SecurityGroup(in *aws.SecurityGroup, 
 
 func autoConvert_v1alpha1_Subnet_To_aws_Subnet(in *Subnet, out *aws.Subnet, s conversion.Scope) error {
 	out.Purpose = in.Purpose
-	out.Name = in.Name
 	out.ID = in.ID
 	out.Zone = in.Zone
 	return nil
@@ -369,7 +368,6 @@ func Convert_v1alpha1_Subnet_To_aws_Subnet(in *Subnet, out *aws.Subnet, s conver
 
 func autoConvert_aws_Subnet_To_v1alpha1_Subnet(in *aws.Subnet, out *Subnet, s conversion.Scope) error {
 	out.Purpose = in.Purpose
-	out.Name = in.Name
 	out.ID = in.ID
 	out.Zone = in.Zone
 	return nil
@@ -382,7 +380,7 @@ func Convert_aws_Subnet_To_v1alpha1_Subnet(in *aws.Subnet, out *Subnet, s conver
 
 func autoConvert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) error {
 	out.ID = (*string)(unsafe.Pointer(in.ID))
-	out.CIDR = (*aws.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*core.CIDR)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -393,7 +391,7 @@ func Convert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) 
 
 func autoConvert_aws_VPC_To_v1alpha1_VPC(in *aws.VPC, out *VPC, s conversion.Scope) error {
 	out.ID = (*string)(unsafe.Pointer(in.ID))
-	out.CIDR = (*CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*corev1alpha1.CIDR)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -428,9 +426,9 @@ func Convert_aws_VPCStatus_To_v1alpha1_VPCStatus(in *aws.VPCStatus, out *VPCStat
 
 func autoConvert_v1alpha1_Zone_To_aws_Zone(in *Zone, out *aws.Zone, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Internal = aws.CIDR(in.Internal)
-	out.Public = aws.CIDR(in.Public)
-	out.Workers = aws.CIDR(in.Workers)
+	out.Internal = core.CIDR(in.Internal)
+	out.Public = core.CIDR(in.Public)
+	out.Workers = core.CIDR(in.Workers)
 	return nil
 }
 
@@ -441,9 +439,9 @@ func Convert_v1alpha1_Zone_To_aws_Zone(in *Zone, out *aws.Zone, s conversion.Sco
 
 func autoConvert_aws_Zone_To_v1alpha1_Zone(in *aws.Zone, out *Zone, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Internal = CIDR(in.Internal)
-	out.Public = CIDR(in.Public)
-	out.Workers = CIDR(in.Workers)
+	out.Internal = corev1alpha1.CIDR(in.Internal)
+	out.Public = corev1alpha1.CIDR(in.Public)
+	out.Workers = corev1alpha1.CIDR(in.Workers)
 	return nil
 }
 

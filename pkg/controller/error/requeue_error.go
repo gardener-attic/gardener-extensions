@@ -22,9 +22,16 @@ import (
 // RequeueAfterError is an error that indicates that an actuator wants a reconcile operation
 // to be requeued again after RequeueAfter has passed.
 type RequeueAfterError struct {
+	// Cause is an optional cause that may be returned together with a time for requeueing.
+	Cause error
+	// RequeueAfter is the duration after which the request should be enqueued again.
 	RequeueAfter time.Duration
 }
 
 func (e *RequeueAfterError) Error() string {
-	return fmt.Sprintf("requeue in %s", e.RequeueAfter)
+	if e.Cause == nil {
+		return fmt.Sprintf("requeue in %s", e.RequeueAfter)
+	}
+
+	return fmt.Sprintf("requeue in %s due to %+v", e.RequeueAfter, e.Cause)
 }

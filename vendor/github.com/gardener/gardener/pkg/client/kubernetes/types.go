@@ -211,11 +211,6 @@ type Interface interface {
 	APIExtension() apiextensionsclientset.Interface
 	APIRegistration() apiregistrationclientset.Interface
 
-	// Deprecated: Use `Client()` and utils instead.
-	SetGarden(gardenclientset.Interface)
-	// Deprecated: Use `Client()` and utils instead.
-	SetGardenCore(gardencoreclientset.Interface)
-
 	// Cleanup
 	// Deprecated: Use `RESTMapper()` and utils instead.
 	GetResourceAPIGroups() map[string][]string
@@ -275,8 +270,6 @@ type Interface interface {
 	ListDeployments(string, metav1.ListOptions) (*appsv1.DeploymentList, error)
 	// Deprecated: Use `Client()` and utils instead.
 	PatchDeployment(string, string, []byte) (*appsv1.Deployment, error)
-	// Deprecated: Use `Client()` and utils instead.
-	ScaleDeployment(string, string, int32) (*appsv1.Deployment, error)
 	// Deprecated: Use `Client()` and utils instead.
 	DeleteDeployment(string, string) error
 

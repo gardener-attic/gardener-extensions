@@ -51,6 +51,9 @@ func ReadImageVector(path string) (ImageVector, error) {
 	var out ImageVector
 	for _, image := range vector {
 		if overwritten, ok := overwrittenImages[image.Name]; ok {
+			if len(overwritten.Tag) == 0 && len(image.Tag) > 0 {
+				overwritten.Tag = image.Tag
+			}
 			out = append(out, overwritten)
 			continue
 		}
@@ -124,6 +127,29 @@ func (v ImageVector) FindImages(names []string, k8sVersionRuntime, k8sVersionTar
 		images[imageName] = image.String()
 	}
 	return images, nil
+}
+
+// InjectImages injects images from a given image vector into the provided <values> map.
+func (v ImageVector) InjectImages(values map[string]interface{}, k8sVersionRuntime, k8sVersionTarget string, images ...string) (map[string]interface{}, error) {
+	var (
+		copy = make(map[string]interface{})
+		i    = make(map[string]interface{})
+	)
+
+	for k, v := range values {
+		copy[k] = v
+	}
+
+	for _, imageName := range images {
+		image, err := v.FindImage(imageName, k8sVersionRuntime, k8sVersionTarget)
+		if err != nil {
+			return nil, err
+		}
+		i[imageName] = image.String()
+	}
+
+	copy["images"] = i
+	return copy, nil
 }
 
 // ToImage applies the given <targetK8sVersion> to the source to produce an output image.

@@ -61,9 +61,6 @@ const (
 	// CloudPurposeSeed is a constant used while instantiating a cloud botanist for the Seed cluster.
 	CloudPurposeSeed = "seed"
 
-	// ClusterAutoscalerDeploymentName is the name of the cluster-autoscaler deployment.
-	ClusterAutoscalerDeploymentName = "cluster-autoscaler"
-
 	// ConfirmationDeletion is an annotation on a Shoot resource whose value must be set to "true" in order to
 	// allow deleting the Shoot (if the annotation is not set any DELETE request will be denied).
 	ConfirmationDeletion = "confirmation.garden.sapcloud.io/deletion"
@@ -87,8 +84,14 @@ const (
 	// EtcdRoleMain is the constant defining the role for main etcd storing data about objects in Shoot.
 	EtcdRoleMain = "main"
 
+	// EtcdMainStatefulSetName is the constant defining the statefulset name for the main etcd.
+	EtcdMainStatefulSetName = "etcd-main"
+
 	// EtcdRoleEvents is the constant defining the role for etcd storing events in Shoot.
 	EtcdRoleEvents = "events"
+
+	// EtcdEventsStatefulSetName is the constant defining the statefulset name for the events etcd.
+	EtcdEventsStatefulSetName = "etcd-events"
 
 	// GardenNamespace is the namespace in which the configuration and secrets for
 	// the Gardener controller manager will be stored (e.g., secrets for the Seed clusters).
@@ -150,9 +153,6 @@ const (
 	// GardenOperatedBy is the key for an annotation of a Shoot cluster whose value must be a valid email address and
 	// is used to send alerts to.
 	GardenOperatedBy = "garden.sapcloud.io/operatedBy"
-
-	// GardenPurpose is a key for a label describing the purpose of the respective object.
-	GardenPurpose = "garden.sapcloud.io/purpose"
 
 	// IngressPrefix is the part of a FQDN which will be used to construct the domain name for an ingress controller of
 	// a Shoot cluster. For example, when a Shoot specifies domain 'cluster.example.com', the ingress domain would be
@@ -321,6 +321,9 @@ const (
 	// Shoot Care controller and can be used to easily identify Shoot clusters with issues.
 	// Deprecated: Use ShootStatus instead
 	ShootUnhealthy = "shoot.garden.sapcloud.io/unhealthy"
+
+	// ShootHibernated is a constant for a label on the Shoot namespace in the Seed indicating the Shoot's hibernation status.
+	ShootHibernated = "shoot.garden.sapcloud.io/hibernated"
 
 	// ShootOperation is a constant for an annotation on a Shoot in a failed state indicating that an operation shall be performed.
 	ShootOperation = "shoot.garden.sapcloud.io/operation"

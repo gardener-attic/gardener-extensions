@@ -6,3 +6,7 @@ image:
 resources: {}
 
 concurrentSyncs: 5
+
+controllers:
+  infrastructure:
+    ignoreOperationAnnotation: false

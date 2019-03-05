@@ -14,9 +14,7 @@
 
 package aws
 
-import (
-	"path/filepath"
-)
+import "path/filepath"
 
 const (
 	// TerraformerImageName is the name of the Terraformer image.

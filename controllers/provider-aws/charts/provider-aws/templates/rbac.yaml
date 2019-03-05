@@ -11,31 +11,15 @@ rules:
 - apiGroups:
   - extensions.gardener.cloud
   resources:
+  - clusters
   - infrastructures
+  - infrastructures/status
   verbs:
   - get
   - list
   - watch
   - patch
   - update
-- apiGroups:
-  - ""
-  resources:
-  - secrets
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - events
-  verbs:
-  - create
 - apiGroups:
   - ""
   resources:
@@ -47,6 +31,27 @@ rules:
   - watch
   - update
   - patch
+- apiGroups:
+  - ""
+  - batch
+  - rbac.authorization.k8s.io
+  resources:
+  - events
+  - secrets
+  - configmaps
+  - serviceaccounts
+  - rolebindings
+  - jobs
+  - pods
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

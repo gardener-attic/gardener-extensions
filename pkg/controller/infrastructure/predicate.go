@@ -17,9 +17,12 @@ package infrastructure
 import (
 	"strings"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	"k8s.io/apimachinery/pkg/runtime"
+
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
@@ -28,8 +31,8 @@ import (
 // as the given type.
 func TypePredicate(typeName string) predicate.Predicate {
 	typeMatches := func(obj runtime.Object) bool {
-		if config, ok := obj.(*extensionsv1alpha1.Infrastructure); ok {
-			return strings.ToLower(config.Spec.Type) == typeName
+		if infrastructure, ok := obj.(*extensionsv1alpha1.Infrastructure); ok {
+			return strings.ToLower(infrastructure.Spec.Type) == typeName
 		}
 		return false
 	}
@@ -38,27 +41,63 @@ func TypePredicate(typeName string) predicate.Predicate {
 		CreateFunc: func(event event.CreateEvent) bool {
 			return typeMatches(event.Object)
 		},
-		UpdateFunc: func(updateEvent event.UpdateEvent) bool {
-			return typeMatches(updateEvent.ObjectOld)
+		UpdateFunc: func(event event.UpdateEvent) bool {
+			return typeMatches(event.ObjectNew)
 		},
-		DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
-			return typeMatches(deleteEvent.Object)
+		DeleteFunc: func(event event.DeleteEvent) bool {
+			return typeMatches(event.Object)
 		},
-		GenericFunc: func(genericEvent event.GenericEvent) bool {
-			return typeMatches(genericEvent.Object)
+		GenericFunc: func(event event.GenericEvent) bool {
+			return typeMatches(event.Object)
 		},
 	}
 }
 
-type generationChangedPredicate struct {
-	predicate.Funcs
-}
-
-func (generationChangedPredicate) Update(e event.UpdateEvent) bool {
-	return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
-}
-
 // GenerationChangedPredicate is a predicate for generation changes.
-func GenerationChangedPredicate() predicate.Predicate {
-	return generationChangedPredicate{}
+func GenerationChangedPredicate(ignoreOperationAnnotation bool) predicate.Predicate {
+	return predicate.Funcs{
+		UpdateFunc: func(event event.UpdateEvent) bool {
+			if ignoreOperationAnnotation {
+				return event.MetaOld.GetGeneration() != event.MetaNew.GetGeneration()
+			}
+
+			infrastructure, ok := event.ObjectNew.(*extensionsv1alpha1.Infrastructure)
+			if !ok {
+				return false
+			}
+
+			return mayReconcile(infrastructure) || event.MetaOld.GetGeneration() != event.MetaNew.GetGeneration()
+		},
+	}
+}
+
+// OperationAnnotationPredicate is a predicate for the operation annotation.
+func OperationAnnotationPredicate() predicate.Predicate {
+	annotationExists := func(obj runtime.Object) bool {
+		infrastructure, ok := obj.(*extensionsv1alpha1.Infrastructure)
+		if !ok {
+			return false
+		}
+		return mayReconcile(infrastructure)
+	}
+
+	return predicate.Funcs{
+		CreateFunc: func(event event.CreateEvent) bool {
+			return annotationExists(event.Object)
+		},
+		UpdateFunc: func(event event.UpdateEvent) bool {
+			return annotationExists(event.ObjectNew)
+		},
+		GenericFunc: func(event event.GenericEvent) bool {
+			return annotationExists(event.Object)
+		},
+	}
+}
+
+func mayReconcile(infrastructure *extensionsv1alpha1.Infrastructure) bool {
+	return infrastructure.DeletionTimestamp != nil ||
+		infrastructure.Status.LastOperation == nil ||
+		infrastructure.Status.LastOperation.Type == gardencorev1alpha1.LastOperationTypeCreate ||
+		infrastructure.Status.LastOperation.Type == gardencorev1alpha1.LastOperationTypeDelete ||
+		kutil.HasMetaDataAnnotation(&infrastructure.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile)
 }

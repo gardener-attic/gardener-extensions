@@ -7,3 +7,6 @@ extensions:
 - name: os-coreos-alicloud
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/os-coreos-alicloud
+- name: provider-aws
+  gitHubRepo: https://github.com/gardener/gardener-extensions
+  path: controllers/provider-aws

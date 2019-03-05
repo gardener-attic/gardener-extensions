@@ -51,16 +51,13 @@ type InfrastructureSpec struct {
 	// ProviderConfig contains provider-specific configuration for this infrastructure.
 	// +optional
 	ProviderConfig *runtime.RawExtension `json:"providerConfig,omitempty"`
-	// Region is the region of the infrastructure.
+	// Region is the region of this infrastructure.
 	Region string `json:"region"`
 	// SecretRef is a reference to a secret that contains the actual result of the generated cloud config.
 	SecretRef corev1.SecretReference `json:"secretRef"`
 	// SSHPublicKey is the public SSH key that should be used with this infrastructure.
 	// +optional
 	SSHPublicKey []byte `json:"sshPublicKey,omitempty"`
-	// Zones is a list of availability zones.
-	// +optional
-	Zones []string `json:"zones,omitempty"`
 }
 
 // InfrastructureStatus is the status for an Infrastructure resource.

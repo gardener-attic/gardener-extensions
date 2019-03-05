@@ -28,6 +28,9 @@ spec:
         - /gardener-extension-hyper
         - provider-aws-controller-manager
         - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
+        {{- if .Values.controllers.infrastructure.ignoreOperationAnnotation }}
+        - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
+        {{- end }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

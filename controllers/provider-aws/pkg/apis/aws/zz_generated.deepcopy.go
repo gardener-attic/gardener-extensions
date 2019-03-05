@@ -21,6 +21,7 @@ limitations under the License.
 package aws
 
 import (
+	core "github.com/gardener/gardener/pkg/apis/core"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -216,7 +217,7 @@ func (in *VPC) DeepCopyInto(out *VPC) {
 	}
 	if in.CIDR != nil {
 		in, out := &in.CIDR, &out.CIDR
-		*out = new(CIDR)
+		*out = new(core.CIDR)
 		**out = **in
 	}
 	return
