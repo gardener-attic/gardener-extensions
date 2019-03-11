@@ -26,6 +26,11 @@ WORKDIR /
 FROM base AS gardener-extension-hyper
 
 COPY controllers/provider-aws/charts /controllers/provider-aws/charts
+COPY controllers/provider-azure/charts /controllers/provider-azure/charts
+COPY controllers/provider-gcp/charts /controllers/provider-gcp/charts
+COPY controllers/provider-openstack/charts /controllers/provider-openstack/charts
+COPY controllers/provider-alicloud/charts /controllers/provider-alicloud/charts
+COPY controllers/provider-local/charts /controllers/provider-local/charts
 
 COPY --from=builder /go/bin/gardener-extension-hyper /gardener-extension-hyper
 

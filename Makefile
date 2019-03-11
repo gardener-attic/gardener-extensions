@@ -96,3 +96,44 @@ start-provider-aws:
 		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
 		--leader-election=false \
 		--infrastructure-ignore-operation-annotation=false
+
+.PHONY: start-provider-azure
+start-provider-azure:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
+		--leader-election=false \
+		--infrastructure-ignore-operation-annotation=false
+
+.PHONY: start-provider-gcp
+start-provider-gcp:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-gcp/cmd/gardener-extension-provider-gcp \
+		--leader-election=false \
+		--infrastructure-ignore-operation-annotation=false
+
+.PHONY: start-provider-openstack
+start-provider-openstack:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-openstack/cmd/gardener-extension-provider-openstack \
+		--leader-election=false \
+		--infrastructure-ignore-operation-annotation=false
+
+.PHONY: start-provider-alicloud
+start-provider-alicloud:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
+		--leader-election=false \
+		--infrastructure-ignore-operation-annotation=false
+
+.PHONY: start-provider-local
+start-provider-local:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-local/cmd/gardener-extension-provider-local \
+		--leader-election=false \
+		--infrastructure-ignore-operation-annotation=false
+

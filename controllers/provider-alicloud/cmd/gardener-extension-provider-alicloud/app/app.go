@@ -19,9 +19,6 @@ import (
 	"fmt"
 	"os"
 
-	awsapi "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	awsv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
-	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -31,10 +28,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the AWS provider controller.
-const Name = "provider-aws"
+// Name is the name of the Alicloud provider controller.
+const Name = "provider-alicloud"
 
-// NewControllerManagerCommand creates a new command for running a AWS provider controller.
+// NewControllerManagerCommand creates a new command for running a Alicloud provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
@@ -68,19 +65,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
-			}
-
-			if err := awsapi.AddToScheme(mgr.GetScheme()); err != nil {
-				controllercmd.LogErrAndExit(err, "Could not update manager scheme with internal AWS API scheme")
-			}
-			if err := awsv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
-				controllercmd.LogErrAndExit(err, "Could not update manager scheme with v1alpha1 AWS API scheme")
-			}
-
-			ctrlOpts.Completed().Apply(&awsinfrastructure.Options)
-			infrastructureReconcilerOpts.Completed().Apply(&awsinfrastructure.IgnoreOperationAnnotation)
-			if err := awsinfrastructure.AddToManager(mgr); err != nil {
-				controllercmd.LogErrAndExit(err, "Could not add controller to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {
