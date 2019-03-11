@@ -14,6 +14,12 @@
 
 package coreos
 
+import (
+	"fmt"
+
+	yaml "gopkg.in/yaml.v2"
+)
+
 // CloudConfig is a structure containing the relevant fields for generating the Config
 // Container Linux specific cloud config. It can be marshalled to YAML.
 type CloudConfig struct {
@@ -81,4 +87,13 @@ type File struct {
 	Path string `yaml:"path,omitempty"`
 	// RawFilePermissions describes the permissions for the file, e.g. 0777.
 	RawFilePermissions string `yaml:"permissions,omitempty"`
+}
+
+// String returns the string representation of the CloudConfig structure.
+func (c CloudConfig) String() (string, error) {
+	bytes, err := yaml.Marshal(c)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("#cloud-config\n\n%s", string(bytes)), nil
 }

@@ -19,6 +19,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// OperatingSystemConfigResource is a constant for the name of the OperatingSystemConfig resource.
+const OperatingSystemConfigResource = "OperatingSystemConfig"
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -33,7 +36,7 @@ type OperatingSystemConfig struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// OperatingSystemConfigList is a list of OperatingSystemConfig resources
+// OperatingSystemConfigList is a list of OperatingSystemConfig resources.
 type OperatingSystemConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
@@ -42,7 +45,7 @@ type OperatingSystemConfigList struct {
 	Items []OperatingSystemConfig `json:"items"`
 }
 
-// OperatingSystemConfigSpec is the spec for a OperatingSystemConfig resource
+// OperatingSystemConfigSpec is the spec for a OperatingSystemConfig resource.
 type OperatingSystemConfigSpec struct {
 	// DefaultSpec is a structure containing common fields used by all extension resources.
 	DefaultSpec `json:",inline"`
@@ -134,7 +137,7 @@ type FileContentInline struct {
 	Data string `json:"data"`
 }
 
-// OperatingSystemConfigStatus is the status for a OperatingSystemConfig resource
+// OperatingSystemConfigStatus is the status for a OperatingSystemConfig resource.
 type OperatingSystemConfigStatus struct {
 	// DefaultStatus is a structure containing common fields used by all extension resources.
 	DefaultStatus `json:",inline"`
@@ -147,7 +150,7 @@ type OperatingSystemConfigStatus struct {
 	// "/usr/bin/reload-cloud-config -from-file=<path>". The <path> is optionally provided by Gardener
 	// in the .spec.reloadConfigFilePath field.
 	// +optional
-	Command string `json:"command,omitempty"`
+	Command *string `json:"command,omitempty"`
 	// Units is a list of systemd unit names that are part of the generated Cloud Config and shall be
 	// restarted when a new version has been downloaded.
 	// +optional

@@ -16,25 +16,27 @@ package controller
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/pkg/util"
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/util/sets"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
+	"reflect"
+	"time"
 
 	controllererror "github.com/gardener/gardener-extensions/pkg/controller/error"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-)
-
-import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes/scheme"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
 )
 
 var (
@@ -64,33 +66,26 @@ func ReconcileErr(err error) (reconcile.Result, error) {
 	return reconcile.Result{}, err
 }
 
-// LastOperation creates a new LastOperation from the given parameters.
-func LastOperation(t extensionsv1alpha1.LastOperationType, state extensionsv1alpha1.LastOperationState, progress int, description string) *extensionsv1alpha1.LastOperation {
-	return &extensionsv1alpha1.LastOperation{
-		LastUpdateTime: metav1.Now(),
-		Type:           t,
-		State:          state,
-		Description:    description,
-		Progress:       progress,
+// ReconcileErrCause returns the cause in case the error is an RequeueAfterError. Otherwise,
+// it returns the input error.
+func ReconcileErrCause(err error) error {
+	if requeueAfter, ok := err.(*controllererror.RequeueAfterError); ok {
+		return requeueAfter.Cause
 	}
+	return err
 }
 
-// LastError creates a new LastError from the given parameters.
-func LastError(description string, codes ...extensionsv1alpha1.ErrorCode) *extensionsv1alpha1.LastError {
-	return &extensionsv1alpha1.LastError{
-		Description: description,
-		Codes:       codes,
+// ReconcileErrCauseOrErr returns the cause of the error or the error if the cause is nil.
+func ReconcileErrCauseOrErr(err error) error {
+	if cause := ReconcileErrCause(err); cause != nil {
+		return cause
 	}
+	return err
 }
 
-// ReconcileSucceeded returns a LastOperation with state succeeded at 100 percent and a nil LastError.
-func ReconcileSucceeded(t extensionsv1alpha1.LastOperationType, description string) (*extensionsv1alpha1.LastOperation, *extensionsv1alpha1.LastError) {
-	return LastOperation(t, extensionsv1alpha1.LastOperationStateSucceeded, 100, description), nil
-}
-
-// ReconcileError returns a LastOperation with state error and a LastError with the given description and codes.
-func ReconcileError(t extensionsv1alpha1.LastOperationType, description string, progress int, codes ...extensionsv1alpha1.ErrorCode) (*extensionsv1alpha1.LastOperation, *extensionsv1alpha1.LastError) {
-	return LastOperation(t, extensionsv1alpha1.LastOperationStateError, progress, description), LastError(description, codes...)
+// SetupSignalHandlerContext sets up a context from signals.SetupSignalHandler stop channel.
+func SetupSignalHandlerContext() context.Context {
+	return util.ContextFromStopChannel(signals.SetupSignalHandler())
 }
 
 // AddToManagerBuilder aggregates various AddToManager functions.
@@ -198,7 +193,70 @@ func CreateOrUpdate(ctx context.Context, c client.Client, obj runtime.Object, tr
 	return c.Update(ctx, obj)
 }
 
-// SetupSignalHandlerContext sets up a context from signals.SetupSignalHandler stop channel.
-func SetupSignalHandlerContext() context.Context {
-	return util.ContextFromStopChannel(signals.SetupSignalHandler())
+// TryUpdate tries to apply the given transformation function onto the given object, and to update it afterwards.
+// It retries the update with an exponential backoff.
+func TryUpdate(ctx context.Context, backoff wait.Backoff, c client.Client, obj runtime.Object, transform func() error) error {
+	return tryUpdate(ctx, backoff, c, obj, c.Update, transform)
+}
+
+// TryUpdateStatus tries to apply the given transformation function onto the given object, and to update its
+// status afterwards. It retries the status update with an exponential backoff.
+func TryUpdateStatus(ctx context.Context, backoff wait.Backoff, c client.Client, obj runtime.Object, transform func() error) error {
+	return tryUpdate(ctx, backoff, c, obj, c.Status().Update, transform)
+}
+
+func tryUpdate(ctx context.Context, backoff wait.Backoff, c client.Client, obj runtime.Object, updateFunc func(context.Context, runtime.Object) error, transform func() error) error {
+	key, err := client.ObjectKeyFromObject(obj)
+	if err != nil {
+		return err
+	}
+
+	return exponentialBackoff(ctx, backoff, func() (bool, error) {
+		if err := c.Get(ctx, key, obj); err != nil {
+			return false, err
+		}
+
+		beforeTransform := obj.DeepCopyObject()
+		if err := transform(); err != nil {
+			return false, err
+		}
+
+		if reflect.DeepEqual(obj, beforeTransform) {
+			return true, nil
+		}
+
+		if err := updateFunc(ctx, obj); err != nil {
+			if apierrors.IsConflict(err) {
+				return false, nil
+			}
+			return false, err
+		}
+		return true, nil
+	})
+}
+
+func exponentialBackoff(ctx context.Context, backoff wait.Backoff, condition wait.ConditionFunc) error {
+	duration := backoff.Duration
+
+	for i := 0; i < backoff.Steps; i++ {
+		if ok, err := condition(); err != nil || ok {
+			return err
+		}
+
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			adjusted := duration
+			if backoff.Jitter > 0.0 {
+				adjusted = wait.Jitter(duration, backoff.Jitter)
+			}
+			time.Sleep(adjusted)
+			duration = time.Duration(float64(duration) * backoff.Factor)
+		}
+
+		i++
+	}
+
+	return wait.ErrWaitTimeout
 }

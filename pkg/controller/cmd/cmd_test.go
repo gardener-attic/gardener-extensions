@@ -16,13 +16,17 @@ package cmd
 
 import (
 	"errors"
+	"testing"
+
 	mocklogr "github.com/gardener/gardener-extensions/pkg/mock/go-logr/logr"
 	"github.com/gardener/gardener-extensions/pkg/util/test"
+
 	"github.com/golang/mock/gomock"
+
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"testing"
 )
 
 func TestCmd(t *testing.T) {
@@ -53,7 +57,7 @@ var _ = Describe("Cmd", func() {
 			logger := mocklogr.NewMockLogger(ctrl)
 			err := errors.New("error")
 			msg := "msg"
-			logger.EXPECT().Error(err, msg, nil)
+			logger.EXPECT().Error(err, msg, []interface{}{})
 			Log.Fulfill(logger)
 
 			LogErrAndExit(err, msg)

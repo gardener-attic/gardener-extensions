@@ -15,26 +15,16 @@
 package operatingsystemconfig
 
 import (
-	"context"
-	"github.com/gardener/gardener-extensions/pkg/util"
-	corev1 "k8s.io/api/core/v1"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	controllerutil "github.com/gardener/gardener-extensions/pkg/controller"
-
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
-	"github.com/go-logr/logr"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
-
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -65,6 +55,13 @@ func Add(mgr manager.Manager, args AddArgs) error {
 	return add(mgr, args.Type, args.ControllerOptions, args.Predicates)
 }
 
+// DefaultPredicates returns the default predicates for an operatingsystemconfig reconciler.
+func DefaultPredicates() []predicate.Predicate {
+	return []predicate.Predicate{
+		extensionscontroller.GenerationChangedPredicate(),
+	}
+}
+
 func add(mgr manager.Manager, typeName string, options controller.Options, predicates []predicate.Predicate) error {
 	ctrl, err := controller.New("operatingsystemconfig-controller", mgr, options)
 	if err != nil {
@@ -72,7 +69,7 @@ func add(mgr manager.Manager, typeName string, options controller.Options, predi
 	}
 
 	if predicates == nil {
-		predicates = append(predicates, GenerationChangedPredicate())
+		predicates = DefaultPredicates()
 	}
 	predicates = append(predicates, TypePredicate(typeName))
 
@@ -80,114 +77,9 @@ func add(mgr manager.Manager, typeName string, options controller.Options, predi
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToOSCMapper(mgr.GetClient(), typeName)}); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToOSCMapper(mgr.GetClient(), predicates)}); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-// reconciler reconciles OperatingSystemConfig resources of Gardener's
-// `extensions.gardener.cloud` API group.
-type reconciler struct {
-	logger   logr.Logger
-	actuator Actuator
-
-	ctx    context.Context
-	client client.Client
-}
-
-var _ reconcile.Reconciler = &reconciler{}
-
-// NewReconciler creates a new reconcile.Reconciler that reconciles
-// OperatingSystemConfig resources of Gardener's `extensions.gardener.cloud` API group.
-func NewReconciler(actuator Actuator) reconcile.Reconciler {
-	logger := log.Log.WithName(name)
-	return &reconciler{logger: logger, actuator: actuator}
-}
-
-// InjectFunc enables dependency injection into the actuator.
-func (r *reconciler) InjectFunc(f inject.Func) error {
-	return f(r.actuator)
-}
-
-// InjectClient injects the controller runtime client into the reconciler.
-func (r *reconciler) InjectClient(client client.Client) error {
-	r.client = client
-	return nil
-}
-
-// InjectStopChannel is an implementation for getting the respective stop channel managed by the controller-runtime.
-func (r *reconciler) InjectStopChannel(stopCh <-chan struct{}) error {
-	r.ctx = util.ContextFromStopChannel(stopCh)
-	return nil
-}
-
-// Reconcile is the reconciler function that gets executed in case there are new events for the `OperatingSystemConfig`
-// resources.
-func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	osc := &extensionsv1alpha1.OperatingSystemConfig{}
-	if err := r.client.Get(r.ctx, request.NamespacedName, osc); err != nil {
-		if apierrors.IsNotFound(err) {
-			return reconcile.Result{}, nil
-		}
-		r.logger.Error(err, "Could not fetch OperatingSystemConfig")
-		return reconcile.Result{}, err
-	}
-
-	if osc.DeletionTimestamp != nil {
-		return r.delete(r.ctx, osc)
-	}
-	return r.reconcile(r.ctx, osc)
-}
-
-func (r *reconciler) reconcile(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) (reconcile.Result, error) {
-	if err := controllerutil.EnsureFinalizer(ctx, r.client, FinalizerName, osc); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	exist, err := r.actuator.Exists(ctx, osc)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	if exist {
-		r.logger.Info("Reconciling operating system config triggers idempotent update.", "osc", osc.Name)
-		if err := r.actuator.Update(ctx, osc); err != nil {
-			return controllerutil.ReconcileErr(err)
-		}
-		return reconcile.Result{}, nil
-	}
-
-	r.logger.Info("Reconciling operating system config triggers idempotent create.", "osc", osc.Name)
-	if err := r.actuator.Create(ctx, osc); err != nil {
-		r.logger.Error(err, "Unable to create operating system config", "osc", osc.Name)
-		return controllerutil.ReconcileErr(err)
-	}
-	return reconcile.Result{}, nil
-}
-
-func (r *reconciler) delete(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) (reconcile.Result, error) {
-	hasFinalizer, err := controllerutil.HasFinalizer(osc, FinalizerName)
-	if err != nil {
-		r.logger.Error(err, "Could not instantiate finalizer deletion")
-		return reconcile.Result{}, err
-	}
-
-	if !hasFinalizer {
-		r.logger.Info("Reconciling operating system config causes a no-op as there is no finalizer.", "osc", osc.Name)
-		return reconcile.Result{}, nil
-	}
-
-	if err := r.actuator.Delete(ctx, osc); err != nil {
-		r.logger.Error(err, "Error deleting operating system config", "osc", osc.Name)
-		return controllerutil.ReconcileErr(err)
-	}
-
-	r.logger.Info("Operating system config deletion successful, removing finalizer.", "osc", osc.Name)
-	if err := controllerutil.DeleteFinalizer(ctx, r.client, FinalizerName, osc); err != nil {
-		r.logger.Error(err, "Error removing finalizer from operating system config", "osc", osc.Name)
-		return reconcile.Result{}, err
-	}
-	return reconcile.Result{}, nil
 }

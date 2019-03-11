@@ -13,11 +13,11 @@
 # limitations under the License.
 
 REGISTRY         := eu.gcr.io/gardener-project
-IMAGE_PREFIX     := $(REGISTRY)/gardener-extension-os-coreos
+IMAGE_PREFIX     := $(REGISTRY)/gardener/gardener-extension-hyper
 REPO_ROOT        := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR         := $(REPO_ROOT)/hack
 VERSION          := $(shell bash -c 'source $(HACK_DIR)/common.sh && echo $$VERSION')
-LD_FLAGS         := "-w -X github.com/gardener/gardener-extensions/gardener-extension-os-coreos/pkg/version.Version=$(IMAGE_TAG)"
+LD_FLAGS         := "-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(IMAGE_TAG)"
 VERIFY           := true
 
 ### Build commands
@@ -49,7 +49,6 @@ verify: check generate test format
 install:
 	@./hack/install.sh
 
-
 .PHONY: all
 ifeq ($(VERIFY),true)
 all: verify generate install
@@ -78,8 +77,22 @@ revendor:
 
 .PHONY: start-os-coreos
 start-os-coreos:
-	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/os-coreos/cmd/gardener-extension-os-coreos
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/os-coreos/cmd/gardener-extension-os-coreos \
+		--leader-election=false
 
 .PHONY: start-os-coreos-alicloud
 start-os-coreos-alicloud:
-	@LEADER_ELECTION_NAMESPACE=garden go run -ldflags $(LD_FLAGS) ./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud \
+		--leader-election=false
+
+.PHONY: start-provider-aws
+start-provider-aws:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
+		--leader-election=false \
+		--infrastructure-ignore-operation-annotation=false

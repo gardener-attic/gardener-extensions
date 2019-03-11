@@ -49,16 +49,3 @@ func TypePredicate(typeName string) predicate.Predicate {
 		},
 	}
 }
-
-type generationChangedPredicate struct {
-	predicate.Funcs
-}
-
-func (generationChangedPredicate) Update(e event.UpdateEvent) bool {
-	return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
-}
-
-// GenerationChangedPredicate is a predicate for generation changes.
-func GenerationChangedPredicate() predicate.Predicate {
-	return generationChangedPredicate{}
-}
