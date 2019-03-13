@@ -1,0 +1,36 @@
+#cloud-config
+write_files:
+{{ range $_, $file := .Files -}}
+- path: '{{ $file.Path }}'
+{{- if $file.Permissions }}
+  permissions: '{{ $file.Permissions }}'
+{{- end }}
+  encoding: b64
+  content: |
+    {{ $file.Content }}
+{{ end -}}
+{{- range $_, $unit := .Units -}}
+{{ if $unit.Content -}}
+- path: '{{ $unit.Path }}'
+  encoding: b64
+  content: |
+    {{ $unit.Content }}
+{{ end -}}
+{{ if $unit.DropIns -}}
+{{ range $_, $dropIn := $unit.DropIns.Items -}}
+- path: '{{ $dropIn.Path }}'
+  encoding: b64
+  content: |
+    {{ $dropIn.Content }}
+{{- end -}}
+{{- end -}}
+{{- end }}
+runcmd:
+- systemctl daemon-reload
+{{ if .Bootstrap -}}
+- ln -s /usr/bin/docker /bin/docker
+- systemctl start docker
+{{ end -}}
+{{ range $_, $unit := .Units -}}
+- systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
+{{ end -}}

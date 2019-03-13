@@ -84,6 +84,13 @@ start-os-coreos:
 		./controllers/os-coreos/cmd/gardener-extension-os-coreos \
 		--leader-election=$(LEADER_ELECTION)
 
+.PHONY: start-os-jeos
+start-os-jeos:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos \
+		--leader-election=false
+
 .PHONY: start-os-coreos-alicloud
 start-os-coreos-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
