@@ -70,6 +70,14 @@ required = [
   name = "github.com/spf13/cobra"
   version = "0.0.3"
 
+[[constraint]]
+  name = "golang.org/x/oauth2"
+  revision = "c85d3e98c914e3a33234ad863dcbff5dbc425bb8"
+
+[[constraint]]
+  name = "google.golang.org/api"
+  version = "0.2.0"
+
 # Dependencies for testing purposes only
 
 [[constraint]]

@@ -16,30 +16,26 @@ package controller
 
 import (
 	"context"
-
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/equality"
-	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-// PredicatesMatch returns true if all predicates match for the given object.
-func PredicatesMatch(predicates []predicate.Predicate, obj runtime.Object) bool {
-	m, err := meta.Accessor(obj)
-	if err != nil {
-		return false
-	}
+// PredicateLog is the logger for predicates.
+var PredicateLog logr.Logger = log.Log
 
-	e := event.GenericEvent{
-		Meta:   m,
-		Object: obj,
-	}
+// EvalGenericPredicate returns true if all predicates match for the given object.
+func EvalGenericPredicate(predicates []predicate.Predicate, obj runtime.Object) bool {
+	e := NewGenericEventFromObject(obj)
 
-	for _, predicate := range predicates {
-		if !predicate.Generic(e) {
+	for _, p := range predicates {
+		if !p.Generic(e) {
 			return false
 		}
 	}
@@ -50,15 +46,12 @@ func PredicatesMatch(predicates []predicate.Predicate, obj runtime.Object) bool 
 // ShootFailedPredicate is a predicate for failed shoots.
 func ShootFailedPredicate(c client.Client) predicate.Predicate {
 	ctx := context.TODO()
+	log := PredicateLog.WithName("shoot-failed")
 
-	shootNotFailed := func(obj runtime.Object) bool {
-		accessor, err := meta.Accessor(obj)
+	shootNotFailed := func(log logr.Logger, meta metav1.Object) bool {
+		cluster, err := GetCluster(ctx, c, meta.GetNamespace())
 		if err != nil {
-			return false
-		}
-
-		cluster, err := GetCluster(ctx, c, accessor.GetNamespace())
-		if err != nil {
+			log.Info("Could not retrieve corresponding cluster", "error", err.Error())
 			return false
 		}
 
@@ -67,16 +60,16 @@ func ShootFailedPredicate(c client.Client) predicate.Predicate {
 
 	return predicate.Funcs{
 		CreateFunc: func(event event.CreateEvent) bool {
-			return shootNotFailed(event.Object)
+			return shootNotFailed(CreateEventLogger(log, event), event.Meta)
 		},
 		UpdateFunc: func(event event.UpdateEvent) bool {
-			return shootNotFailed(event.ObjectNew)
+			return shootNotFailed(UpdateEventLogger(log, event), event.MetaNew)
 		},
 		DeleteFunc: func(event event.DeleteEvent) bool {
-			return shootNotFailed(event.Object)
+			return shootNotFailed(DeleteEventLogger(log, event), event.Meta)
 		},
 		GenericFunc: func(event event.GenericEvent) bool {
-			return shootNotFailed(event.Object)
+			return shootNotFailed(GenericEventLogger(log, event), event.Meta)
 		},
 	}
 }

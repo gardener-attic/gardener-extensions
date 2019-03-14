@@ -27,3 +27,4 @@ for source_tree in ${SOURCE_TREES[@]}; do
 done
 
 packr2 clean "$ROOT/controllers/os-coreos-alicloud/pkg/coreos-alicloud/internal"
+packr2 clean "$ROOT/controllers/provider-gcp/pkg/internal/imagevector"

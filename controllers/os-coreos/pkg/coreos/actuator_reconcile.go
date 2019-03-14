@@ -32,7 +32,7 @@ var coreOSCloudInitCommand = fmt.Sprintf("/usr/bin/coreos-cloudinit --from-file=
 func (c *actuator) reconcile(ctx context.Context, config *extensionsv1alpha1.OperatingSystemConfig) ([]byte, *string, []string, error) {
 	cloudConfig, units, err := c.cloudConfigFromOperatingSystemConfig(ctx, config)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("Could not generate cloud config: %v", err)
+		return nil, nil, nil, fmt.Errorf("could not generate cloud config: %v", err)
 	}
 
 	var command *string

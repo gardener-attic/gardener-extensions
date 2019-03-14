@@ -16,8 +16,8 @@ package infrastructure
 
 import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -39,8 +39,6 @@ const (
 type AddArgs struct {
 	// Actuator is an infrastructure actuator.
 	Actuator Actuator
-	// Type is the infrastructure type the actuator supports.
-	Type string
 	// ControllerOptions are the controller options used for creating a controller.
 	// The options.Reconciler is always overridden with a reconciler created from the
 	// given actuator.
@@ -48,21 +46,21 @@ type AddArgs struct {
 	// Predicates are the predicates to use.
 	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
-	// IgnoreOperationAnnotation defines whether to ignore the operation annotation.
-	IgnoreOperationAnnotation bool
 }
 
 // DefaultPredicates returns the default predicates for an infrastructure reconciler.
-func DefaultPredicates(mgr manager.Manager, ignoreOperationAnnotation bool) []predicate.Predicate {
+func DefaultPredicates(client client.Client, typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionscontroller.ShootFailedPredicate(mgr.GetClient()),
+			TypePredicate(typeName),
+			extensionscontroller.ShootFailedPredicate(client),
 			extensionscontroller.GenerationChangedPredicate(),
 		}
 	}
 
 	return []predicate.Predicate{
-		extensionscontroller.ShootFailedPredicate(mgr.GetClient()),
+		TypePredicate(typeName),
+		extensionscontroller.ShootFailedPredicate(client),
 		OperationAnnotationPredicate(),
 		extensionscontroller.OrPredicate(
 			extensionscontroller.GenerationChangedPredicate(),
@@ -75,20 +73,15 @@ func DefaultPredicates(mgr manager.Manager, ignoreOperationAnnotation bool) []pr
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(mgr, args.Actuator)
-	return add(mgr, args.Type, args.ControllerOptions, args.IgnoreOperationAnnotation, args.Predicates)
+	return add(mgr, args.ControllerOptions, args.Predicates)
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, typeName string, options controller.Options, ignoreOperationAnnotation bool, predicates []predicate.Predicate) error {
+func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate) error {
 	ctrl, err := controller.New(ControllerName, mgr, options)
 	if err != nil {
 		return err
 	}
-
-	if predicates == nil {
-		predicates = DefaultPredicates(mgr, ignoreOperationAnnotation)
-	}
-	predicates = append(predicates, TypePredicate(typeName))
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Infrastructure{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err

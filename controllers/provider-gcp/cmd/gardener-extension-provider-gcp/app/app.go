@@ -17,6 +17,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
+	gcpcontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller"
+	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	"os"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -40,14 +43,17 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
-		ctrlOpts = &controllercmd.ControllerOptions{
+
+		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		infrastructureReconcilerOpts = &infrastructure.ReconcilerOptions{
+		infraReconcileOpts = &infrastructure.ReconcilerOptions{
 			IgnoreOperationAnnotation: true,
 		}
+		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
+		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, ctrlOpts, infrastructureReconcilerOpts)
+		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts)
 	)
 
 	cmd := &cobra.Command{
@@ -65,6 +71,17 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			infraCtrlOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.Controller)
+			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+
+			if err := gcpcontroller.AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {

@@ -60,7 +60,7 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			ctrlOpts.Completed().Apply(&coreos.Options)
+			ctrlOpts.Completed().Apply(&coreos.DefaultAddOptions.Controller)
 
 			if err := coreos.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controller to manager")

@@ -17,6 +17,7 @@ package operatingsystemconfig
 import (
 	"context"
 	"fmt"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -112,7 +113,7 @@ func (r *reconciler) reconcile(ctx context.Context, osc *extensionsv1alpha1.Oper
 	userData, command, units, err := r.actuator.Reconcile(ctx, osc)
 	if err != nil {
 		msg := "Error reconciling operating system config"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), osc, operationType, msg)
+		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), osc, operationType, msg))
 		r.logger.Error(err, msg, "osc", osc.Name)
 		return extensionscontroller.ReconcileErr(err)
 	}
@@ -127,7 +128,7 @@ func (r *reconciler) reconcile(ctx context.Context, osc *extensionsv1alpha1.Oper
 		return controllerutil.SetControllerReference(osc, secret, r.scheme)
 	}); err != nil {
 		msg := "Could not apply secret for generated cloud config"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), osc, operationType, msg)
+		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), osc, operationType, msg))
 		r.logger.Error(err, msg, "osc", osc.Name)
 		return extensionscontroller.ReconcileErr(err)
 	}
@@ -171,7 +172,7 @@ func (r *reconciler) delete(ctx context.Context, osc *extensionsv1alpha1.Operati
 	r.logger.Info("Starting the deletion of operating system config", "osc", osc.Name)
 	if err := r.actuator.Delete(ctx, osc); err != nil {
 		msg := "Error deleting operating system config"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), osc, operationType, msg)
+		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), osc, operationType, msg))
 		r.logger.Error(err, msg, "osc", osc.Name)
 		return extensionscontroller.ReconcileErr(err)
 	}

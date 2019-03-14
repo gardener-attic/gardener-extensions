@@ -52,7 +52,7 @@ func (m *secretToInfrastructureMapper) Map(obj handler.MapObject) []reconcile.Re
 
 	var requests []reconcile.Request
 	for _, infrastructure := range infrastructureList.Items {
-		if !extensionscontroller.PredicatesMatch(m.predicates, &infrastructure) {
+		if !extensionscontroller.EvalGenericPredicate(m.predicates, &infrastructure) {
 			continue
 		}
 
@@ -96,7 +96,7 @@ func (m *clusterToInfrastructureMapper) Map(obj handler.MapObject) []reconcile.R
 
 	var requests []reconcile.Request
 	for _, infrastructure := range infrastructureList.Items {
-		if !extensionscontroller.PredicatesMatch(m.predicates, &infrastructure) {
+		if !extensionscontroller.EvalGenericPredicate(m.predicates, &infrastructure) {
 			continue
 		}
 

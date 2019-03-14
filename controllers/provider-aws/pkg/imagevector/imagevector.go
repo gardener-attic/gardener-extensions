@@ -15,19 +15,38 @@
 package imagevector
 
 import (
-	"path/filepath"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
+	"github.com/gobuffalo/packr/v2"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
-// ImageVector is the image vector that contains al the needed images
-var ImageVector imagevector.ImageVector
+var imageVector imagevector.ImageVector
 
 func init() {
-	var err error
-	ImageVector, err = imagevector.ReadFile(filepath.Join(aws.ChartsPath, "images.yaml"))
+	box := packr.New("charts", "../../../charts")
+
+	imagesYaml, err := box.FindString("images.yaml")
 	runtime.Must(err)
+
+	imageVector, err := imagevector.Read(strings.NewReader(imagesYaml))
+	runtime.Must(err)
+
+	imageVector, err = imagevector.WithEnvOverride(imageVector)
+	runtime.Must(err)
+}
+
+// ImageVector is the image vector that contains al the needed images
+func ImageVector() imagevector.ImageVector {
+	return imageVector
+}
+
+// TerraformerImage returns the Terraformer image.
+func TerraformerImage() string {
+	image, err := imageVector.FindImage(aws.TerraformerImageName, "", "")
+	runtime.Must(err)
+
+	return image.String()
 }

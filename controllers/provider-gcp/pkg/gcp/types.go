@@ -14,16 +14,11 @@
 
 package gcp
 
-import "path/filepath"
-
 const (
-	// TerraformerImageName is the name of the Terraformer image.
-	TerraformerImageName = "terraformer"
-)
 
-var (
-	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-gcp", "charts")
-	// InternalChartsPath is the path to the internal charts
-	InternalChartsPath = filepath.Join(ChartsPath, "internal")
+	// ServiceAccountJSONField is the field in a secret where the service account JSON is stored at.
+	ServiceAccountJSONField = "serviceaccount.json"
+
+	// Type is the type of resources managed by the GCP actuator.
+	Type = "gcp"
 )
