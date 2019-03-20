@@ -1,0 +1,47 @@
+apiVersion: certificateservice.extensions.gardener.cloud/v1alpha1
+kind: CertificateServiceConfiguration
+metadata:
+  name: certificate-service
+  namespace: {{ .Release.Namespace }}
+spec:
+  issuerName: {{ required ".Values.certificateConfig.issuerName is required" .Values.certificateConfig.issuerName }}
+  acme:
+    email: {{ required ".Values.certificateConfig.acme.email is required" .Values.certificateConfig.acme.email }}
+    server: {{ required ".Values.certificateConfig.acme.server is required" .Values.certificateConfig.acme.server }}
+    {{- if .Values.certificateConfig.acme.privateKey }}
+    privateKey: | 
+{{ .Values.certificateConfig.acme.privateKey | trim | indent 6 }}
+    {{- end }}
+  providers:
+    {{- if .Values.certificateConfig.providers.clouddns }}
+    clouddns:
+    {{- range .Values.certificateConfig.providers.clouddns }}
+    - name: {{ required ".name is required" .name }}
+      {{- if not .domains }}
+      {{ required ".domains is required" .domains }}
+      {{- end }}
+      domains: 
+      {{- range .domains }}
+      - {{ . }}
+      {{- end }}
+      project: {{ required ".project is required" .project }}
+      serviceAccount: |
+{{required ".serviceAccount is required" .serviceAccount | trim | indent 8 }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.certificateConfig.providers.route53 }}
+    route53:
+    {{- range .Values.certificateConfig.providers.route53 }}
+    - name: {{ required ".name is required" .name }}
+      {{- if not .domains }}
+      {{ required ".domains is required" .domains }}
+      {{- end }}
+      domains: 
+      {{- range .domains }}
+      - {{ . }}
+      {{- end }}
+      region: {{ required ".region is required" .region }}
+      accessKeyID: {{ required ".accessKeyID is required" .accessKeyID }}
+      secretAccessKey: {{ required ".secretAccessKey is required" .secretAccessKey }}
+    {{- end }}
+    {{- end }}

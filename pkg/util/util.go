@@ -16,6 +16,9 @@ package util
 
 import (
 	"context"
+	"encoding/json"
+
+	"github.com/gardener/gardener/pkg/utils"
 )
 
 // ContextFromStopChannel creates a new context from a given stop channel.
@@ -27,4 +30,13 @@ func ContextFromStopChannel(stopCh <-chan struct{}) context.Context {
 	}()
 
 	return ctx
+}
+
+// ComputeSecretCheckSum computes a SHA256 checksum for the give map.
+func ComputeSecretCheckSum(data map[string][]byte) string {
+	jsonString, err := json.Marshal(data)
+	if err != nil {
+		return ""
+	}
+	return utils.ComputeSHA256Hex(jsonString)
 }

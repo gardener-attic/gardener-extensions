@@ -1,0 +1,107 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gardener-extension-certificate-service
+  labels:
+    app.kubernetes.io/name: gardener-extension-certificate-service
+    helm.sh/chart: gardener-extension-certificate-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+rules:
+- apiGroups:
+  - extensions.gardener.cloud
+  resources:
+  - extensions
+  - extensions/status
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gardener-extension-generic-certificate-service
+  labels:
+    app.kubernetes.io/name: gardener-extension-generic-certificate-service
+    helm.sh/chart: gardener-extension-generic-certificate-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gardener-extension-generic-certificate-service
+subjects:
+- kind: ServiceAccount
+  name: gardener-extension-generic-certificate-service
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gardener-extension-generic-certificate-service
+  namespace: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: gardener-extension-generic-certificate-service
+    helm.sh/chart: gardener-extension-generic-certificate-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - generic-certificate-service-leader-election
+  verbs:
+  - get
+  - create
+  - watch
+  - update
+  - patch
+  - apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - generic-certificate-service
+  verbs:
+  - get
+  - watch
+  - update
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gardener-extension-generic-certificate-service
+  namespace: {{ .Release.Name }}
+  labels:
+    app.kubernetes.io/name: gardener-extension-generic-certificate-service
+    helm.sh/chart: gardener-extension-generic-certificate-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gardener-extension-generic-certificate-service
+subjects:
+- kind: ServiceAccount
+  name: gardener-extension-generic-certificate-service
+  namespace: {{ .Release.Namespace }}

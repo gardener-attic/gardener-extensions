@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -259,4 +260,12 @@ func exponentialBackoff(ctx context.Context, backoff wait.Backoff, condition wai
 	}
 
 	return wait.ErrWaitTimeout
+}
+
+// WatcherBuilder holds various functions which add watch controls to the passed Controller.
+type WatcherBuilder []func(controller.Controller) error
+
+// Register adds a function which add watch controls to the passed Controller to the WatcherBuilder.
+func (w *WatcherBuilder) Register(funcs ...func(controller.Controller) error) {
+	*w = append(*w, funcs...)
 }

@@ -50,7 +50,7 @@ func (m *secretToControlPlaneMapper) Map(obj handler.MapObject) []reconcile.Requ
 
 	var requests []reconcile.Request
 	for _, cp := range cpList.Items {
-		if !extensionscontroller.EvalGenericPredicate(m.predicates, &cp) {
+		if !extensionscontroller.EvalGenericPredicate(&cp, m.predicates...) {
 			continue
 		}
 
@@ -94,7 +94,7 @@ func (m *clusterToControlPlaneMapper) Map(obj handler.MapObject) []reconcile.Req
 
 	var requests []reconcile.Request
 	for _, cp := range cpList.Items {
-		if !extensionscontroller.EvalGenericPredicate(m.predicates, &cp) {
+		if !extensionscontroller.EvalGenericPredicate(&cp, m.predicates...) {
 			continue
 		}
 

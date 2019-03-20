@@ -139,3 +139,11 @@ start-provider-local:
 		--leader-election=$(LEADER_ELECTION) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
+.PHONY: start-certificate-service
+start-certificate-service:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/extension-certificate-service/cmd \
+		--leader-election=false \
+		--resource-namespace=default
+

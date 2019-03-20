@@ -1,0 +1,96 @@
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: certificateserviceconfiguration.certificateservice.extensions.gardener.cloud
+spec:
+  group: certificateservice.extensions.gardener.cloud
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+  version: v1alpha1
+  scope: Namespaced
+  names:
+    plural: certificateserviceconfiguration
+    singular: certificateserviceconfiguration
+    kind: CertificateServiceConfiguration
+    shortNames:
+    - csconf
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          required:
+          - issuerName
+          - acme
+          properties:
+            issuerName:
+              type: string
+              pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])$'
+            acme:
+              required:
+              - email
+              - server
+              type: object
+              properties:
+                email:
+                  type: string
+                  pattern: ^[A-Za-z0-9+_.-]+@(.+)$
+                server:
+                  type: string
+                  pattern: ^(https:\/\/)[a-z0-9]([-a-z0-9.]*[a-z])(\/[a-z0-9]*)*$
+                privateKey:
+                  type: string
+            providers:
+              type: object
+              properties:
+                clouddns:
+                  type: array
+                  items:
+                    required:
+                    - name
+                    - domains
+                    - project
+                    - serviceAccount
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])$'
+                      domains:
+                        type: array
+                        items:
+                          type: string
+                          pattern: ^[a-z0-9]([-a-z0-9.]*[a-z])$
+                      project:
+                        type: string
+                      serviceAccount:
+                        type: string                 
+                route53:
+                  type: array
+                  items:
+                    required:
+                    - name
+                    - domains
+                    - region
+                    - accessKeyID
+                    - secretAccessKey
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])$'
+                      domains:
+                        type: array
+                        items:
+                          type: string
+                          pattern: ^[a-z0-9]([-a-z0-9.]*[a-z])$
+                      region:
+                        type: string
+                      accessKeyID:
+                        type: string
+                      secretAccessKey:
+                        type: string
