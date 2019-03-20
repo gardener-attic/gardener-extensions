@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 
+	certservice "github.com/gardener/gardener-extensions/controllers/extension-certificate-service/cmd/app"
 	coreosalicloud "github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud/app"
 	coreos "github.com/gardener/gardener-extensions/controllers/os-coreos/cmd/gardener-extension-os-coreos/app"
 	jeos "github.com/gardener/gardener-extensions/controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos/app"
@@ -30,6 +31,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		provideropenstack.NewControllerManagerCommand(ctx),
 		provideralicloud.NewControllerManagerCommand(ctx),
 		providerazure.NewControllerManagerCommand(ctx),
+		certservice.NewServiceControllerCommand(ctx),
 	)
 
 	return cmd

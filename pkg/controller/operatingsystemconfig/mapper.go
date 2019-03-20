@@ -52,7 +52,7 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 
 	var requests []reconcile.Request
 	for _, osc := range oscList.Items {
-		if !extensionscontroller.EvalGenericPredicate(m.predicates, &osc) {
+		if !extensionscontroller.EvalGenericPredicate(&osc, m.predicates...) {
 			continue
 		}
 

@@ -15,11 +15,11 @@
 package controlplane
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-	"github.com/gardener/gardener/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -48,15 +48,10 @@ func MergeSecretMaps(a, b map[string]*corev1.Secret) map[string]*corev1.Secret {
 func ComputeChecksums(secrets map[string]*corev1.Secret, cms map[string]*corev1.ConfigMap) map[string]string {
 	checksums := make(map[string]string, len(secrets)+len(cms))
 	for name, secret := range secrets {
-		checksums[name] = computeChecksum(secret.Data)
+		checksums[name] = util.ComputeChecksum(secret.Data)
 	}
 	for name, cm := range cms {
-		checksums[name] = computeChecksum(cm.Data)
+		checksums[name] = util.ComputeChecksum(cm.Data)
 	}
 	return checksums
-}
-
-func computeChecksum(data interface{}) string {
-	jsonString, _ := json.Marshal(data)
-	return utils.ComputeSHA256Hex(jsonString)
 }

@@ -22,6 +22,7 @@ LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pk
 VERIFY                      := true
 LEADER_ELECTION             := false
 IGNORE_OPERATION_ANNOTATION := false
+CERTIFICATE_SERVICE_CONFIG  := ./controllers/extension-certificate-service/example/config.yaml
 
 ### Build commands
 
@@ -141,3 +142,12 @@ start-provider-alicloud:
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
 		--leader-election=$(LEADER_ELECTION) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+
+.PHONY: start-certificate-service
+start-certificate-service:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/extension-certificate-service/cmd \
+		--leader-election=$(LEADER_ELECTION) \
+		--config=$(CERTIFICATE_SERVICE_CONFIG)
+

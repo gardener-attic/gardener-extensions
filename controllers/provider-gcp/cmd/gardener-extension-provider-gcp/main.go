@@ -15,12 +15,10 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/cmd/gardener-extension-provider-gcp/app"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
+	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
@@ -29,7 +27,6 @@ func main() {
 	cmd := app.NewControllerManagerCommand(controller.SetupSignalHandlerContext())
 
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		controllercmd.LogErrAndExit(err, "error executing the main controller command")
 	}
 }

@@ -34,6 +34,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -259,4 +260,29 @@ func exponentialBackoff(ctx context.Context, backoff wait.Backoff, condition wai
 	}
 
 	return wait.ErrWaitTimeout
+}
+
+// WatchBuilder holds various functions which add watch controls to the passed Controller.
+type WatchBuilder []func(controller.Controller) error
+
+// NewWatchBuilder creates a new WatchBuilder and registers the given functions.
+func NewWatchBuilder(funcs ...func(controller.Controller) error) WatchBuilder {
+	var builder WatchBuilder
+	builder.Register(funcs...)
+	return builder
+}
+
+// Register adds a function which add watch controls to the passed Controller to the WatchBuilder.
+func (w *WatchBuilder) Register(funcs ...func(controller.Controller) error) {
+	*w = append(*w, funcs...)
+}
+
+// AddToController adds the registered watches to the passed controller.
+func (w *WatchBuilder) AddToController(ctrl controller.Controller) error {
+	for _, f := range *w {
+		if err := f(ctrl); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -56,14 +56,14 @@ type AddArgs struct {
 func DefaultPredicates(client client.Client, typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			TypePredicate(typeName),
+			extensionscontroller.TypePredicate(typeName),
 			extensionscontroller.ShootFailedPredicate(client),
 			extensionscontroller.GenerationChangedPredicate(),
 		}
 	}
 
 	return []predicate.Predicate{
-		TypePredicate(typeName),
+		extensionscontroller.TypePredicate(typeName),
 		extensionscontroller.ShootFailedPredicate(client),
 		OperationAnnotationPredicate(),
 		extensionscontroller.OrPredicate(
