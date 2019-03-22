@@ -63,6 +63,19 @@ func (c *actuator) cloudConfigFromOperatingSystemConfig(ctx context.Context, con
 		},
 	}
 
+	// blacklist sctp kernel module
+	if config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {
+		cloudConfig.WriteFiles = []File{
+			{
+				Encoding:           "b64",
+				Content:            base64.StdEncoding.EncodeToString([]byte("install sctp /bin/true")),
+				Owner:              "root",
+				Path:               "/etc/modprobe.d/sctp.conf",
+				RawFilePermissions: "0644",
+			},
+		}
+	}
+
 	unitNames := make([]string, 0, len(config.Spec.Units))
 	for _, unit := range config.Spec.Units {
 		unitNames = append(unitNames, unit.Name)
