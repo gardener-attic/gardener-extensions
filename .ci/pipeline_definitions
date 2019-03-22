@@ -11,7 +11,7 @@ gardener-extensions:
             registry: 'gcr-readwrite'
             image: 'eu.gcr.io/gardener-project/gardener/gardener-extension-hyper'
             dockerfile: 'Dockerfile'
-            target_name: gardener-extension-hyper
+            target: gardener-extension-hyper
     steps: ~
   variants:
     head-update:
