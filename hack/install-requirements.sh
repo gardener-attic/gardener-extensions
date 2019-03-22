@@ -20,4 +20,4 @@ go get -u "gopkg.in/gobuffalo/packr.v1/v2/packr2"
 go get -u "gopkg.in/onsi/ginkgo.v1/ginkgo"
 go get -u "gopkg.in/golang/mock.v1/mockgen"
 go get -u "golang.org/x/lint/golint"
-curl -s "https://raw.githubusercontent.com/helm/helm/v2.12.3/scripts/get" | bash
+curl -s "https://raw.githubusercontent.com/helm/helm/master/scripts/get" | bash
