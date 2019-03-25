@@ -3,3 +3,6 @@ images:
   sourceRepository: github.com/gardener/terraformer
   repository: eu.gcr.io/gardener-project/gardener/terraformer
   tag: "0.11.0"
+- name: hyperkube
+  sourceRepository: github.com/kubernetes/kubernetes
+  repository: k8s.gcr.io/hyperkube

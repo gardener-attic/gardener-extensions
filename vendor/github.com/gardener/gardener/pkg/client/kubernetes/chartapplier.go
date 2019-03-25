@@ -20,14 +20,13 @@ import (
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/utils"
 
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
 
 // ChartApplier is an interface that describes needed methods that render and apply
 // Helm charts in Kubernetes clusters.
 type ChartApplier interface {
-	chartrenderer.ChartRenderer
+	chartrenderer.Interface
 	ApplierInterface
 
 	ApplyChartWithOptions(context.Context, string, string, string, map[string]interface{}, map[string]interface{}, ApplierOptions) error
@@ -38,18 +37,13 @@ type ChartApplier interface {
 
 // chartApplier is a structure that contains a chart renderer and a manifest applier.
 type chartApplier struct {
-	chartrenderer.ChartRenderer
+	chartrenderer.Interface
 	ApplierInterface
 }
 
 // NewChartApplierForConfig returns a new chart applier based on the given REST config.
 func NewChartApplierForConfig(config *rest.Config) (ChartApplier, error) {
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	renderer, err := chartrenderer.New(clientset)
+	renderer, err := chartrenderer.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +56,7 @@ func NewChartApplierForConfig(config *rest.Config) (ChartApplier, error) {
 }
 
 // NewChartApplier returns a new chart applier.
-func NewChartApplier(renderer chartrenderer.ChartRenderer, applier ApplierInterface) ChartApplier {
+func NewChartApplier(renderer chartrenderer.Interface, applier ApplierInterface) ChartApplier {
 	return &chartApplier{renderer, applier}
 }
 

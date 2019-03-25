@@ -21,6 +21,7 @@ import (
 
 	awsapi "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	awsv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
+	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -80,7 +81,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			ctrlOpts.Completed().Apply(&awsinfrastructure.Options)
 			infrastructureReconcilerOpts.Completed().Apply(&awsinfrastructure.IgnoreOperationAnnotation)
 			if err := awsinfrastructure.AddToManager(mgr); err != nil {
-				controllercmd.LogErrAndExit(err, "Could not add controller to manager")
+				controllercmd.LogErrAndExit(err, "Could not add infrastructure controller to manager")
+			}
+			ctrlOpts.Completed().Apply(&awscontrolplane.Options)
+			if err := awscontrolplane.AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add controlplane controller to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {

@@ -55,7 +55,7 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		return fmt.Errorf("Failed to generate Terraform config: %+v", err)
 	}
 
-	chartRenderer, err := chartrenderer.New(a.kubernetes)
+	chartRenderer, err := chartrenderer.NewForConfig(a.restConfig)
 	if err != nil {
 		return fmt.Errorf("Could not create chart renderer: %+v", err)
 	}

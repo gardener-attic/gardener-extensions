@@ -9,7 +9,7 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "ee0f237e86540a2fc917373030cf22b7d75f7cee"
+  revision = "1ebbe303f020e91d42e8689144bac3904cacb08b"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
@@ -24,12 +24,35 @@ required = [
   version = "kubernetes-1.13.4"
 
 [[override]]
+  name = "k8s.io/apiserver"
+  version = "kubernetes-1.13.4"
+
+[[override]]
+  name = "k8s.io/apiextensions-apiserver"
+  version = "kubernetes-1.13.4"
+
+[[override]]
   name = "k8s.io/client-go"
   version = "kubernetes-1.13.4"
 
 [[override]]
   name = "k8s.io/code-generator"
   version = "kubernetes-1.13.4"
+
+[[override]]
+  name = "k8s.io/kube-aggregator"
+  version = "kubernetes-1.13.4"
+
+# use the same version that is referenced by k8s.io/apiserver
+[[override]]
+  name = "github.com/docker/docker"
+  revision = "a9fbbdc8dd8794b20af358382ab780559bca589d"
+
+# use the same version that is referenced by k8s.io, mainly required by Helm
+# https://github.com/kubernetes/kubernetes/blob/v1.13.5/Godeps/Godeps.json
+[[override]]
+  name = "github.com/russross/blackfriday"
+  revision = "300106c228d52c8941d4b3de6054a6062a86dda3"
 
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
