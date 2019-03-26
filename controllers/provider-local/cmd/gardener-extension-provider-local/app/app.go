@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-local/pkg/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -65,6 +66,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			if err := controlplane.AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add controller to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {

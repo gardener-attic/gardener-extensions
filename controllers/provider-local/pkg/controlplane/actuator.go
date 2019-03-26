@@ -12,7 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-local . ../../example/controller-registration.yaml Infrastructure:local ControlPlane:local
+package controlplane
 
-// Package chart enables go:generate support for generating the correct controller registration.
-package chart
+import (
+	"context"
+
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+)
+
+type actuator struct{}
+
+func (a *actuator) Reconcile(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) error {
+	return nil
+}
+
+func (a *actuator) Delete(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) error {
+	return nil
+}

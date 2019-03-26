@@ -113,7 +113,7 @@
   revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
 
 [[projects]]
-  digest = "1:652e7b3530bb50ec80374ee5a360c48ef082049536ff9718eaf856f7dddcb728"
+  digest = "1:826a907fa8d422cd9deea28ebf21591b6c7c7c4ee5d94a137128a0d27ed6e520"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -145,7 +145,7 @@
     "pkg/utils/kubernetes",
   ]
   pruneopts = "NUT"
-  revision = "bca4ab1463af383ea083e81820f6ee2bf3005e10"
+  revision = "ee0f237e86540a2fc917373030cf22b7d75f7cee"
 
 [[projects]]
   digest = "1:b678acaf8766b6df36723a4adefc3302191a34c22b7a38b0abaf5f6d3dd24090"
