@@ -54,6 +54,15 @@ func (a *actuator) cloudConfigFromOperatingSystemConfig(ctx context.Context, con
 		files = append(files, &internal.File{Path: file.Path, Content: data, Permissions: file.Permissions})
 	}
 
+	// blacklist sctp kernel module
+	if config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {
+		files = append(files,
+			&internal.File{
+				Path:    "/etc/modprobe.d/sctp.conf",
+				Content: []byte("install sctp /bin/true"),
+			})
+	}
+
 	units := make([]*internal.Unit, 0, len(config.Spec.Units))
 	for _, unit := range config.Spec.Units {
 		var content []byte
