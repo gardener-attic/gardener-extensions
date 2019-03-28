@@ -25,3 +25,6 @@ extensions:
 - name: provider-local
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-local
+- name: dns-external
+  gitHubRepo: https://github.com/gardener/external-dns-management
+  examplePath: examples/gardener-controllerregistration.yaml
