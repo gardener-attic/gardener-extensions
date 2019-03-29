@@ -57,5 +57,7 @@ cp -R "$REPO_DIR" "$REPO_PATH"
 "$REPO_PATH"/hack/install-requirements.sh
 
 echo "$EFFECTIVE_VERSION" > "$REPO_PATH/VERSION"
-make -C "$REPO_PATH" generate
+pushd "$REPO_PATH"
+make generate || { popd; exit 1 }
+popd
 cp -RT "$REPO_PATH/" "$REPO_DIR/"
