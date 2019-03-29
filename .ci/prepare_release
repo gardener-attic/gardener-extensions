@@ -59,6 +59,10 @@ cp -R "$REPO_DIR" "$REPO_PATH"
 echo "$EFFECTIVE_VERSION" > "$REPO_PATH/VERSION"
 cur_dir="$(pwd)"
 cd "$REPO_PATH"
-make generate || { cd "$cur_dir"; exit 1 }
+if ! make generate; then
+  cd "$cur_dir"
+  exit 1
+fi
 cd "$cur_dir"
 cp -RT "$REPO_PATH/" "$REPO_DIR/"
+
