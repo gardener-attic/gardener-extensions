@@ -16,8 +16,10 @@ package controlplane
 
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controlplane/internal"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -39,7 +41,7 @@ func init() {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator:          NewActuator(),
+		Actuator:          NewActuator(internal.NewHelper()),
 		Type:              aws.Type,
 		ControllerOptions: opts,
 	})

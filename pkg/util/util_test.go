@@ -15,9 +15,12 @@
 package util
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestUtil(t *testing.T) {
@@ -26,4 +29,18 @@ func TestUtil(t *testing.T) {
 }
 
 var _ = Describe("Util", func() {
+	Describe("#ObjectName", func() {
+		It("should return the correct object name with an object", func() {
+			Expect(ObjectName(&corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test",
+					Namespace: "default",
+				},
+			})).To(Equal("default/test"))
+		})
+		It("should return / with a non-object or nil", func() {
+			Expect(ObjectName(&corev1.SecretList{})).To(Equal("/"))
+			Expect(ObjectName(nil)).To(Equal("/"))
+		})
+	})
 })

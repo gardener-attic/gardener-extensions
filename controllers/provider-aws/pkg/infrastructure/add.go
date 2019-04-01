@@ -41,7 +41,7 @@ var (
 
 func init() {
 	addToManagerBuilder.Register(Add)
-	terraformerImage, err := imagevector.ImageVector.FindImage(aws.TerraformerImageName, "", "")
+	terraformerImage, err := imagevector.GetImageVector().FindImage(aws.TerraformerImageName, "", "")
 	runtime.Must(err)
 
 	TerraformerImage = terraformerImage.String()

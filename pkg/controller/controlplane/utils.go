@@ -15,8 +15,11 @@
 package controlplane
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils"
@@ -33,8 +36,42 @@ func DNSNamesForService(name, namespace string) []string {
 	}
 }
 
-// MergeSecretMaps merges the 2 given secret maps.
-func MergeSecretMaps(a, b map[string]*corev1.Secret) map[string]*corev1.Secret {
+// ComputeChecksums computes and returns the checksums for the given secrets and configmaps,
+// as well as the secrets and configmaps with the given names that are fetched from the cluster.
+func ComputeChecksums(
+	ctx context.Context,
+	c client.Client,
+	secrets map[string]*corev1.Secret,
+	configMaps map[string]*corev1.ConfigMap,
+	secretNames, configMapNames []string,
+	namespace string,
+) (map[string]string, error) {
+	// Get cluster secrets
+	clusterSecrets := make(map[string]*corev1.Secret)
+	for _, name := range secretNames {
+		secret := &corev1.Secret{}
+		if err := c.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, secret); err != nil {
+			return nil, errors.Wrapf(err, "could not get secret '%s/%s'", namespace, name)
+		}
+		clusterSecrets[name] = secret
+	}
+
+	// Get cluster configmaps
+	clusterConfigMaps := make(map[string]*corev1.ConfigMap)
+	for _, name := range configMapNames {
+		cm := &corev1.ConfigMap{}
+		if err := c.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, cm); err != nil {
+			return nil, errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, name)
+		}
+		clusterConfigMaps[name] = cm
+	}
+
+	// Compute checksums
+	return computeChecksums(mergeSecretMaps(secrets, clusterSecrets), mergeConfigMapMaps(configMaps, clusterConfigMaps)), nil
+}
+
+// mergeSecretMaps merges the 2 given secret maps.
+func mergeSecretMaps(a, b map[string]*corev1.Secret) map[string]*corev1.Secret {
 	x := make(map[string]*corev1.Secret)
 	for _, m := range []map[string]*corev1.Secret{a, b} {
 		for k, v := range m {
@@ -44,8 +81,19 @@ func MergeSecretMaps(a, b map[string]*corev1.Secret) map[string]*corev1.Secret {
 	return x
 }
 
-// ComputeChecksums computes and returns SAH256 checksums for the given secrets and configmaps.
-func ComputeChecksums(secrets map[string]*corev1.Secret, cms map[string]*corev1.ConfigMap) map[string]string {
+// mergeConfigMapMaps merges the 2 given configmap maps.
+func mergeConfigMapMaps(a, b map[string]*corev1.ConfigMap) map[string]*corev1.ConfigMap {
+	x := make(map[string]*corev1.ConfigMap)
+	for _, m := range []map[string]*corev1.ConfigMap{a, b} {
+		for k, v := range m {
+			x[k] = v
+		}
+	}
+	return x
+}
+
+// computeChecksums computes and returns SAH256 checksums for the given secrets and configmaps.
+func computeChecksums(secrets map[string]*corev1.Secret, cms map[string]*corev1.ConfigMap) map[string]string {
 	checksums := make(map[string]string, len(secrets)+len(cms))
 	for name, secret := range secrets {
 		checksums[name] = computeChecksum(secret.Data)

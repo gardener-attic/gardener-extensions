@@ -12,31 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+//go:generate mockgen -destination=mocks.go -package=runtime k8s.io/apimachinery/pkg/runtime Decoder
 
-import (
-	"context"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-// ContextFromStopChannel creates a new context from a given stop channel.
-func ContextFromStopChannel(stopCh <-chan struct{}) context.Context {
-	ctx, cancel := context.WithCancel(context.Background())
-	go func() {
-		defer cancel()
-		<-stopCh
-	}()
-
-	return ctx
-}
-
-// ObjectName returns the given object's name in the format <namespace>/<name>.
-func ObjectName(obj runtime.Object) string {
-	k, err := client.ObjectKeyFromObject(obj)
-	if err != nil {
-		return "/"
-	}
-	return k.String()
-}
+package runtime

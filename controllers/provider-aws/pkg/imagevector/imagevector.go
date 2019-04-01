@@ -23,11 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
-// ImageVector is the image vector that contains al the needed images
-var ImageVector imagevector.ImageVector
-
-func init() {
-	var err error
-	ImageVector, err = imagevector.ReadFile(filepath.Join(aws.ChartsPath, "images.yaml"))
+// GetImageVector returns the image vector that contains al the needed images.
+func GetImageVector() imagevector.ImageVector {
+	imageVector, err := imagevector.ReadFile(filepath.Join(aws.ChartsPath, "images.yaml"))
 	runtime.Must(err)
+	return imageVector
 }
