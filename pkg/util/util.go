@@ -14,7 +14,9 @@
 
 package util
 
-import "context"
+import (
+	"context"
+)
 
 // ContextFromStopChannel creates a new context from a given stop channel.
 func ContextFromStopChannel(stopCh <-chan struct{}) context.Context {

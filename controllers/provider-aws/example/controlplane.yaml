@@ -1,0 +1,53 @@
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: Cluster
+metadata:
+  name: default
+spec:
+  cloudProfile:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: CloudProfile
+  seed:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: Seed
+  shoot:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: Shoot
+    spec:
+      cloud:
+        aws:
+          networks:
+            pods: 10.250.0.0/19
+      kubernetes:
+        version: 1.13.4
+      hibernation:
+        enabled: false
+    status:
+      lastOperation:
+        state: Succeeded
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: ControlPlane
+metadata:
+  name: control-plane
+spec:
+  type: aws
+  region: eu-west-1
+  secretRef:
+    name: cloudprovider
+    namespace: shoot--foo-bar
+  providerConfig:
+    apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
+    kind: ControlPlaneConfig
+    cloudControllerManager:
+      featureGates:
+        CustomResourceValidation: true
+  infrastructureProviderStatus:
+    apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
+    kind: InfrastructureStatus
+    vpc:
+      id: vpc-1234
+      subnets:
+      - id: subnet-acbd1234
+        purpose: public
+        zone: eu-west-1a

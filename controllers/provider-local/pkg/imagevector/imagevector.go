@@ -28,6 +28,6 @@ var ImageVector imagevector.ImageVector
 
 func init() {
 	var err error
-	ImageVector, err = imagevector.ReadImageVector(filepath.Join(local.ChartsPath, "images.yaml"))
+	ImageVector, err = imagevector.ReadFile(filepath.Join(local.ChartsPath, "images.yaml"))
 	runtime.Must(err)
 }

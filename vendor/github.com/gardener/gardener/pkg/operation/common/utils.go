@@ -15,6 +15,7 @@
 package common
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -167,7 +168,7 @@ func GenerateAddonConfig(values map[string]interface{}, enabled bool) map[string
 // GetLoadBalancerIngress takes a K8SClient, a namespace and a service name. It queries for a load balancer's technical name
 // (ip address or hostname). It returns the value of the technical name whereby it always prefers the IP address (if given)
 // over the hostname. It also returns the list of all load balancer ingresses.
-func GetLoadBalancerIngress(client kubernetes.Interface, namespace, name string) (string, []corev1.LoadBalancerIngress, error) {
+func GetLoadBalancerIngress(client kubernetes.Interface, namespace, name string) (string, error) {
 	var (
 		loadBalancerIngress  string
 		serviceStatusIngress []corev1.LoadBalancerIngress
@@ -175,13 +176,13 @@ func GetLoadBalancerIngress(client kubernetes.Interface, namespace, name string)
 
 	service, err := client.GetService(namespace, name)
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	serviceStatusIngress = service.Status.LoadBalancer.Ingress
 	length := len(serviceStatusIngress)
 	if length == 0 {
-		return "", nil, errors.New("`.status.loadBalancer.ingress[]` has no elements yet, i.e. external load balancer has not been created (is your quota limit exceeded/reached?)")
+		return "", errors.New("`.status.loadBalancer.ingress[]` has no elements yet, i.e. external load balancer has not been created (is your quota limit exceeded/reached?)")
 	}
 
 	if serviceStatusIngress[length-1].IP != "" {
@@ -189,9 +190,9 @@ func GetLoadBalancerIngress(client kubernetes.Interface, namespace, name string)
 	} else if serviceStatusIngress[length-1].Hostname != "" {
 		loadBalancerIngress = serviceStatusIngress[length-1].Hostname
 	} else {
-		return "", nil, errors.New("`.status.loadBalancer.ingress[]` has an element which does neither contain `.ip` nor `.hostname`")
+		return "", errors.New("`.status.loadBalancer.ingress[]` has an element which does neither contain `.ip` nor `.hostname`")
 	}
-	return loadBalancerIngress, serviceStatusIngress, nil
+	return loadBalancerIngress, nil
 }
 
 // ExtractShootName returns Shoot resource name extracted from provided <backupInfrastructureName>.
@@ -281,19 +282,6 @@ func MergeOwnerReferences(references []metav1.OwnerReference, newReferences ...m
 	return references
 }
 
-// HasInitializer checks whether the passed name is part of the pending initializers.
-func HasInitializer(initializers *metav1.Initializers, name string) bool {
-	if initializers == nil {
-		return false
-	}
-	for _, initializer := range initializers.Pending {
-		if initializer.Name == name {
-			return true
-		}
-	}
-	return false
-}
-
 // ReadLeaderElectionRecord returns the leader election record for a given lock type and a namespace/name combination.
 func ReadLeaderElectionRecord(k8sClient kubernetes.Interface, lock, namespace, name string) (*resourcelock.LeaderElectionRecord, error) {
 	var (
@@ -345,6 +333,91 @@ func ShouldObjectBeRemoved(obj metav1.Object, gracePeriod time.Duration) bool {
 	}
 
 	return deletionTimestamp.Time.Before(time.Now().Add(-gracePeriod))
+}
+
+// DeleteVpa delete all resources required for the vertical pod autoscaler in the given namespace.
+func DeleteVpa(k8sClient kubernetes.Interface, namespace string) error {
+	if k8sClient == nil {
+		return fmt.Errorf("require kubernetes client")
+	}
+
+	listOptions := metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s", GardenRole, GardenRoleVpa),
+	}
+
+	// Delete all Crds with label "garden.sapcloud.io/role=vpa"
+	if err := k8sClient.APIExtension().ApiextensionsV1beta1().CustomResourceDefinitions().DeleteCollection(
+		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete all Deployments with label "garden.sapcloud.io/role=vpa"
+	deletePropagation := metav1.DeletePropagationForeground
+	if err := k8sClient.Kubernetes().AppsV1().Deployments(namespace).DeleteCollection(
+		&metav1.DeleteOptions{
+			PropagationPolicy: &deletePropagation,
+		}, listOptions); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete all ClusterRoles with label "garden.sapcloud.io/role=vpa"
+	if err := k8sClient.Kubernetes().RbacV1().ClusterRoles().DeleteCollection(
+		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete all ClusterRoleBindings with label "garden.sapcloud.io/role=vpa"
+	if err := k8sClient.Kubernetes().Rbac().ClusterRoleBindings().DeleteCollection(
+		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete all ServiceAccounts with label "garden.sapcloud.io/role=vpa"
+	if err := k8sClient.Kubernetes().CoreV1().ServiceAccounts(namespace).DeleteCollection(
+		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete Service
+	if err := k8sClient.Client().Delete(context.TODO(), &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "vpa-webhook"}}); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	// Delete Secret
+	if err := k8sClient.Client().Delete(context.TODO(), &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "vpa-tls-certs"}}); err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+
+	return nil
+}
+
+// InjectCSIFeatureGates adds required feature gates for csi when starting Kubelet/Kube-APIServer based on kubernetes version
+func InjectCSIFeatureGates(kubeVersion string, featureGates map[string]interface{}) (map[string]interface{}, error) {
+	lessV1_13, err := utils.CompareVersions(kubeVersion, "<", "v1.13.0")
+	if err != nil {
+		return featureGates, err
+	}
+	if lessV1_13 {
+		return featureGates, nil
+	}
+
+	//https://kubernetes-csi.github.io/docs/Setup.html
+	csiFG := map[string]interface{}{
+		"VolumeSnapshotDataSource": true,
+		"KubeletPluginsWatcher":    true,
+		"CSINodeInfo":              true,
+		"CSIDriverRegistry":        true,
+	}
+
+	if featureGates == nil {
+		return csiFG, nil
+	}
+
+	for k, v := range csiFG {
+		featureGates[k] = v
+	}
+
+	return featureGates, nil
 }
 
 // DeleteLoggingStack deletes all resource of the EFK logging stack in the given namespace.

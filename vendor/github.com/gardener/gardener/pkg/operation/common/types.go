@@ -146,6 +146,9 @@ const (
 	// GardenRoleCertificateManagement is the value of GardenRole key indicating type 'certificate-management'.
 	GardenRoleCertificateManagement = "certificate-management"
 
+	// GardenRoleVpa is the value of GardenRole key indecating type 'vpa'.
+	GardenRoleVpa = "vpa"
+
 	// GardenCreatedBy is the key for an annotation of a Shoot cluster whose value indicates contains the username
 	// of the user that created the resource.
 	GardenCreatedBy = "garden.sapcloud.io/createdBy"
@@ -463,8 +466,14 @@ const (
 	// CSIDriverRegistrarImageName is the name of driver registrar - https://github.com/kubernetes-csi/driver-registrar
 	CSIDriverRegistrarImageName = "csi-driver-registrar"
 
+	// CSINodeDriverRegistrarImageName is the name of driver registrar - https://github.com/kubernetes-csi/node-driver-registrar
+	CSINodeDriverRegistrarImageName = "csi-node-driver-registrar"
+
 	// CSIProvisionerImageName is the name of csi provisioner - https://github.com/kubernetes-csi/external-provisioner
 	CSIProvisionerImageName = "csi-provisioner"
+
+	// CSISnapshotterImageName is the name of csi plugin for Alicloud - https://github.com/kubernetes-csi/external-snapshotter
+	CSISnapshotterImageName = "csi-snapshotter"
 
 	// CSIPluginAlicloudImageName is the name of csi plugin for Alicloud - https://github.com/AliyunContainerService/csi-plugin
 	CSIPluginAlicloudImageName = "csi-plugin-alicloud"
@@ -474,9 +483,6 @@ const (
 
 	// PauseContainerImageName is the name of the PauseContainer image.
 	PauseContainerImageName = "pause-container"
-
-	// GardenerExternalAdmissionControllerImageName is the name of the GardenerExternalAdmissionController image.
-	GardenerExternalAdmissionControllerImageName = "gardener-external-admission-controller"
 
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
@@ -516,6 +522,15 @@ const (
 
 	// RegistrationSpecHash is a constant for a label on `ControllerInstallation`s (similar to `pod-template-hash` on `Pod`s).
 	RegistrationSpecHash = "registration-spec-hash"
+
+	// VpaAdmissionControllerImageName is the name of the vpa-admission-controller image
+	VpaAdmissionControllerImageName = "vpa-admission-controller"
+
+	// VpaRecommenderImageName is the name of the vpa-recommender image
+	VpaRecommenderImageName = "vpa-recommender"
+
+	// VpaUpdaterImageName is the name of the vpa-updater image
+	VpaUpdaterImageName = "vpa-updater"
 )
 
 var (
