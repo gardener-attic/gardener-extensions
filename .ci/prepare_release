@@ -45,10 +45,9 @@ cd /usr/local/go/src
 echo "Executing make on go $GOLANG_VERSION"
 ./make.bash > /dev/null 2>&1
 
-export \
-    GOPATH="$(mktemp -d)" \
-    GOBIN="$GOPATH/bin" \
-    PATH="$GOBIN:$PATH"
+export GOPATH="$(mktemp -d)"
+export GOBIN="$GOPATH/bin"
+export PATH="$GOBIN:$PATH"
 
 REPO_BASE="$GOPATH/src/github.com/gardener"
 mkdir -p "$REPO_BASE"
