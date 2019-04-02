@@ -37,10 +37,7 @@ export \
     GOOS="$(go env GOOS)" \
     GOARCH="$(go env GOARCH)" \
     GOHOSTOS="$(go env GOHOSTOS)" \
-    GOHOSTARCH="$(go env GOHOSTARCH)" \
-    GOPATH=/go \
-    GOBIN="$GOPATH/bin" \
-    PATH="$GOBIN:$PATH"
+    GOHOSTARCH="$(go env GOHOSTARCH)"
 
 echo "Downloading go $GOLANG_VERSION"
 wget -q -O - "https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz" | tar zx -C /usr/local
@@ -48,7 +45,11 @@ cd /usr/local/go/src
 echo "Executing make on go $GOLANG_VERSION"
 ./make.bash > /dev/null 2>&1
 
-export GOPATH="$(mktemp -d)"
+export \
+    GOPATH="$(mktemp -d)" \
+    GOBIN="$GOPATH/bin" \
+    PATH="$GOBIN:$PATH"
+
 REPO_BASE="$GOPATH/src/github.com/gardener"
 mkdir -p "$REPO_BASE"
 REPO_PATH="$REPO_BASE/gardener-extensions"
