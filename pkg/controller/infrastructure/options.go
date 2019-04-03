@@ -21,7 +21,7 @@ import (
 const (
 	// IgnoreOperationAnnotationFlag is the name of the command line flag to specify whether the operation annotation
 	// is ignored or not.
-	IgnoreOperationAnnotationFlag = "infrastructure-ignore-operation-annotation"
+	IgnoreOperationAnnotationFlag = "ignore-operation-annotation"
 )
 
 // ReconcilerOptions are command line options that can be set for controller.Options.

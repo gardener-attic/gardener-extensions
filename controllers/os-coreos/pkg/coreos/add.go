@@ -15,7 +15,6 @@
 package coreos
 
 import (
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -25,30 +24,28 @@ import (
 // Type is the type of OperatingSystemConfigs the coreos actuator / predicate are built for.
 const Type = "coreos"
 
-func init() {
-	addToManagerBuilder.Register(Add)
-}
-
 var (
-	addToManagerBuilder = extensionscontroller.NewAddToManagerBuilder()
-	// AddToManager adds all coreos controllers to the given manager.
-	AddToManager = addToManagerBuilder.AddToManager
-
-	// Options are the default controller.Options for Add.
-	Options = controller.Options{}
+	// DefaultAddOptions are the default controller.Options for AddToManager.
+	DefaultAddOptions = AddOptions{}
 )
 
-// AddWithOptions adds a controller with the given Options to the given manager.
+// AddOptions are the options for adding the controller to the manager.
+type AddOptions struct {
+	// Controller are the controller related options.
+	Controller controller.Options
+}
+
+// AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddWithOptions(mgr manager.Manager, opts controller.Options) error {
+func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
 		Actuator:          NewActuator(),
-		Type:              Type,
-		ControllerOptions: opts,
+		ControllerOptions: opts.Controller,
+		Predicates:        operatingsystemconfig.DefaultPredicates(Type),
 	})
 }
 
-// Add adds a controller with the default Options.
-func Add(mgr manager.Manager) error {
-	return AddWithOptions(mgr, Options)
+// AddToManager adds a controller with the default Options.
+func AddToManager(mgr manager.Manager) error {
+	return AddToManagerWithOptions(mgr, DefaultAddOptions)
 }

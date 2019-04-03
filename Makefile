@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-REGISTRY         := eu.gcr.io/gardener-project
-IMAGE_PREFIX     := $(REGISTRY)/gardener/gardener-extension-hyper
-REPO_ROOT        := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-HACK_DIR         := $(REPO_ROOT)/hack
-VERSION          := $(shell bash -c 'source $(HACK_DIR)/common.sh && echo $$VERSION')
-LD_FLAGS         := "-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(IMAGE_TAG)"
-VERIFY           := true
+REGISTRY                    := eu.gcr.io/gardener-project
+IMAGE_PREFIX                := $(REGISTRY)/gardener/gardener-extension-hyper
+REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+HACK_DIR                    := $(REPO_ROOT)/hack
+VERSION                     := $(shell bash -c 'source $(HACK_DIR)/common.sh && echo $$VERSION')
+LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(IMAGE_TAG)"
+VERIFY                      := true
+LEADER_ELECTION             := false
+IGNORE_OPERATION_ANNOTATION := false
 
 ### Build commands
 
@@ -80,60 +82,60 @@ start-os-coreos:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos/cmd/gardener-extension-os-coreos \
-		--leader-election=false
+		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-os-coreos-alicloud
 start-os-coreos-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud \
-		--leader-election=false
+		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-provider-aws
 start-provider-aws:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
-		--leader-election=false \
-		--infrastructure-ignore-operation-annotation=false
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-azure
 start-provider-azure:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
-		--leader-election=false \
-		--infrastructure-ignore-operation-annotation=false
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-gcp
 start-provider-gcp:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-gcp/cmd/gardener-extension-provider-gcp \
-		--leader-election=false \
-		--infrastructure-ignore-operation-annotation=false
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-openstack
 start-provider-openstack:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-openstack/cmd/gardener-extension-provider-openstack \
-		--leader-election=false \
-		--infrastructure-ignore-operation-annotation=false
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
-		--leader-election=false \
-		--infrastructure-ignore-operation-annotation=false
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-local
 start-provider-local:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-local/cmd/gardener-extension-provider-local \
-		--leader-election=false \
-		--infrastructure-ignore-operation-annotation=false
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 

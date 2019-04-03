@@ -53,24 +53,6 @@ func TypePredicate(typeName string) predicate.Predicate {
 	}
 }
 
-// GenerationChangedPredicate is a predicate for generation changes.
-func GenerationChangedPredicate(ignoreOperationAnnotation bool) predicate.Predicate {
-	return predicate.Funcs{
-		UpdateFunc: func(event event.UpdateEvent) bool {
-			if ignoreOperationAnnotation {
-				return event.MetaOld.GetGeneration() != event.MetaNew.GetGeneration()
-			}
-
-			infrastructure, ok := event.ObjectNew.(*extensionsv1alpha1.Infrastructure)
-			if !ok {
-				return false
-			}
-
-			return mayReconcile(infrastructure) || event.MetaOld.GetGeneration() != event.MetaNew.GetGeneration()
-		},
-	}
-}
-
 // OperationAnnotationPredicate is a predicate for the operation annotation.
 func OperationAnnotationPredicate() predicate.Predicate {
 	annotationExists := func(obj runtime.Object) bool {

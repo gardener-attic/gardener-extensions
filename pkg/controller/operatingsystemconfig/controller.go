@@ -38,8 +38,6 @@ const (
 type AddArgs struct {
 	// Actuator is an operatingsystemconfig actuator.
 	Actuator Actuator
-	// Type is the operatingsystemconfig type the actuator supports.
-	Type string
 	// ControllerOptions are the controller options used for creating a controller.
 	// The options.Reconciler is always overridden with a reconciler created from the
 	// given actuator.
@@ -52,26 +50,22 @@ type AddArgs struct {
 // Add adds an operatingsystemconfig controller to the given manager using the given AddArgs.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(args.Actuator)
-	return add(mgr, args.Type, args.ControllerOptions, args.Predicates)
+	return add(mgr, args.ControllerOptions, args.Predicates)
 }
 
 // DefaultPredicates returns the default predicates for an operatingsystemconfig reconciler.
-func DefaultPredicates() []predicate.Predicate {
+func DefaultPredicates(typeName string) []predicate.Predicate {
 	return []predicate.Predicate{
+		TypePredicate(typeName),
 		extensionscontroller.GenerationChangedPredicate(),
 	}
 }
 
-func add(mgr manager.Manager, typeName string, options controller.Options, predicates []predicate.Predicate) error {
+func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate) error {
 	ctrl, err := controller.New("operatingsystemconfig-controller", mgr, options)
 	if err != nil {
 		return err
 	}
-
-	if predicates == nil {
-		predicates = DefaultPredicates()
-	}
-	predicates = append(predicates, TypePredicate(typeName))
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err

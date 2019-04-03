@@ -17,6 +17,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -24,15 +25,11 @@ import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
 	"github.com/go-logr/logr"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -114,18 +111,9 @@ func (r *reconciler) reconcile(ctx context.Context, infrastructure *extensionsv1
 	r.recorder.Event(infrastructure, corev1.EventTypeNormal, EventInfrastructureReconciliation, "Reconciling the infrastructure")
 	if err := r.actuator.Reconcile(ctx, infrastructure, cluster); err != nil {
 		msg := "Error reconciling infrastructure"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), infrastructure, operationType, msg)
+		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), infrastructure, operationType, msg))
 		r.logger.Error(err, msg, "infrastructure", infrastructure.Name)
 		return extensionscontroller.ReconcileErr(err)
-	}
-
-	if kutil.HasMetaDataAnnotation(&infrastructure.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile) {
-		if err := extensionscontroller.TryUpdate(ctx, retry.DefaultRetry, r.client, infrastructure, func() error {
-			delete(infrastructure.Annotations, gardencorev1alpha1.GardenerOperation)
-			return nil
-		}); err != nil {
-			return reconcile.Result{}, err
-		}
 	}
 
 	msg := "Successfully reconciled infrastructure"
@@ -159,7 +147,7 @@ func (r *reconciler) delete(ctx context.Context, infrastructure *extensionsv1alp
 	if err := r.actuator.Delete(r.ctx, infrastructure, cluster); err != nil {
 		msg := "Error deleting infrastructure"
 		r.recorder.Eventf(infrastructure, corev1.EventTypeWarning, EventInfrastructureDeleton, "%s: %+v", msg, err)
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), infrastructure, operationType, msg)
+		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), infrastructure, operationType, msg))
 		r.logger.Error(err, msg, "infrastructure", infrastructure.Name)
 		return extensionscontroller.ReconcileErr(err)
 	}
