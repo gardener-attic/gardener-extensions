@@ -24,7 +24,6 @@ Usage:
 generate-controller-registration <name> <chart-dir> <dest> <kind-and-type> [kinds-and-types ...]
 
     <name>            Name of the controller registration to generate.
-    <type>            Type of the controller registration.
     <chart-dir>       Location of the chart directory.
     <dest>            The destination file to write the registration YAML to.
     <kind-and-type>   A tuple of kind and type of the controller registration to generate.
