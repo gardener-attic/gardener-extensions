@@ -1,7 +1,9 @@
 #!/bin/bash
-#Disable locksmithd
+#Disable upgrade related services
 systemctl disable locksmithd
 systemctl stop locksmithd
+systemctl disable update-engine
+systemctl stop update-engine
 
 #Fix mis-configuration of dockerd
 mkdir -p /etc/docker
