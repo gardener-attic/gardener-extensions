@@ -88,7 +88,7 @@ func (m *clusterToControlPlaneMapper) Map(obj handler.MapObject) []reconcile.Req
 	}
 
 	cpList := &extensions1alpha1.ControlPlaneList{}
-	if err := m.client.List(context.TODO(), client.InNamespace(cluster.Namespace), cpList); err != nil {
+	if err := m.client.List(context.TODO(), client.InNamespace(cluster.Name), cpList); err != nil {
 		return nil
 	}
 

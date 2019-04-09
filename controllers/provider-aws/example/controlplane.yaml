@@ -30,6 +30,7 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: ControlPlane
 metadata:
   name: control-plane
+  namespace: default
 spec:
   type: aws
   region: eu-west-1

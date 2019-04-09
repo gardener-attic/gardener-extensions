@@ -39,7 +39,7 @@ type Cluster struct {
 // GetCluster tries to read Gardener's Cluster extension resource in the given namespace.
 func GetCluster(ctx context.Context, c client.Client, namespace string) (*Cluster, error) {
 	cluster := &extensionsv1alpha1.Cluster{}
-	if err := c.Get(ctx, kutil.Key(namespace, namespace), cluster); err != nil {
+	if err := c.Get(ctx, kutil.Key(namespace), cluster); err != nil {
 		return nil, err
 	}
 
