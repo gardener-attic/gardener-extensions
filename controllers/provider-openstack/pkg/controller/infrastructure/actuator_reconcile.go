@@ -17,7 +17,6 @@ package infrastructure
 import (
 	"context"
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"path/filepath"
 	"time"
 
@@ -35,7 +34,7 @@ import (
 )
 
 const (
-	defaultRouterID = "${openstack_networking_router_v2.router.id}"
+	DefaultRouterID = "${openstack_networking_router_v2.router.id}"
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
@@ -77,7 +76,7 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		return fmt.Errorf("could not render Terraform chart: %+v", err)
 	}
 
-	tf, err := a.newTerraformer(aws.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
+	tf, err := a.newTerraformer(openstack.TerrformerPurposeInfra, infrastructure.Namespace, infrastructure.Name)
 	if err != nil {
 		return fmt.Errorf("could not create terraformer object: %+v", err)
 	}
@@ -85,7 +84,7 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 	if err := tf.
 		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).
 		InitializeWith(terraformer.DefaultInitializer(
-			nil,
+			a.client,
 			release.FileContent("main.tf"),
 			release.FileContent("variables.tf"),
 			[]byte(release.FileContent("terraform.tfvars"))),
@@ -110,7 +109,7 @@ func extractCredentials(providerSecret *corev1.Secret) *credentials {
 
 func generateTerraformInfraConfig(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *openstackv1alpha1.InfrastructureConfig, cluster *extensionscontroller.Cluster, credentials *credentials) (map[string]interface{}, error) {
 	var (
-		routerID = defaultRouterID
+		routerID = DefaultRouterID
 		createRouter = true
 	)
 	if router := infrastructureConfig.Networks.Router; router != nil {

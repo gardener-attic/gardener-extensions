@@ -15,13 +15,8 @@
 package infrastructure
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
-
-	"k8s.io/apimachinery/pkg/util/runtime"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -40,17 +35,17 @@ type AddOptions struct {
 	IgnoreOperationAnnotation bool
 }
 
-// AddToManagerWithOptions adds a controller with the given Options to the given manager.
+// AddToManagerWithOptions adds a controller with the given AddOptions to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
+func AddToManagerWithOptions(mgr manager.Manager, options AddOptions) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
-		Actuator:          infrastructure.OperationAnnotationWrapper(NewActuator()),
-		ControllerOptions: opts.Controller,
-		Predicates:        infrastructure.DefaultPredicates(mgr.GetClient(), aws.Type, opts.IgnoreOperationAnnotation),
+		Actuator:          infrastructure.OperationAnnotationWrapper(NewActuator(openstack.TerraformerImageName)),
+		ControllerOptions: options.Controller,
+		Predicates:        infrastructure.DefaultPredicates(mgr.GetClient(), openstack.Type, options.IgnoreOperationAnnotation),
 	})
 }
 
-// AddToManager adds a controller with the default Options.
+// AddToManager adds a controller with the default AddOptions.
 func AddToManager(mgr manager.Manager) error {
 	return AddToManagerWithOptions(mgr, DefaultAddOptions)
 }
