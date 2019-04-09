@@ -1,0 +1,20 @@
+#cloud-config
+write_files:
+- path: '/foo'
+  permissions: '0600'
+  encoding: b64
+  content: |
+    YmFy
+- path: '/etc/systemd/system/docker.service'
+  encoding: b64
+  content: |
+    dW5pdA==
+- path: '/etc/systemd/system/docker.service.d/10-docker-opts.conf'
+  encoding: b64
+  content: |
+    b3ZlcnJpZGU=
+runcmd:
+- systemctl daemon-reload
+- ln -s /usr/bin/docker /bin/docker
+- systemctl start docker
+- systemctl enable 'docker.service' && systemctl restart 'docker.service'
