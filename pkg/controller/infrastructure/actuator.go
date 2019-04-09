@@ -16,6 +16,7 @@ package infrastructure
 
 import (
 	"context"
+
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -58,13 +59,12 @@ func (o *operationAnnotationWrapper) InjectFunc(f inject.Func) error {
 
 // Reconcile implements Actuator.
 func (o *operationAnnotationWrapper) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
-	if err := o.Actuator.Reconcile(ctx, infra, cluster); err != nil {
-		return err
-	}
-
 	if kutil.HasMetaDataAnnotation(&infra.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile) {
 		delete(infra.Annotations, gardencorev1alpha1.GardenerOperation)
-		return o.client.Update(ctx, infra)
+		if err := o.client.Update(ctx, infra); err != nil {
+			return err
+		}
 	}
-	return nil
+
+	return o.Actuator.Reconcile(ctx, infra, cluster)
 }
