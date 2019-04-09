@@ -12,20 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package openstack
+package v1alpha1
 
-import "path/filepath"
-
-const (
-	// TerraformerImageName is the name of the Terraformer image.
-	TerraformerImageName = "terraformer"
-	// TerrformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
-	TerrformerPurposeInfra = "infra"
+import (
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-var (
-	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-openstack", "charts")
-	// InternalChartsPath is the path to the internal charts
-	InternalChartsPath = filepath.Join(ChartsPath, "internal")
-)
+func addDefaultingFuncs(scheme *runtime.Scheme) error {
+	return RegisterDefaults(scheme)
+}

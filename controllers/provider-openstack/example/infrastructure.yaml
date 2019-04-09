@@ -1,0 +1,22 @@
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: Infrastructure
+metadata:
+  name: infrastructure
+spec:
+  type: openstack
+  region: eu-de-1
+  secretRef:
+    name: cloudprovider
+    namespace: shoot--foo--bar
+  providerConfig:
+    apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
+    kind: InfrastructureConfig
+    floatingPoolName: MY-FLOATING-POOL
+    networks:
+    # router:
+    #   id: 1234
+      workers: ['10.250.0.0/19']
+    zones:
+    - name: zone_1_1
+  sshPublicKey: ...

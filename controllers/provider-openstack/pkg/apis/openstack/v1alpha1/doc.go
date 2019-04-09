@@ -12,20 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package openstack
+// +k8s:deepcopy-gen=package
+// +k8s:conversion-gen=github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
 
-import "path/filepath"
-
-const (
-	// TerraformerImageName is the name of the Terraformer image.
-	TerraformerImageName = "terraformer"
-	// TerrformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
-	TerrformerPurposeInfra = "infra"
-)
-
-var (
-	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-openstack", "charts")
-	// InternalChartsPath is the path to the internal charts
-	InternalChartsPath = filepath.Join(ChartsPath, "internal")
-)
+package v1alpha1 // import "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
