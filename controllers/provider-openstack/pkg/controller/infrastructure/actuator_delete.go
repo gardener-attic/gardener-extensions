@@ -17,15 +17,9 @@ package infrastructure
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
-
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	glogger "github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/utils/flow"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	corev1 "k8s.io/api/core/v1"
@@ -42,23 +36,7 @@ func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha
 		return err
 	}
 
-	var (
-		g = flow.NewGraph("OpenStack infrastructure destruction")
-
-		_ = g.Add(flow.Task{
-			Name: "Destroying Shoot infrastructure",
-			Fn:   flow.SimpleTaskFn(tf.SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).Destroy),
-		})
-
-		f = g.Compile()
-	)
-
-	if err := f.Run(flow.Opts{Context: ctx, Logger: glogger.NewFieldLogger(glogger.NewLogger("info"), "infrastructure", infrastructure.Name)}); err != nil {
-		return &controllererrors.RequeueAfterError{
-			Cause:        flow.Causes(err),
-			RequeueAfter: 30 * time.Second,
-		}
-	}
-
-	return nil
+	return tf.
+		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).
+		Destroy()
 }

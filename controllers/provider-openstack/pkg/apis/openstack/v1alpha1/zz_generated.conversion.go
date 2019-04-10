@@ -158,6 +158,9 @@ func Convert_openstack_InfrastructureConfig_To_v1alpha1_InfrastructureConfig(in 
 }
 
 func autoConvert_v1alpha1_InfrastructureStatus_To_openstack_InfrastructureStatus(in *InfrastructureStatus, out *openstack.InfrastructureStatus, s conversion.Scope) error {
+	if err := Convert_v1alpha1_NetworkStatus_To_openstack_NetworkStatus(&in.Network, &out.Network, s); err != nil {
+		return err
+	}
 	if err := Convert_v1alpha1_RouterStatus_To_openstack_RouterStatus(&in.Router, &out.Router, s); err != nil {
 		return err
 	}
@@ -170,6 +173,9 @@ func Convert_v1alpha1_InfrastructureStatus_To_openstack_InfrastructureStatus(in 
 }
 
 func autoConvert_openstack_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *openstack.InfrastructureStatus, out *InfrastructureStatus, s conversion.Scope) error {
+	if err := Convert_openstack_NetworkStatus_To_v1alpha1_NetworkStatus(&in.Network, &out.Network, s); err != nil {
+		return err
+	}
 	if err := Convert_openstack_RouterStatus_To_v1alpha1_RouterStatus(&in.Router, &out.Router, s); err != nil {
 		return err
 	}

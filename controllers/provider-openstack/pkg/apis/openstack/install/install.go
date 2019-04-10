@@ -15,7 +15,7 @@
 package install
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -24,7 +24,7 @@ import (
 var (
 	schemeBuilder = runtime.NewSchemeBuilder(
 		v1alpha1.AddToScheme,
-		gcp.AddToScheme,
+		openstack.AddToScheme,
 		setVersionPriority,
 	)
 

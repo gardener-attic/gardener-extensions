@@ -39,7 +39,7 @@ type InfrastructureStatus struct {
 	metav1.TypeMeta
 
 	// // Network contains information about the created Network and some related resources.
-	// Network NetworkStatus
+	Network NetworkStatus
 
 	// Router contains information about the Router and related resources.
 	Router RouterStatus
@@ -66,7 +66,6 @@ type NetworkStatus struct {
 // Networks holds information about the Kubernetes and infrastructure networks.
 type Networks struct {
 	// Router indicates whether to use an existing router or create a new one.
-	// +optional
 	Router *Router
 	// Workers is a list of CIDRs of worker subnets (private) to create (used for the VMs).
 	Workers []gardencorev1alpha1.CIDR

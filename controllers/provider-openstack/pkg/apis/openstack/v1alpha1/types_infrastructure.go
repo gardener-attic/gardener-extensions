@@ -40,7 +40,7 @@ type InfrastructureStatus struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// // Network contains information about the created Network and some related resources.
-	// Network NetworkStatus `json:"network"`
+	Network NetworkStatus `json:"network"`
 
 	// Router contains information about the Router and related resources.
 	Router RouterStatus `json:"router"`

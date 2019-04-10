@@ -60,6 +60,7 @@ func (in *InfrastructureConfig) DeepCopyObject() runtime.Object {
 func (in *InfrastructureStatus) DeepCopyInto(out *InfrastructureStatus) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
+	in.Network.DeepCopyInto(&out.Network)
 	in.Router.DeepCopyInto(&out.Router)
 	return
 }

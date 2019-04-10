@@ -4,7 +4,6 @@ openstack:
   tenantName: kubernetes
   region: eu-de-1
   floatingPoolName: my-pool
-  loadBalancerProvider: my-pool
 
 create:
   router: true
@@ -19,12 +18,14 @@ dnsServers:
 
 clusterName: test-namespace
 
-names:
-  configuration: shoot.tf-config
-  variables: shoot.tf-vars
-  state: shoot.tf-state
-
-initializeEmptyState: true
-
 networks:
   worker: 10.250.0.0/19
+
+outputKeys:
+  routerId: router_id
+  networkId: network_id
+  keyName: key_name
+  securityGroupId: security_group_id
+  securityGroupName: security_group_name
+  floatingNetworkId: floating_network_id
+  subnetId: subnet_id
