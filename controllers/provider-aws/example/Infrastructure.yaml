@@ -7,8 +7,8 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  namespace: shoot--foo--bar
   name: cloudprovider
+  namespace: shoot--foo--bar
 type: Opaque
 data:
 # accessKeyID: base64(access-key-id)
@@ -17,7 +17,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: default
+  name: shoot--foo--bar
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -37,6 +37,7 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Infrastructure
 metadata:
   name: infrastructure
+  namespace: shoot--foo--bar
 spec:
   type: aws
   region: eu-west-1

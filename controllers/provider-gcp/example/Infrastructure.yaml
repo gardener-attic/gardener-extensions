@@ -7,8 +7,8 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
-  namespace: shoot--foo--bar
   name: core-gcp
+  namespace: shoot--foo--bar
 type: Opaque
 data:
 # serviceaccount.json: base64(serviceaccount-json)
@@ -16,7 +16,6 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  namespace: shoot--foo--bar
   name: shoot--foo--bar
 spec:
   cloudProfile:
@@ -42,8 +41,8 @@ spec:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Infrastructure
 metadata:
-  namespace: shoot--foo--bar
   name: gcp-infra
+  namespace: shoot--foo--bar
 spec:
   type: gcp
   region: europe-west1
@@ -55,5 +54,5 @@ spec:
     kind: InfrastructureConfig
     networks:
       worker: 10.242.0.0/19
-      # internal: 10.243.0.0/19
+    # internal: 10.243.0.0/19
 

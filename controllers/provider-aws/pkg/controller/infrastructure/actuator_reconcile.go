@@ -37,6 +37,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 )
 
 func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
@@ -188,43 +189,44 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Ter
 		return err
 	}
 
-	infrastructure.Status.ProviderStatus = &runtime.RawExtension{
-		Object: &awsv1alpha1.InfrastructureStatus{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: awsv1alpha1.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureStatus",
-			},
-			VPC: awsv1alpha1.VPCStatus{
-				ID:      output[aws.VPCIDKey],
-				Subnets: subnets,
-				SecurityGroups: []awsv1alpha1.SecurityGroup{
-					{
-						Purpose: awsapi.PurposeNodes,
-						ID:      output[aws.SecurityGroupsNodes],
+	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infrastructure, func() error {
+		infrastructure.Status.ProviderStatus = &runtime.RawExtension{
+			Object: &awsv1alpha1.InfrastructureStatus{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: awsv1alpha1.SchemeGroupVersion.String(),
+					Kind:       "InfrastructureStatus",
+				},
+				VPC: awsv1alpha1.VPCStatus{
+					ID:      output[aws.VPCIDKey],
+					Subnets: subnets,
+					SecurityGroups: []awsv1alpha1.SecurityGroup{
+						{
+							Purpose: awsapi.PurposeNodes,
+							ID:      output[aws.SecurityGroupsNodes],
+						},
+					},
+				},
+				EC2: awsv1alpha1.EC2{
+					KeyName: output[aws.SSHKeyName],
+				},
+				IAM: awsv1alpha1.IAM{
+					InstanceProfiles: []awsv1alpha1.InstanceProfile{
+						{
+							Purpose: awsapi.PurposeNodes,
+							Name:    output[aws.IAMInstanceProfileNodes],
+						},
+					},
+					Roles: []awsv1alpha1.Role{
+						{
+							Purpose: awsapi.PurposeNodes,
+							ARN:     output[aws.NodesRole],
+						},
 					},
 				},
 			},
-			EC2: awsv1alpha1.EC2{
-				KeyName: output[aws.SSHKeyName],
-			},
-			IAM: awsv1alpha1.IAM{
-				InstanceProfiles: []awsv1alpha1.InstanceProfile{
-					{
-						Purpose: awsapi.PurposeNodes,
-						Name:    output[aws.IAMInstanceProfileNodes],
-					},
-				},
-				Roles: []awsv1alpha1.Role{
-					{
-						Purpose: awsapi.PurposeNodes,
-						ARN:     output[aws.NodesRole],
-					},
-				},
-			},
-		},
-	}
-
-	return a.client.Status().Update(ctx, infrastructure)
+		}
+		return nil
+	})
 }
 
 func computeProviderStatusSubnets(infrastructure *awsapi.InfrastructureConfig, values map[string]string) ([]awsv1alpha1.Subnet, error) {

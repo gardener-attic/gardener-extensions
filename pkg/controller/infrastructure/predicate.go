@@ -81,5 +81,6 @@ func mayReconcile(infrastructure *extensionsv1alpha1.Infrastructure) bool {
 		infrastructure.Status.LastOperation == nil ||
 		infrastructure.Status.LastOperation.Type == gardencorev1alpha1.LastOperationTypeCreate ||
 		infrastructure.Status.LastOperation.Type == gardencorev1alpha1.LastOperationTypeDelete ||
-		kutil.HasMetaDataAnnotation(&infrastructure.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile)
+		kutil.HasMetaDataAnnotation(&infrastructure.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile) ||
+		infrastructure.Status.LastOperation.State != gardencorev1alpha1.LastOperationStateSucceeded
 }
