@@ -46,8 +46,8 @@ func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha
 		g = flow.NewGraph("OpenStack infrastructure destruction")
 
 		_ = g.Add(flow.Task{
-			Name:         "Destroying Shoot infrastructure",
-			Fn:           flow.SimpleTaskFn(tf.SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).Destroy),
+			Name: "Destroying Shoot infrastructure",
+			Fn:   flow.SimpleTaskFn(tf.SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).Destroy),
 		})
 
 		f = g.Compile()

@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	DefaultRouterID = "${openstack_networking_router_v2.router.id}"
+	defaultRouterID = "${openstack_networking_router_v2.router.id}"
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
@@ -109,7 +109,7 @@ func extractCredentials(providerSecret *corev1.Secret) *credentials {
 
 func generateTerraformInfraConfig(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *openstackv1alpha1.InfrastructureConfig, cluster *extensionscontroller.Cluster, credentials *credentials) (map[string]interface{}, error) {
 	var (
-		routerID = DefaultRouterID
+		routerID     = defaultRouterID
 		createRouter = true
 	)
 	if router := infrastructureConfig.Networks.Router; router != nil {
@@ -118,11 +118,11 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 	}
 	return map[string]interface{}{
 		"openstack": map[string]interface{}{
-			"authURL":              cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
-			"domainName":           credentials.DomainName,
-			"tenantName":           credentials.TenantName,
-			"region":               infrastructure.Spec.Region,
-			"floatingPoolName":     infrastructureConfig.FloatingPoolName,
+			"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
+			"domainName":       credentials.DomainName,
+			"tenantName":       credentials.TenantName,
+			"region":           infrastructure.Spec.Region,
+			"floatingPoolName": infrastructureConfig.FloatingPoolName,
 		},
 		"create": map[string]interface{}{
 			"router": createRouter,

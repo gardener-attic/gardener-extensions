@@ -17,15 +17,16 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
 	"os"
+
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 
-	openstackinfrastrcuture "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 	openstackcontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller"
+	openstackinfrastrcuture "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 
 	"github.com/spf13/cobra"
 

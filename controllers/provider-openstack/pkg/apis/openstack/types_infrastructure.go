@@ -67,13 +67,13 @@ type NetworkStatus struct {
 type Networks struct {
 	// Router indicates whether to use an existing router or create a new one.
 	// +optional
-	Router *OpenStackRouter
+	Router *Router
 	// Workers is a list of CIDRs of worker subnets (private) to create (used for the VMs).
 	Workers []gardencorev1alpha1.CIDR
 }
 
-// OpenStackRouter indicates whether to use an existing router or create a new one.
-type OpenStackRouter struct {
+// Router indicates whether to use an existing router or create a new one.
+type Router struct {
 	// ID is the router id of an existing OpenStack router.
 	ID string
 }
