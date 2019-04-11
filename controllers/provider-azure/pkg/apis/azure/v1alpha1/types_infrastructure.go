@@ -27,7 +27,7 @@ type InfrastructureConfig struct {
 	metav1.TypeMeta `json:",inline"`
 	// ResourceGroup is azure resource group
 	// +optional
-	ResourceGroup *ResourceGroup `json:"resourceGroup"`
+	ResourceGroup *ResourceGroup `json:"resourceGroup,omitempty"`
 	// Networks is the network configuration (VNet, subnets, etc.)
 	Networks NetworkConfig `json:"networks"`
 }
