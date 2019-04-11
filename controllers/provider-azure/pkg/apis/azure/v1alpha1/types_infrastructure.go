@@ -56,11 +56,11 @@ type InfrastructureStatus struct {
 	// ResourceGroup is azure resource group
 	ResourceGroup ResourceGroup `json:"resourceGroup"`
 	// AvailabilitySets is a list of created availability sets
-	AvailabilitySets []AvailabilitySet `json:"availabilitySets`
+	AvailabilitySets []AvailabilitySet `json:"availabilitySets"`
 	// AvailabilitySets is a list of created route tables
-	RouteTables []RouteTable `json:"routeTables`
+	RouteTables []RouteTable `json:"routeTables"`
 	// SecurityGroups is a list of created security groups
-	SecurityGroups []SecurityGroup `json:"securityGroup`
+	SecurityGroups []SecurityGroup `json:"securityGroup"`
 }
 
 // NetworkStatus is the current status of the infrastructure networks.
