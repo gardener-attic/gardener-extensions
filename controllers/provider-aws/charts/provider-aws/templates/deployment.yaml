@@ -32,10 +32,32 @@ spec:
         {{- if .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         {{- end }}
+        - --webhook-config-mode=service
+        - --webhook-config-name=aws-webhooks
+        - --webhook-config-namespace={{ .Release.Namespace }}
+        - --webhook-config-service-selectors='{"app.kubernetes.io/name":"gardener-extension-provider-aws","app.kubernetes.io/instance":"{{ .Release.Name }}"}'
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        ports:
+        - name: webhook-server
+          containerPort: 7890
+          protocol: TCP
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: cert
+          mountPath: /tmp/cert
+      volumes:
+      - name: cert
+        secret:
+          secretName: aws-webhooks
+          defaultMode: 420
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-webhooks
+  namespace: {{ .Release.Namespace }}

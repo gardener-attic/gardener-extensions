@@ -37,15 +37,18 @@ rules:
   - ""
   - batch
   - rbac.authorization.k8s.io
+  - admissionregistration.k8s.io
   resources:
   - events
   - secrets
   - configmaps
+  - services
   - serviceaccounts
   - rolebindings
   - jobs
   - pods
   - pods/log
+  - mutatingwebhookconfigurations
   verbs:
   - get
   - list

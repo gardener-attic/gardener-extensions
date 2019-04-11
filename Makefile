@@ -13,9 +13,10 @@
 # limitations under the License.
 
 REGISTRY                    := eu.gcr.io/gardener-project
-IMAGE_PREFIX                := $(REGISTRY)/gardener/gardener-extension-hyper
+IMAGE_PREFIX                := $(REGISTRY)/gardener
 REPO_ROOT                   := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 HACK_DIR                    := $(REPO_ROOT)/hack
+HOSTNAME                    := $(shell hostname)
 VERSION                     := $(shell bash -c 'source $(HACK_DIR)/common.sh && echo $$VERSION')
 LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(IMAGE_TAG)"
 VERIFY                      := true
@@ -104,6 +105,9 @@ start-provider-aws:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
 		--leader-election=$(LEADER_ELECTION) \
+		--webhook-config-mode=url \
+		--webhook-config-name=aws-webhooks \
+		--webhook-config-host=$(HOSTNAME) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-azure

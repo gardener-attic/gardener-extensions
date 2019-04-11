@@ -17,18 +17,19 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/install"
-	awscontroller "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller"
 	"os"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/install"
+	awscontroller "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller"
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
+	awswebhook "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -59,7 +60,17 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts)
+		webhookServerOpts = &webhookcmd.WebhookServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+
+		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts, webhookServerOpts)
 	)
 
 	cmd := &cobra.Command{
@@ -88,7 +99,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
 
 			if err := awscontroller.AddToManager(mgr); err != nil {
-				controllercmd.LogErrAndExit(err, "Could not add infrastructure controller to manager")
+				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
+			}
+
+			if err := awswebhook.AddToManager(mgr, webhookServerOpts.Completed()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {
