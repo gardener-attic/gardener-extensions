@@ -49,12 +49,10 @@ type InfrastructureStatus struct {
 	metav1.TypeMeta `json:",inline"`
 
 	// Networks is the status of the networks of the infrastructure.
-	// +optional
-	Networks *NetworkStatus `json:"networks,omitempty"`
+	Networks NetworkStatus `json:"networks"`
 
 	// ServiceAccountEmail is the email address of the service account.
-	// +optional
-	ServiceAccountEmail *string `json:"serviceAccountEmail,omitempty"`
+	ServiceAccountEmail string `json:"serviceAccountEmail"`
 }
 
 // NetworkStatus is the current status of the infrastructure networks.
@@ -63,8 +61,7 @@ type NetworkStatus struct {
 	VPC VPC `json:"vpc"`
 
 	// Subnets are the subnets that have been created.
-	// +optional
-	Subnets []Subnet `json:"subnets,omitempty"`
+	Subnets []Subnet `json:"subnets"`
 }
 
 // SubnetPurpose is a purpose of a subnet.

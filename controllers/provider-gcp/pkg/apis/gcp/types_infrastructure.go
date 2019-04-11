@@ -47,10 +47,10 @@ type InfrastructureStatus struct {
 	metav1.TypeMeta
 
 	// Networks is the status of the networks of the infrastructure.
-	Networks *NetworkStatus
+	Networks NetworkStatus
 
 	// ServiceAccountEmail is the email address of the service account.
-	ServiceAccountEmail *string
+	ServiceAccountEmail string
 }
 
 // NetworkStatus is the current status of the infrastructure networks.

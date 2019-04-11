@@ -52,27 +52,24 @@ type NetworkConfig struct {
 type InfrastructureStatus struct {
 	metav1.TypeMeta `json:",inline"`
 	// Networks is the status of the networks of the infrastructure.
-	// +optional
-	Networks *NetworkStatus `json:"networks,omitempty"`
+	Networks NetworkStatus `json:"networks"`
 	// ResourceGroup is azure resource group
-	// +optional
-	ResourceGroup *ResourceGroup `json:"resourceGroup"`
+	ResourceGroup ResourceGroup `json:"resourceGroup"`
 	// AvailabilitySets is a list of created availability sets
-	AvailabilitySets []AvailabilitySet `json:"availabilitySets,omitempty"`
+	AvailabilitySets []AvailabilitySet `json:"availabilitySets`
 	// AvailabilitySets is a list of created route tables
-	RouteTables []RouteTable `json:"routeTables,omitempty"`
+	RouteTables []RouteTable `json:"routeTables`
 	// SecurityGroups is a list of created security groups
-	SecurityGroups []SecurityGroup `json:"securityGroup,omitempty"`
+	SecurityGroups []SecurityGroup `json:"securityGroup`
 }
 
 // NetworkStatus is the current status of the infrastructure networks.
 type NetworkStatus struct {
-	// VNet states the name of the infrastructure VNet.
-	VNet VNet `json:"vnet"`
+	// VNetStatus states the name of the infrastructure VNet.
+	VNet VNetStatus `json:"vnet"`
 
 	// Subnets are the subnets that have been created.
-	// +optional
-	Subnets []Subnet `json:"subnets,omitempty"`
+	Subnets []Subnet `json:"subnets"`
 }
 
 // Purpose is a purpose of a subnet.
@@ -127,4 +124,10 @@ type VNet struct {
 	// CIDR is the VNet CIDR
 	// +optional
 	CIDR *gardencorev1alpha1.CIDR `json:"cidr,omitempty"`
+}
+
+// VNetStatus contains the VNet name.
+type VNetStatus struct {
+	// Name is the VNet name.
+	Name string `json:"name"`
 }

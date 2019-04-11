@@ -51,9 +51,9 @@ type NetworkConfig struct {
 type InfrastructureStatus struct {
 	metav1.TypeMeta
 	// Networks is the status of the networks of the infrastructure.
-	Networks *NetworkStatus
+	Networks NetworkStatus
 	// ResourceGroup is azure resource group
-	ResourceGroup *ResourceGroup
+	ResourceGroup ResourceGroup
 	// AvailabilitySets is a list of created availability sets
 	AvailabilitySets []AvailabilitySet
 	// AvailabilitySets is a list of created route tables
@@ -65,7 +65,7 @@ type InfrastructureStatus struct {
 // NetworkStatus is the current status of the infrastructure networks.
 type NetworkStatus struct {
 	// VNet states the name of the infrastructure VNet.
-	VNet VNet
+	VNet VNetStatus
 	// Subnets are the subnets that have been created.
 	Subnets []Subnet
 }
@@ -120,4 +120,10 @@ type VNet struct {
 	Name *string
 	// CIDR is the VNet CIDR
 	CIDR *gardencorev1alpha1.CIDR
+}
+
+// VNetStatus contains the VNet name.
+type VNetStatus struct {
+	// Name is the VNet name.
+	Name string
 }

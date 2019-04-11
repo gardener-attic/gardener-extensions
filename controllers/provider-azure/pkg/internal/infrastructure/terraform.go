@@ -18,14 +18,15 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-
 	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -225,12 +226,12 @@ func ExtractTerraformState(tf *terraformer.Terraformer, config *azurev1alpha1.In
 func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.InfrastructureStatus {
 	return &azurev1alpha1.InfrastructureStatus{
 		TypeMeta: StatusTypeMeta,
-		ResourceGroup: &azurev1alpha1.ResourceGroup{
+		ResourceGroup: azurev1alpha1.ResourceGroup{
 			Name: state.ResourceGroupName,
 		},
-		Networks: &azurev1alpha1.NetworkStatus{
-			VNet: azurev1alpha1.VNet{
-				Name: &state.VNetName,
+		Networks: azurev1alpha1.NetworkStatus{
+			VNet: azurev1alpha1.VNetStatus{
+				Name: state.VNetName,
 			},
 			Subnets: []azurev1alpha1.Subnet{
 				{

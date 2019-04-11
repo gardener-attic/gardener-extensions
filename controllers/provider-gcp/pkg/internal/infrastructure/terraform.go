@@ -15,15 +15,18 @@
 package infrastructure
 
 import (
+	"path/filepath"
+
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"path/filepath"
 )
 
 const (
@@ -184,7 +187,7 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 	var (
 		status = &gcpv1alpha1.InfrastructureStatus{
 			TypeMeta: StatusTypeMeta,
-			Networks: &gcpv1alpha1.NetworkStatus{
+			Networks: gcpv1alpha1.NetworkStatus{
 				VPC: gcpv1alpha1.VPC{
 					Name: state.VPCName,
 				},
@@ -195,7 +198,7 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 					},
 				},
 			},
-			ServiceAccountEmail: &state.ServiceAccountEmail,
+			ServiceAccountEmail: state.ServiceAccountEmail,
 		}
 	)
 

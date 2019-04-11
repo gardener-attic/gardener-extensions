@@ -55,16 +55,7 @@ func (in *InfrastructureConfig) DeepCopyObject() runtime.Object {
 func (in *InfrastructureStatus) DeepCopyInto(out *InfrastructureStatus) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	if in.Networks != nil {
-		in, out := &in.Networks, &out.Networks
-		*out = new(NetworkStatus)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.ServiceAccountEmail != nil {
-		in, out := &in.ServiceAccountEmail, &out.ServiceAccountEmail
-		*out = new(string)
-		**out = **in
-	}
+	in.Networks.DeepCopyInto(&out.Networks)
 	return
 }
 

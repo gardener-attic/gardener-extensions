@@ -124,8 +124,10 @@ func Convert_gcp_InfrastructureConfig_To_v1alpha1_InfrastructureConfig(in *gcp.I
 }
 
 func autoConvert_v1alpha1_InfrastructureStatus_To_gcp_InfrastructureStatus(in *InfrastructureStatus, out *gcp.InfrastructureStatus, s conversion.Scope) error {
-	out.Networks = (*gcp.NetworkStatus)(unsafe.Pointer(in.Networks))
-	out.ServiceAccountEmail = (*string)(unsafe.Pointer(in.ServiceAccountEmail))
+	if err := Convert_v1alpha1_NetworkStatus_To_gcp_NetworkStatus(&in.Networks, &out.Networks, s); err != nil {
+		return err
+	}
+	out.ServiceAccountEmail = in.ServiceAccountEmail
 	return nil
 }
 
@@ -135,8 +137,10 @@ func Convert_v1alpha1_InfrastructureStatus_To_gcp_InfrastructureStatus(in *Infra
 }
 
 func autoConvert_gcp_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *gcp.InfrastructureStatus, out *InfrastructureStatus, s conversion.Scope) error {
-	out.Networks = (*NetworkStatus)(unsafe.Pointer(in.Networks))
-	out.ServiceAccountEmail = (*string)(unsafe.Pointer(in.ServiceAccountEmail))
+	if err := Convert_gcp_NetworkStatus_To_v1alpha1_NetworkStatus(&in.Networks, &out.Networks, s); err != nil {
+		return err
+	}
+	out.ServiceAccountEmail = in.ServiceAccountEmail
 	return nil
 }
 
