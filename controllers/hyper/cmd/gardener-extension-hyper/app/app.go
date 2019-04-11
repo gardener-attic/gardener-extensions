@@ -31,6 +31,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		provideropenstack.NewControllerManagerCommand(ctx),
 		provideralicloud.NewControllerManagerCommand(ctx),
 		providerlocal.NewControllerManagerCommand(ctx),
+		providerazure.NewControllerManagerCommand(ctx),
 	)
 
 	return cmd

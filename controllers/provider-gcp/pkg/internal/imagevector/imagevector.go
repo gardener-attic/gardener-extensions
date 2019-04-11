@@ -16,8 +16,9 @@
 package imagevector
 
 import (
-	"github.com/gobuffalo/packr/v2"
 	"strings"
+
+	"github.com/gobuffalo/packr/v2"
 
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 
@@ -37,7 +38,7 @@ func init() {
 	imagesYaml, err := box.FindString("images.yaml")
 	runtime.Must(err)
 
-	imageVector, err := imagevector.Read(strings.NewReader(imagesYaml))
+	imageVector, err = imagevector.Read(strings.NewReader(imagesYaml))
 	runtime.Must(err)
 
 	imageVector, err = imagevector.WithEnvOverride(imageVector)
