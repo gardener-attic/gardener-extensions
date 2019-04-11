@@ -16,6 +16,7 @@ package infrastructure
 
 import (
 	"fmt"
+
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -186,7 +187,7 @@ var _ = Describe("Terraform", func() {
 
 			Expect(status).To(Equal(&gcpv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				Networks: &gcpv1alpha1.NetworkStatus{
+				Networks: gcpv1alpha1.NetworkStatus{
 					VPC: gcpv1alpha1.VPC{
 						Name: vpcName,
 					},
@@ -201,7 +202,7 @@ var _ = Describe("Terraform", func() {
 						},
 					},
 				},
-				ServiceAccountEmail: &serviceAccountEmail,
+				ServiceAccountEmail: serviceAccountEmail,
 			}))
 		})
 
@@ -211,7 +212,7 @@ var _ = Describe("Terraform", func() {
 
 			Expect(status).To(Equal(&gcpv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				Networks: &gcpv1alpha1.NetworkStatus{
+				Networks: gcpv1alpha1.NetworkStatus{
 					VPC: gcpv1alpha1.VPC{
 						Name: vpcName,
 					},
@@ -222,7 +223,7 @@ var _ = Describe("Terraform", func() {
 						},
 					},
 				},
-				ServiceAccountEmail: &serviceAccountEmail,
+				ServiceAccountEmail: serviceAccountEmail,
 			}))
 		})
 	})

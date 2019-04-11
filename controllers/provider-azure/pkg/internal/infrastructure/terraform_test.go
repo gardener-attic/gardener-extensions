@@ -87,7 +87,7 @@ var _ = Describe("Terraform", func() {
 		)
 		config = &azurev1alpha1.InfrastructureConfig{
 			Networks: azurev1alpha1.NetworkConfig{
-				VNet: &azurev1alpha1.VNet{
+				VNet: azurev1alpha1.VNet{
 					Name: &VNetName,
 					CIDR: &VNetCIDR,
 				},
@@ -192,7 +192,7 @@ var _ = Describe("Terraform", func() {
 			status := StatusFromTerraformState(state)
 			Expect(status).To(Equal(&azurev1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				ResourceGroup: &azurev1alpha1.ResourceGroup{
+				ResourceGroup: azurev1alpha1.ResourceGroup{
 					Name: resourceGroupName,
 				},
 				RouteTables: []azurev1alpha1.RouteTable{
@@ -204,9 +204,9 @@ var _ = Describe("Terraform", func() {
 				SecurityGroups: []azurev1alpha1.SecurityGroup{
 					{Name: securityGroupName, Purpose: azurev1alpha1.PurposeNodes},
 				},
-				Networks: &azurev1alpha1.NetworkStatus{
-					VNet: azurev1alpha1.VNet{
-						Name: &vnetName,
+				Networks: azurev1alpha1.NetworkStatus{
+					VNet: azurev1alpha1.VNetStatus{
+						Name: vnetName,
 					},
 					Subnets: []azurev1alpha1.Subnet{
 						{
@@ -218,5 +218,4 @@ var _ = Describe("Terraform", func() {
 			}))
 		})
 	})
-
 })
