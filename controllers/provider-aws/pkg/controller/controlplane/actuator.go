@@ -27,7 +27,6 @@ import (
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
@@ -102,51 +101,6 @@ var ccmChart = &chart.Chart{
 	Name:   "cloud-controller-manager",
 	Path:   filepath.Join(aws.InternalChartsPath, "cloud-controller-manager"),
 	Images: []string{common.HyperkubeImageName},
-	ValuesFunc: func(clusterName string, shoot *gardenv1beta1.Shoot, checksums map[string]string) (map[string]interface{}, error) {
-		return map[string]interface{}{
-			"cloudProvider": "aws",
-			"clusterName":   clusterName,
-
-			"kubernetesVersion": shoot.Spec.Kubernetes.Version,
-			"podNetwork":        extensionscontroller.GetPodNetwork(shoot),
-			"replicas":          extensionscontroller.GetReplicas(shoot, 1),
-			"podAnnotations": map[string]interface{}{
-				"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
-				"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
-				// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-				// See https://github.com/gardener/gardener/pull/930
-				"checksum/secret-cloudprovider":            checksums[common.CloudProviderSecretName],
-				"checksum/configmap-cloud-provider-config": checksums[aws.CloudProviderConfigName],
-			},
-			"configureRoutes": false,
-			"environment": []map[string]interface{}{
-				{
-					"name": "AWS_ACCESS_KEY_ID",
-					"valueFrom": map[string]interface{}{
-						"secretKeyRef": map[string]interface{}{
-							"key":  aws.AccessKeyID,
-							"name": common.CloudProviderSecretName,
-						},
-					},
-				},
-				{
-					"name": "AWS_SECRET_ACCESS_KEY",
-					"valueFrom": map[string]interface{}{
-						"secretKeyRef": map[string]interface{}{
-							"key":  aws.SecretAccessKey,
-							"name": common.CloudProviderSecretName,
-						},
-					},
-				},
-			},
-			"resources": map[string]interface{}{
-				"limits": map[string]interface{}{
-					"cpu":    "500m",
-					"memory": "512Mi",
-				},
-			},
-		}, nil
-	},
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
@@ -154,17 +108,22 @@ var ccmChart = &chart.Chart{
 }
 
 // NewActuator creates a new Actuator that acts upon and updates the status of ControlPlane resources.
-func NewActuator() controlplane.Actuator {
+func NewActuator(secrets controlplane.Secrets, configChart, ccmChart controlplane.Chart) controlplane.Actuator {
 	return &actuator{
-		logger: log.Log.WithName("controlplane-controller"),
+		secrets:     secrets,
+		configChart: configChart,
+		ccmChart:    ccmChart,
+		logger:      log.Log.WithName("controlplane-controller"),
 	}
 }
 
 // actuator is an Actuator that acts upon and updates the status of ControlPlane resources.
 type actuator struct {
-	scheme            *runtime.Scheme
+	secrets     controlplane.Secrets
+	configChart controlplane.Chart
+	ccmChart    controlplane.Chart
+
 	decoder           runtime.Decoder
-	config            *rest.Config
 	clientset         kubernetes.Interface
 	gardenerClientset gardenerkubernetes.Interface
 	chartApplier      gardenerkubernetes.ChartApplier
@@ -174,15 +133,12 @@ type actuator struct {
 
 // InjectScheme injects the given scheme into the actuator.
 func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	a.scheme = scheme
-	a.decoder = serializer.NewCodecFactory(a.scheme).UniversalDecoder()
+	a.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 	return nil
 }
 
 // InjectConfig injects the given config into the actuator.
 func (a *actuator) InjectConfig(config *rest.Config) error {
-	a.config = config
-
 	// Create clientset
 	var err error
 	a.clientset, err = kubernetes.NewForConfig(config)
@@ -232,25 +188,20 @@ func (a *actuator) Reconcile(
 
 	// Deploy secrets
 	a.logger.Info("Deploying secrets", "controlplane", objectName(cp))
-	deployedSecrets, err := controlPlaneSecrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
+	deployedSecrets, err := a.secrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
 	if err != nil {
 		return errors.Wrapf(err, "could not deploy secrets for controlplane '%s'", objectName(cp))
 	}
 
-	// Determine subnet ID and zone
-	subnetID, zone, err := getSubnetIDAndZone(infraStatus)
+	// Get config chart values
+	values, err := getConfigChartValues(infraStatus, cp)
 	if err != nil {
-		return errors.Wrapf(err, "could not determine subnet ID or zone from infrastructureProviderStatus of controlplane '%s'", objectName(cp))
-	}
-
-	// Collect additional configuration chart values
-	values := map[string]interface{}{
-		"cloudProviderConfig": getCloudProviderConfig(infraStatus.VPC.ID, subnetID, zone, cp.Namespace),
+		return err
 	}
 
 	// Apply config chart
-	a.logger.Info("Applying configuration chart", "controlplane", objectName(cp), "chart", configChart.Name, "values", values)
-	if err := configChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, nil, nil, values); err != nil {
+	a.logger.Info("Applying configuration chart", "controlplane", objectName(cp), "values", values)
+	if err := a.configChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, nil, nil, values); err != nil {
 		return errors.Wrapf(err, "could not apply configuration chart for controlplane '%s'", objectName(cp))
 	}
 
@@ -260,15 +211,15 @@ func (a *actuator) Reconcile(
 		return err
 	}
 
-	// Collect additional CCM chart values
-	values = make(map[string]interface{})
-	if cpConfig.CloudControllerManager != nil {
-		values["featureGates"] = cpConfig.CloudControllerManager.FeatureGates
+	// Get CCM chart values
+	values, err = getCCMChartValues(cpConfig, cp, cluster, checksums)
+	if err != nil {
+		return err
 	}
 
 	// Apply CCM chart
-	a.logger.Info("Applying CCM chart", "controlplane", objectName(cp), "chart", ccmChart.Name, "values", values)
-	if err := ccmChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, imagevector.ImageVector(), checksums, values); err != nil {
+	a.logger.Info("Applying CCM chart", "controlplane", objectName(cp), "values", values)
+	if err := a.ccmChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, imagevector.ImageVector(), checksums, values); err != nil {
 		return errors.Wrapf(err, "could not apply CCM chart for controlplane '%s'", objectName(cp))
 	}
 
@@ -284,19 +235,19 @@ func (a *actuator) Delete(
 ) error {
 	// Delete CCM objects
 	a.logger.Info("Deleting CCM objects", "controlplane", objectName(cp))
-	if err := ccmChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+	if err := a.ccmChart.Delete(ctx, a.client, cp.Namespace); err != nil {
 		return errors.Wrapf(err, "could not delete CCM objects for controlplane '%s'", objectName(cp))
 	}
 
 	// Delete config objects
 	a.logger.Info("Deleting configuration objects", "controlplane", objectName(cp))
-	if err := configChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+	if err := a.configChart.Delete(ctx, a.client, cp.Namespace); err != nil {
 		return errors.Wrapf(err, "could not delete configuration objects for controlplane '%s'", objectName(cp))
 	}
 
 	// Delete secrets
 	a.logger.Info("Deleting secrets", "controlplane", objectName(cp))
-	if err := controlPlaneSecrets.Delete(a.clientset, cp.Namespace); err != nil {
+	if err := a.secrets.Delete(a.clientset, cp.Namespace); err != nil {
 		return errors.Wrapf(err, "could not delete secrets for controlplane '%s'", objectName(cp))
 	}
 
@@ -330,6 +281,78 @@ func (a *actuator) computeChecksums(
 		aws.CloudProviderConfigName: cpConfigMap,
 	}
 	return controlplane.ComputeChecksums(csSecrets, csConfigMaps), nil
+}
+
+// getConfigChartValues collects and returns the configuration chart values.
+func getConfigChartValues(
+	infraStatus *apisaws.InfrastructureStatus,
+	cp *extensionsv1alpha1.ControlPlane,
+) (map[string]interface{}, error) {
+	// Determine subnet ID and zone
+	subnetID, zone, err := getSubnetIDAndZone(infraStatus)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not determine subnet ID or zone from infrastructureProviderStatus of controlplane '%s'", objectName(cp))
+	}
+
+	// Collect config chart values
+	return map[string]interface{}{
+		"cloudProviderConfig": getCloudProviderConfig(infraStatus.VPC.ID, subnetID, zone, cp.Namespace),
+	}, nil
+}
+
+// getCCMChartValues collects and returns the CCM chart values.
+func getCCMChartValues(
+	cpConfig *apisaws.ControlPlaneConfig,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+	checksums map[string]string,
+) (map[string]interface{}, error) {
+	values := map[string]interface{}{
+		"cloudProvider":     "aws",
+		"clusterName":       cp.Namespace,
+		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
+		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
+		"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
+		"podAnnotations": map[string]interface{}{
+			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
+			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
+			// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
+			// See https://github.com/gardener/gardener/pull/930
+			"checksum/secret-cloudprovider":            checksums[common.CloudProviderSecretName],
+			"checksum/configmap-cloud-provider-config": checksums[aws.CloudProviderConfigName],
+		},
+		"configureRoutes": false,
+		"environment": []map[string]interface{}{
+			{
+				"name": "AWS_ACCESS_KEY_ID",
+				"valueFrom": map[string]interface{}{
+					"secretKeyRef": map[string]interface{}{
+						"key":  aws.AccessKeyID,
+						"name": common.CloudProviderSecretName,
+					},
+				},
+			},
+			{
+				"name": "AWS_SECRET_ACCESS_KEY",
+				"valueFrom": map[string]interface{}{
+					"secretKeyRef": map[string]interface{}{
+						"key":  aws.SecretAccessKey,
+						"name": common.CloudProviderSecretName,
+					},
+				},
+			},
+		},
+		"resources": map[string]interface{}{
+			"limits": map[string]interface{}{
+				"cpu":    "500m",
+				"memory": "512Mi",
+			},
+		},
+	}
+	if cpConfig.CloudControllerManager != nil {
+		values["featureGates"] = cpConfig.CloudControllerManager.FeatureGates
+	}
+	return values, nil
 }
 
 // getSubnetIDAndZone determines the subnet ID and zone from the given infrastructure status by looking for the first

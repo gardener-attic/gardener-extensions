@@ -30,7 +30,7 @@ var (
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator:          NewActuator(),
+		Actuator:          NewActuator(controlPlaneSecrets, configChart, ccmChart),
 		Type:              aws.Type,
 		ControllerOptions: opts,
 	})
