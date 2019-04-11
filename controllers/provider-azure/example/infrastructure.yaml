@@ -63,6 +63,9 @@ spec:
     apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig
     networks:
-      vnet:
+      vnet: # specify either 'name' or 'cidr'
+      # name: my-vnet
         cidr: 10.250.0.0/16
       workers: 10.250.0.0/19
+  # resourceGroup:
+  #   name: mygroup

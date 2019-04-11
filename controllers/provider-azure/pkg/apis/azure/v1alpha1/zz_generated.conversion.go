@@ -218,7 +218,9 @@ func Convert_azure_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *azu
 }
 
 func autoConvert_v1alpha1_NetworkConfig_To_azure_NetworkConfig(in *NetworkConfig, out *azure.NetworkConfig, s conversion.Scope) error {
-	out.VNet = (*azure.VNet)(unsafe.Pointer(in.VNet))
+	if err := Convert_v1alpha1_VNet_To_azure_VNet(&in.VNet, &out.VNet, s); err != nil {
+		return err
+	}
 	out.Workers = corev1alpha1.CIDR(in.Workers)
 	return nil
 }
@@ -229,7 +231,9 @@ func Convert_v1alpha1_NetworkConfig_To_azure_NetworkConfig(in *NetworkConfig, ou
 }
 
 func autoConvert_azure_NetworkConfig_To_v1alpha1_NetworkConfig(in *azure.NetworkConfig, out *NetworkConfig, s conversion.Scope) error {
-	out.VNet = (*VNet)(unsafe.Pointer(in.VNet))
+	if err := Convert_azure_VNet_To_v1alpha1_VNet(&in.VNet, &out.VNet, s); err != nil {
+		return err
+	}
 	out.Workers = corev1alpha1.CIDR(in.Workers)
 	return nil
 }

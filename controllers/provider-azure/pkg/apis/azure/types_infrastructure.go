@@ -40,7 +40,7 @@ type ResourceGroup struct {
 // NetworkConfig holds information about the Kubernetes and infrastructure networks.
 type NetworkConfig struct {
 	// VNet indicates whether to use an existing VNet or create a new one.
-	VNet *VNet
+	VNet VNet
 	// Workers is the worker subnet range to create (used for the VMs).
 	Workers gardencorev1alpha1.CIDR
 }
