@@ -78,9 +78,10 @@ func OperationAnnotationPredicate() predicate.Predicate {
 
 func mayReconcile(infrastructure *extensionsv1alpha1.Infrastructure) bool {
 	return infrastructure.DeletionTimestamp != nil ||
+		infrastructure.Generation != infrastructure.Status.ObservedGeneration ||
 		infrastructure.Status.LastOperation == nil ||
 		infrastructure.Status.LastOperation.Type == gardencorev1alpha1.LastOperationTypeCreate ||
 		infrastructure.Status.LastOperation.Type == gardencorev1alpha1.LastOperationTypeDelete ||
-		kutil.HasMetaDataAnnotation(&infrastructure.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile) ||
-		infrastructure.Status.LastOperation.State != gardencorev1alpha1.LastOperationStateSucceeded
+		infrastructure.Status.LastOperation.State != gardencorev1alpha1.LastOperationStateSucceeded ||
+		kutil.HasMetaDataAnnotation(&infrastructure.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile)
 }
