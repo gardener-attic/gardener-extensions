@@ -21,3 +21,24 @@ go get -u "gopkg.in/onsi/ginkgo.v1/ginkgo"
 go get -u "gopkg.in/golang/mock.v1/mockgen"
 go get -u "golang.org/x/lint/golint"
 curl -s "https://raw.githubusercontent.com/helm/helm/master/scripts/get" | bash
+
+function mac_os_hint {
+    cat <<EOM
+You are running in a MAC OS environment!
+
+Please make sure you have installed the following requirements:
+
+- GNU Core Utils
+- GNU Tar
+
+Brew command:
+$ brew install coreutils gnu-tar
+
+Please allow them to be used without their "g" prefix:
+$ export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH
+
+EOM
+    exit 0
+}
+
+[[ `uname -s | grep -i darwin` ]] && mac_os_hint
