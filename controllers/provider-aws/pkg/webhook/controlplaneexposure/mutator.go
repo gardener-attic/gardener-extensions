@@ -42,7 +42,7 @@ func (v *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	switch x := obj.(type) {
 	case *corev1.Service:
 		switch x.Name {
-		case common.KubeAPIServerDeploymentName:
+		case "kube-apiserver":
 			return mutateKubeAPIServerService(x)
 		}
 	case *appsv1.Deployment:

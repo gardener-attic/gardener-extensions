@@ -91,67 +91,68 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--external-cloud-volume-plugin=", "aws")
 }
 
+var (
+	accessKeyIDEnvVar = corev1.EnvVar{
+		Name: "AWS_ACCESS_KEY_ID",
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: &corev1.SecretKeySelector{
+				Key:                  aws.AccessKeyID,
+				LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
+			},
+		},
+	}
+	secretAccessKeyEnvVar = corev1.EnvVar{
+		Name: "AWS_SECRET_ACCESS_KEY",
+		ValueFrom: &corev1.EnvVarSource{
+			SecretKeyRef: &corev1.SecretKeySelector{
+				Key:                  aws.SecretAccessKey,
+				LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
+			},
+		},
+	}
+)
+
 func ensureEnvVars(c *corev1.Container) {
-	c.Env = controlplane.EnsureEnvVarWithName(c.Env,
-		corev1.EnvVar{
-			Name: "AWS_ACCESS_KEY_ID",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					Key:                  aws.AccessKeyID,
-					LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
-				},
-			},
-		},
-	)
-	c.Env = controlplane.EnsureEnvVarWithName(c.Env,
-		corev1.EnvVar{
-			Name: "AWS_SECRET_ACCESS_KEY",
-			ValueFrom: &corev1.EnvVarSource{
-				SecretKeyRef: &corev1.SecretKeySelector{
-					Key:                  aws.SecretAccessKey,
-					LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
-				},
-			},
-		},
-	)
+	c.Env = controlplane.EnsureEnvVarWithName(c.Env, accessKeyIDEnvVar)
+	c.Env = controlplane.EnsureEnvVarWithName(c.Env, secretAccessKeyEnvVar)
 }
 
+var (
+	cloudProviderConfigVolumeMount = corev1.VolumeMount{
+		Name:      aws.CloudProviderConfigName,
+		MountPath: "/etc/kubernetes/cloudprovider",
+	}
+	cloudProviderSecretVolumeMount = corev1.VolumeMount{
+		Name:      common.CloudProviderSecretName,
+		MountPath: "/srv/cloudprovider",
+	}
+
+	cloudProviderConfigVolume = corev1.Volume{
+		Name: aws.CloudProviderConfigName,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{Name: aws.CloudProviderConfigName},
+			},
+		},
+	}
+	cloudProviderSecretVolume = corev1.Volume{
+		Name: common.CloudProviderSecretName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
+				// See https://github.com/gardener/gardener/pull/930
+				SecretName: common.CloudProviderSecretName,
+			},
+		},
+	}
+)
+
 func ensureVolumeMounts(c *corev1.Container) {
-	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts,
-		corev1.VolumeMount{
-			Name:      aws.CloudProviderConfigName,
-			MountPath: "/etc/kubernetes/cloudprovider",
-		},
-	)
-	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts,
-		corev1.VolumeMount{
-			Name:      common.CloudProviderSecretName,
-			MountPath: "/srv/cloudprovider",
-		},
-	)
+	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
+	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderSecretVolumeMount)
 }
 
 func ensureVolumes(ps *corev1.PodSpec) {
-	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes,
-		corev1.Volume{
-			Name: aws.CloudProviderConfigName,
-			VolumeSource: corev1.VolumeSource{
-				ConfigMap: &corev1.ConfigMapVolumeSource{
-					LocalObjectReference: corev1.LocalObjectReference{Name: aws.CloudProviderConfigName},
-				},
-			},
-		},
-	)
-	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes,
-		corev1.Volume{
-			Name: common.CloudProviderSecretName,
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-					// See https://github.com/gardener/gardener/pull/930
-					SecretName: common.CloudProviderSecretName,
-				},
-			},
-		},
-	)
+	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
+	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderSecretVolume)
 }
