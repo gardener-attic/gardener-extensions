@@ -22,10 +22,10 @@ networks:
   worker: 10.250.0.0/19
 
 outputKeys:
-  routerId: router_id
-  networkId: network_id
+  routerID: router_id
+  networkID: network_id
   keyName: key_name
-  securityGroupId: security_group_id
+  securityGroupID: security_group_id
   securityGroupName: security_group_name
-  floatingNetworkId: floating_network_id
-  subnetId: subnet_id
+  floatingNetworkID: floating_network_id
+  subnetID: subnet_id
