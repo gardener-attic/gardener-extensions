@@ -16,6 +16,8 @@ package infrastructure
 
 import (
 	"context"
+	"time"
+
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client"
@@ -24,7 +26,6 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/gardener/gardener/pkg/utils/flow"
-	"time"
 )
 
 func (a *actuator) cleanupKubernetesFirewallRules(
@@ -43,6 +44,25 @@ func (a *actuator) cleanupKubernetesFirewallRules(
 	}
 
 	return infrastructure.CleanupKubernetesFirewalls(ctx, client, account.ProjectID, state.VPCName)
+}
+
+func (a *actuator) cleanupKubernetesRoutes(
+	ctx context.Context,
+	config *gcpv1alpha1.InfrastructureConfig,
+	client gcpclient.Interface,
+	tf *terraformer.Terraformer,
+	account *internal.ServiceAccount,
+	namespace string,
+) error {
+	state, err := infrastructure.ExtractTerraformState(tf, config)
+	if err != nil {
+		if terraformer.IsVariablesNotFoundError(err) {
+			return nil
+		}
+		return err
+	}
+
+	return infrastructure.CleanupKubernetesRoutes(ctx, client, account.ProjectID, state.VPCName, namespace)
 }
 
 // Delete implements infrastructure.Actuator.
@@ -72,6 +92,8 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 		return err
 	}
 
+	namespace := infra.GetNamespace()
+
 	var (
 		g                              = flow.NewGraph("GCP infrastructure destruction")
 		destroyKubernetesFirewallRules = g.Add(flow.Task{
@@ -83,10 +105,19 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 				DoIf(configExists),
 		})
 
+		destroyKubernetesRoutes = g.Add(flow.Task{
+			Name: "Destroying Kubernetes route entries",
+			Fn: flow.TaskFn(func(ctx context.Context) error {
+				return a.cleanupKubernetesRoutes(ctx, config, gcpClient, tf, serviceAccount, namespace)
+			}).
+				RetryUntilTimeout(10*time.Second, 5*time.Minute).
+				DoIf(configExists),
+		})
+
 		_ = g.Add(flow.Task{
 			Name:         "Destroying Shoot infrastructure",
 			Fn:           flow.SimpleTaskFn(tf.Destroy),
-			Dependencies: flow.NewTaskIDs(destroyKubernetesFirewallRules),
+			Dependencies: flow.NewTaskIDs(destroyKubernetesFirewallRules, destroyKubernetesRoutes),
 		})
 
 		f = g.Compile()

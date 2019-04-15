@@ -16,6 +16,7 @@ package gcp
 
 import (
 	"context"
+
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
@@ -30,12 +31,24 @@ type firewallsService struct {
 	firewallsService *compute.FirewallsService
 }
 
+type routesService struct {
+	routesService *compute.RoutesService
+}
+
 type firewallsListCall struct {
 	firewallsListCall *compute.FirewallsListCall
 }
 
+type routesListCall struct {
+	routesListCall *compute.RoutesListCall
+}
+
 type firewallsDeleteCall struct {
 	firewallsDeleteCall *compute.FirewallsDeleteCall
+}
+
+type routesDeleteCall struct {
+	routesDeleteCall *compute.RoutesDeleteCall
 }
 
 // NewFromServiceAccount creates a new client from the given service account.
@@ -64,9 +77,19 @@ func (c *client) Firewalls() FirewallsService {
 	return &firewallsService{c.service.Firewalls}
 }
 
+// Routes implements Interface.
+func (c *client) Routes() RoutesService {
+	return &routesService{c.service.Routes}
+}
+
 // List implements FirewallsService.
 func (f *firewallsService) List(projectID string) FirewallsListCall {
 	return &firewallsListCall{f.firewallsService.List(projectID)}
+}
+
+// List implements RoutesService.
+func (r *routesService) List(projectID string) RoutesListCall {
+	return &routesListCall{r.routesService.List(projectID)}
 }
 
 // Pages implements FirewallsListCall.
@@ -74,9 +97,19 @@ func (c *firewallsListCall) Pages(ctx context.Context, f func(*compute.FirewallL
 	return c.firewallsListCall.Pages(ctx, f)
 }
 
+// Pages implements RoutesListCall.
+func (c *routesListCall) Pages(ctx context.Context, f func(*compute.RouteList) error) error {
+	return c.routesListCall.Pages(ctx, f)
+}
+
 // Delete implements FirewallsService.
 func (f *firewallsService) Delete(projectID, firewall string) FirewallsDeleteCall {
 	return &firewallsDeleteCall{f.firewallsService.Delete(projectID, firewall)}
+}
+
+// Delete implements RoutesService.
+func (r *routesService) Delete(projectID, route string) RoutesDeleteCall {
+	return &routesDeleteCall{r.routesService.Delete(projectID, route)}
 }
 
 // Context implements FirewallsDeleteCall.
@@ -84,7 +117,17 @@ func (c *firewallsDeleteCall) Context(ctx context.Context) FirewallsDeleteCall {
 	return &firewallsDeleteCall{c.firewallsDeleteCall.Context(ctx)}
 }
 
+// Context implements RoutesDeleteCall.
+func (c *routesDeleteCall) Context(ctx context.Context) RoutesDeleteCall {
+	return &routesDeleteCall{c.routesDeleteCall.Context(ctx)}
+}
+
 // Do implements FirewallsDeleteCall.
 func (c *firewallsDeleteCall) Do(opts ...googleapi.CallOption) (*compute.Operation, error) {
 	return c.firewallsDeleteCall.Do(opts...)
+}
+
+// Do implements RoutesDeleteCall.
+func (c *routesDeleteCall) Do(opts ...googleapi.CallOption) (*compute.Operation, error) {
+	return c.routesDeleteCall.Do(opts...)
 }

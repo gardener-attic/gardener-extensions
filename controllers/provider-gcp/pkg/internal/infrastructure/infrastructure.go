@@ -16,12 +16,13 @@ package infrastructure
 
 import (
 	"context"
+	"strings"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"google.golang.org/api/compute/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strings"
 )
 
 // KubernetesFirewallNamePrefix is the name prefix that Kubernetes related firewall rules have.
@@ -44,12 +45,40 @@ func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, pr
 	return names, nil
 }
 
+// ListKubernetesRoutes returns a list of all routes within the shoot network which have the namespace as prefix.
+func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network, namespace string) ([]string, error) {
+	var routes []string
+	if err := client.Routes().List(projectID).Pages(ctx, func(page *compute.RouteList) error {
+		for _, route := range page.Items {
+			if strings.HasPrefix(route.Name, namespace) {
+				routes = append(routes, route.Name)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+	return routes, nil
+}
+
 // DeleteFirewalls deletes the firewalls with the given names in the given project.
 //
 // If a deletion fails, it immediately returns the error of that deletion.
 func DeleteFirewalls(ctx context.Context, client gcpclient.Interface, projectID string, firewalls []string) error {
 	for _, firewall := range firewalls {
 		if _, err := client.Firewalls().Delete(projectID, firewall).Context(ctx).Do(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DeleteRoutes deletes the route entries with the given names in the given project.
+//
+// If a deletion fails, it immediately returns the error of that deletion.
+func DeleteRoutes(ctx context.Context, client gcpclient.Interface, projectID string, routes []string) error {
+	for _, route := range routes {
+		if _, err := client.Routes().Delete(projectID, route).Context(ctx).Do(); err != nil {
 			return err
 		}
 	}
@@ -66,6 +95,18 @@ func CleanupKubernetesFirewalls(ctx context.Context, client gcpclient.Interface,
 	}
 
 	return DeleteFirewalls(ctx, client, projectID, firewallNames)
+}
+
+// CleanupKubernetesRoutes lists all Kubernetes route rules and then deletes them one after another.
+//
+// If a deletion fails, this method returns immediately with the encountered error.
+func CleanupKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network, namespace string) error {
+	routeNames, err := ListKubernetesRoutes(ctx, client, projectID, network, namespace)
+	if err != nil {
+		return err
+	}
+
+	return DeleteRoutes(ctx, client, projectID, routeNames)
 }
 
 // GetServiceAccountFromInfrastructure retrieves the ServiceAccount from the Secret referenced in the given Infrastructure.

@@ -17,12 +17,13 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	mockgcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/mock/client"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"google.golang.org/api/compute/v1"
-	"testing"
 )
 
 func TestActuator(t *testing.T) {
@@ -76,6 +77,42 @@ var _ = Describe("Infrastructure", func() {
 		})
 	})
 
+	Describe("#ListKubernetesRoutes", func() {
+		It("should list all kubernetes related route names with the shoot namespace as prefix", func() {
+			var (
+				ctx       = context.TODO()
+				projectID = "foo"
+				network   = "shoot--foo--bar"
+				namespace = "shoot--foo--bar"
+
+				routeName  = fmt.Sprintf("shoot--foo--bar-2690fa98-450f-11e9-8ebe-ce2a79d67b14")
+				routeNames = []string{routeName}
+
+				client         = mockgcpclient.NewMockInterface(ctrl)
+				routes         = mockgcpclient.NewMockRoutesService(ctrl)
+				routesListCall = mockgcpclient.NewMockRoutesListCall(ctrl)
+			)
+
+			gomock.InOrder(
+				client.EXPECT().Routes().Return(routes),
+				routes.EXPECT().List(projectID).Return(routesListCall),
+				routesListCall.EXPECT().Pages(ctx, gomock.AssignableToTypeOf(func(*compute.RouteList) error { return nil })).
+					DoAndReturn(func(_ context.Context, f func(*compute.RouteList) error) error {
+						return f(&compute.RouteList{
+							Items: []*compute.Route{
+								{Name: routeName, Network: network},
+							},
+						})
+					}),
+			)
+
+			actual, err := ListKubernetesRoutes(ctx, client, projectID, network, namespace)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actual).To(Equal(routeNames))
+		})
+	})
+
 	Describe("#DeleteFirewalls", func() {
 		It("should delete all firewalls", func() {
 			var (
@@ -98,6 +135,31 @@ var _ = Describe("Infrastructure", func() {
 			)
 
 			Expect(DeleteFirewalls(ctx, client, projectID, firewallNames)).To(Succeed())
+		})
+	})
+
+	Describe("#DeleteRoutes", func() {
+		It("should delete all routess", func() {
+			var (
+				ctx       = context.TODO()
+				projectID = "foo"
+
+				routeName  = fmt.Sprintf("shoot--foo--bar-2690fa98-450f-11e9-8ebe-ce2a79d67b14")
+				routeNames = []string{routeName}
+
+				client           = mockgcpclient.NewMockInterface(ctrl)
+				routes           = mockgcpclient.NewMockRoutesService(ctrl)
+				routesDeleteCall = mockgcpclient.NewMockRoutesDeleteCall(ctrl)
+			)
+
+			gomock.InOrder(
+				client.EXPECT().Routes().Return(routes),
+				routes.EXPECT().Delete(projectID, routeName).Return(routesDeleteCall),
+				routesDeleteCall.EXPECT().Context(ctx).Return(routesDeleteCall),
+				routesDeleteCall.EXPECT().Do(),
+			)
+
+			Expect(DeleteRoutes(ctx, client, projectID, routeNames)).To(Succeed())
 		})
 	})
 })
