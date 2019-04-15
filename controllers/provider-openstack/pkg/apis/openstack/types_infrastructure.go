@@ -28,8 +28,6 @@ type InfrastructureConfig struct {
 	FloatingPoolName string
 	// Networks is the OpenStack specific network configuration
 	Networks Networks
-	// Zones belonging to the same region
-	Zones []Zone
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -37,12 +35,18 @@ type InfrastructureConfig struct {
 // InfrastructureStatus contains information about created infrastructure resources.
 type InfrastructureStatus struct {
 	metav1.TypeMeta
-
 	// // Network contains information about the created Network and some related resources.
 	Network NetworkStatus
-
 	// Router contains information about the Router and related resources.
 	Router RouterStatus
+	// Node contains information about Node related resources.
+	Node NodeStatus
+}
+
+// NodeStatus contains information about Node related resources.
+type NodeStatus struct {
+	// KeyName is the name of the SSH key.
+	KeyName string
 }
 
 // RouterStatus contains information about a generated Router or resources attached to an existing Router.
@@ -67,8 +71,8 @@ type NetworkStatus struct {
 type Networks struct {
 	// Router indicates whether to use an existing router or create a new one.
 	Router *Router
-	// Workers is a list of CIDRs of worker subnets (private) to create (used for the VMs).
-	Workers []gardencorev1alpha1.CIDR
+	// Worker is a CIDRs of a worker subnet (private) to create (used for the VMs).
+	Worker gardencorev1alpha1.CIDR
 }
 
 // Router indicates whether to use an existing router or create a new one.
@@ -77,27 +81,20 @@ type Router struct {
 	ID string
 }
 
-// Zone describes the properties of a zone
-type Zone struct {
-	// Name is the name for this zone.
-	Name string
-	// Workers is the  workers  subnet range  to create (used for the VMs).
-	Workers gardencorev1alpha1.CIDR
-}
+// SubnetPurpose is a purpose of a subnet.
+type SubnetPurpose string
 
 const (
-	// PurposeNodes is a constant describing that the respective resource is used for nodes.
-	PurposeNodes string = "nodes"
+	// PurposeNodes is a SubnetPurpose for nodes.
+	PurposeNodes SubnetPurpose = "nodes"
 )
 
 // Subnet is an OpenStack subnet related to a Network.
 type Subnet struct {
 	// Purpose is a logical description of the subnet.
-	Purpose string
+	Purpose SubnetPurpose
 	// ID is the subnet id.
 	ID string
-	// Zone is the availability zone into which the subnet has been created.
-	Zone string
 }
 
 // SecurityGroup is an OpenStack security group related to a Network.

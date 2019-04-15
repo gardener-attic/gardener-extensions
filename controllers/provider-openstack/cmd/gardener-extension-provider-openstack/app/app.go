@@ -26,7 +26,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 
 	openstackcontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller"
-	openstackinfrastrcuture "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
+	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 
 	"github.com/spf13/cobra"
 
@@ -79,8 +79,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			infraCtrlOpts.Completed().Apply(&openstackinfrastrcuture.DefaultAddOptions.Controller)
-			infraReconcileOpts.Completed().Apply(&openstackinfrastrcuture.DefaultAddOptions.IgnoreOperationAnnotation)
+			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
+			infraReconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
 			if err := openstackcontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

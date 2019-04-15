@@ -17,6 +17,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/runtime"
 	"path/filepath"
 	"time"
 
@@ -31,6 +32,7 @@ import (
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -97,7 +99,53 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		}
 	}
 
+	if err := a.updateProviderStatus(ctx, tf, infrastructure, infrastructureConfig); err != nil {
+		return fmt.Errorf("failed to update the provider status in the Infrastructure resource: %+v", err)
+	}
 	return nil
+}
+
+func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *openstackv1alpha1.InfrastructureConfig) error {
+	outputVarKeys := []string{
+		openstack.SSHKeyName,
+		openstack.RouterID,
+		openstack.NetworkID,
+		openstack.SubnetID,
+		openstack.FloatingNetworkID,
+		openstack.SecurityGroupID,
+		openstack.SecurityGroupName,
+	}
+
+	output, err := tf.GetStateOutputVariables(outputVarKeys...)
+	if err != nil {
+		return err
+	}
+
+	infrastructure.Status.ProviderStatus = &runtime.RawExtension{
+		Object: &openstackv1alpha1.InfrastructureStatus{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "InfrastructureStatus",
+			},
+			Router: openstackv1alpha1.RouterStatus{
+				ID: output[openstack.RouterID],
+			},
+			Network: openstackv1alpha1.NetworkStatus{
+				ID: output[openstack.NetworkID],
+				Subnets: []openstackv1alpha1.Subnet{
+					{
+						ID:      output[openstack.SubnetID],
+						Purpose: openstackv1alpha1.PurposeNodes,
+					},
+				},
+			},
+			Node: openstackv1alpha1.NodeStatus{
+				KeyName: output[openstack.SSHKeyName],
+			},
+		},
+	}
+
+	return a.client.Status().Update(ctx, infrastructure)
 }
 
 func extractCredentials(providerSecret *corev1.Secret) *credentials {
@@ -134,7 +182,7 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 		},
 		"clusterName": infrastructure.Namespace,
 		"networks": map[string]interface{}{
-			"worker": infrastructureConfig.Networks.Workers[0],
+			"worker": infrastructureConfig.Networks.Worker,
 		},
 	}, nil
 }
