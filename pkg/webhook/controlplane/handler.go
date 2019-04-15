@@ -86,7 +86,8 @@ func (h *handler) Handle(ctx context.Context, req types.Request) types.Response 
 	newObj := obj.DeepCopyObject()
 	err = h.mutator.Mutate(ctx, newObj)
 	if err != nil {
-		return admission.ErrorResponse(http.StatusInternalServerError, errors.Wrapf(err, "could not mutate %v", newObj))
+		return admission.ErrorResponse(http.StatusInternalServerError,
+			errors.Wrapf(err, "could not mutate %s %s/%s", ar.Kind.Kind, accessor.GetNamespace(), accessor.GetName()))
 	}
 
 	// Return a patch response if the resource should be changed
