@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	"path/filepath"
 	"time"
 
@@ -121,31 +122,32 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Ter
 		return err
 	}
 
-	infrastructure.Status.ProviderStatus = &runtime.RawExtension{
-		Object: &openstackv1alpha1.InfrastructureStatus{
-			TypeMeta: metav1.TypeMeta{
-				APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
-				Kind:       "InfrastructureStatus",
-			},
-			Router: openstackv1alpha1.RouterStatus{
-				ID: output[openstack.RouterID],
-			},
-			Network: openstackv1alpha1.NetworkStatus{
-				ID: output[openstack.NetworkID],
-				Subnets: []openstackv1alpha1.Subnet{
-					{
-						ID:      output[openstack.SubnetID],
-						Purpose: openstackv1alpha1.PurposeNodes,
+	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infrastructure, func() error {
+		infrastructure.Status.ProviderStatus = &runtime.RawExtension{
+			Object: &openstackv1alpha1.InfrastructureStatus{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+					Kind:       "InfrastructureStatus",
+				},
+				Router: openstackv1alpha1.RouterStatus{
+					ID: output[openstack.RouterID],
+				},
+				Network: openstackv1alpha1.NetworkStatus{
+					ID: output[openstack.NetworkID],
+					Subnets: []openstackv1alpha1.Subnet{
+						{
+							ID:      output[openstack.SubnetID],
+							Purpose: openstackv1alpha1.PurposeNodes,
+						},
 					},
 				},
+				Node: openstackv1alpha1.NodeStatus{
+					KeyName: output[openstack.SSHKeyName],
+				},
 			},
-			Node: openstackv1alpha1.NodeStatus{
-				KeyName: output[openstack.SSHKeyName],
-			},
-		},
-	}
-
-	return a.client.Status().Update(ctx, infrastructure)
+		}
+		return nil
+	})
 }
 
 func extractCredentials(providerSecret *corev1.Secret) *credentials {

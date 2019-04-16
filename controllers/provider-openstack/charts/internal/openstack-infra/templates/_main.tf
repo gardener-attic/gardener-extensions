@@ -99,31 +99,31 @@ resource "null_resource" "outputs" {
 //= Output Variables
 //=====================================================================
 
-output "router_id" {
+output "{{ .Values.outputKeys.routerID }}" {
   value = "{{ required "router.id is required" .Values.router.id }}"
 }
 
-output "network_id" {
+output "{{ .Values.outputKeys.networkID }}" {
   value = "${openstack_networking_network_v2.cluster.id}"
 }
 
-output "key_name" {
+output "{{ .Values.outputKeys.keyName }}" {
   value = "${openstack_compute_keypair_v2.ssh_key.name}"
 }
 
-output "security_group_id" {
+output "{{ .Values.outputKeys.securityGroupID }}" {
   value = "${openstack_networking_secgroup_v2.cluster.id}"
 }
 
-output "security_group_name" {
+output "{{ .Values.outputKeys.securityGroupName }}" {
   value = "${openstack_networking_secgroup_v2.cluster.name}"
 }
 
-output "floating_network_id" {
+output "{{ .Values.outputKeys.floatingNetworkID }}" {
   value = "${data.openstack_networking_network_v2.fip.id}"
 }
 
-output "subnet_id" {
+output "{{ .Values.outputKeys.subnetID }}" {
   value = "${openstack_networking_subnet_v2.cluster.id}"
 }
 {{- end -}}
