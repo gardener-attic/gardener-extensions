@@ -16,6 +16,7 @@ package infrastructure
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/imagevector"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/go-logr/logr"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/version"
@@ -47,15 +47,13 @@ type actuator struct {
 	scheme     *runtime.Scheme
 	decoder    runtime.Decoder
 
-	serverVersion    *version.Info
-	terraformerImage string
+	serverVersion *version.Info
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled Infrastructure resources.
-func NewActuator(terraformerImage string) infrastructure.Actuator {
+func NewActuator() infrastructure.Actuator {
 	return &actuator{
-		logger:           log.Log.WithName("infrastructure-actuator"),
-		terraformerImage: terraformerImage,
+		logger: log.Log.WithName("infrastructure-actuator"),
 	}
 }
 
@@ -99,12 +97,12 @@ func (a *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infras
 // Helper functions
 
 func (a *actuator) newTerraformer(purpose, namespace, name string) (*terraformer.Terraformer, error) {
-	return terraformer.NewForConfig(glogger.NewLogger("info"), a.restConfig, purpose, namespace, name, a.terraformerImage)
+	return terraformer.NewForConfig(glogger.NewLogger("info"), a.restConfig, purpose, namespace, name, imagevector.TerraformerImage())
 }
 
-func generateTerraformInfraVariablesEnvironment(secret *corev1.Secret) map[string]string {
-	return terraformer.GenerateVariablesEnvironment(secret, map[string]string{
-		"USER_NAME": string(secret.Data[UserName]),
-		"PASSWORD":  string(secret.Data[DomainName]),
-	})
+func generateTerraformInfraVariablesEnvironment(creds *credentials) map[string]string {
+	return map[string]string{
+		"TF_VAR_USER_NAME": creds.Username,
+		"TF_VAR_PASSWORD":  creds.Password,
+	}
 }

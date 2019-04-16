@@ -15,19 +15,44 @@
 package imagevector
 
 import (
-	"path/filepath"
+	"github.com/gobuffalo/packr/v2"
+	"strings"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
-// ImageVector is the image vector that contains al the needed images
-var ImageVector imagevector.ImageVector
+const (
+	// TerraformerImageName is the name of the Terraformer image.
+	TerraformerImageName = "terraformer"
+)
+
+var (
+	// ImageVector is the image vector that contains al the needed images
+	imageVector imagevector.ImageVector
+)
 
 func init() {
-	var err error
-	ImageVector, err = imagevector.ReadFile(filepath.Join(openstack.ChartsPath, "images.yaml"))
+	box := packr.New("charts", "../../charts")
+
+	imagesYaml, err := box.FindString("images.yaml")
 	runtime.Must(err)
+
+	imageVector, err = imagevector.Read(strings.NewReader(imagesYaml))
+	runtime.Must(err)
+
+	imageVector, err = imagevector.WithEnvOverride(imageVector)
+	runtime.Must(err)
+}
+
+func ImageVector() imagevector.ImageVector {
+	return imageVector
+}
+
+func TerraformerImage() string {
+	image, err := imageVector.FindImage(TerraformerImageName, "", "")
+	runtime.Must(err)
+
+	return image.String()
 }

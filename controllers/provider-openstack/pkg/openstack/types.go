@@ -17,8 +17,6 @@ package openstack
 import "path/filepath"
 
 const (
-	// TerraformerImageName is the name of the Terraformer image.
-	TerraformerImageName = "terraformer"
 	// TerrformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
 	TerrformerPurposeInfra = "infra"
 	// SSHKeyName key for accessing SSH key name from outputs in terraform

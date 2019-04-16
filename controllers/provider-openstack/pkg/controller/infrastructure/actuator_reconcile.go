@@ -20,6 +20,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 	"path/filepath"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
@@ -51,6 +52,17 @@ const (
 type credentials struct {
 	DomainName string
 	TenantName string
+	Username   string
+	Password   string
+}
+
+func getCredentials(ctx context.Context, c client.Client, infra *extensionsv1alpha1.Infrastructure) (*credentials, error) {
+	providerSecret := &corev1.Secret{}
+	if err := c.Get(ctx, kutil.Key(infra.Spec.SecretRef.Namespace, infra.Spec.SecretRef.Name), providerSecret); err != nil {
+		return nil, err
+	}
+
+	return extractCredentials(providerSecret)
 }
 
 func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
@@ -59,12 +71,12 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		return fmt.Errorf("could not decode provider config: %+v", err)
 	}
 
-	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(infrastructure.Spec.SecretRef.Namespace, infrastructure.Spec.SecretRef.Name), providerSecret); err != nil {
+	creds, err := getCredentials(ctx, a.client, infrastructure)
+	if err != nil {
 		return err
 	}
 
-	terraformConfig, err := generateTerraformInfraConfig(ctx, infrastructure, infrastructureConfig, cluster, extractCredentials(providerSecret))
+	terraformConfig, err := generateTerraformInfraConfig(ctx, infrastructure, infrastructureConfig, cluster, creds)
 	if err != nil {
 		return fmt.Errorf("failed to generate Terraform config: %+v", err)
 	}
@@ -85,7 +97,7 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 	}
 
 	if err := tf.
-		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).
+		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(creds)).
 		InitializeWith(terraformer.DefaultInitializer(
 			a.client,
 			release.FileContent("main.tf"),
@@ -134,6 +146,11 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Ter
 				},
 				Network: openstackv1alpha1.NetworkStatus{
 					ID: output[openstack.NetworkID],
+					SecurityGroups: []openstackv1alpha1.SecurityGroup{
+						{
+							ID: output[openstack.SecurityGroupID],
+						},
+					},
 					Subnets: []openstackv1alpha1.Subnet{
 						{
 							ID:      output[openstack.SubnetID],
@@ -150,11 +167,41 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Ter
 	})
 }
 
-func extractCredentials(providerSecret *corev1.Secret) *credentials {
-	return &credentials{
-		DomainName: string(providerSecret.Data[DomainName]),
-		TenantName: string(providerSecret.Data[TenantName]),
+func getRequired(data map[string][]byte, key string) (string, error) {
+	value, ok := data[key]
+	if !ok {
+		return "", fmt.Errorf("map %v does not contain key %s", data, key)
 	}
+	if len(value) == 0 {
+		return "", fmt.Errorf("key %s may not be empty", key)
+	}
+	return string(value), nil
+}
+
+func extractCredentials(providerSecret *corev1.Secret) (*credentials, error) {
+	domainName, err := getRequired(providerSecret.Data, DomainName)
+	if err != nil {
+		return nil, err
+	}
+	tenantName, err := getRequired(providerSecret.Data, TenantName)
+	if err != nil {
+		return nil, err
+	}
+	userName, err := getRequired(providerSecret.Data, UserName)
+	if err != nil {
+		return nil, err
+	}
+	password, err := getRequired(providerSecret.Data, Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &credentials{
+		DomainName: domainName,
+		TenantName: tenantName,
+		Username:   userName,
+		Password:   password,
+	}, nil
 }
 
 func generateTerraformInfraConfig(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *openstackv1alpha1.InfrastructureConfig, cluster *extensionscontroller.Cluster, credentials *credentials) (map[string]interface{}, error) {
@@ -178,13 +225,22 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 			"router": createRouter,
 		},
 		"dnsServers":   cluster.CloudProfile.Spec.OpenStack.DNSServers,
-		"sshPublicKey": infrastructure.Spec.SSHPublicKey,
+		"sshPublicKey": string(infrastructure.Spec.SSHPublicKey),
 		"router": map[string]interface{}{
 			"id": routerID,
 		},
 		"clusterName": infrastructure.Namespace,
 		"networks": map[string]interface{}{
 			"worker": infrastructureConfig.Networks.Worker,
+		},
+		"outputKeys": map[string]interface{}{
+			"routerID":          openstack.RouterID,
+			"networkID":         openstack.NetworkID,
+			"keyName":           openstack.SSHKeyName,
+			"securityGroupID":   openstack.SecurityGroupID,
+			"securityGroupName": openstack.SecurityGroupName,
+			"floatingNetworkID": openstack.FloatingNetworkID,
+			"subnetID":          openstack.SubnetID,
 		},
 	}, nil
 }

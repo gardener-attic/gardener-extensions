@@ -20,9 +20,6 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
@@ -31,12 +28,12 @@ func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha
 		return fmt.Errorf("could not create the Terraformer: %+v", err)
 	}
 
-	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(infrastructure.Spec.SecretRef.Namespace, infrastructure.Spec.SecretRef.Name), providerSecret); err != nil {
+	creds, err := getCredentials(ctx, a.client, infrastructure)
+	if err != nil {
 		return err
 	}
 
 	return tf.
-		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).
+		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(creds)).
 		Destroy()
 }

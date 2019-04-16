@@ -279,7 +279,6 @@ func Convert_openstack_Router_To_v1alpha1_Router(in *openstack.Router, out *Rout
 
 func autoConvert_v1alpha1_RouterStatus_To_openstack_RouterStatus(in *RouterStatus, out *openstack.RouterStatus, s conversion.Scope) error {
 	out.ID = in.ID
-	out.Subnets = *(*[]openstack.Subnet)(unsafe.Pointer(&in.Subnets))
 	return nil
 }
 
@@ -290,7 +289,6 @@ func Convert_v1alpha1_RouterStatus_To_openstack_RouterStatus(in *RouterStatus, o
 
 func autoConvert_openstack_RouterStatus_To_v1alpha1_RouterStatus(in *openstack.RouterStatus, out *RouterStatus, s conversion.Scope) error {
 	out.ID = in.ID
-	out.Subnets = *(*[]Subnet)(unsafe.Pointer(&in.Subnets))
 	return nil
 }
 
@@ -300,7 +298,6 @@ func Convert_openstack_RouterStatus_To_v1alpha1_RouterStatus(in *openstack.Route
 }
 
 func autoConvert_v1alpha1_SecurityGroup_To_openstack_SecurityGroup(in *SecurityGroup, out *openstack.SecurityGroup, s conversion.Scope) error {
-	out.Purpose = in.Purpose
 	out.ID = in.ID
 	return nil
 }
@@ -311,7 +308,6 @@ func Convert_v1alpha1_SecurityGroup_To_openstack_SecurityGroup(in *SecurityGroup
 }
 
 func autoConvert_openstack_SecurityGroup_To_v1alpha1_SecurityGroup(in *openstack.SecurityGroup, out *SecurityGroup, s conversion.Scope) error {
-	out.Purpose = in.Purpose
 	out.ID = in.ID
 	return nil
 }

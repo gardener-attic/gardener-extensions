@@ -1,4 +1,3 @@
-{{- define "openstack-infra.main" -}}
 provider "openstack" {
   auth_url    = "{{ required "openstack.authURL is required" .Values.openstack.authURL }}"
   domain_name = "{{ required "openstack.domainName is required" .Values.openstack.domainName }}"
@@ -126,4 +125,3 @@ output "{{ .Values.outputKeys.floatingNetworkID }}" {
 output "{{ .Values.outputKeys.subnetID }}" {
   value = "${openstack_networking_subnet_v2.cluster.id}"
 }
-{{- end -}}

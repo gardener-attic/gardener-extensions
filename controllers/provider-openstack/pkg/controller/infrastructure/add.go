@@ -39,7 +39,7 @@ type AddOptions struct {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, options AddOptions) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
-		Actuator:          infrastructure.OperationAnnotationWrapper(NewActuator(openstack.TerraformerImageName)),
+		Actuator:          infrastructure.OperationAnnotationWrapper(NewActuator()),
 		ControllerOptions: options.Controller,
 		Predicates:        infrastructure.DefaultPredicates(mgr.GetClient(), openstack.Type, options.IgnoreOperationAnnotation),
 	})

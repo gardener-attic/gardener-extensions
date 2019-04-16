@@ -54,8 +54,6 @@ type NodeStatus struct {
 type RouterStatus struct {
 	// ID is the Router id.
 	ID string `json:"id"`
-	// Subnets is a list of subnets that have been created.
-	Subnets []Subnet `json:"subnets"`
 }
 
 // NetworkStatus contains information about a generated Network or resources created in an existing Network.
@@ -101,8 +99,6 @@ type Subnet struct {
 
 // SecurityGroup is an OpenStack security group related to a Network.
 type SecurityGroup struct {
-	// Purpose is a logical description of the security group.
-	Purpose string `json:"purpose"`
 	// ID is the subnet id.
 	ID string `json:"id"`
 }
