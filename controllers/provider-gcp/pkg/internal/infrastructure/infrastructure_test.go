@@ -83,7 +83,6 @@ var _ = Describe("Infrastructure", func() {
 				ctx       = context.TODO()
 				projectID = "foo"
 				network   = "shoot--foo--bar"
-				namespace = "shoot--foo--bar"
 
 				routeName  = fmt.Sprintf("shoot--foo--bar-2690fa98-450f-11e9-8ebe-ce2a79d67b14")
 				routeNames = []string{routeName}
@@ -106,7 +105,7 @@ var _ = Describe("Infrastructure", func() {
 					}),
 			)
 
-			actual, err := ListKubernetesRoutes(ctx, client, projectID, network, namespace)
+			actual, err := ListKubernetesRoutes(ctx, client, projectID, network)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(routeNames))
