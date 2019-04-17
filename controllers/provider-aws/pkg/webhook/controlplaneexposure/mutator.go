@@ -17,6 +17,8 @@ package controlplaneexposure
 import (
 	"context"
 
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -53,11 +55,23 @@ func (v *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 }
 
 func mutateKubeAPIServerService(svc *corev1.Service) error {
-	// TODO
+	if svc.Annotations == nil {
+		svc.Annotations = make(map[string]string)
+	}
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout"] = "3600"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-backend-protocol"] = "ssl"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-ssl-ports"] = "443"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout"] = "5"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval"] = "30"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold"] = "2"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold"] = "2"
+	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy"] = "ELBSecurityPolicy-TLS-1-2-2017-01"
 	return nil
 }
 
 func mutateKubeAPIServerDeployment(dep *appsv1.Deployment) error {
-	// TODO
+	if c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
+		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
+	}
 	return nil
 }

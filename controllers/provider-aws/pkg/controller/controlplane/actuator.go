@@ -93,7 +93,7 @@ var configChart = &chart.Chart{
 	Objects: []*chart.Object{
 		{
 			Type: &corev1.ConfigMap{},
-			Name: common.CloudProviderConfigName,
+			Name: aws.CloudProviderConfigName,
 		},
 	},
 }
@@ -113,8 +113,10 @@ var ccmChart = &chart.Chart{
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
 				"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
-				"checksum/secret-cloudprovider":                   checksums[common.CloudProviderSecretName],
-				"checksum/configmap-cloud-provider-config":        checksums[common.CloudProviderConfigName],
+				// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
+				// See https://github.com/gardener/gardener/pull/930
+				"checksum/secret-cloudprovider":            checksums[common.CloudProviderSecretName],
+				"checksum/configmap-cloud-provider-config": checksums[aws.CloudProviderConfigName],
 			},
 			"configureRoutes": false,
 			"environment": []map[string]interface{}{
@@ -315,7 +317,7 @@ func (a *actuator) computeChecksums(
 		return nil, errors.Wrapf(err, "could not get secret '%s'", objectName(cpSecret))
 	}
 	cpConfigMap := &corev1.ConfigMap{}
-	err = a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: common.CloudProviderConfigName}, cpConfigMap)
+	err = a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: aws.CloudProviderConfigName}, cpConfigMap)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not get configmap '%s'", objectName(cpConfigMap))
 	}
@@ -325,7 +327,7 @@ func (a *actuator) computeChecksums(
 		common.CloudProviderSecretName: cpSecret,
 	})
 	csConfigMaps := map[string]*corev1.ConfigMap{
-		common.CloudProviderConfigName: cpConfigMap,
+		aws.CloudProviderConfigName: cpConfigMap,
 	}
 	return controlplane.ComputeChecksums(csSecrets, csConfigMaps), nil
 }

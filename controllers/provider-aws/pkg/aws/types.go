@@ -45,6 +45,9 @@ const (
 	NodesRole = "nodes_role_arn"
 	// BastionsRole role for bastions
 	BastionsRole = "bastions_role_arn"
+
+	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	CloudProviderConfigName = "cloud-provider-config"
 )
 
 var (
