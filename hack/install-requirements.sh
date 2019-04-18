@@ -20,10 +20,10 @@ go get -u "gopkg.in/gobuffalo/packr.v1/v2/packr2"
 go get -u "gopkg.in/onsi/ginkgo.v1/ginkgo"
 go get -u "gopkg.in/golang/mock.v1/mockgen"
 go get -u "golang.org/x/lint/golint"
-curl -s "https://raw.githubusercontent.com/helm/helm/master/scripts/get" | bash
+curl -s "https://raw.githubusercontent.com/helm/helm/v2.13.1/scripts/get" | bash -s -- --version 'v2.13.1'
 
-function mac_os_hint {
-    cat <<EOM
+if [[ "$(uname -s)" == *"Darwin"* ]]; then
+  cat <<EOM
 You are running in a MAC OS environment!
 
 Please make sure you have installed the following requirements:
@@ -38,7 +38,5 @@ Please allow them to be used without their "g" prefix:
 $ export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH
 
 EOM
-    exit 0
-}
+fi
 
-[[ `uname -s | grep -i darwin` ]] && mac_os_hint
