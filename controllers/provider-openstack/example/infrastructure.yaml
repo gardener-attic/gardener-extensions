@@ -5,19 +5,6 @@ metadata:
   name: shoot--foo--bar
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: garden.sapcloud.io:system:terraformers
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-    verbs:
-      - '*'
-
----
 apiVersion: v1
 kind: Secret
 metadata:
@@ -50,12 +37,6 @@ spec:
   shoot:
     apiVersion: garden.sapcloud.io/v1beta1
     kind: Shoot
-    spec:
-      cloud:
-        openstack:
-          networks:
-            pods: 10.243.128.0/17
-            services: 10.243.0.0/17
     status:
       lastOperation:
         state: Succeeded
