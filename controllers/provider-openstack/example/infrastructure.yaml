@@ -21,7 +21,7 @@ rules:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: core-gcp
+  name: core-openstack
   namespace: shoot--foo--bar
 type: Opaque
 data:
@@ -69,7 +69,7 @@ spec:
   type: openstack
   region: eu-de-1
   secretRef:
-    name: cloudprovider
+    name: core-openstack
     namespace: shoot--foo--bar
   providerConfig:
     apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
