@@ -16,25 +16,12 @@ package infrastructure
 
 import (
 	"context"
-	"fmt"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal/infrastructure"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (a *actuator) delete(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
-	creds, err := infrastructure.GetCredentialsFromInfrastructure(ctx, a.client, infra)
-	if err != nil {
-		return err
-	}
-
-	tf, err := internal.NewTerraformer(a.restConfig, creds, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
-	if err != nil {
-		return fmt.Errorf("could not create the Terraformer: %+v", err)
-	}
-
-	return tf.
-		SetVariablesEnvironment(internal.TerraformerVariablesEnvironmentFromCredentials(creds)).
-		Destroy()
+// GetCredentialsFromInfrastructure retrieves the ServiceAccount from the Secret referenced in the given Infrastructure.
+func GetCredentialsFromInfrastructure(ctx context.Context, c client.Client, config *extensionsv1alpha1.Infrastructure) (*internal.Credentials, error) {
+	return internal.GetCredentials(ctx, c, config)
 }

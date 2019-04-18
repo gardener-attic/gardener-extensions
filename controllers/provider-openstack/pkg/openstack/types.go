@@ -17,22 +17,14 @@ package openstack
 import "path/filepath"
 
 const (
-	// TerrformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
-	TerrformerPurposeInfra = "infra"
-	// SSHKeyName key for accessing SSH key name from outputs in terraform
-	SSHKeyName = "key_name"
-	// RouterID is the id the router between provider network and the worker subnet.
-	RouterID = "router_id"
-	// NetworkID is the private worker network.
-	NetworkID = "network_id"
-	// SecurityGroupID is the id of worker security group.
-	SecurityGroupID = "security_group_id"
-	// SecurityGroupName is the name of the worker security group.
-	SecurityGroupName = "security_group_name"
-	// FloatingNetworkID is the id of the provider network.
-	FloatingNetworkID = "floating_network_id"
-	// SubnetID is the id of the worker subnet.
-	SubnetID = "subnet_id"
+	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
+	DomainName = "domainName"
+	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
+	TenantName = "tenantName"
+	// UserName is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack username.
+	UserName = "username"
+	// Password is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack password.
+	Password = "password"
 )
 
 var (
