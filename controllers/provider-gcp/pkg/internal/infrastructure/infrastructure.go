@@ -26,7 +26,10 @@ import (
 )
 
 // KubernetesFirewallNamePrefix is the name prefix that Kubernetes related firewall rules have.
-const KubernetesFirewallNamePrefix = "k8s"
+const (
+	KubernetesFirewallNamePrefix string = "k8s"
+	routePrefix                  string = "shoot--"
+)
 
 // ListKubernetesFirewalls lists all firewalls that are in the given network and have the KubernetesFirewallNamePrefix.
 func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, projectID, network string) ([]string, error) {
@@ -45,12 +48,12 @@ func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, pr
 	return names, nil
 }
 
-// ListKubernetesRoutes returns a list of all routes within the shoot network which have the namespace as prefix.
-func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network, namespace string) ([]string, error) {
+// ListKubernetesRoutes returns a list of all routes within the shoot network which have "shoot--" as prefix.
+func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network string) ([]string, error) {
 	var routes []string
 	if err := client.Routes().List(projectID).Pages(ctx, func(page *compute.RouteList) error {
 		for _, route := range page.Items {
-			if strings.HasPrefix(route.Name, namespace) {
+			if strings.HasPrefix(route.Name, routePrefix) && route.Network == network {
 				routes = append(routes, route.Name)
 			}
 		}
@@ -100,8 +103,8 @@ func CleanupKubernetesFirewalls(ctx context.Context, client gcpclient.Interface,
 // CleanupKubernetesRoutes lists all Kubernetes route rules and then deletes them one after another.
 //
 // If a deletion fails, this method returns immediately with the encountered error.
-func CleanupKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network, namespace string) error {
-	routeNames, err := ListKubernetesRoutes(ctx, client, projectID, network, namespace)
+func CleanupKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network string) error {
+	routeNames, err := ListKubernetesRoutes(ctx, client, projectID, network)
 	if err != nil {
 		return err
 	}
