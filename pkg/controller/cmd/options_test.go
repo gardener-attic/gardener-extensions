@@ -28,74 +28,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"strings"
 )
-
-type Flag struct {
-	Key   string
-	Value interface{}
-}
-
-func (f *Flag) Slice() []string {
-	key := fmt.Sprintf("--%s", f.Key)
-	if f.Value == nil {
-		return []string{key}
-	}
-	return []string{key, fmt.Sprintf("%v", f.Value)}
-}
-
-func (f *Flag) String() string {
-	return strings.Join(f.Slice(), " ")
-}
-
-type Command struct {
-	Name  string
-	Flags []Flag
-	Args  []string
-}
-
-type CommandBuilder struct {
-	command Command
-}
-
-func NewCommandBuilder(name string) *CommandBuilder {
-	return &CommandBuilder{Command{Name: name}}
-}
-
-func (c *CommandBuilder) Flags(flags ...Flag) *CommandBuilder {
-	c.command.Flags = append(c.command.Flags, flags...)
-	return c
-}
-
-func (c *CommandBuilder) BoolFlag(key string) *CommandBuilder {
-	return c.Flag(key, "")
-}
-
-func (c *CommandBuilder) Flag(key string, value interface{}) *CommandBuilder {
-	return c.Flags(Flag{key, value})
-}
-
-func (c *CommandBuilder) Args(args ...string) *CommandBuilder {
-	c.command.Args = append(c.command.Args, args...)
-	return c
-}
-
-func (c *CommandBuilder) Command() *Command {
-	return &c.command
-}
-
-func (c *Command) Slice() []string {
-	out := []string{c.Name}
-	for _, flag := range c.Flags {
-		out = append(out, flag.Slice()...)
-	}
-	out = append(out, c.Args...)
-	return out
-}
-
-func (c *Command) String() string {
-	return strings.Join(c.Slice(), " ")
-}
 
 var _ = Describe("Options", func() {
 	var (
@@ -123,7 +56,7 @@ var _ = Describe("Options", func() {
 			flagName = "bar"
 			value    = "x"
 		)
-		command := NewCommandBuilder(cmdName).
+		command := test.NewCommandBuilder(cmdName).
 			Flag(fmt.Sprintf("%s%s", prefix, flagName), value).
 			Command().
 			Slice()
@@ -152,7 +85,7 @@ var _ = Describe("Options", func() {
 			flagName = "bar"
 			value    = "x"
 		)
-		command := NewCommandBuilder(cmdName).
+		command := test.NewCommandBuilder(cmdName).
 			Flag(fmt.Sprintf("%s%s", prefix, flagName), value).
 			Command().
 			Slice()
@@ -263,7 +196,7 @@ var _ = Describe("Options", func() {
 			leaderElectionID        = "id"
 			leaderElectionNamespace = "namespace"
 		)
-		command := NewCommandBuilder(name).
+		command := test.NewCommandBuilder(name).
 			BoolFlag(LeaderElectionFlag).
 			Flag(LeaderElectionIDFlag, leaderElectionID).
 			Flag(LeaderElectionNamespaceFlag, leaderElectionNamespace).
@@ -321,7 +254,7 @@ var _ = Describe("Options", func() {
 			name                    = "foo"
 			maxConcurrentReconciles = 5
 		)
-		command := NewCommandBuilder(name).
+		command := test.NewCommandBuilder(name).
 			Flag(MaxConcurrentReconcilesFlag, maxConcurrentReconciles).
 			Command().
 			Slice()
@@ -374,7 +307,7 @@ var _ = Describe("Options", func() {
 			kubeconfig = "kubeconfig"
 			masterURL  = "masterURL"
 		)
-		command := NewCommandBuilder(name).
+		command := test.NewCommandBuilder(name).
 			Flag(KubeconfigFlag, kubeconfig).
 			Flag(MasterURLFlag, masterURL).
 			Command().
