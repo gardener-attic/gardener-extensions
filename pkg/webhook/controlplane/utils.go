@@ -33,7 +33,7 @@ func ContainerWithName(containers []corev1.Container, name string) *corev1.Conta
 // with a value equal to prefix + value.
 func EnsureStringWithPrefix(items []string, prefix, value string) []string {
 	item := prefix + value
-	if i := stringWithPrefixIndex(items, prefix); i < 0 {
+	if i := StringWithPrefixIndex(items, prefix); i < 0 {
 		items = append(items, item)
 	} else if items[i] != item {
 		items = append(append(items[:i], item), items[i+1:]...)
@@ -43,7 +43,7 @@ func EnsureStringWithPrefix(items []string, prefix, value string) []string {
 
 // EnsureNoStringWithPrefix ensures that a string having the given prefix does not exist in the given slice.
 func EnsureNoStringWithPrefix(items []string, prefix string) []string {
-	if i := stringWithPrefixIndex(items, prefix); i >= 0 {
+	if i := StringWithPrefixIndex(items, prefix); i >= 0 {
 		items = append(items[:i], items[i+1:]...)
 	}
 	return items
@@ -52,11 +52,11 @@ func EnsureNoStringWithPrefix(items []string, prefix string) []string {
 // EnsureStringWithPrefixContains ensures that a string having the given prefix exists in the given slice
 // and contains the given value in a list separated by sep.
 func EnsureStringWithPrefixContains(items []string, prefix, value, sep string) []string {
-	if i := stringWithPrefixIndex(items, prefix); i < 0 {
+	if i := StringWithPrefixIndex(items, prefix); i < 0 {
 		items = append(items, prefix+value)
 	} else {
 		values := strings.Split(strings.TrimPrefix(items[i], prefix), sep)
-		if j := stringIndex(values, value); j < 0 {
+		if j := StringIndex(values, value); j < 0 {
 			values = append(values, value)
 			items = append(append(items[:i], prefix+strings.Join(values, sep)), items[i+1:]...)
 		}
@@ -67,9 +67,9 @@ func EnsureStringWithPrefixContains(items []string, prefix, value, sep string) [
 // EnsureNoStringWithPrefixContains ensures that either a string having the given prefix does not exist in the given slice,
 // or it doesn't contain the given value in a list separated by sep.
 func EnsureNoStringWithPrefixContains(items []string, prefix, value, sep string) []string {
-	if i := stringWithPrefixIndex(items, prefix); i >= 0 {
+	if i := StringWithPrefixIndex(items, prefix); i >= 0 {
 		values := strings.Split(strings.TrimPrefix(items[i], prefix), sep)
-		if j := stringIndex(values, value); j >= 0 {
+		if j := StringIndex(values, value); j >= 0 {
 			values = append(values[:j], values[j+1:]...)
 			items = append(append(items[:i], prefix+strings.Join(values, sep)), items[i+1:]...)
 		}
@@ -134,7 +134,8 @@ func EnsureNoVolumeWithName(items []corev1.Volume, name string) []corev1.Volume 
 	return items
 }
 
-func stringIndex(items []string, value string) int {
+// StringIndex returns the index of the first occurrence of the given string in the given slice, or -1 if not found.
+func StringIndex(items []string, value string) int {
 	for i, item := range items {
 		if item == value {
 			return i
@@ -143,7 +144,8 @@ func stringIndex(items []string, value string) int {
 	return -1
 }
 
-func stringWithPrefixIndex(items []string, prefix string) int {
+// StringWithPrefixIndex returns the index of the first occurrence of a string having the given prefix in the given slice, or -1 if not found.
+func StringWithPrefixIndex(items []string, prefix string) int {
 	for i, item := range items {
 		if strings.HasPrefix(item, prefix) {
 			return i
