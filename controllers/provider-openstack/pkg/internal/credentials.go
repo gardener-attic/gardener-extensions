@@ -1,0 +1,81 @@
+// Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package internal
+
+import (
+	"context"
+	"fmt"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+// Credentials contains the necessary OpenStack credential information.
+type Credentials struct {
+	DomainName string
+	TenantName string
+	Username   string
+	Password   string
+}
+
+// GetCredentials computes for a given context and infrastructure the corresponding credentials object.
+func GetCredentials(ctx context.Context, c client.Client, infra *extensionsv1alpha1.Infrastructure) (*Credentials, error) {
+	providerSecret := &corev1.Secret{}
+	if err := c.Get(ctx, kutil.Key(infra.Spec.SecretRef.Namespace, infra.Spec.SecretRef.Name), providerSecret); err != nil {
+		return nil, err
+	}
+	return ExtractCredentials(providerSecret)
+}
+
+// ExtractCredentials generates a credentials object for a given provider secret.
+func ExtractCredentials(providerSecret *corev1.Secret) (*Credentials, error) {
+	domainName, err := getRequired(providerSecret.Data, openstack.DomainName)
+	if err != nil {
+		return nil, err
+	}
+	tenantName, err := getRequired(providerSecret.Data, openstack.TenantName)
+	if err != nil {
+		return nil, err
+	}
+	userName, err := getRequired(providerSecret.Data, openstack.UserName)
+	if err != nil {
+		return nil, err
+	}
+	password, err := getRequired(providerSecret.Data, openstack.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Credentials{
+		DomainName: domainName,
+		TenantName: tenantName,
+		Username:   userName,
+		Password:   password,
+	}, nil
+}
+
+// getRequired checks if the provided map has a valid value for a corresponding key.
+func getRequired(data map[string][]byte, key string) (string, error) {
+	value, ok := data[key]
+	if !ok {
+		return "", fmt.Errorf("map %v does not contain key %s", data, key)
+	}
+	if len(value) == 0 {
+		return "", fmt.Errorf("key %s may not be empty", key)
+	}
+	return string(value), nil
+}

@@ -19,9 +19,14 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
+
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+
+	openstackcontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller"
+	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 
 	"github.com/spf13/cobra"
 
@@ -40,14 +45,17 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
-		ctrlOpts = &controllercmd.ControllerOptions{
+
+		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		infrastructureReconcilerOpts = &infrastructure.ReconcilerOptions{
+		infraReconcileOpts = &infrastructure.ReconcilerOptions{
 			IgnoreOperationAnnotation: true,
 		}
+		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
+		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, ctrlOpts, infrastructureReconcilerOpts)
+		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts)
 	)
 
 	cmd := &cobra.Command{
@@ -65,6 +73,17 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
+			infraReconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+
+			if err := openstackcontroller.AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {
