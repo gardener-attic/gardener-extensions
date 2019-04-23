@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=client -destination=mocks.go github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client Interface,FirewallsService,RoutesService,FirewallsListCall,RoutesListCall,FirewallsDeleteCall,RoutesDeleteCall
+//go:generate mockgen -package=chartrenderer -destination=mocks.go github.com/gardener/gardener/pkg/chartrenderer Interface
 
-package client
+package chartrenderer

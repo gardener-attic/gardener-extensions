@@ -25,11 +25,9 @@ import (
 // The value of `src` has to be assignable to the type of `dst`.
 //
 // Example usage:
-// ```
-// v := "foo"
-// defer WithVar(&v, "bar")()
-// ```
-func WithVar(dst interface{}, src interface{}) func() {
+//   v := "foo"
+//   defer WithVar(&v, "bar")()
+func WithVar(dst, src interface{}) func() {
 	dstValue := reflect.ValueOf(dst)
 	if dstValue.Type().Kind() != reflect.Ptr {
 		ginkgo.Fail(fmt.Sprintf("destination value %T is not a pointer", dst))
@@ -48,5 +46,30 @@ func WithVar(dst interface{}, src interface{}) func() {
 	dstValue.Elem().Set(srcValue)
 	return func() {
 		dstValue.Elem().Set(reflect.ValueOf(tmp))
+	}
+}
+
+// WithVars sets the given vars to the given values and returns a function to revert back.
+// dstsAndSrcs have to appear in pairs of 2, otherwise there will be a runtime panic.
+//
+// Example usage:
+//  defer WithVars(&v, "foo", &x, "bar")()
+func WithVars(dstsAndSrcs ...interface{}) func() {
+	if len(dstsAndSrcs)%2 != 0 {
+		ginkgo.Fail(fmt.Sprintf("dsts and srcs are not of equal length: %v", dstsAndSrcs))
+	}
+	reverts := make([]func(), 0, len(dstsAndSrcs)/2)
+
+	for i := 0; i < len(dstsAndSrcs); i += 2 {
+		dst := dstsAndSrcs[i]
+		src := dstsAndSrcs[i+1]
+
+		reverts = append(reverts, WithVar(dst, src))
+	}
+
+	return func() {
+		for _, revert := range reverts {
+			revert()
+		}
 	}
 }

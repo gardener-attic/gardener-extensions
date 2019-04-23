@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infrastructure
+package infrastructure_test
 
 import (
 	"context"
 	"fmt"
 
+	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/infrastructure"
 	mockgcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/mock/client"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -132,7 +133,7 @@ var _ = Describe("Infrastructure", func() {
 	})
 
 	Describe("#DeleteRoutes", func() {
-		It("should delete all routess", func() {
+		It("should delete all routes", func() {
 			var (
 				ctx       = context.TODO()
 				projectID = "foo"

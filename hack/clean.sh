@@ -24,5 +24,7 @@ header_text "Clean"
 for source_tree in ${SOURCE_TREES[@]}; do
   find "$(dirname "$source_tree")" -type f -name "controller-registration.yaml" -exec rm '{}' \;
   find "$(dirname "$source_tree")" -type f -name "zz_*.go" -exec rm '{}' \;
+  find "$(dirname "$source_tree")" -type f -name "mocks.go" -exec rm '{}' \;
+  find "$(dirname "$source_tree")" -type f -name "funcs.go" -exec rm '{}' \;
   grep -lr --include="*.go" "//go:generate packr2" | xargs -i packr2 clean "{}/.."
 done

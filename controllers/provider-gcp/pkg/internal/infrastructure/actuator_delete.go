@@ -16,42 +16,48 @@ package infrastructure
 
 import (
 	"context"
-	"fmt"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 )
 
-// Reconcile implements infrastructure.Actuator.
-func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *controller.Cluster) error {
+// Delete implements infrastructure.Actuator.
+func (a *Actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *controller.Cluster) error {
 	config, err := internal.InfrastructureConfigFromInfrastructure(infra)
 	if err != nil {
 		return err
 	}
 
-	serviceAccount, err := infrastructure.GetServiceAccountFromInfrastructure(ctx, a.client, infra)
+	serviceAccount, err := GetServiceAccountFromInfrastructure(ctx, a.Client, infra)
 	if err != nil {
 		return err
 	}
 
-	terraformFiles, err := infrastructure.RenderTerraformerChart(a.chartRenderer, infra, serviceAccount, config, cluster)
+	gcpClient, err := NewGCPClientFromServiceAccount(ctx, serviceAccount.Raw)
 	if err != nil {
 		return err
 	}
 
-	tf, err := internal.NewTerraformer(a.restConfig, serviceAccount, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
+	tf, err := NewTerraformer(a.RESTConfig, serviceAccount, TerraformerPurpose, infra.Namespace, infra.Name)
 	if err != nil {
 		return err
 	}
 
-	err = tf.
-		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars)).
-		Apply()
+	configExists, err := tf.ConfigExists()
 	if err != nil {
-		return fmt.Errorf("failed to update the provider: %v", err)
+		return err
 	}
 
-	return a.updateProviderStatus(ctx, tf, infra, config)
+	if configExists {
+		state, err := ExtractTerraformState(tf, config)
+		if err != nil {
+			return err
+		}
+
+		if err := CleanupKubernetesCloudArtifacts(ctx, gcpClient, serviceAccount.ProjectID, state.VPCName); err != nil {
+			return err
+		}
+	}
+
+	return tf.Destroy()
 }

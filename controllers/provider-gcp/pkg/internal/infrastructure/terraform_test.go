@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infrastructure
+package infrastructure_test
 
 import (
 	"fmt"
+	testinfra "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/test/infrastructure"
+	"github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/gardener/terraformer"
+	"github.com/golang/mock/gomock"
 
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
+	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -32,13 +36,25 @@ import (
 
 var _ = Describe("Terraform", func() {
 	var (
+		ctrl               *gomock.Controller
+		vpcName            string
 		infra              *extensionsv1alpha1.Infrastructure
 		config             *gcpv1alpha1.InfrastructureConfig
 		cluster            *controller.Cluster
 		projectID          string
 		serviceAccountData []byte
 		serviceAccount     *internal.ServiceAccount
+
+		serviceAccountEmail string
+		subnetNodes         string
+		subnetInternal      string
 	)
+	BeforeEach(func() {
+		ctrl = gomock.NewController(GinkgoT())
+	})
+	AfterEach(func() {
+		ctrl.Finish()
+	})
 
 	BeforeEach(func() {
 		internalCIDR := gardencorev1alpha1.CIDR("192.168.0.0/16")
@@ -46,7 +62,7 @@ var _ = Describe("Terraform", func() {
 		config = &gcpv1alpha1.InfrastructureConfig{
 			Networks: gcpv1alpha1.NetworkConfig{
 				VPC: &gcpv1alpha1.VPC{
-					Name: "vpc",
+					Name: vpcName,
 				},
 				Internal: &internalCIDR,
 				Worker:   gardencorev1alpha1.CIDR("10.1.0.0/16"),
@@ -93,6 +109,9 @@ var _ = Describe("Terraform", func() {
 		projectID = "project"
 		serviceAccountData = []byte(fmt.Sprintf(`{"project_id": "%s"}`, projectID))
 		serviceAccount = &internal.ServiceAccount{ProjectID: projectID, Raw: serviceAccountData}
+		serviceAccountEmail = "gardener@cloud"
+		subnetNodes = "nodes-subnet"
+		subnetInternal = "internal"
 	})
 
 	Describe("#ComputeTerraformerChartValues", func() {
@@ -160,20 +179,10 @@ var _ = Describe("Terraform", func() {
 
 	Describe("#StatusFromTerraformState", func() {
 		var (
-			serviceAccountEmail string
-			vpcName             string
-			subnetNodes         string
-			subnetInternal      string
-
 			state *TerraformState
 		)
 
 		BeforeEach(func() {
-			serviceAccountEmail = "gardener@cloud"
-			vpcName = "vpc-name"
-			subnetNodes = "nodes-subnet"
-			subnetInternal = "internal"
-
 			state = &TerraformState{
 				VPCName:             vpcName,
 				ServiceAccountEmail: serviceAccountEmail,
@@ -224,6 +233,28 @@ var _ = Describe("Terraform", func() {
 					},
 				},
 				ServiceAccountEmail: serviceAccountEmail,
+			}))
+		})
+	})
+
+	Describe("#ExtractTerraformState", func() {
+		It("should correctly extract the terraform state", func() {
+			tf := terraformer.NewMockTerraformer(ctrl)
+
+			tf.EXPECT().GetStateOutputVariables(
+				TerraformerOutputKeyVPCName,
+				TerraformerOutputKeySubnetNodes,
+				TerraformerOutputKeyServiceAccountEmail,
+				TerraformerOutputKeySubnetInternal,
+			).Return(testinfra.MkTerraformerOutputVariables(vpcName, subnetNodes, serviceAccountEmail, &subnetInternal), nil)
+
+			state, err := ExtractTerraformState(tf, config)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(state).To(Equal(&TerraformState{
+				VPCName:             vpcName,
+				ServiceAccountEmail: serviceAccountEmail,
+				SubnetNodes:         subnetNodes,
+				SubnetInternal:      &subnetInternal,
 			}))
 		})
 	})

@@ -12,37 +12,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package internal_test
 
 import (
 	"context"
-	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
+	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/test"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Service Account", func() {
 	var (
-		projectID          string
-		serviceAccountData []byte
-		serviceAccount     *ServiceAccount
-		secret             *corev1.Secret
+		projectID                   string
+		serviceAccountData          []byte
+		serviceAccount              *ServiceAccount
+		secretNamespace, secretName string
+		secret                      *corev1.Secret
 	)
 	BeforeEach(func() {
 		projectID = "project"
-		serviceAccountData = []byte(fmt.Sprintf(`{"project_id": "%s"}`, projectID))
+		serviceAccountData = test.MkServiceAccountData(projectID)
 		serviceAccount = &ServiceAccount{ProjectID: projectID, Raw: serviceAccountData}
-		secret = &corev1.Secret{
-			Data: map[string][]byte{
-				gcp.ServiceAccountJSONField: serviceAccountData,
-			},
-		}
+		secretNamespace, secretName = "foo", "bar"
+		secret = test.MkServiceAccountSecret(secretNamespace, secretName, serviceAccountData)
 	})
 
 	var (
@@ -64,7 +60,7 @@ var _ = Describe("Service Account", func() {
 		})
 
 		It("should error if the project ID is empty", func() {
-			_, err := ExtractServiceAccountProjectID([]byte(`{"project_id": ""`))
+			_, err := ExtractServiceAccountProjectID(test.MkServiceAccountData(""))
 
 			Expect(err).To(HaveOccurred())
 		})
@@ -78,10 +74,6 @@ var _ = Describe("Service Account", func() {
 
 	Describe("#ReadServiceAccountSecret", func() {
 		It("should read the service account data from the secret", func() {
-			secret := &corev1.Secret{Data: map[string][]byte{
-				gcp.ServiceAccountJSONField: serviceAccountData,
-			}}
-
 			actual, err := ReadServiceAccountSecret(secret)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(serviceAccountData))
@@ -96,11 +88,7 @@ var _ = Describe("Service Account", func() {
 				namespace = "foo"
 				name      = "bar"
 			)
-			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).
-				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
-					*actual = *secret
-					return nil
-				})
+			test.ExpectGetServiceAccountSecret(ctx, c, secret)
 
 			actual, err := GetServiceAccountData(ctx, c, namespace, name)
 
@@ -112,18 +100,12 @@ var _ = Describe("Service Account", func() {
 	Describe("#GetServiceAccount", func() {
 		It("should correctly retrieve the service account", func() {
 			var (
-				c         = mockclient.NewMockClient(ctrl)
-				ctx       = context.TODO()
-				namespace = "foo"
-				name      = "bar"
+				c   = mockclient.NewMockClient(ctrl)
+				ctx = context.TODO()
 			)
-			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).
-				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
-					*actual = *secret
-					return nil
-				})
+			test.ExpectGetServiceAccountSecret(ctx, c, secret)
 
-			actual, err := GetServiceAccount(ctx, c, namespace, name)
+			actual, err := GetServiceAccount(ctx, c, secretNamespace, secretName)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(serviceAccount))

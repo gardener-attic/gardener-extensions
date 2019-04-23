@@ -15,6 +15,7 @@
 package infrastructure
 
 import (
+	"github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
 	"path/filepath"
 
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
@@ -24,7 +25,6 @@ import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -44,6 +44,9 @@ const (
 	TerraformerOutputKeySubnetNodes = "subnet_nodes"
 	// TerraformerOutputKeySubnetInternal is the name of the subnet_internal terraform output variable.
 	TerraformerOutputKeySubnetInternal = "subnet_internal"
+
+	// InfraChartName is the name of the gcp-infra chart.
+	InfraChartName = "gcp-infra"
 )
 
 var (
@@ -51,6 +54,9 @@ var (
 	ChartsPath = filepath.Join("controllers", "provider-gcp", "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
+
+	// InfraChartPath is the path to the gcp-infra chart.
+	InfraChartPath = filepath.Join(InternalChartsPath, "gcp-infra")
 
 	// StatusTypeMeta is the TypeMeta of the GCP InfrastructureStatus
 	StatusTypeMeta = metav1.TypeMeta{
@@ -120,7 +126,7 @@ func RenderTerraformerChart(
 ) (*TerraformFiles, error) {
 	values := ComputeTerraformerChartValues(infra, account, config, cluster)
 
-	release, err := renderer.Render(filepath.Join(InternalChartsPath, "gcp-infra"), "gcp-infra", infra.Namespace, values)
+	release, err := renderer.Render(InfraChartPath, InfraChartName, infra.Namespace, values)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +158,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf *terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*TerraformState, error) {
 	outputKeys := []string{
 		TerraformerOutputKeyVPCName,
 		TerraformerOutputKeySubnetNodes,
@@ -212,7 +218,7 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf *terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*gcpv1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*gcpv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

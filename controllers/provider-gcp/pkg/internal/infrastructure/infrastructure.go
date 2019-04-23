@@ -16,7 +16,9 @@ package infrastructure
 
 import (
 	"context"
+	"github.com/gardener/gardener/pkg/utils/flow"
 	"strings"
+	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client"
@@ -29,6 +31,11 @@ import (
 const (
 	KubernetesFirewallNamePrefix string = "k8s"
 	routePrefix                  string = "shoot--"
+)
+
+var (
+	// CleanupKubernetesCloudArtifacts cleans up all remaining Kubernetes artifacts in the cloud.
+	CleanupKubernetesCloudArtifacts = cleanupKubernetesCloudArtifacts
 )
 
 // ListKubernetesFirewalls lists all firewalls that are in the given network and have the KubernetesFirewallNamePrefix.
@@ -110,6 +117,33 @@ func CleanupKubernetesRoutes(ctx context.Context, client gcpclient.Interface, pr
 	}
 
 	return DeleteRoutes(ctx, client, projectID, routeNames)
+}
+
+func cleanupKubernetesCloudArtifacts(ctx context.Context, client gcpclient.Interface, projectID, network string) error {
+	var (
+		g = flow.NewGraph("Cleanup Kubernetes Cloud Artifacts")
+
+		_ = g.Add(flow.Task{
+			Name: "Destroying Kubernetes firewall rules",
+			Fn: flow.TaskFn(func(ctx context.Context) error {
+				return CleanupKubernetesFirewalls(ctx, client, projectID, network)
+			}).RetryUntilTimeout(10*time.Second, 5*time.Minute),
+		})
+
+		_ = g.Add(flow.Task{
+			Name: "Destroying Kubernetes route entries",
+			Fn: flow.TaskFn(func(ctx context.Context) error {
+				return CleanupKubernetesRoutes(ctx, client, projectID, network)
+			}).RetryUntilTimeout(10*time.Second, 5*time.Minute),
+		})
+
+		f = g.Compile()
+	)
+
+	if err := f.Run(flow.Opts{Context: ctx}); err != nil {
+		return flow.Causes(err)
+	}
+	return nil
 }
 
 // GetServiceAccountFromInfrastructure retrieves the ServiceAccount from the Secret referenced in the given Infrastructure.

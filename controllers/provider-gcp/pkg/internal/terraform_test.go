@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package internal_test
 
 import (
 	"fmt"
+	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
