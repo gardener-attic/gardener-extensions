@@ -141,12 +141,3 @@ start-provider-alicloud:
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
 		--leader-election=$(LEADER_ELECTION) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
-
-.PHONY: start-provider-local
-start-provider-local:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
-		-ldflags $(LD_FLAGS) \
-		./controllers/provider-local/cmd/gardener-extension-provider-local \
-		--leader-election=$(LEADER_ELECTION) \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
-
