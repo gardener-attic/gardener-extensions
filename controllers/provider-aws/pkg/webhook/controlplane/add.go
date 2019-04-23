@@ -19,6 +19,7 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -34,7 +35,7 @@ func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Kind:     extensionswebhook.ShootKind,
 		Provider: aws.Type,
-		Types:    []runtime.Object{&appsv1.Deployment{}},
-		Mutator:  newMutator(logger),
+		Types:    []runtime.Object{&appsv1.Deployment{}, &extensionsv1alpha1.OperatingSystemConfig{}},
+		Mutator:  newMutator(controlplane.NewUnitSerializer(), controlplane.NewKubeletConfigCodec(controlplane.NewFileContentInlineCodec()), logger),
 	})
 }

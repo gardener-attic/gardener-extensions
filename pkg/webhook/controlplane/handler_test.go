@@ -36,7 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
-func TestCmd(t *testing.T) {
+func TestControlplane(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Controlplane Webhook Suite")
 }

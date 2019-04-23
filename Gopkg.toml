@@ -43,6 +43,10 @@ required = [
   name = "k8s.io/kube-aggregator"
   version = "kubernetes-1.13.4"
 
+[[override]]
+  name = "k8s.io/kubelet"
+  version = "kubernetes-1.13.4"
+
 # use the same version that is referenced by k8s.io/apiserver
 [[override]]
   name = "github.com/docker/docker"
@@ -77,6 +81,10 @@ required = [
 [[constraint]]
   name = "google.golang.org/api"
   version = "0.2.0"
+
+[[constraint]]
+  name = "github.com/coreos/go-systemd"
+  version = "v19"
 
 # Dependencies for testing purposes only
 

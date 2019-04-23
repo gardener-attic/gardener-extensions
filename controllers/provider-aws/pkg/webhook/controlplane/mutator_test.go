@@ -56,7 +56,7 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			mutator := newMutator(logger)
+			mutator := newMutator(nil, nil, logger)
 			err := mutator.Mutate(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
@@ -100,7 +100,7 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			mutator := newMutator(logger)
+			mutator := newMutator(nil, nil, logger)
 			err := mutator.Mutate(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
@@ -124,7 +124,7 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			mutator := newMutator(logger)
+			mutator := newMutator(nil, nil, logger)
 			err := mutator.Mutate(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
@@ -165,7 +165,7 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			mutator := newMutator(logger)
+			mutator := newMutator(nil, nil, logger)
 			err := mutator.Mutate(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
