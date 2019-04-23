@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package infrastructure_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestInternal(t *testing.T) {
+func TestInfrastructure(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "CoreOS Alicloud Internal Suite")
+	RunSpecs(t, "OpenStack Infrastructure Suite")
 }

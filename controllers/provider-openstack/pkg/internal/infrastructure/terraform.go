@@ -15,10 +15,10 @@
 package infrastructure
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"path/filepath"
 
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -193,21 +193,26 @@ func StatusFromTerraformState(state *TerraformState) *openstackv1alpha1.Infrastr
 				APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
 				Kind:       "InfrastructureStatus",
 			},
-			Router: openstackv1alpha1.RouterStatus{
-				ID: state.RouterID,
-			},
-			Network: openstackv1alpha1.NetworkStatus{
+			Networks: openstackv1alpha1.NetworkStatus{
 				ID: state.NetworkID,
-				SecurityGroups: []openstackv1alpha1.SecurityGroup{
-					{
-						ID: state.SecurityGroupID,
-					},
+				FloatingPool: openstackv1alpha1.FloatingPoolStatus{
+					ID: state.FloatingNetworkID,
+				},
+				Router: openstackv1alpha1.RouterStatus{
+					ID: state.RouterID,
 				},
 				Subnets: []openstackv1alpha1.Subnet{
 					{
-						ID:      state.SubnetID,
 						Purpose: openstackv1alpha1.PurposeNodes,
+						ID:      state.SubnetID,
 					},
+				},
+			},
+			SecurityGroups: []openstackv1alpha1.SecurityGroup{
+				{
+					Purpose: openstackv1alpha1.PurposeNodes,
+					ID:      state.SecurityGroupID,
+					Name:    state.SecurityGroupName,
 				},
 			},
 			Node: openstackv1alpha1.NodeStatus{

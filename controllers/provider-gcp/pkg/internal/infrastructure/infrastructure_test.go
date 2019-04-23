@@ -17,7 +17,6 @@ package infrastructure
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	mockgcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/mock/client"
 	"github.com/golang/mock/gomock"
@@ -25,11 +24,6 @@ import (
 	. "github.com/onsi/gomega"
 	"google.golang.org/api/compute/v1"
 )
-
-func TestActuator(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Infrastructure Suite")
-}
 
 var _ = Describe("Infrastructure", func() {
 	var (

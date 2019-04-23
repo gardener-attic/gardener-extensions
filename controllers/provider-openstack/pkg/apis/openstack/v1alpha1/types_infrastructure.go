@@ -31,41 +31,6 @@ type InfrastructureConfig struct {
 	Networks Networks `json:"networks"`
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// InfrastructureStatus contains information about created infrastructure resources.
-type InfrastructureStatus struct {
-	metav1.TypeMeta `json:",inline"`
-	// Network contains information about the created Network and some related resources.
-	Network NetworkStatus `json:"network"`
-	// Router contains information about the Router and related resources.
-	Router RouterStatus `json:"router"`
-	// Node contains information about Node related resources.
-	Node NodeStatus `json:"node"`
-}
-
-// NodeStatus contains information about Node related resources.
-type NodeStatus struct {
-	// KeyName is the name of the SSH key.
-	KeyName string `json:"keyName"`
-}
-
-// RouterStatus contains information about a generated Router or resources attached to an existing Router.
-type RouterStatus struct {
-	// ID is the Router id.
-	ID string `json:"id"`
-}
-
-// NetworkStatus contains information about a generated Network or resources created in an existing Network.
-type NetworkStatus struct {
-	// ID is the Network id.
-	ID string `json:"id"`
-	// Subnets is a list of subnets that have been created.
-	Subnets []Subnet `json:"subnets"`
-	// SecurityGroups is a list of security groups that have been created.
-	SecurityGroups []SecurityGroup `json:"securityGroups"`
-}
-
 // Networks holds information about the Kubernetes and infrastructure networks.
 type Networks struct {
 	// Router indicates whether to use an existing router or create a new one.
@@ -81,24 +46,71 @@ type Router struct {
 	ID string `json:"id"`
 }
 
-// SubnetPurpose is a purpose of a subnet.
-type SubnetPurpose string
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// InfrastructureStatus contains information about created infrastructure resources.
+type InfrastructureStatus struct {
+	metav1.TypeMeta `json:",inline"`
+	// Networks contains information about the created Networks and some related resources.
+	Networks NetworkStatus `json:"networks"`
+	// Node contains information about Node related resources.
+	Node NodeStatus `json:"node"`
+	// SecurityGroups is a list of security groups that have been created.
+	SecurityGroups []SecurityGroup `json:"securityGroups"`
+}
+
+// NodeStatus contains information about Node related resources.
+type NodeStatus struct {
+	// KeyName is the name of the SSH key.
+	KeyName string `json:"keyName"`
+}
+
+// NetworkStatus contains information about a generated Network or resources created in an existing Network.
+type NetworkStatus struct {
+	// ID is the Network id.
+	ID string `json:"id"`
+	// FloatingPool contains information about the floating pool.
+	FloatingPool FloatingPoolStatus `json:"floatingPool"`
+	// Router contains information about the Router and related resources.
+	Router RouterStatus `json:"router"`
+	// Subnets is a list of subnets that have been created.
+	Subnets []Subnet `json:"subnets"`
+}
+
+// RouterStatus contains information about a generated Router or resources attached to an existing Router.
+type RouterStatus struct {
+	// ID is the Router id.
+	ID string `json:"id"`
+}
+
+// FloatingPoolStatus contains information about the floating pool.
+type FloatingPoolStatus struct {
+	// ID is the floating pool id.
+	ID string `json:"id"`
+}
+
+// Purpose is a purpose of a resource.
+type Purpose string
 
 const (
-	// PurposeNodes is a SubnetPurpose for nodes.
-	PurposeNodes SubnetPurpose = "nodes"
+	// PurposeNodes is a Purpose for node resources.
+	PurposeNodes Purpose = "nodes"
 )
 
 // Subnet is an OpenStack subnet related to a Network.
 type Subnet struct {
 	// Purpose is a logical description of the subnet.
-	Purpose SubnetPurpose `json:"purpose"`
+	Purpose Purpose `json:"purpose"`
 	// ID is the subnet id.
 	ID string `json:"id"`
 }
 
 // SecurityGroup is an OpenStack security group related to a Network.
 type SecurityGroup struct {
-	// ID is the subnet id.
+	// Purpose is a logical description of the security group.
+	Purpose Purpose `json:"purpose"`
+	// ID is the security group id.
 	ID string `json:"id"`
+	// Name is the security group name.
+	Name string `json:"name"`
 }

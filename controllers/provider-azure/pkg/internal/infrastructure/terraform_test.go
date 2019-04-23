@@ -15,8 +15,6 @@
 package infrastructure
 
 import (
-	"testing"
-
 	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -64,11 +62,6 @@ func makeCluster(pods, services gardencorev1alpha1.CIDR, region string) *control
 		Shoot:        &shoot,
 		CloudProfile: &cloudProfile,
 	}
-}
-
-func TestInfrastructure(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Infrastructure Suite")
 }
 
 var _ = Describe("Terraform", func() {

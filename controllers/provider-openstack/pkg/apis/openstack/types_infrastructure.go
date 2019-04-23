@@ -30,41 +30,6 @@ type InfrastructureConfig struct {
 	Networks Networks
 }
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// InfrastructureStatus contains information about created infrastructure resources.
-type InfrastructureStatus struct {
-	metav1.TypeMeta
-	// // Network contains information about the created Network and some related resources.
-	Network NetworkStatus
-	// Router contains information about the Router and related resources.
-	Router RouterStatus
-	// Node contains information about Node related resources.
-	Node NodeStatus
-}
-
-// NodeStatus contains information about Node related resources.
-type NodeStatus struct {
-	// KeyName is the name of the SSH key.
-	KeyName string
-}
-
-// RouterStatus contains information about a generated Router or resources attached to an existing Router.
-type RouterStatus struct {
-	// ID is the Router id.
-	ID string
-}
-
-// NetworkStatus contains information about a generated Network or resources created in an existing Network.
-type NetworkStatus struct {
-	// ID is the Network id.
-	ID string
-	// Subnets is a list of subnets that have been created.
-	Subnets []Subnet
-	// SecurityGroups is a list of security groups that have been created.
-	SecurityGroups []SecurityGroup
-}
-
 // Networks holds information about the Kubernetes and infrastructure networks.
 type Networks struct {
 	// Router indicates whether to use an existing router or create a new one.
@@ -79,24 +44,71 @@ type Router struct {
 	ID string
 }
 
-// SubnetPurpose is a purpose of a subnet.
-type SubnetPurpose string
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+// InfrastructureStatus contains information about created infrastructure resources.
+type InfrastructureStatus struct {
+	metav1.TypeMeta
+	// Networks contains information about the created Networks and some related resources.
+	Networks NetworkStatus
+	// Node contains information about Node related resources.
+	Node NodeStatus
+	// SecurityGroups is a list of security groups that have been created.
+	SecurityGroups []SecurityGroup
+}
+
+// NodeStatus contains information about Node related resources.
+type NodeStatus struct {
+	// KeyName is the name of the SSH key.
+	KeyName string
+}
+
+// NetworkStatus contains information about a generated Network or resources created in an existing Network.
+type NetworkStatus struct {
+	// ID is the Network id.
+	ID string
+	// FloatingPool contains information about the floating pool.
+	FloatingPool FloatingPoolStatus `json:"floatingPool"`
+	// Router contains information about the Router and related resources.
+	Router RouterStatus
+	// Subnets is a list of subnets that have been created.
+	Subnets []Subnet
+}
+
+// RouterStatus contains information about a generated Router or resources attached to an existing Router.
+type RouterStatus struct {
+	// ID is the Router id.
+	ID string
+}
+
+// FloatingPoolStatus contains information about the floating pool.
+type FloatingPoolStatus struct {
+	// ID is the floating pool id.
+	ID string
+}
+
+// Purpose is a purpose of resources.
+type Purpose string
 
 const (
-	// PurposeNodes is a SubnetPurpose for nodes.
-	PurposeNodes SubnetPurpose = "nodes"
+	// PurposeNodes is a Purpose for node resources.
+	PurposeNodes Purpose = "nodes"
 )
 
 // Subnet is an OpenStack subnet related to a Network.
 type Subnet struct {
 	// Purpose is a logical description of the subnet.
-	Purpose SubnetPurpose
+	Purpose Purpose
 	// ID is the subnet id.
 	ID string
 }
 
 // SecurityGroup is an OpenStack security group related to a Network.
 type SecurityGroup struct {
-	// ID is the subnet id.
+	// Purpose is a logical description of the security group.
+	Purpose Purpose
+	// ID is the security group id.
 	ID string
+	// Name is the security group name.
+	Name string
 }

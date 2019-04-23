@@ -18,11 +18,14 @@ import (
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -34,10 +37,11 @@ var _ = Describe("Terraform", func() {
 		config      *openstackv1alpha1.InfrastructureConfig
 		cluster     *controller.Cluster
 		credentials *internal.Credentials
+
+		keystoneURL = "foo-bar.com"
 	)
 
 	BeforeEach(func() {
-
 		config = &openstackv1alpha1.InfrastructureConfig{
 			Networks: openstackv1alpha1.Networks{
 				Router: &openstackv1alpha1.Router{
@@ -68,6 +72,13 @@ var _ = Describe("Terraform", func() {
 		podsCIDR := gardencorev1alpha1.CIDR("11.0.0.0/16")
 		servicesCIDR := gardencorev1alpha1.CIDR("12.0.0.0/16")
 		cluster = &controller.Cluster{
+			CloudProfile: &gardenv1beta1.CloudProfile{
+				Spec: gardenv1beta1.CloudProfileSpec{
+					OpenStack: &gardenv1beta1.OpenStackProfile{
+						KeyStoneURL: keystoneURL,
+					},
+				},
+			},
 			Shoot: &gardenv1beta1.Shoot{
 				Spec: gardenv1beta1.ShootSpec{
 					Cloud: gardenv1beta1.Cloud{
@@ -141,7 +152,7 @@ var _ = Describe("Terraform", func() {
 				"dnsServers":   cluster.CloudProfile.Spec.OpenStack.DNSServers,
 				"sshPublicKey": string(infra.Spec.SSHPublicKey),
 				"router": map[string]interface{}{
-					"id": "1",
+					"id": DefaultRouterID,
 				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
@@ -201,21 +212,26 @@ var _ = Describe("Terraform", func() {
 					APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
 					Kind:       "InfrastructureStatus",
 				},
-				Router: openstackv1alpha1.RouterStatus{
-					ID: state.RouterID,
-				},
-				Network: openstackv1alpha1.NetworkStatus{
+				Networks: openstackv1alpha1.NetworkStatus{
 					ID: state.NetworkID,
-					SecurityGroups: []openstackv1alpha1.SecurityGroup{
-						{
-							ID: state.SecurityGroupID,
-						},
+					Router: openstackv1alpha1.RouterStatus{
+						ID: state.RouterID,
+					},
+					FloatingPool: openstackv1alpha1.FloatingPoolStatus{
+						ID: FloatingNetworkID,
 					},
 					Subnets: []openstackv1alpha1.Subnet{
 						{
-							ID:      state.SubnetID,
 							Purpose: openstackv1alpha1.PurposeNodes,
+							ID:      state.SubnetID,
 						},
+					},
+				},
+				SecurityGroups: []openstackv1alpha1.SecurityGroup{
+					{
+						Purpose: openstackv1alpha1.PurposeNodes,
+						ID:      state.SecurityGroupID,
+						Name:    state.SecurityGroupName,
 					},
 				},
 				Node: openstackv1alpha1.NodeStatus{

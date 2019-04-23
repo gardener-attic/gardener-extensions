@@ -22,5 +22,5 @@ import (
 
 func TestCoreos(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Config package Suite")
+	RunSpecs(t, "CoreOS Config package Suite")
 }

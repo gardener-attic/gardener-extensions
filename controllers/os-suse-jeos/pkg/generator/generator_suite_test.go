@@ -15,12 +15,13 @@
 package generator
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestInternal(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Generator Suite")
+	RunSpecs(t, "SUSE JeOS Generator Suite")
 }
