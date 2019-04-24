@@ -53,7 +53,7 @@ func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, proje
 	var routes []string
 	if err := client.Routes().List(projectID).Pages(ctx, func(page *compute.RouteList) error {
 		for _, route := range page.Items {
-			if strings.HasPrefix(route.Name, routePrefix) && route.Network == network {
+			if strings.HasPrefix(route.Name, routePrefix) && strings.HasSuffix(route.Network, network) {
 				routes = append(routes, route.Name)
 			}
 		}
