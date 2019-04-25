@@ -16,15 +16,60 @@ package controlplane
 
 import (
 	"reflect"
+	"regexp"
 	"strings"
 
+	"github.com/coreos/go-systemd/unit"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
+
+// DeserializeCommandLine deserializes the given string to a slice of command line elements by splitting it
+// on white space and the "\" character.
+func DeserializeCommandLine(s string) []string {
+	return regexp.MustCompile(`[\\\s]+`).Split(s, -1)
+}
+
+// SerializeCommandLine serializes the given command line elements slice to a string by joining the first
+// n+1 elements with a space " ", and all subsequent elements with the given separator.
+func SerializeCommandLine(command []string, n int, sep string) string {
+	if len(command) <= n {
+		return strings.Join(command, " ")
+	}
+	if n == 0 {
+		return strings.Join(command, sep)
+	}
+	return strings.Join(command[0:n], " ") + " " + strings.Join(command[n:], sep)
+}
 
 // ContainerWithName returns the container with the given name if it exists in the given slice, nil otherwise.
 func ContainerWithName(containers []corev1.Container, name string) *corev1.Container {
 	if i := containerWithNameIndex(containers, name); i >= 0 {
 		return &containers[i]
+	}
+	return nil
+}
+
+// UnitWithName returns the unit with the given name if it exists in the given slice, nil otherwise.
+func UnitWithName(units []extensionsv1alpha1.Unit, name string) *extensionsv1alpha1.Unit {
+	if i := unitWithNameIndex(units, name); i >= 0 {
+		return &units[i]
+	}
+	return nil
+}
+
+// FileWithPath returns the file with the given path if it exists in the given slice, nil otherwise.
+func FileWithPath(files []extensionsv1alpha1.File, path string) *extensionsv1alpha1.File {
+	if i := fileWithPathIndex(files, path); i >= 0 {
+		return &files[i]
+	}
+	return nil
+}
+
+// UnitOptionWithSectionAndName returns the unit option with the given section and name if it exists in the given slice, nil otherwise.
+func UnitOptionWithSectionAndName(opts []*unit.UnitOption, section, name string) *unit.UnitOption {
+	if i := unitOptionWithSectionAndNameIndex(opts, section, name); i >= 0 {
+		return opts[i]
 	}
 	return nil
 }
@@ -157,6 +202,33 @@ func StringWithPrefixIndex(items []string, prefix string) int {
 func containerWithNameIndex(items []corev1.Container, name string) int {
 	for i, item := range items {
 		if item.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func unitWithNameIndex(items []extensionsv1alpha1.Unit, name string) int {
+	for i, item := range items {
+		if item.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func fileWithPathIndex(items []extensionsv1alpha1.File, path string) int {
+	for i, item := range items {
+		if item.Path == path {
+			return i
+		}
+	}
+	return -1
+}
+
+func unitOptionWithSectionAndNameIndex(items []*unit.UnitOption, section, name string) int {
+	for i, item := range items {
+		if item.Section == section && item.Name == name {
 			return i
 		}
 	}
