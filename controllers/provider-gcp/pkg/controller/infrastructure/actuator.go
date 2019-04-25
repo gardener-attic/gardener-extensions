@@ -22,6 +22,8 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 
+	"github.com/go-logr/logr"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
@@ -30,9 +32,11 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 type actuator struct {
+	logger        logr.Logger
 	client        client.Client
 	restConfig    *rest.Config
 	chartRenderer chartrenderer.Interface
@@ -40,7 +44,9 @@ type actuator struct {
 
 // NewActuator creates a new infrastructure.Actuator.
 func NewActuator() infrastructure.Actuator {
-	return &actuator{}
+	return &actuator{
+		logger: log.Log.WithName("infrastructure-actuator"),
+	}
 }
 
 // InjectClient implements inject.Client.

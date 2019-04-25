@@ -16,14 +16,15 @@ package infrastructure
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal/infrastructure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
-
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal/infrastructure"
 )
 
 func (a *actuator) reconcile(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
@@ -47,11 +48,15 @@ func (a *actuator) reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
-	err = tf.
+	if err := tf.
 		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars)).
-		Apply()
-	if err != nil {
-		return fmt.Errorf("failed to update the provider: %v", err)
+		Apply(); err != nil {
+
+		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infrastructure.Name)
+		return &controllererrors.RequeueAfterError{
+			Cause:        err,
+			RequeueAfter: 30 * time.Second,
+		}
 	}
 
 	return a.updateProviderStatus(ctx, tf, infra, config)

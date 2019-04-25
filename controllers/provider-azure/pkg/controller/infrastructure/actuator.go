@@ -17,21 +17,26 @@ package infrastructure
 import (
 	"context"
 
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	"k8s.io/client-go/util/retry"
-
-	azurev1alph1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	infrainternal "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal/infrastructure"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+
+	"github.com/go-logr/logr"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 type actuator struct {
+	logger        logr.Logger
 	client        client.Client
 	restConfig    *rest.Config
 	chartRenderer chartrenderer.Interface
@@ -39,7 +44,9 @@ type actuator struct {
 
 // NewActuator creates a new infrastructure.Actuator.
 func NewActuator() infrastructure.Actuator {
-	return &actuator{}
+	return &actuator{
+		logger: log.Log.WithName("infrastructure-actuator"),
+	}
 }
 
 // InjectClient implements inject.Client.
@@ -65,7 +72,7 @@ func (a *actuator) updateProviderStatus(
 	ctx context.Context,
 	tf *terraformer.Terraformer,
 	infra *extensionsv1alpha1.Infrastructure,
-	config *azurev1alph1.InfrastructureConfig,
+	config *azurev1alpha1.InfrastructureConfig,
 ) error {
 	status, err := infrainternal.ComputeStatus(tf, config)
 	if err != nil {

@@ -35,7 +35,7 @@ spec:
         - --webhook-config-mode=service
         - --webhook-config-name=aws-webhooks
         - --webhook-config-namespace={{ .Release.Namespace }}
-        - --webhook-config-service-selectors='{"app.kubernetes.io/name":"gardener-extension-provider-aws","app.kubernetes.io/instance":"{{ .Release.Name }}"}'
+        - --webhook-config-service-selectors={"app.kubernetes.io/name":"gardener-extension-provider-aws","app.kubernetes.io/instance":"{{ .Release.Name }}"}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

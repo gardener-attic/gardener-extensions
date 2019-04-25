@@ -5,8 +5,7 @@ image:
 
 resources: {}
 
-concurrentSyncs: 5
-
 controllers:
   infrastructure:
+    concurrentSyncs: 5
     ignoreOperationAnnotation: false

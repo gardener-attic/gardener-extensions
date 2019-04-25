@@ -81,17 +81,14 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		).
 		Apply(); err != nil {
 
+		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infrastructure.Name)
 		return &controllererrors.RequeueAfterError{
 			Cause:        err,
 			RequeueAfter: 30 * time.Second,
 		}
 	}
 
-	if err := a.updateProviderStatus(ctx, tf, infrastructure, infrastructureConfig); err != nil {
-		return fmt.Errorf("failed to update the provider status in the Infrastructure resource: %+v", err)
-	}
-
-	return nil
+	return a.updateProviderStatus(ctx, tf, infrastructure, infrastructureConfig)
 }
 
 func generateTerraformInfraConfig(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *awsapi.InfrastructureConfig, providerSecret *corev1.Secret) (map[string]interface{}, error) {
