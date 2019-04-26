@@ -52,7 +52,7 @@ func (a *actuator) reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars)).
 		Apply(); err != nil {
 
-		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infrastructure.Name)
+		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infra.Name)
 		return &controllererrors.RequeueAfterError{
 			Cause:        err,
 			RequeueAfter: 30 * time.Second,
