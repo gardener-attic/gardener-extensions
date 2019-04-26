@@ -98,7 +98,7 @@ for controller_dir in controllers_path.iterdir():
         if images_file_path.is_file():
             parser = ImagesParser(
                 images_file=images_file_path,
-                names=names,
+                names=names.copy(),
                 target_version=str(component_reference.version()),
             )
 
