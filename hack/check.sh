@@ -23,11 +23,8 @@ header_text "Check"
 echo "Executing check-generate"
 "$DIRNAME"/check-generate.sh
 
-echo "Executing go vet"
-go vet "${SOURCE_TREES[@]}"
-
-echo "Executing golint"
-golint -set_exit_status "${SOURCE_TREES[@]}"
+echo "Executing golangci-lint"
+golangci-lint run "${SOURCE_TREES[@]}"
 
 echo "Checking for format issues with gofmt"
 unformatted_files="$(gofmt -l controllers pkg)"

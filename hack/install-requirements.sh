@@ -15,11 +15,15 @@
 # limitations under the License.
 set -e
 
+DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
+
+cd "$DIRNAME/../tools"
+export GO111MODULE=on
 echo "Installing requirements"
-go get -u "gopkg.in/gobuffalo/packr.v1/v2/packr2"
-go get -u "gopkg.in/onsi/ginkgo.v1/ginkgo"
-go get -u "gopkg.in/golang/mock.v1/mockgen"
-go get -u "golang.org/x/lint/golint"
+go get "github.com/gobuffalo/packr/v2/packr2@v2.1.0"
+go get "github.com/onsi/ginkgo/ginkgo@v1.8.0"
+go get "github.com/golang/mock/mockgen@v1.2.0"
+go get "github.com/golangci/golangci-lint/cmd/golangci-lint@692dacb773b703162c091c2d8c59f9cd2d6801db"
 curl -s "https://raw.githubusercontent.com/helm/helm/v2.13.1/scripts/get" | bash -s -- --version 'v2.13.1'
 
 if [[ "$(uname -s)" == *"Darwin"* ]]; then

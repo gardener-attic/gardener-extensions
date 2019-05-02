@@ -109,7 +109,7 @@ func (r *reconciler) reconcile(ctx context.Context, cp *extensionsv1alpha1.Contr
 	r.recorder.Event(cp, corev1.EventTypeNormal, EventControlPlaneReconciliation, "Reconciling the controlplane")
 	if err := r.actuator.Reconcile(ctx, cp, cluster); err != nil {
 		msg := "Error reconciling controlplane"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), cp, operationType, msg)
+		_ = r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), cp, operationType, msg)
 		r.logger.Error(err, msg, "controlplane", cp.Name)
 		return extensionscontroller.ReconcileErr(err)
 	}
@@ -145,7 +145,7 @@ func (r *reconciler) delete(ctx context.Context, cp *extensionsv1alpha1.ControlP
 	if err := r.actuator.Delete(r.ctx, cp, cluster); err != nil {
 		msg := "Error deleting controlplane"
 		r.recorder.Eventf(cp, corev1.EventTypeWarning, EventControlPlaneDeletion, "%s: %+v", msg, err)
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), cp, operationType, msg)
+		_ = r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), cp, operationType, msg)
 		r.logger.Error(err, msg, "controlplane", cp.Name)
 		return extensionscontroller.ReconcileErr(err)
 	}
