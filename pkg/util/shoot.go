@@ -21,13 +21,16 @@ import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
-	"github.com/gardener/gardener/pkg/utils/kubernetes"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
+
+	"github.com/Masterminds/semver"
+
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -95,7 +98,7 @@ func GetOrCreateShootKubeconfig(ctx context.Context, client client.Client, certi
 		return nil, fmt.Errorf("error creating kubeconfig: %v", err)
 	}
 
-	return &secret, kubernetes.CreateOrUpdate(ctx, client, &secret, func() error {
+	return &secret, kutil.CreateOrUpdate(ctx, client, &secret, func() error {
 		secret.Data = controlPlane.SecretData()
 		if secret.Annotations == nil {
 			secret.Annotations = make(map[string]string)
@@ -118,4 +121,13 @@ func GetReplicaCount(shoot *gardenv1beta1.Shoot, count int) int {
 		return 0
 	}
 	return count
+}
+
+// VersionMajorMinor extracts and returns the major and the minor part of the given version (input must be a semantic version).
+func VersionMajorMinor(version string) (string, error) {
+	v, err := semver.NewVersion(version)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%d.%d", v.Major(), v.Minor()), nil
 }

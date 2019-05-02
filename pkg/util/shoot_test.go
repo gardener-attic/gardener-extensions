@@ -16,26 +16,30 @@ package util_test
 
 import (
 	"context"
-
-	"github.com/gardener/gardener-extensions/pkg/util"
-
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo"
-
-	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"fmt"
 
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
+	"github.com/gardener/gardener-extensions/pkg/util"
+	. "github.com/gardener/gardener-extensions/pkg/util"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
+
+	"github.com/golang/mock/gomock"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var _ = Describe("Predicate", func() {
+var _ = Describe("Shoot", func() {
 	var (
 		ctrl *gomock.Controller
 	)
@@ -217,6 +221,29 @@ var _ = Describe("Predicate", func() {
 			_, err := util.GetOrCreateShootKubeconfig(ctx, c, *certificateConfig, namespace)
 
 			Expect(err).To(HaveOccurred())
+		})
+	})
+
+	Describe("#VersionMajorMinor", func() {
+		It("should return an error due to an invalid version format", func() {
+			v, err := VersionMajorMinor("invalid-semver")
+
+			Expect(v).To(BeEmpty())
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should return the major/minor part of the given version", func() {
+			var (
+				major = 14
+				minor = 123
+
+				expectedVersion = fmt.Sprintf("%d.%d", major, minor)
+			)
+
+			v, err := VersionMajorMinor(fmt.Sprintf("%s.88", expectedVersion))
+
+			Expect(v).To(Equal(expectedVersion))
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })
