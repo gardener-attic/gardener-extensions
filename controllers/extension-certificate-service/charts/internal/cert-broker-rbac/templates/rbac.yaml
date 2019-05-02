@@ -1,0 +1,45 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: extensions.gardener.cloud:extension-certificate-service:cert-broker
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: extensions.gardener.cloud:extension-certificate-service:cert-broker
+subjects:
+- kind: User
+  name: garden.sapcloud.io:system:cert-broker
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: extensions.gardener.cloud:extension-certificate-service:cert-broker
+rules:
+- apiGroups:
+  - "extensions"
+  - "networking.k8s.io"
+  resources:
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - create
+  - update
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - update
+  - get
+  - patch

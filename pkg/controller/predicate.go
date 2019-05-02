@@ -16,8 +16,12 @@ package controller
 
 import (
 	"context"
+	"strings"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/equality"
+
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -31,7 +35,7 @@ import (
 var PredicateLog logr.Logger = log.Log
 
 // EvalGenericPredicate returns true if all predicates match for the given object.
-func EvalGenericPredicate(predicates []predicate.Predicate, obj runtime.Object) bool {
+func EvalGenericPredicate(obj runtime.Object, predicates ...predicate.Predicate) bool {
 	e := NewGenericEventFromObject(obj)
 
 	for _, p := range predicates {
@@ -96,7 +100,7 @@ func AnnotationsChangedPredicate() predicate.Predicate {
 	return annotationsChangedPredicate
 }
 
-// OrPredicate is a predicate for annotations changes.
+// OrPredicate builds a logical OR gate of passed predicates.
 func OrPredicate(predicates ...predicate.Predicate) predicate.Predicate {
 	orRange := func(f func(predicate.Predicate) bool) bool {
 		for _, p := range predicates {
@@ -119,6 +123,54 @@ func OrPredicate(predicates ...predicate.Predicate) predicate.Predicate {
 		},
 		GenericFunc: func(event event.GenericEvent) bool {
 			return orRange(func(p predicate.Predicate) bool { return p.Generic(event) })
+		},
+	}
+}
+
+// TypePredicate filters the incoming OperatingSystemConfigs for ones that have the same type
+// as the given type.
+func TypePredicate(typeName string) predicate.Predicate {
+	typeMatches := func(obj runtime.Object) bool {
+		if config, ok := obj.(extensionsv1alpha1.ExtensionType); ok {
+			return strings.ToLower(config.GetExtensionType()) == typeName
+		}
+		return false
+	}
+
+	return predicate.Funcs{
+		CreateFunc: func(event event.CreateEvent) bool {
+			return typeMatches(event.Object)
+		},
+		UpdateFunc: func(updateEvent event.UpdateEvent) bool {
+			return typeMatches(updateEvent.ObjectOld)
+		},
+		DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
+			return typeMatches(deleteEvent.Object)
+		},
+		GenericFunc: func(genericEvent event.GenericEvent) bool {
+			return typeMatches(genericEvent.Object)
+		},
+	}
+}
+
+// NamePredicate returns a predicate that matches the given name of a resource.
+func NamePredicate(name string) predicate.Predicate {
+	nameMatch := func(meta metav1.Object) bool {
+		return meta.GetName() == name
+	}
+
+	return predicate.Funcs{
+		CreateFunc: func(event event.CreateEvent) bool {
+			return nameMatch(event.Meta)
+		},
+		UpdateFunc: func(updateEvent event.UpdateEvent) bool {
+			return nameMatch(updateEvent.MetaOld)
+		},
+		DeleteFunc: func(deleteEvent event.DeleteEvent) bool {
+			return nameMatch(deleteEvent.Meta)
+		},
+		GenericFunc: func(genericEvent event.GenericEvent) bool {
+			return nameMatch(genericEvent.Meta)
 		},
 	}
 }

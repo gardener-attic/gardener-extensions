@@ -15,10 +15,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gardener/gardener-extensions/controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos/app"
 	extcontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	"os"
+	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
@@ -28,7 +27,6 @@ func main() {
 	cmd := app.NewControllerCommand(extcontroller.SetupSignalHandlerContext())
 
 	if err := cmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		controllercmd.LogErrAndExit(err, "error executing the main controller command")
 	}
 }

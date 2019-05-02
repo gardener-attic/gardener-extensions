@@ -16,6 +16,13 @@ package util
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/gardener/gardener/pkg/utils"
+	corev1 "k8s.io/api/core/v1"
+	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ContextFromStopChannel creates a new context from a given stop channel.
@@ -27,4 +34,25 @@ func ContextFromStopChannel(stopCh <-chan struct{}) context.Context {
 	}()
 
 	return ctx
+}
+
+// ComputeChecksum computes a SHA256 checksum for the give map.
+func ComputeChecksum(data interface{}) string {
+	jsonString, err := json.Marshal(data)
+	if err != nil {
+		return ""
+	}
+	return utils.ComputeSHA256Hex(jsonString)
+}
+
+// GetKubeconfigFromSecret gets the Kubeconfig from the passed secret.
+func GetKubeconfigFromSecret(secret *corev1.Secret) (*restclient.Config, error) {
+	var (
+		key            = "kubeconfig"
+		kubeconfig, ok = secret.Data[key]
+	)
+	if !ok {
+		return nil, fmt.Errorf("Key %s not available in map", key)
+	}
+	return clientcmd.RESTConfigFromKubeConfig(kubeconfig)
 }

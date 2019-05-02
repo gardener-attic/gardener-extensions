@@ -15,8 +15,6 @@
 package infrastructure
 
 import (
-	"strings"
-
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -26,32 +24,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
-
-// TypePredicate filters the incoming Infrastructure resources for ones that have the same type
-// as the given type.
-func TypePredicate(typeName string) predicate.Predicate {
-	typeMatches := func(obj runtime.Object) bool {
-		if infrastructure, ok := obj.(*extensionsv1alpha1.Infrastructure); ok {
-			return strings.ToLower(infrastructure.Spec.Type) == typeName
-		}
-		return false
-	}
-
-	return predicate.Funcs{
-		CreateFunc: func(event event.CreateEvent) bool {
-			return typeMatches(event.Object)
-		},
-		UpdateFunc: func(event event.UpdateEvent) bool {
-			return typeMatches(event.ObjectNew)
-		},
-		DeleteFunc: func(event event.DeleteEvent) bool {
-			return typeMatches(event.Object)
-		},
-		GenericFunc: func(event event.GenericEvent) bool {
-			return typeMatches(event.Object)
-		},
-	}
-}
 
 // OperationAnnotationPredicate is a predicate for the operation annotation.
 func OperationAnnotationPredicate() predicate.Predicate {

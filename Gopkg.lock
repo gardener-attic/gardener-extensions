@@ -741,11 +741,13 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:feed851b93f9debbe8180092067c4e29a51c06dbb5fe2f643ec9feea039670a3"
+  digest = "1:2818b181473a181ae7b727cb5e505ca0e8e5b696b6929c050262820c6152d63b"
   name = "github.com/onsi/gomega"
   packages = [
     ".",
     "format",
+    "gstruct",
+    "gstruct/errors",
     "internal/assertion",
     "internal/asyncassertion",
     "internal/oraclematcher",
@@ -1760,6 +1762,7 @@
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
     "github.com/onsi/gomega",
+    "github.com/onsi/gomega/gstruct",
     "github.com/onsi/gomega/types",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
@@ -1773,10 +1776,12 @@
     "k8s.io/api/admissionregistration/v1beta1",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/rbac/v1",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/meta",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/conversion",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
@@ -1785,6 +1790,7 @@
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
+    "k8s.io/apimachinery/pkg/util/validation/field",
     "k8s.io/apimachinery/pkg/util/wait",
     "k8s.io/apiserver/pkg/authentication/user",
     "k8s.io/client-go/kubernetes",

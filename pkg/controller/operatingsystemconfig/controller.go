@@ -56,7 +56,7 @@ func Add(mgr manager.Manager, args AddArgs) error {
 // DefaultPredicates returns the default predicates for an operatingsystemconfig reconciler.
 func DefaultPredicates(typeName string) []predicate.Predicate {
 	return []predicate.Predicate{
-		TypePredicate(typeName),
+		extensionscontroller.TypePredicate(typeName),
 		extensionscontroller.GenerationChangedPredicate(),
 	}
 }
