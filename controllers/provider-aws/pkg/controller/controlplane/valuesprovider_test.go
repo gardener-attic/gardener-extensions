@@ -21,11 +21,7 @@ import (
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	mockruntime "github.com/gardener/gardener-extensions/pkg/mock/apimachinery/runtime"
-	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
-	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/controlplane"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -34,11 +30,10 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 const (
@@ -50,9 +45,13 @@ func TestController(t *testing.T) {
 	RunSpecs(t, "AWS Controlplane Suite")
 }
 
-var _ = Describe("Actuator", func() {
+var _ = Describe("ValuesProvider", func() {
 	var (
 		ctrl *gomock.Controller
+
+		// Build scheme
+		scheme = runtime.NewScheme()
+		_      = apisaws.AddToScheme(scheme)
 
 		cp = &extensionsv1alpha1.ControlPlane{
 			ObjectMeta: metav1.ObjectMeta{
@@ -108,36 +107,6 @@ var _ = Describe("Actuator", func() {
 			},
 		}
 
-		deployedSecrets = map[string]*corev1.Secret{
-			"cloud-controller-manager": {
-				ObjectMeta: metav1.ObjectMeta{Name: "cloud-controller-manager", Namespace: namespace},
-				Data:       map[string][]byte{"a": []byte("b")},
-			},
-			"cloud-controller-manager-server": {
-				ObjectMeta: metav1.ObjectMeta{Name: "cloud-controller-manager-server", Namespace: namespace},
-				Data:       map[string][]byte{"c": []byte("d")},
-			},
-		}
-
-		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}
-		cpConfigMapKey = client.ObjectKey{Namespace: namespace, Name: aws.CloudProviderConfigName}
-		cpSecret       = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      common.CloudProviderSecretName,
-				Namespace: namespace,
-			},
-			Data: map[string][]byte{"foo": []byte("bar")},
-		}
-		cpConfigMap = &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      aws.CloudProviderConfigName,
-				Namespace: namespace,
-			},
-			Data: map[string]string{"abc": "xyz"},
-		}
-
-		imageVector = imagevector.ImageVector()
-
 		checksums = map[string]string{
 			common.CloudProviderSecretName:    "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 			aws.CloudProviderConfigName:       "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
@@ -156,7 +125,7 @@ Zone="eu-west-1a"
 `,
 		}
 
-		ccmValues = map[string]interface{}{
+		ccmChartValues = map[string]interface{}{
 			"cloudProvider":     "aws",
 			"clusterName":       namespace,
 			"kubernetesVersion": "1.13.4",
@@ -199,6 +168,8 @@ Zone="eu-west-1a"
 				"CustomResourceValidation": true,
 			},
 		}
+
+		logger = log.Log.WithName("test")
 	)
 
 	BeforeEach(func() {
@@ -208,79 +179,34 @@ Zone="eu-west-1a"
 		ctrl.Finish()
 	})
 
-	Describe("#Reconcile", func() {
-		It("should deploy secrets and apply charts with correct parameters", func() {
-			// Create mock decoder
-			decoder := mockruntime.NewMockDecoder(ctrl)
-			decoder.EXPECT().Decode(cp.Spec.ProviderConfig.Raw, nil, &apisaws.ControlPlaneConfig{}).DoAndReturn(decoderDecode())
-			decoder.EXPECT().Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, &apisaws.InfrastructureStatus{}).DoAndReturn(decoderDecode())
-
-			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
-			client.EXPECT().Get(context.TODO(), cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
-
-			// Create mock secrets and charts
-			secrets := mockcontrolplane.NewMockSecrets(ctrl)
-			secrets.EXPECT().Deploy(gomock.Any(), gomock.Any(), namespace).Return(deployedSecrets, nil)
-			configChart := mockcontrolplane.NewMockChart(ctrl)
-			configChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, nil, nil, configChartValues).Return(nil)
-			ccmChart := mockcontrolplane.NewMockChart(ctrl)
-			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksums, ccmValues).Return(nil)
-
-			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart)
-			a.(*actuator).decoder = decoder
-			a.(*actuator).client = client
-
-			// Call Reconcile method and check the result
-			err := a.Reconcile(context.TODO(), cp, cluster)
+	Describe("#GetConfigChartValues", func() {
+		It("should return correct config chart values", func() {
+			// Create valuesProvider
+			vp := newValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
 			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetConfigChartValues method and check the result
+			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(configChartValues))
 		})
 	})
 
-	Describe("#Delete", func() {
-		It("should delete secrets and charts", func() {
-			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-
-			// Create mock secrets and charts
-			secrets := mockcontrolplane.NewMockSecrets(ctrl)
-			secrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
-			configChart := mockcontrolplane.NewMockChart(ctrl)
-			configChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
-			ccmChart := mockcontrolplane.NewMockChart(ctrl)
-			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
-
-			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart)
-			a.(*actuator).client = client
-
-			// Call Delete method and check the result
-			err := a.Delete(context.TODO(), cp, cluster)
+	Describe("#GetControlPlaneChartValues", func() {
+		It("should return correct control plane chart values", func() {
+			// Create valuesProvider
+			vp := newValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
 			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetControlPlaneChartValues method and check the result
+			values, err := vp.GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(ccmChartValues))
 		})
 	})
 })
-
-func clientGet(result runtime.Object) interface{} {
-	return func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
-		switch obj.(type) {
-		case *corev1.Secret:
-			*obj.(*corev1.Secret) = *result.(*corev1.Secret)
-		case *corev1.ConfigMap:
-			*obj.(*corev1.ConfigMap) = *result.(*corev1.ConfigMap)
-		}
-		return nil
-	}
-}
-
-func decoderDecode() interface{} {
-	return func(data []byte, _ *schema.GroupVersionKind, obj runtime.Object) (runtime.Object, *schema.GroupVersionKind, error) {
-		err := json.Unmarshal(data, obj)
-		return nil, nil, err
-	}
-}
 
 func encode(obj runtime.Object) []byte {
 	data, _ := json.Marshal(obj)

@@ -21,13 +21,12 @@ import (
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
@@ -38,10 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 // Object names
@@ -107,180 +102,62 @@ var ccmChart = &chart.Chart{
 	},
 }
 
-// NewActuator creates a new Actuator that acts upon and updates the status of ControlPlane resources.
-func NewActuator(secrets controlplane.Secrets, configChart, ccmChart controlplane.Chart) controlplane.Actuator {
-	return &actuator{
-		secrets:     secrets,
-		configChart: configChart,
-		ccmChart:    ccmChart,
-		logger:      log.Log.WithName("controlplane-controller"),
+// newValuesProvider creates a new ValuesProvider for the generic actuator.
+func newValuesProvider(logger logr.Logger) controlplane.ValuesProvider {
+	return &valuesProvider{
+		logger: logger.WithName("aws-values-provider"),
 	}
 }
 
-// actuator is an Actuator that acts upon and updates the status of ControlPlane resources.
-type actuator struct {
-	secrets     controlplane.Secrets
-	configChart controlplane.Chart
-	ccmChart    controlplane.Chart
-
-	decoder           runtime.Decoder
-	clientset         kubernetes.Interface
-	gardenerClientset gardenerkubernetes.Interface
-	chartApplier      gardenerkubernetes.ChartApplier
-	client            client.Client
-	logger            logr.Logger
+// valuesProvider is a ValuesProvider that provides AWS-specific values for the 2 charts applied by the generic actuator.
+type valuesProvider struct {
+	decoder runtime.Decoder
+	logger  logr.Logger
 }
 
-// InjectScheme injects the given scheme into the actuator.
-func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	a.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
+// InjectScheme injects the given scheme into the valuesProvider.
+func (vp *valuesProvider) InjectScheme(scheme *runtime.Scheme) error {
+	vp.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 	return nil
 }
 
-// InjectConfig injects the given config into the actuator.
-func (a *actuator) InjectConfig(config *rest.Config) error {
-	// Create clientset
-	var err error
-	a.clientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "could not create Kubernetes client")
-	}
-
-	// Create Gardener clientset
-	a.gardenerClientset, err = gardenerkubernetes.NewForConfig(config, client.Options{})
-	if err != nil {
-		return errors.Wrap(err, "could not create Gardener client")
-	}
-
-	// Create chart applier
-	a.chartApplier, err = gardenerkubernetes.NewChartApplierForConfig(config)
-	if err != nil {
-		return errors.Wrap(err, "could not create chart applier")
-	}
-
-	return nil
-}
-
-// InjectClient injects the given client into the actuator.
-func (a *actuator) InjectClient(client client.Client) error {
-	a.client = client
-	return nil
-}
-
-// Reconcile reconciles the given controlplane and cluster, creating or updating the additional Shoot
-// control plane components as needed.
-func (a *actuator) Reconcile(
+// GetConfigChartValues returns the values for the config chart applied by the generic actuator.
+func (vp *valuesProvider) GetConfigChartValues(
 	ctx context.Context,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
-) error {
+) (map[string]interface{}, error) {
 	// Decode providerConfig
 	cpConfig := &apisaws.ControlPlaneConfig{}
-	if _, _, err := a.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
-		return errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", objectName(cp))
+	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
+		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Decode infrastructureProviderStatus
 	infraStatus := &apisaws.InfrastructureStatus{}
-	if _, _, err := a.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
-		return errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", objectName(cp))
-	}
-
-	// Deploy secrets
-	a.logger.Info("Deploying secrets", "controlplane", objectName(cp))
-	deployedSecrets, err := a.secrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
-	if err != nil {
-		return errors.Wrapf(err, "could not deploy secrets for controlplane '%s'", objectName(cp))
+	if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
+		return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Get config chart values
-	values, err := getConfigChartValues(infraStatus, cp)
-	if err != nil {
-		return err
-	}
-
-	// Apply config chart
-	a.logger.Info("Applying configuration chart", "controlplane", objectName(cp), "values", values)
-	if err := a.configChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, nil, nil, values); err != nil {
-		return errors.Wrapf(err, "could not apply configuration chart for controlplane '%s'", objectName(cp))
-	}
-
-	// Compute all needed checksums
-	checksums, err := a.computeChecksums(ctx, deployedSecrets, cp.Namespace)
-	if err != nil {
-		return err
-	}
-
-	// Get CCM chart values
-	values, err = getCCMChartValues(cpConfig, cp, cluster, checksums)
-	if err != nil {
-		return err
-	}
-
-	// Apply CCM chart
-	a.logger.Info("Applying CCM chart", "controlplane", objectName(cp), "values", values)
-	if err := a.ccmChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, imagevector.ImageVector(), checksums, values); err != nil {
-		return errors.Wrapf(err, "could not apply CCM chart for controlplane '%s'", objectName(cp))
-	}
-
-	return nil
+	return getConfigChartValues(infraStatus, cp)
 }
 
-// Delete reconciles the given controlplane and cluster, deleting the additional Shoot
-// control plane components as needed.
-func (a *actuator) Delete(
+// GetControlPlaneChartValues returns the values for the control plane chart applied by the generic actuator.
+func (vp *valuesProvider) GetControlPlaneChartValues(
 	ctx context.Context,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
-) error {
-	// Delete CCM objects
-	a.logger.Info("Deleting CCM objects", "controlplane", objectName(cp))
-	if err := a.ccmChart.Delete(ctx, a.client, cp.Namespace); err != nil {
-		return errors.Wrapf(err, "could not delete CCM objects for controlplane '%s'", objectName(cp))
+	checksums map[string]string,
+) (map[string]interface{}, error) {
+	// Decode providerConfig
+	cpConfig := &apisaws.ControlPlaneConfig{}
+	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
+		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 	}
 
-	// Delete config objects
-	a.logger.Info("Deleting configuration objects", "controlplane", objectName(cp))
-	if err := a.configChart.Delete(ctx, a.client, cp.Namespace); err != nil {
-		return errors.Wrapf(err, "could not delete configuration objects for controlplane '%s'", objectName(cp))
-	}
-
-	// Delete secrets
-	a.logger.Info("Deleting secrets", "controlplane", objectName(cp))
-	if err := a.secrets.Delete(a.clientset, cp.Namespace); err != nil {
-		return errors.Wrapf(err, "could not delete secrets for controlplane '%s'", objectName(cp))
-	}
-
-	return nil
-}
-
-// computeChecksums computes and returns all needed checksums. This includes the checksums for the given deployed secrets,
-// as well as the cloud provider secret and configmap that are fetched from the cluster.
-func (a *actuator) computeChecksums(
-	ctx context.Context,
-	deployedSecrets map[string]*corev1.Secret,
-	namespace string,
-) (map[string]string, error) {
-	// Get cloud provider secret and configmap from cluster
-	cpSecret := &corev1.Secret{}
-	err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}, cpSecret)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not get secret '%s'", objectName(cpSecret))
-	}
-	cpConfigMap := &corev1.ConfigMap{}
-	err = a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: aws.CloudProviderConfigName}, cpConfigMap)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not get configmap '%s'", objectName(cpConfigMap))
-	}
-
-	// Compute checksums
-	csSecrets := controlplane.MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
-		common.CloudProviderSecretName: cpSecret,
-	})
-	csConfigMaps := map[string]*corev1.ConfigMap{
-		aws.CloudProviderConfigName: cpConfigMap,
-	}
-	return controlplane.ComputeChecksums(csSecrets, csConfigMaps), nil
+	// Get CCM chart values
+	return getCCMChartValues(cpConfig, cp, cluster, checksums)
 }
 
 // getConfigChartValues collects and returns the configuration chart values.
@@ -291,7 +168,7 @@ func getConfigChartValues(
 	// Determine subnet ID and zone
 	subnetID, zone, err := getSubnetIDAndZone(infraStatus)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not determine subnet ID or zone from infrastructureProviderStatus of controlplane '%s'", objectName(cp))
+		return nil, errors.Wrapf(err, "could not determine subnet ID or zone from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Collect config chart values
@@ -378,12 +255,4 @@ KubernetesClusterID=%q
 Zone=%q
 `,
 		vpcID, subnetID, clusterID, clusterID, zone)
-}
-
-func objectName(obj runtime.Object) string {
-	k, err := client.ObjectKeyFromObject(obj)
-	if err != nil {
-		return "/"
-	}
-	return k.String()
 }

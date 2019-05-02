@@ -21,8 +21,10 @@ import (
 
 	"github.com/gardener/gardener/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ContextFromStopChannel creates a new context from a given stop channel.
@@ -55,4 +57,13 @@ func GetKubeconfigFromSecret(secret *corev1.Secret) (*restclient.Config, error) 
 		return nil, fmt.Errorf("Key %s not available in map", key)
 	}
 	return clientcmd.RESTConfigFromKubeConfig(kubeconfig)
+}
+
+// ObjectName returns the name of the given object in the format <namespace>/<name>
+func ObjectName(obj runtime.Object) string {
+	k, err := client.ObjectKeyFromObject(obj)
+	if err != nil {
+		return "/"
+	}
+	return k.String()
 }
