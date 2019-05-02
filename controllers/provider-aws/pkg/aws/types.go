@@ -17,6 +17,9 @@ package aws
 import "path/filepath"
 
 const (
+	// Name is the name of the AWS provider.
+	Name = "provider-aws"
+
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
 	// HyperkubeImageName is the name of the hyperkube image.

@@ -17,6 +17,9 @@ package openstack
 import "path/filepath"
 
 const (
+	// Name is the name of the OpenStack provider.
+	Name = "provider-openstack"
+
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
@@ -29,7 +32,7 @@ const (
 
 var (
 	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-openstack", "charts")
+	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )

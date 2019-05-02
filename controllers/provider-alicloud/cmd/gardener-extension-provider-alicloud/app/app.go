@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -28,16 +29,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the Alicloud provider controller.
-const Name = "provider-alicloud"
-
 // NewControllerManagerCommand creates a new command for running a Alicloud provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
-			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(alicloud.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 		ctrlOpts = &controllercmd.ControllerOptions{
@@ -51,7 +49,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", alicloud.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {

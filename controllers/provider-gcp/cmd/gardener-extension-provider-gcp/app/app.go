@@ -23,7 +23,9 @@ import (
 	gcpcontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	gcpwebhook "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook"
+
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -33,16 +35,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the GCP provider controller.
-const Name = "provider-gcp"
-
 // NewControllerManagerCommand creates a new command for running a GCP provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
-			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(gcp.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 
@@ -74,7 +73,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", gcp.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {

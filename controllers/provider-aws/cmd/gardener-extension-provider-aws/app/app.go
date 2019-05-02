@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/install"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	awscontroller "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller"
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
@@ -33,9 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the AWS provider controller.
-const Name = "provider-aws"
-
 // NewControllerManagerCommand creates a new command for running a AWS provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
@@ -43,6 +41,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(aws.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 
@@ -74,7 +73,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", aws.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {

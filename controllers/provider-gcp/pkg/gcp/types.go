@@ -15,6 +15,9 @@
 package gcp
 
 const (
+	// Name is the name of the GCP provider.
+	Name = "provider-gcp"
+
 	// HyperkubeImageName is the name of the hyperkube image.
 	HyperkubeImageName = "hyperkube"
 

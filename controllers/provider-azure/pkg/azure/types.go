@@ -22,8 +22,11 @@ const (
 )
 
 var (
+	// Name is the name of the Azure provider.
+	Name = "provider-azure"
+
 	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-azure", "charts")
+	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )
