@@ -22,18 +22,26 @@ import (
 	. "github.com/onsi/gomega/gstruct"
 
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/golang/mock/gomock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("Mappers", func() {
+var _ = Describe("Controller Mapper", func() {
 	var (
-		ctrl          *gomock.Controller
-		c             *mockclient.MockClient
+		ctrl *gomock.Controller
+		c    *mockclient.MockClient
+
 		extensionType string
 		objectName    string
 		resourceName  string
@@ -42,6 +50,7 @@ var _ = Describe("Mappers", func() {
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		c = mockclient.NewMockClient(ctrl)
+
 		extensionType = "certificate-service"
 		objectName = "object-abc"
 		resourceName = "certificate-service"
@@ -261,6 +270,131 @@ var _ = Describe("Mappers", func() {
 			result := requestFunc(object)
 
 			Expect(result).To(BeEmpty())
+		})
+	})
+
+	Describe("#ClusterToObjectMapper", func() {
+		var (
+			resourceName = "infra"
+			namespace    = "shoot"
+
+			newObjListFunc = func() runtime.Object { return &extensionsv1alpha1.InfrastructureList{} }
+		)
+
+		It("should find all objects for the passed cluster", func() {
+			mapper := ClusterToObjectMapper(c, newObjListFunc, nil)
+
+			c.EXPECT().
+				List(
+					gomock.AssignableToTypeOf(context.TODO()),
+					gomock.Eq(client.InNamespace(namespace)),
+					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
+				).
+				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
+					*actual = extensionsv1alpha1.InfrastructureList{
+						Items: []extensionsv1alpha1.Infrastructure{
+							extensionsv1alpha1.Infrastructure{
+								ObjectMeta: metav1.ObjectMeta{
+									Name:      resourceName,
+									Namespace: namespace,
+								},
+							},
+						},
+					}
+					return nil
+				})
+
+			result := mapper.Map(handler.MapObject{
+				Object: &extensionsv1alpha1.Cluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: namespace,
+					},
+				},
+			})
+
+			Expect(result).To(ConsistOf(reconcile.Request{
+				NamespacedName: types.NamespacedName{
+					Name:      resourceName,
+					Namespace: namespace,
+				},
+			}))
+		})
+
+		It("should find no objects for the passed cluster because predicates do not match", func() {
+			var (
+				predicates = []predicate.Predicate{
+					predicate.Funcs{
+						GenericFunc: func(event event.GenericEvent) bool {
+							return false
+						},
+					},
+				}
+				mapper = ClusterToObjectMapper(c, newObjListFunc, predicates)
+			)
+
+			c.EXPECT().
+				List(
+					gomock.AssignableToTypeOf(context.TODO()),
+					gomock.Eq(client.InNamespace(namespace)),
+					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
+				).
+				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
+					*actual = extensionsv1alpha1.InfrastructureList{
+						Items: []extensionsv1alpha1.Infrastructure{
+							extensionsv1alpha1.Infrastructure{
+								ObjectMeta: metav1.ObjectMeta{
+									Name:      resourceName,
+									Namespace: namespace,
+								},
+							},
+						},
+					}
+					return nil
+				})
+
+			result := mapper.Map(handler.MapObject{
+				Object: &extensionsv1alpha1.Cluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: namespace,
+					},
+				},
+			})
+
+			Expect(result).To(BeEmpty())
+		})
+
+		It("should find no objects because list is empty", func() {
+			mapper := ClusterToObjectMapper(c, newObjListFunc, nil)
+
+			c.EXPECT().
+				List(
+					gomock.AssignableToTypeOf(context.TODO()),
+					gomock.Eq(client.InNamespace(namespace)),
+					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
+				).
+				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
+					*actual = extensionsv1alpha1.InfrastructureList{}
+					return nil
+				})
+
+			result := mapper.Map(handler.MapObject{
+				Object: &extensionsv1alpha1.Cluster{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: namespace,
+					},
+				},
+			})
+
+			Expect(result).To(BeEmpty())
+		})
+
+		It("should find no objects because the passed object is no cluster", func() {
+			mapper := ClusterToObjectMapper(c, newObjListFunc, nil)
+			result := mapper.Map(handler.MapObject{
+				Object: &extensionsv1alpha1.Infrastructure{},
+			})
+
+			Expect(result).To(BeNil())
 		})
 	})
 })

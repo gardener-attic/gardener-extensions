@@ -21,6 +21,7 @@ import (
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -72,44 +73,8 @@ func SecretToControlPlaneMapper(client client.Client, predicates []predicate.Pre
 	return &secretToControlPlaneMapper{client, predicates}
 }
 
-type clusterToControlPlaneMapper struct {
-	client     client.Client
-	predicates []predicate.Predicate
-}
-
-func (m *clusterToControlPlaneMapper) Map(obj handler.MapObject) []reconcile.Request {
-	if obj.Object == nil {
-		return nil
-	}
-
-	cluster, ok := obj.Object.(*extensions1alpha1.Cluster)
-	if !ok {
-		return nil
-	}
-
-	cpList := &extensions1alpha1.ControlPlaneList{}
-	if err := m.client.List(context.TODO(), client.InNamespace(cluster.Name), cpList); err != nil {
-		return nil
-	}
-
-	var requests []reconcile.Request
-	for _, cp := range cpList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&cp, m.predicates...) {
-			continue
-		}
-
-		requests = append(requests, reconcile.Request{
-			NamespacedName: types.NamespacedName{
-				Namespace: cp.Namespace,
-				Name:      cp.Name,
-			},
-		})
-	}
-	return requests
-}
-
 // ClusterToControlPlaneMapper returns a mapper that returns requests for ControlPlanes whose
 // referenced clusters have been modified.
 func ClusterToControlPlaneMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return &clusterToControlPlaneMapper{client, predicates}
+	return extensionscontroller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.ControlPlaneList{} }, predicates)
 }
