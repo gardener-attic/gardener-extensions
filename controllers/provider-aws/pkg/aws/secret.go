@@ -12,22 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package aws
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
-var (
-	addToManagerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
-		controlplane.AddToManager,
-		worker.AddToManager,
-	)
+// ReadCredentialsSecret reads a secret containing credentials.
+func ReadCredentialsSecret(secret *corev1.Secret) (*Credentials, error) {
+	if secret.Data == nil {
+		return nil, fmt.Errorf("secret does not contain any data")
+	}
 
-	// AddToManager adds all provider controllers to the given manager.
-	AddToManager = addToManagerBuilder.AddToManager
-)
+	accessKeyID, ok := secret.Data[AccessKeyID]
+	if !ok {
+		return nil, fmt.Errorf("missing %q field in secret", AccessKeyID)
+	}
+
+	secretAccessKey, ok := secret.Data[SecretAccessKey]
+	if !ok {
+		return nil, fmt.Errorf("missing %q field in secret", SecretAccessKey)
+	}
+
+	return &Credentials{
+		AccessKeyID:     accessKeyID,
+		SecretAccessKey: secretAccessKey,
+	}, nil
+}

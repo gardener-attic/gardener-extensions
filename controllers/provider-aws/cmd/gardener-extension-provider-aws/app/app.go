@@ -25,6 +25,7 @@ import (
 	awscontroller "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller"
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
+	awsworker "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
 	awswebhook "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -69,6 +70,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		infraCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 
+		// options for the worker controller
+		workerCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -78,6 +81,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			webhookServerOpts,
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 		)
 	)
 
@@ -102,7 +106,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := awsinstall.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
@@ -110,6 +114,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			workerCtrlOpts.Completed().Apply(&awsworker.DefaultAddOptions.Controller)
 
 			if err := awscontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

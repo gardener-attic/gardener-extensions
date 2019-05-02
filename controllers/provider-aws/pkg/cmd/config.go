@@ -21,8 +21,6 @@ import (
 	configloader "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config/loader"
 
 	"github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
 // ConfigOptions are command line options that can be set for config.ControllerConfiguration.
@@ -30,8 +28,6 @@ type ConfigOptions struct {
 	// Kubeconfig is the path to a kubeconfig.
 	ConfigFilePath string
 
-	scheme *runtime.Scheme
-	codecs serializer.CodecFactory
 	config *Config
 }
 

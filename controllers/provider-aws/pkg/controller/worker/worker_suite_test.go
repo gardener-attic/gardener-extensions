@@ -12,22 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package worker_test
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-var (
-	addToManagerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
-		controlplane.AddToManager,
-		worker.AddToManager,
-	)
-
-	// AddToManager adds all provider controllers to the given manager.
-	AddToManager = addToManagerBuilder.AddToManager
-)
+func TestWorker(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "AWS Worker Suite")
+}

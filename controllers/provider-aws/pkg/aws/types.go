@@ -20,6 +20,8 @@ const (
 	// Name is the name of the AWS provider.
 	Name = "provider-aws"
 
+	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
+	MachineControllerManagerImageName = "machine-controller-manager"
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
 	// HyperkubeImageName is the name of the hyperkube image.
@@ -54,11 +56,19 @@ const (
 
 	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
 	CloudProviderConfigName = "cloud-provider-config"
+	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
+	MachineControllerManagerName = "machine-controller-manager"
 )
 
 var (
 	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-aws", "charts")
+	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )
+
+// Credentials stores AWS credentials.
+type Credentials struct {
+	AccessKeyID     []byte
+	SecretAccessKey []byte
+}
