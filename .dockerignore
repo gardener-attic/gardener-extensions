@@ -5,6 +5,7 @@
 !pkg/
 !controllers/
 !hack/
+!tools/
 !vendor/
 !VERSION
 !Makefile

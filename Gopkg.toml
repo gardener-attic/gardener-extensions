@@ -109,3 +109,7 @@ required = [
     name = "k8s.io/code-generator"
     unused-packages = false
     non-go = false
+
+  [[prune.project]]
+    name = "github.com/golang/mock"
+    unused-packages = false
