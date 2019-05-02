@@ -12,32 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package install
+// +k8s:deepcopy-gen=package
+// +k8s:conversion-gen=github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
 
-import (
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-)
-
-var (
-	schemeBuilder = runtime.NewSchemeBuilder(
-		v1alpha1.AddToScheme,
-		aws.AddToScheme,
-		setVersionPriority,
-	)
-
-	// AddToScheme adds all APIs to the scheme.
-	AddToScheme = schemeBuilder.AddToScheme
-)
-
-func setVersionPriority(scheme *runtime.Scheme) error {
-	return scheme.SetVersionPriority(v1alpha1.SchemeGroupVersion)
-}
-
-// Install installs all APIs in the scheme.
-func Install(scheme *runtime.Scheme) {
-	utilruntime.Must(AddToScheme(scheme))
-}
+package v1alpha1 // import "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config/v1alpha1"

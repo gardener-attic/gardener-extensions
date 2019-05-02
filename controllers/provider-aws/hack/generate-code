@@ -51,3 +51,20 @@ $(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh 
   "aws:v1alpha1" \
   --extra-peer-dirs=github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws,github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime \
   -h <(headers)
+
+$(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh \
+  deepcopy,defaulter \
+  github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/client/componentconfig \
+  github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis \
+  github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis \
+  "config:v1alpha1" \
+  -h <(headers)
+
+$(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh \
+  conversion \
+  github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/client/componentconfig \
+  github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis \
+  github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis \
+  "config:v1alpha1" \
+  --extra-peer-dirs=github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config,github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime \
+  -h <(headers)
