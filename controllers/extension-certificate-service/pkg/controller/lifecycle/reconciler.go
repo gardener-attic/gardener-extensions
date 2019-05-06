@@ -31,7 +31,6 @@ import (
 type Reconciler struct {
 	logger   logr.Logger
 	actuator Actuator
-	sync     time.Duration
 
 	ctx    context.Context
 	client client.Client
@@ -58,7 +57,7 @@ func (r *Reconciler) Start(stop <-chan struct{}) error {
 	}
 
 	wait.Until(func() {
-		wait.ExponentialBackoff(retryBackoff, func() (done bool, err error) {
+		_ = wait.ExponentialBackoff(retryBackoff, func() (done bool, err error) {
 			if err := r.Reconcile(r.certServiceConfig); err != nil {
 				return false, nil
 			}
@@ -95,7 +94,7 @@ func (r *Reconciler) Reconcile(config config.Configuration) error {
 func (r *Reconciler) reconcile(ctx context.Context, config config.Configuration) error {
 	r.logger.Info("Reconciling certificate service configuration triggers idempotent create or update")
 	if err := r.actuator.Reconcile(ctx, config); err != nil {
-		r.logger.Error(err, "Reconcilation failed for certificate service")
+		r.logger.Error(err, "Reconciliation failed for certificate service")
 		return err
 	}
 	return nil

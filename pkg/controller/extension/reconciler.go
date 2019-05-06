@@ -181,7 +181,7 @@ func (r *reconciler) reconcile(ctx context.Context, ex *extensionsv1alpha1.Exten
 
 	if err := r.actuator.Reconcile(ctx, ex); err != nil {
 		msg := "Unable to reconcile Extension resource"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), ex, operationType, msg)
+		_ = r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), ex, operationType, msg)
 		r.logger.Error(err, msg, "extension", ex.Name, "namespace", ex.Namespace)
 		return controllerutil.ReconcileErr(err)
 	}
@@ -213,7 +213,7 @@ func (r *reconciler) delete(ctx context.Context, ex *extensionsv1alpha1.Extensio
 
 	if err := r.actuator.Delete(ctx, ex); err != nil {
 		msg := "Error deleting Extension resource"
-		r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), ex, operationType, msg)
+		_ = r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), ex, operationType, msg)
 		r.logger.Error(err, msg, "extension", ex.Name, "namespace", ex.Namespace)
 		return controllerutil.ReconcileErr(err)
 	}
