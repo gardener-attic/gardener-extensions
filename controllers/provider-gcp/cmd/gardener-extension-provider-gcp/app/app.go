@@ -17,17 +17,17 @@ package app
 import (
 	"context"
 	"fmt"
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
-	gcpcontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller"
-	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	"os"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
+	gcpcontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller"
+	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
+	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -53,7 +53,12 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts)
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
+
+		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts)
 	)
 
 	cmd := &cobra.Command{
@@ -79,6 +84,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			infraCtrlOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 
 			if err := gcpcontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

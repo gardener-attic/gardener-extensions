@@ -12,25 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aws
+package internal
 
-import (
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import "path/filepath"
+
+const (
+	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	CloudProviderConfigName = "cloud-provider-config"
 )
 
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-// ControlPlaneConfig contains configuration settings for the control plane.
-type ControlPlaneConfig struct {
-	metav1.TypeMeta
-
-	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
-	// +optional
-	CloudControllerManager *CloudControllerManagerConfig
-}
-
-// CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.
-type CloudControllerManagerConfig struct {
-	gardenv1beta1.KubernetesConfig
-}
+var (
+	// ChartsPath is the path to the charts
+	ChartsPath = filepath.Join("controllers", "provider-gcp", "charts")
+	// InternalChartsPath is the path to the internal charts
+	InternalChartsPath = filepath.Join(ChartsPath, "internal")
+)

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package aws
+package gcp
 
 import (
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -24,6 +24,9 @@ import (
 // ControlPlaneConfig contains configuration settings for the control plane.
 type ControlPlaneConfig struct {
 	metav1.TypeMeta
+
+	// Zone is the GCP zone
+	Zone string
 
 	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
 	// +optional

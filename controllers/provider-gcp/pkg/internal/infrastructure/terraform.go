@@ -47,11 +47,6 @@ const (
 )
 
 var (
-	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-gcp", "charts")
-	// InternalChartsPath is the path to the internal charts
-	InternalChartsPath = filepath.Join(ChartsPath, "internal")
-
 	// StatusTypeMeta is the TypeMeta of the GCP InfrastructureStatus
 	StatusTypeMeta = metav1.TypeMeta{
 		APIVersion: gcpv1alpha1.SchemeGroupVersion.String(),
@@ -120,7 +115,7 @@ func RenderTerraformerChart(
 ) (*TerraformFiles, error) {
 	values := ComputeTerraformerChartValues(infra, account, config, cluster)
 
-	release, err := renderer.Render(filepath.Join(InternalChartsPath, "gcp-infra"), "gcp-infra", infra.Namespace, values)
+	release, err := renderer.Render(filepath.Join(internal.InternalChartsPath, "gcp-infra"), "gcp-infra", infra.Namespace, values)
 	if err != nil {
 		return nil, err
 	}

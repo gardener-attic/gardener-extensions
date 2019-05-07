@@ -74,10 +74,10 @@ const (
 
 // Subnet is a subnet that was created.
 type Subnet struct {
-	// Purpose is the purpose for which the subnet was created.
-	Purpose SubnetPurpose
 	// Name is the name of the subnet.
 	Name string
+	// Purpose is the purpose for which the subnet was created.
+	Purpose SubnetPurpose
 }
 
 // VPC contains information about the VPC and some related resources.
