@@ -15,21 +15,13 @@
 package controlplane
 
 import (
-	"testing"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func TestController(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Controlplane Suite")
-}
-
 var _ = Describe("Utils", func() {
-
 	Describe("#DNSNamesForService", func() {
 		It("should return all expected DNS names for the given service name and namespace", func() {
 			Expect(DNSNamesForService("test", "default")).To(Equal([]string{

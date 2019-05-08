@@ -143,6 +143,14 @@ start-provider-alicloud:
 		--leader-election=$(LEADER_ELECTION) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
+.PHONY: start-provider-packet
+start-provider-packet:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-packet/cmd/gardener-extension-provider-packet \
+		--leader-election=$(LEADER_ELECTION) \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+
 .PHONY: start-certificate-service
 start-certificate-service:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
