@@ -52,32 +52,37 @@ const (
 )
 
 // AddToManagerBuilder aggregates various AddToManager functions.
-type AddToManagerBuilder []func(manager.Manager) (webhook.Webhook, error)
+type AddToManagerBuilder map[string]func(manager.Manager) (webhook.Webhook, error)
 
 // NewAddToManagerBuilder creates a new AddToManagerBuilder and registers the given functions.
-func NewAddToManagerBuilder(funcs ...func(manager.Manager) (webhook.Webhook, error)) AddToManagerBuilder {
-	var builder AddToManagerBuilder
-	builder.Register(funcs...)
+func NewAddToManagerBuilder(params ...interface{}) AddToManagerBuilder {
+	builder := AddToManagerBuilder(make(map[string]func(manager.Manager) (webhook.Webhook, error)))
+	builder.Register(params...)
 	return builder
 }
 
 // Register registers the given functions in this builder.
-func (a *AddToManagerBuilder) Register(funcs ...func(manager.Manager) (webhook.Webhook, error)) {
-	*a = append(*a, funcs...)
+func (a AddToManagerBuilder) Register(params ...interface{}) {
+	for i := 0; i < len(params)-1; i += 2 {
+		name, f := params[i].(string), params[i+1].(func(manager.Manager) (webhook.Webhook, error))
+		a[name] = f
+	}
 }
 
 // AddToManager creates a webhook server adds all webhooks created by the AddToManager-functions of this builder to it.
 // It exits on the first error and returns it.
-func (a *AddToManagerBuilder) AddToManager(mgr manager.Manager, cfg *cmd.WebhookServerConfig) error {
+func (a *AddToManagerBuilder) AddToManager(mgr manager.Manager, cfg *cmd.WebhookServerConfig, disabled map[string]bool) error {
 	logger := log.Log.WithName("webhook-server")
 
 	var whs []webhook.Webhook
-	for _, f := range *a {
-		wh, err := f(mgr)
-		if err != nil {
-			return err
+	for name, f := range *a {
+		if !disabled[name] {
+			wh, err := f(mgr)
+			if err != nil {
+				return err
+			}
+			whs = append(whs, wh)
 		}
-		whs = append(whs, wh)
 	}
 
 	if len(whs) > 0 {

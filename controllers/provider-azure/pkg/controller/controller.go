@@ -15,15 +15,16 @@
 package controller
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
+	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 )
 
 var (
-	managerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
+	addToManagerBuilder = controller.NewAddToManagerBuilder(
+		infrastructure.ControllerName, azureinfrastructure.AddToManager,
 	)
 
 	// AddToManager adds all provider controllers to the given manager.
-	AddToManager = managerBuilder.AddToManager
+	AddToManager = addToManagerBuilder.AddToManager
 )

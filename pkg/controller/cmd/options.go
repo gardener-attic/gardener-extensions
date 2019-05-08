@@ -17,6 +17,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/pflag"
 	"k8s.io/client-go/rest"
@@ -36,6 +37,10 @@ const (
 	// MaxConcurrentReconcilesFlag is the name of the command line flag to specify the maximum number of
 	// concurrent reconciliations a controller can do.
 	MaxConcurrentReconcilesFlag = "max-concurrent-reconciles"
+
+	// DisableFlag is the name of the command line flag to specify a comma-separated list of controllers and webhooks
+	// that should be disabled.
+	DisableFlag = "disable"
 
 	// KubeconfigFlag is the name of the command line flag to specify a kubeconfig used to retrieve
 	// a rest.Config for a manager.Manager.
@@ -138,6 +143,8 @@ type ManagerOptions struct {
 	LeaderElectionID string
 	// LeaderElectionNamespace is the namespace to do leader election in.
 	LeaderElectionNamespace string
+	// Disable is a comma-separated list of controllers and webhooks that should be disabled.
+	Disable string
 
 	config *ManagerConfig
 }
@@ -147,11 +154,24 @@ func (m *ManagerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&m.LeaderElection, LeaderElectionFlag, m.LeaderElection, "Whether to use leader election or not when running this controller manager.")
 	fs.StringVar(&m.LeaderElectionID, LeaderElectionIDFlag, m.LeaderElectionID, "The leader election id to use.")
 	fs.StringVar(&m.LeaderElectionNamespace, LeaderElectionNamespaceFlag, m.LeaderElectionNamespace, "The namespace to do leader election in.")
+	fs.StringVar(&m.Disable, DisableFlag, m.Disable, "A comma-separated list of controllers and webhooks that should be disabled.")
 }
 
 // Complete implements Completer.Complete.
 func (m *ManagerOptions) Complete() error {
-	m.config = &ManagerConfig{m.LeaderElection, m.LeaderElectionID, m.LeaderElectionNamespace}
+	// Build a map containing disabled controllers and webhooks
+	disabled := make(map[string]bool)
+	for _, name := range strings.Split(m.Disable, ",") {
+		disabled[name] = true
+	}
+
+	// Build ManagerConfig
+	m.config = &ManagerConfig{
+		LeaderElection:          m.LeaderElection,
+		LeaderElectionID:        m.LeaderElectionID,
+		LeaderElectionNamespace: m.LeaderElectionNamespace,
+		Disabled:                disabled,
+	}
 	return nil
 }
 
@@ -168,6 +188,8 @@ type ManagerConfig struct {
 	LeaderElectionID string
 	// LeaderElectionNamespace is the namespace to do leader election in.
 	LeaderElectionNamespace string
+	// Disabled is a map containing disabled controllers and webhooks.
+	Disabled map[string]bool
 }
 
 // Apply sets the values of this ManagerConfig in the given manager.Options.

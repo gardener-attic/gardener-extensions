@@ -86,7 +86,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 
-			if err := gcpcontroller.AddToManager(mgr); err != nil {
+			if err := gcpcontroller.AddToManager(mgr, mgrOpts.Completed().Disabled); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 

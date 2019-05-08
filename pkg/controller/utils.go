@@ -90,26 +90,31 @@ func SetupSignalHandlerContext() context.Context {
 }
 
 // AddToManagerBuilder aggregates various AddToManager functions.
-type AddToManagerBuilder []func(manager.Manager) error
+type AddToManagerBuilder map[string]func(manager.Manager) error
 
 // NewAddToManagerBuilder creates a new AddToManagerBuilder and registers the given functions.
-func NewAddToManagerBuilder(funcs ...func(manager.Manager) error) AddToManagerBuilder {
-	var builder AddToManagerBuilder
-	builder.Register(funcs...)
+func NewAddToManagerBuilder(params ...interface{}) AddToManagerBuilder {
+	builder := AddToManagerBuilder(make(map[string]func(manager.Manager) error))
+	builder.Register(params...)
 	return builder
 }
 
 // Register registers the given functions in this builder.
-func (a *AddToManagerBuilder) Register(funcs ...func(manager.Manager) error) {
-	*a = append(*a, funcs...)
+func (a AddToManagerBuilder) Register(params ...interface{}) {
+	for i := 0; i < len(params)-1; i += 2 {
+		name, f := params[i].(string), params[i+1].(func(manager.Manager) error)
+		a[name] = f
+	}
 }
 
 // AddToManager traverses over all AddToManager-functions of this builder, sequentially applying
 // them. It exits on the first error and returns it.
-func (a *AddToManagerBuilder) AddToManager(m manager.Manager) error {
-	for _, f := range *a {
-		if err := f(m); err != nil {
-			return err
+func (a AddToManagerBuilder) AddToManager(m manager.Manager, disabled map[string]bool) error {
+	for name, f := range a {
+		if !disabled[name] {
+			if err := f(m); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

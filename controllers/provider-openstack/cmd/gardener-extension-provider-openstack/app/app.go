@@ -82,7 +82,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
-			if err := openstackcontroller.AddToManager(mgr); err != nil {
+			if err := openstackcontroller.AddToManager(mgr, mgrOpts.Completed().Disabled); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 

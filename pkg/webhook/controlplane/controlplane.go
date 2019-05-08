@@ -26,9 +26,9 @@ import (
 
 const (
 	// WebhookName is the webhook name.
-	WebhookName = "controlplane"
+	WebhookName = "controlplane-webhook"
 	// ExposureWebhookName is the exposure webhook name.
-	ExposureWebhookName = "controlplaneexposure"
+	ExposureWebhookName = "controlplaneexposure-webhook"
 )
 
 var logger = log.Log.WithName("controlplane-webhook")

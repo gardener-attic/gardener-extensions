@@ -98,11 +98,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraReconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
 
-			if err := awscontroller.AddToManager(mgr); err != nil {
+			if err := awscontroller.AddToManager(mgr, mgrOpts.Completed().Disabled); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
-			if err := awswebhook.AddToManager(mgr, webhookServerOpts.Completed()); err != nil {
+			if err := awswebhook.AddToManager(mgr, webhookServerOpts.Completed(), mgrOpts.Completed().Disabled); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 

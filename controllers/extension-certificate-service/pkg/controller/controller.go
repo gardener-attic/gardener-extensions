@@ -22,8 +22,8 @@ import (
 
 var (
 	addToManagerBuilder = controller.NewAddToManagerBuilder(
-		lifecycle.AddToManager,
-		certservice.AddToManager,
+		lifecycle.ControllerName, lifecycle.AddToManager,
+		certservice.ControllerName, certservice.AddToManager,
 	)
 
 	// AddToManager adds certificate lifecycle controllers to the manager.

@@ -195,11 +195,13 @@ var _ = Describe("Options", func() {
 			name                    = "foo"
 			leaderElectionID        = "id"
 			leaderElectionNamespace = "namespace"
+			disable                 = "foo,bar"
 		)
 		command := test.NewCommandBuilder(name).
 			BoolFlag(LeaderElectionFlag).
 			Flag(LeaderElectionIDFlag, leaderElectionID).
 			Flag(LeaderElectionNamespaceFlag, leaderElectionNamespace).
+			Flag(DisableFlag, disable).
 			Command().
 			Slice()
 
@@ -215,6 +217,7 @@ var _ = Describe("Options", func() {
 					LeaderElection:          true,
 					LeaderElectionID:        leaderElectionID,
 					LeaderElectionNamespace: leaderElectionNamespace,
+					Disable:                 disable,
 				}))
 			})
 		})
@@ -244,6 +247,7 @@ var _ = Describe("Options", func() {
 					LeaderElection:          true,
 					LeaderElectionID:        leaderElectionID,
 					LeaderElectionNamespace: leaderElectionNamespace,
+					Disabled:                map[string]bool{"foo": true, "bar": true},
 				}))
 			})
 		})

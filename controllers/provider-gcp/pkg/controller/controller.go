@@ -15,17 +15,19 @@
 package controller
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
+	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
+	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 )
 
 var (
-	managerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
-		controlplane.AddToManager,
+	addToManagerBuilder = controller.NewAddToManagerBuilder(
+		infrastructure.ControllerName, gcpinfrastructure.AddToManager,
+		controlplane.ControllerName, gcpcontrolplane.AddToManager,
 	)
 
 	// AddToManager adds all provider controllers to the given manager.
-	AddToManager = managerBuilder.AddToManager
+	AddToManager = addToManagerBuilder.AddToManager
 )

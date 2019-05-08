@@ -80,7 +80,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraCtrlOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
-			if err := azurecontroller.AddToManager(mgr); err != nil {
+			if err := azurecontroller.AddToManager(mgr, mgrOpts.Completed().Disabled); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 

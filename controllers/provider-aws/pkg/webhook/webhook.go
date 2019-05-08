@@ -15,15 +15,16 @@
 package webhook
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplane"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplaneexposure"
+	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplane"
+	awscontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/webhook"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 )
 
 var (
 	addToManagerBuilder = webhook.NewAddToManagerBuilder(
-		controlplaneexposure.AddToManager,
-		controlplane.AddToManager,
+		controlplane.ExposureWebhookName, awscontrolplaneexposure.AddToManager,
+		controlplane.WebhookName, awscontrolplane.AddToManager,
 	)
 
 	// AddToManager adds all provider webhooks to the given manager.
