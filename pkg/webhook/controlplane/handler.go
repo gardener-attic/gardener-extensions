@@ -24,8 +24,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
@@ -53,9 +55,18 @@ type handler struct {
 	logger   logr.Logger
 }
 
-// InjectDecoder injects the decoder into the handler.
+// InjectDecoder injects the given decoder into the handler.
 func (h *handler) InjectDecoder(d types.Decoder) error {
 	h.decoder = d
+	return nil
+}
+
+// InjectClient injects the given client into the mutator.
+// TODO Replace this with the more generic InjectFunc when controller runtime supports it
+func (h *handler) InjectClient(client client.Client) error {
+	if _, err := inject.ClientInto(client, h.mutator); err != nil {
+		return errors.Wrap(err, "could not inject the client into the mutator")
+	}
 	return nil
 }
 

@@ -179,6 +179,14 @@ func EnsureNoVolumeWithName(items []corev1.Volume, name string) []corev1.Volume 
 	return items
 }
 
+// EnsureUnitOption ensures the given unit option exist in the given slice.
+func EnsureUnitOption(items []*unit.UnitOption, item *unit.UnitOption) []*unit.UnitOption {
+	if i := unitOptionIndex(items, item); i < 0 {
+		items = append(items, item)
+	}
+	return items
+}
+
 // StringIndex returns the index of the first occurrence of the given string in the given slice, or -1 if not found.
 func StringIndex(items []string, value string) int {
 	for i, item := range items {
@@ -229,6 +237,15 @@ func fileWithPathIndex(items []extensionsv1alpha1.File, path string) int {
 func unitOptionWithSectionAndNameIndex(items []*unit.UnitOption, section, name string) int {
 	for i, item := range items {
 		if item.Section == section && item.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func unitOptionIndex(items []*unit.UnitOption, item *unit.UnitOption) int {
+	for i := range items {
+		if reflect.DeepEqual(items[i], item) {
 			return i
 		}
 	}

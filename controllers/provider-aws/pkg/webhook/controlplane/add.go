@@ -36,6 +36,6 @@ func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
 		Kind:     extensionswebhook.ShootKind,
 		Provider: aws.Type,
 		Types:    []runtime.Object{&appsv1.Deployment{}, &extensionsv1alpha1.OperatingSystemConfig{}},
-		Mutator:  newMutator(controlplane.NewUnitSerializer(), controlplane.NewKubeletConfigCodec(controlplane.NewFileContentInlineCodec()), logger),
+		Mutator:  NewMutator(controlplane.NewUnitSerializer(), controlplane.NewKubeletConfigCodec(controlplane.NewFileContentInlineCodec()), logger),
 	})
 }

@@ -16,8 +16,10 @@ package controlplane
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/coreos/go-systemd/unit"
@@ -87,7 +89,7 @@ func mutateKubeControllerManagerDeployment(dep *appsv1.Deployment) error {
 }
 
 func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "aws")
+	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "gce")
 	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-config=",
 		"/etc/kubernetes/cloudprovider/cloudprovider.conf")
 	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
@@ -100,38 +102,23 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "external")
 	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-config=",
 		"/etc/kubernetes/cloudprovider/cloudprovider.conf")
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--external-cloud-volume-plugin=", "aws")
+	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--external-cloud-volume-plugin=", "gce")
 }
 
 var (
-	accessKeyIDEnvVar = corev1.EnvVar{
-		Name: "AWS_ACCESS_KEY_ID",
-		ValueFrom: &corev1.EnvVarSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				Key:                  aws.AccessKeyID,
-				LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
-			},
-		},
-	}
-	secretAccessKeyEnvVar = corev1.EnvVar{
-		Name: "AWS_SECRET_ACCESS_KEY",
-		ValueFrom: &corev1.EnvVarSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				Key:                  aws.SecretAccessKey,
-				LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
-			},
-		},
+	credentialsEnvVar = corev1.EnvVar{
+		Name:  "GOOGLE_APPLICATION_CREDENTIALS",
+		Value: fmt.Sprintf("/srv/cloudprovider/%s", gcp.ServiceAccountJSONField),
 	}
 )
 
 func ensureEnvVars(c *corev1.Container) {
-	c.Env = controlplane.EnsureEnvVarWithName(c.Env, accessKeyIDEnvVar)
-	c.Env = controlplane.EnsureEnvVarWithName(c.Env, secretAccessKeyEnvVar)
+	c.Env = controlplane.EnsureEnvVarWithName(c.Env, credentialsEnvVar)
 }
 
 var (
 	cloudProviderConfigVolumeMount = corev1.VolumeMount{
-		Name:      aws.CloudProviderConfigName,
+		Name:      internal.CloudProviderConfigName,
 		MountPath: "/etc/kubernetes/cloudprovider",
 	}
 	cloudProviderSecretVolumeMount = corev1.VolumeMount{
@@ -140,10 +127,10 @@ var (
 	}
 
 	cloudProviderConfigVolume = corev1.Volume{
-		Name: aws.CloudProviderConfigName,
+		Name: internal.CloudProviderConfigName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: aws.CloudProviderConfigName},
+				LocalObjectReference: corev1.LocalObjectReference{Name: internal.CloudProviderConfigName},
 			},
 		},
 	}
@@ -196,7 +183,7 @@ func (m *mutator) ensureKubeletServiceUnitContent(content *string) error {
 		return errors.Wrap(err, "could not deserialize kubelet.service unit content")
 	}
 
-	ensureKubeletServiceUnitOptions(opts)
+	opts = ensureKubeletServiceUnitOptions(opts)
 
 	// Serialize unit options
 	if *content, err = m.unitSerializer.Serialize(opts); err != nil {
@@ -227,16 +214,22 @@ func (m *mutator) ensureKubeletConfigFileContent(fci *extensionsv1alpha1.FileCon
 	return nil
 }
 
-func ensureKubeletServiceUnitOptions(opts []*unit.UnitOption) {
+func ensureKubeletServiceUnitOptions(opts []*unit.UnitOption) []*unit.UnitOption {
 	if opt := controlplane.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
 		command := controlplane.DeserializeCommandLine(opt.Value)
 		command = ensureKubeletCommandLineArgs(command)
 		opt.Value = controlplane.SerializeCommandLine(command, 1, " \\\n    ")
 	}
+	opts = controlplane.EnsureUnitOption(opts, &unit.UnitOption{
+		Section: "Service",
+		Name:    "ExecStartPre",
+		Value:   `/bin/sh -c 'hostnamectl set-hostname $(echo $HOSTNAME | cut -d '.' -f 1)'`,
+	})
+	return opts
 }
 
 func ensureKubeletCommandLineArgs(command []string) []string {
-	command = controlplane.EnsureStringWithPrefix(command, "--cloud-provider=", "aws")
+	command = controlplane.EnsureStringWithPrefix(command, "--cloud-provider=", "gce")
 	return command
 }
 

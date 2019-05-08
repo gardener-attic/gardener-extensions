@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
@@ -46,7 +46,7 @@ const (
 
 func TestController(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "AWS Controlplane Webhook Suite")
+	RunSpecs(t, "GCP Controlplane Webhook Suite")
 }
 
 var _ = Describe("Mutator", func() {
@@ -106,11 +106,10 @@ var _ = Describe("Mutator", func() {
 											"--disable-admission-plugins=PersistentVolumeLabel",
 										},
 										Env: []corev1.EnvVar{
-											{Name: "AWS_ACCESS_KEY_ID", Value: "?"},
-											{Name: "AWS_SECRET_ACCESS_KEY", Value: "?"},
+											{Name: "GOOGLE_APPLICATION_CREDENTIALS", Value: "?"},
 										},
 										VolumeMounts: []corev1.VolumeMount{
-											{Name: aws.CloudProviderConfigName, MountPath: "?"},
+											{Name: internal.CloudProviderConfigName, MountPath: "?"},
 											// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
 											// See https://github.com/gardener/gardener/pull/930
 											{Name: common.CloudProviderSecretName, MountPath: "?"},
@@ -118,7 +117,7 @@ var _ = Describe("Mutator", func() {
 									},
 								},
 								Volumes: []corev1.Volume{
-									{Name: aws.CloudProviderConfigName},
+									{Name: internal.CloudProviderConfigName},
 									{Name: common.CloudProviderSecretName},
 								},
 							},
@@ -179,17 +178,16 @@ var _ = Describe("Mutator", func() {
 											"--external-cloud-volume-plugin=?",
 										},
 										Env: []corev1.EnvVar{
-											{Name: "AWS_ACCESS_KEY_ID", Value: "?"},
-											{Name: "AWS_SECRET_ACCESS_KEY", Value: "?"},
+											{Name: "GOOGLE_APPLICATION_CREDENTIALS", Value: "?"},
 										},
 										VolumeMounts: []corev1.VolumeMount{
-											{Name: aws.CloudProviderConfigName, MountPath: "?"},
+											{Name: internal.CloudProviderConfigName, MountPath: "?"},
 											{Name: common.CloudProviderSecretName, MountPath: "?"},
 										},
 									},
 								},
 								Volumes: []corev1.Volume{
-									{Name: aws.CloudProviderConfigName},
+									{Name: internal.CloudProviderConfigName},
 									{Name: common.CloudProviderSecretName},
 								},
 							},
@@ -246,7 +244,12 @@ var _ = Describe("Mutator", func() {
 						Name:    "ExecStart",
 						Value: `/opt/bin/hyperkube kubelet \
     --config=/var/lib/kubelet/config/kubelet \
-    --cloud-provider=aws`,
+    --cloud-provider=gce`,
+					},
+					{
+						Section: "Service",
+						Name:    "ExecStartPre",
+						Value:   `/bin/sh -c 'hostnamectl set-hostname $(echo $HOSTNAME | cut -d '.' -f 1)'`,
 					},
 				}
 
@@ -290,12 +293,11 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 	// env vars, and volume mounts
 	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
-	Expect(c.Command).To(ContainElement("--cloud-provider=aws"))
+	Expect(c.Command).To(ContainElement("--cloud-provider=gce"))
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ","))
 	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ",")))
-	Expect(c.Env).To(ContainElement(accessKeyIDEnvVar))
-	Expect(c.Env).To(ContainElement(secretAccessKeyEnvVar))
+	Expect(c.Env).To(ContainElement(credentialsEnvVar))
 	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigVolumeMount))
 	Expect(c.VolumeMounts).To(ContainElement(cloudProviderSecretVolumeMount))
 
@@ -311,9 +313,8 @@ func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(ContainElement("--cloud-provider=external"))
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))
-	Expect(c.Command).To(ContainElement("--external-cloud-volume-plugin=aws"))
-	Expect(c.Env).To(ContainElement(accessKeyIDEnvVar))
-	Expect(c.Env).To(ContainElement(secretAccessKeyEnvVar))
+	Expect(c.Command).To(ContainElement("--external-cloud-volume-plugin=gce"))
+	Expect(c.Env).To(ContainElement(credentialsEnvVar))
 	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigVolumeMount))
 	Expect(c.VolumeMounts).To(ContainElement(cloudProviderSecretVolumeMount))
 
