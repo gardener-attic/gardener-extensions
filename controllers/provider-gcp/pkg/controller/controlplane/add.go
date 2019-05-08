@@ -16,21 +16,28 @@ package controlplane
 
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/imagevector"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var (
 	// Options are the default controller.Options for AddToManager.
 	Options = controller.Options{}
+
+	logger = log.Log.WithName("aws-controlplane-controller")
 )
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator:          NewActuator(controlPlaneSecrets, configChart, ccmChart),
+		Actuator: controlplane.NewActuator(controlPlaneSecrets, configChart, ccmChart, newValuesProvider(logger),
+			imagevector.ImageVector(), internal.CloudProviderConfigName, logger),
 		Type:              gcp.Type,
 		ControllerOptions: opts,
 	})
