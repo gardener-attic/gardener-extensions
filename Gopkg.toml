@@ -62,6 +62,10 @@ required = [
   name = "github.com/russross/blackfriday"
   revision = "300106c228d52c8941d4b3de6054a6062a86dda3"
 
+[[override]]
+  name = "github.com/jmespath/go-jmespath"
+  version = "^0.2.2"
+
 [[constraint]]
   name = "github.com/aws/aws-sdk-go"
   version = "~1.12.48"

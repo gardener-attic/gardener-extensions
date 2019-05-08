@@ -20,8 +20,8 @@ const (
 	// Name is the name of the Alicloud provider.
 	Name = "provider-alicloud"
 
-	// TerraformerImageName is the name of the Terraformer image.
-	TerraformerImageName = "terraformer"
+	// InfraRelease is the name of the alicloud-infra chart.
+	InfraRelease = "alicloud-infra"
 )
 
 var (
@@ -29,4 +29,6 @@ var (
 	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
+	// InfraChartPath is the path to the alicloud-infra chart.
+	InfraChartPath = filepath.Join(InternalChartsPath, "alicloud-infra")
 )

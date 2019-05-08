@@ -15,10 +15,14 @@
 package cmd
 
 import (
+	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 )
 
 // ControllerSwitchOptions are the controllercmd.SwitchOptions for the provider controllers.
 func ControllerSwitchOptions() *controllercmd.SwitchOptions {
-	return controllercmd.NewSwitchOptions()
+	return controllercmd.NewSwitchOptions(
+		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
+	)
 }
