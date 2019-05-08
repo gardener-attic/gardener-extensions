@@ -16,12 +16,12 @@ package controlplane
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/apihelper"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -31,13 +31,17 @@ import (
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
+
 	"github.com/go-logr/logr"
+
 	"github.com/pkg/errors"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -97,7 +101,7 @@ var configChart = &chart.Chart{
 var ccmChart = &chart.Chart{
 	Name:   "cloud-controller-manager",
 	Path:   filepath.Join(internal.InternalChartsPath, "cloud-controller-manager"),
-	Images: []string{common.HyperkubeImageName},
+	Images: []string{gcp.HyperkubeImageName},
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
@@ -187,7 +191,11 @@ func getConfigChartValues(
 
 	// Collect config chart values
 	return map[string]interface{}{
-		"cloudProviderConfig": getCloudProviderConfig(serviceAccount.ProjectID, networkName, subNetworkName, cpConfig.Zone, cp.Namespace),
+		"projectID":      serviceAccount.ProjectID,
+		"networkName":    networkName,
+		"subNetworkName": subNetworkName,
+		"zone":           cpConfig.Zone,
+		"nodeTags":       cp.Namespace,
 	}, nil
 }
 
@@ -199,11 +207,10 @@ func getCCMChartValues(
 	checksums map[string]string,
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
-		"cloudProvider":     "gce",
-		"clusterName":       cp.Namespace,
-		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
-		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
 		"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
+		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
+		"clusterName":       cp.Namespace,
+		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
@@ -212,22 +219,12 @@ func getCCMChartValues(
 			"checksum/secret-cloudprovider":            checksums[common.CloudProviderSecretName],
 			"checksum/configmap-cloud-provider-config": checksums[internal.CloudProviderConfigName],
 		},
-		"environment": []map[string]interface{}{
-			{
-				"name":  "GOOGLE_APPLICATION_CREDENTIALS",
-				"value": fmt.Sprintf("/srv/cloudprovider/%s", gcp.ServiceAccountJSONField),
-			},
-		},
-		"resources": map[string]interface{}{
-			"limits": map[string]interface{}{
-				"cpu":    "500m",
-				"memory": "512Mi",
-			},
-		},
 	}
+
 	if cpConfig.CloudControllerManager != nil {
 		values["featureGates"] = cpConfig.CloudControllerManager.FeatureGates
 	}
+
 	return values, nil
 }
 
@@ -236,41 +233,16 @@ func getNetworkNames(
 	infraStatus *apisgcp.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 ) (string, string) {
-	// Determine network name
 	networkName := infraStatus.Networks.VPC.Name
 	if networkName == "" {
 		networkName = cp.Namespace
 	}
 
-	// Determine sub-network name
 	subNetworkName := ""
-	for _, subnet := range infraStatus.Networks.Subnets {
-		if subnet.Purpose == apisgcp.PurposeInternal {
-			subNetworkName = subnet.Name
-			break
-		}
+	subnet, _ := apihelper.FindSubnetForPurpose(infraStatus.Networks.Subnets, apisgcp.PurposeInternal)
+	if subnet != nil {
+		subNetworkName = subnet.Name
 	}
 
 	return networkName, subNetworkName
-}
-
-// getCloudProviderConfig builds and returns a GCP config from the given parameters.
-func getCloudProviderConfig(projectID, networkName, subNetworkName, zone, clusterID string) string {
-	// Compose subnetwork-name fragment
-	var subNetworkNameFragment string
-	if subNetworkName != "" {
-		subNetworkNameFragment = fmt.Sprintf("subnetwork-name=%q", subNetworkName)
-	}
-
-	return fmt.Sprintf(
-		`[Global]
-project-id=%q
-network-name=%q
-%v
-multizone=true
-local-zone=%q
-token-url=nil
-node-tags=%q
-`,
-		projectID, networkName, subNetworkNameFragment, zone, clusterID)
 }

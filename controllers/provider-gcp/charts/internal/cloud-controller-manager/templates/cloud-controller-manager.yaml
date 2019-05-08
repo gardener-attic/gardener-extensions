@@ -60,7 +60,7 @@ spec:
         - --cluster-cidr={{ .Values.podNetwork }}
         - --cluster-name={{ .Values.clusterName }}
         - --concurrent-service-syncs=10
-        - --configure-cloud-routes={{ .Values.configureRoutes }}
+        - --configure-cloud-routes=true
         {{- include "cloud-controller-manager.featureGates" . | trimSuffix "," | indent 8 }}
         - --kubeconfig=/var/lib/cloud-controller-manager/kubeconfig
         - --leader-elect=true
@@ -81,7 +81,8 @@ spec:
         - {{ $param }}
         {{- end }}
         env:
-{{ toYaml .Values.environment | indent 10 }}
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /srv/cloudprovider/serviceaccount.json
         livenessProbe:
           httpGet:
             path: /healthz

@@ -60,7 +60,7 @@ spec:
         - --cluster-cidr={{ .Values.podNetwork }}
         - --cluster-name={{ .Values.clusterName }}
         - --concurrent-service-syncs=10
-        - --configure-cloud-routes={{ .Values.configureRoutes }}
+        - --configure-cloud-routes=false
         {{- include "cloud-controller-manager.featureGates" . | trimSuffix "," | indent 8 }}
         - --kubeconfig=/var/lib/cloud-controller-manager/kubeconfig
         - --leader-elect=true
@@ -81,7 +81,16 @@ spec:
         - {{ $param }}
         {{- end }}
         env:
-{{ toYaml .Values.environment | indent 10 }}
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: cloudprovider
+              key: accessKeyID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cloudprovider
+              key: secretAccessKey
         livenessProbe:
           httpGet:
             path: /healthz
@@ -109,8 +118,6 @@ spec:
           mountPath: /var/lib/cloud-controller-manager-server
         - name: cloud-provider-config
           mountPath: /etc/kubernetes/cloudprovider
-        - name: cloudprovider
-          mountPath: /srv/cloudprovider
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -125,6 +132,3 @@ spec:
       - name: cloud-provider-config
         configMap:
           name: cloud-provider-config
-      - name: cloudprovider
-        secret:
-          secretName: cloudprovider

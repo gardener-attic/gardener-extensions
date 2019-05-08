@@ -1,1 +1,4 @@
-cloudProviderConfig: ""
+vpcID: vpc-1234
+subnetID: subnet-1234
+clusterName: foo-bar
+zone: eu-west-1a

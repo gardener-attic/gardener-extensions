@@ -16,7 +16,6 @@ package controlplane
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
@@ -30,8 +29,11 @@ import (
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
+
 	"github.com/go-logr/logr"
+
 	"github.com/pkg/errors"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -95,7 +97,7 @@ var configChart = &chart.Chart{
 var ccmChart = &chart.Chart{
 	Name:   "cloud-controller-manager",
 	Path:   filepath.Join(aws.InternalChartsPath, "cloud-controller-manager"),
-	Images: []string{common.HyperkubeImageName},
+	Images: []string{aws.HyperkubeImageName},
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
@@ -173,7 +175,10 @@ func getConfigChartValues(
 
 	// Collect config chart values
 	return map[string]interface{}{
-		"cloudProviderConfig": getCloudProviderConfig(infraStatus.VPC.ID, subnetID, zone, cp.Namespace),
+		"vpcID":       infraStatus.VPC.ID,
+		"subnetID":    subnetID,
+		"clusterName": cp.Namespace,
+		"zone":        zone,
 	}, nil
 }
 
@@ -185,11 +190,10 @@ func getCCMChartValues(
 	checksums map[string]string,
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
-		"cloudProvider":     "aws",
+		"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
 		"clusterName":       cp.Namespace,
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
-		"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
@@ -198,42 +202,18 @@ func getCCMChartValues(
 			"checksum/secret-cloudprovider":            checksums[common.CloudProviderSecretName],
 			"checksum/configmap-cloud-provider-config": checksums[aws.CloudProviderConfigName],
 		},
-		"configureRoutes": false,
-		"environment": []map[string]interface{}{
-			{
-				"name": "AWS_ACCESS_KEY_ID",
-				"valueFrom": map[string]interface{}{
-					"secretKeyRef": map[string]interface{}{
-						"key":  aws.AccessKeyID,
-						"name": common.CloudProviderSecretName,
-					},
-				},
-			},
-			{
-				"name": "AWS_SECRET_ACCESS_KEY",
-				"valueFrom": map[string]interface{}{
-					"secretKeyRef": map[string]interface{}{
-						"key":  aws.SecretAccessKey,
-						"name": common.CloudProviderSecretName,
-					},
-				},
-			},
-		},
-		"resources": map[string]interface{}{
-			"limits": map[string]interface{}{
-				"cpu":    "500m",
-				"memory": "512Mi",
-			},
-		},
 	}
+
 	if cpConfig.CloudControllerManager != nil {
 		values["featureGates"] = cpConfig.CloudControllerManager.FeatureGates
 	}
+
 	return values, nil
 }
 
 // getSubnetIDAndZone determines the subnet ID and zone from the given infrastructure status by looking for the first
 // subnet with purpose "public".
+// TODO: Move to pkg/apis/aws/v1alpha1/helper once https://github.com/gardener/gardener-extensions/pull/71 is merged.
 func getSubnetIDAndZone(infraStatus *apisaws.InfrastructureStatus) (string, string, error) {
 	for _, subnet := range infraStatus.VPC.Subnets {
 		if subnet.Purpose == apisaws.PurposePublic {
@@ -241,18 +221,4 @@ func getSubnetIDAndZone(infraStatus *apisaws.InfrastructureStatus) (string, stri
 		}
 	}
 	return "", "", errors.Errorf("subnet with purpose 'public' not found")
-}
-
-// getCloudProviderConfig builds and returns a AWS config from the given parameters.
-func getCloudProviderConfig(vpcID, subnetID, zone, clusterID string) string {
-	return fmt.Sprintf(
-		`[Global]
-VPC=%q
-SubnetID=%q
-DisableSecurityGroupIngress=true
-KubernetesClusterTag=%q
-KubernetesClusterID=%q
-Zone=%q
-`,
-		vpcID, subnetID, clusterID, clusterID, zone)
 }
