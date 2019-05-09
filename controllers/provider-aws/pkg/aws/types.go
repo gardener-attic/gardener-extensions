@@ -19,14 +19,17 @@ import "path/filepath"
 const (
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
+	// HyperkubeImageName is the name of the hyperkube image.
+	HyperkubeImageName = "hyperkube"
+
 	// AccessKeyID is a constant for the key in a cloud provider secret and backup secret that holds the AWS access key id.
 	AccessKeyID = "accessKeyID"
 	// SecretAccessKey is a constant for the key in a cloud provider secret and backup secret that holds the AWS secret access key.
 	SecretAccessKey = "secretAccessKey"
 	// Region is a constant for the key in a backup secret that holds the AWS region.
 	Region = "region"
-	// TerrformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
-	TerrformerPurposeInfra = "infra"
+	// TerraformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
+	TerraformerPurposeInfra = "infra"
 	// VPCIDKey is the vpc_id tf state key
 	VPCIDKey = "vpc_id"
 	// SubnetPublicPrefix is the prefix for the subnets

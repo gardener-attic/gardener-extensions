@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gcp
+package controlplane_test
 
-const (
-	// HyperkubeImageName is the name of the hyperkube image.
-	HyperkubeImageName = "hyperkube"
+import (
+	"testing"
 
-	// ServiceAccountJSONField is the field in a secret where the service account JSON is stored at.
-	ServiceAccountJSONField = "serviceaccount.json"
-
-	// Type is the type of resources managed by the GCP actuator.
-	Type = "gcp"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
+
+func TestControlplane(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "AWS Controlplane Suite")
+}

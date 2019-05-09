@@ -1,10 +1,7 @@
 replicas: 1
-kubernetesVersion: 1.7.5
-configureRoutes: true
 clusterName: shoot-foo-bar
+kubernetesVersion: 1.7.5
 podNetwork: 192.168.0.0/16
-environment: []
-additionalParameters: []
 podAnnotations: {}
 featureGates: {}
   # CustomResourceValidation: true
@@ -16,5 +13,5 @@ resources:
     cpu: 100m
     memory: 64Mi
   limits:
-    cpu: 250m
-    memory: 300Mi
+    cpu: 500m
+    memory: 512Mi

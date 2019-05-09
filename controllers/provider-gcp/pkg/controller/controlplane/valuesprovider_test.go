@@ -17,8 +17,6 @@ package controlplane
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"testing"
 
 	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
@@ -30,12 +28,16 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
+
 	"github.com/golang/mock/gomock"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -44,11 +46,6 @@ import (
 const (
 	namespace = "test"
 )
-
-func TestController(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "GCP Controlplane Suite")
-}
 
 var _ = Describe("ValuesProvider", func() {
 	var (
@@ -138,40 +135,23 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		configChartValues = map[string]interface{}{
-			"cloudProviderConfig": `[Global]
-project-id="abc"
-network-name="vpc-1234"
-subnetwork-name="subnet-acbd1234"
-multizone=true
-local-zone="europe-west1a"
-token-url=nil
-node-tags="` + namespace + `"
-`,
+			"projectID":      "abc",
+			"networkName":    "vpc-1234",
+			"subNetworkName": "subnet-acbd1234",
+			"zone":           "europe-west1a",
+			"nodeTags":       namespace,
 		}
 
 		ccmChartValues = map[string]interface{}{
-			"cloudProvider":     "gce",
-			"clusterName":       namespace,
-			"kubernetesVersion": "1.13.4",
-			"podNetwork":        cidr,
 			"replicas":          1,
+			"kubernetesVersion": "1.13.4",
+			"clusterName":       namespace,
+			"podNetwork":        cidr,
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-cloud-controller-manager":        "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 				"checksum/secret-cloud-controller-manager-server": "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
 				"checksum/secret-cloudprovider":                   "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 				"checksum/configmap-cloud-provider-config":        "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			},
-			"environment": []map[string]interface{}{
-				{
-					"name":  "GOOGLE_APPLICATION_CREDENTIALS",
-					"value": fmt.Sprintf("/srv/cloudprovider/%s", gcp.ServiceAccountJSONField),
-				},
-			},
-			"resources": map[string]interface{}{
-				"limits": map[string]interface{}{
-					"cpu":    "500m",
-					"memory": "512Mi",
-				},
 			},
 			"featureGates": map[string]bool{
 				"CustomResourceValidation": true,
@@ -184,6 +164,7 @@ node-tags="` + namespace + `"
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 	})
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
