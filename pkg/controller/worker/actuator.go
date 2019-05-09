@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package worker
 
 import (
-	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"context"
+
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 
-// GenerationChangedPredicate is a predicate for generation changes.
-func GenerationChangedPredicate() predicate.Predicate {
-	return predicate.Funcs{
-		UpdateFunc: func(event event.UpdateEvent) bool {
-			return event.MetaOld.GetGeneration() != event.MetaNew.GetGeneration()
-		},
-	}
+// Actuator acts upon Worker resources.
+type Actuator interface {
+	// Reconcile reconciles the Worker.
+	Reconcile(context.Context, *extensionsv1alpha1.Worker, *extensionscontroller.Cluster) error
+	// Delete deletes the Worker.
+	Delete(context.Context, *extensionsv1alpha1.Worker, *extensionscontroller.Cluster) error
 }

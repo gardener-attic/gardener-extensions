@@ -29,8 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	controllerutil "github.com/gardener/gardener-extensions/pkg/controller"
-
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
@@ -64,7 +62,7 @@ type AddArgs struct {
 	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
 	// WatchBuilder defines additional watches on controllers that should be set up.
-	WatchBuilder controllerutil.WatchBuilder
+	WatchBuilder extensionscontroller.WatchBuilder
 	// Resync determines the requeue interval.
 	Resync time.Duration
 }
@@ -82,9 +80,9 @@ func add(mgr manager.Manager, args AddArgs) error {
 	}
 
 	if args.Predicates == nil {
-		args.Predicates = append(args.Predicates, controllerutil.GenerationChangedPredicate())
+		args.Predicates = append(args.Predicates, extensionscontroller.GenerationChangedPredicate())
 	}
-	args.Predicates = append(args.Predicates, controllerutil.TypePredicate(args.Type))
+	args.Predicates = append(args.Predicates, extensionscontroller.TypePredicate(args.Type))
 
 	// Add standard watch.
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Extension{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
@@ -168,7 +166,7 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 }
 
 func (r *reconciler) reconcile(ctx context.Context, ex *extensionsv1alpha1.Extension) (reconcile.Result, error) {
-	if err := controllerutil.EnsureFinalizer(ctx, r.client, r.finalizerName, ex); err != nil {
+	if err := extensionscontroller.EnsureFinalizer(ctx, r.client, r.finalizerName, ex); err != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -183,7 +181,7 @@ func (r *reconciler) reconcile(ctx context.Context, ex *extensionsv1alpha1.Exten
 		msg := "Unable to reconcile Extension resource"
 		_ = r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), ex, operationType, msg)
 		r.logger.Error(err, msg, "extension", ex.Name, "namespace", ex.Namespace)
-		return controllerutil.ReconcileErr(err)
+		return extensionscontroller.ReconcileErr(err)
 	}
 
 	msg = "Successfully reconciled Extension resource"
@@ -195,7 +193,7 @@ func (r *reconciler) reconcile(ctx context.Context, ex *extensionsv1alpha1.Exten
 }
 
 func (r *reconciler) delete(ctx context.Context, ex *extensionsv1alpha1.Extension) (reconcile.Result, error) {
-	hasFinalizer, err := controllerutil.HasFinalizer(ex, r.finalizerName)
+	hasFinalizer, err := extensionscontroller.HasFinalizer(ex, r.finalizerName)
 	if err != nil {
 		r.logger.Error(err, "Could not instantiate finalizer deletion")
 		return reconcile.Result{}, err
@@ -215,7 +213,7 @@ func (r *reconciler) delete(ctx context.Context, ex *extensionsv1alpha1.Extensio
 		msg := "Error deleting Extension resource"
 		_ = r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), ex, operationType, msg)
 		r.logger.Error(err, msg, "extension", ex.Name, "namespace", ex.Namespace)
-		return controllerutil.ReconcileErr(err)
+		return extensionscontroller.ReconcileErr(err)
 	}
 
 	msg := "Successfully deleted Extension resource"
@@ -225,7 +223,7 @@ func (r *reconciler) delete(ctx context.Context, ex *extensionsv1alpha1.Extensio
 	}
 
 	r.logger.Info("Extension resource deletion successful, removing finalizer.", "extension", ex.Name, "namespace", ex.Namespace)
-	if err := controllerutil.DeleteFinalizer(ctx, r.client, r.finalizerName, ex); err != nil {
+	if err := extensionscontroller.DeleteFinalizer(ctx, r.client, r.finalizerName, ex); err != nil {
 		r.logger.Error(err, "Error removing finalizer from Extension resource", "extension", ex.Name, "namespace", ex.Namespace)
 		return reconcile.Result{}, err
 	}
