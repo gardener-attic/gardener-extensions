@@ -49,8 +49,8 @@ type ValuesProvider interface {
 // It creates / deletes the given secrets and applies / deletes the 2 given charts, using the given image vector and
 // the values provided by the given values provider.
 func NewActuator(
-	secrets Secrets,
-	configChart, controlPlaneChart Chart,
+	secrets util.Secrets,
+	configChart, controlPlaneChart util.Chart,
 	vp ValuesProvider,
 	imageVector imagevector.ImageVector,
 	configName string,
@@ -69,9 +69,9 @@ func NewActuator(
 
 // actuator is an Actuator that acts upon and updates the status of ControlPlane resources.
 type actuator struct {
-	secrets           Secrets
-	configChart       Chart
-	controlPlaneChart Chart
+	secrets           util.Secrets
+	configChart       util.Chart
+	controlPlaneChart util.Chart
 	vp                ValuesProvider
 	imageVector       imagevector.ImageVector
 	configName        string
