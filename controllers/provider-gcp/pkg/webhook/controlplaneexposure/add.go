@@ -15,12 +15,11 @@
 package controlplaneexposure
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -34,8 +33,8 @@ func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
 	logger.Info("Adding webhook to manager")
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Kind:     extensionswebhook.SeedKind,
-		Provider: aws.Type,
-		Types:    []runtime.Object{&corev1.Service{}, &appsv1.Deployment{}},
+		Provider: gcp.Type,
+		Types:    []runtime.Object{&appsv1.Deployment{}},
 		Mutator:  NewMutator(logger),
 	})
 }

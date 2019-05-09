@@ -21,9 +21,10 @@ import (
 
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewMutator creates a new controlplaneexposure mutator.
@@ -34,44 +35,37 @@ func NewMutator(logger logr.Logger) controlplane.Mutator {
 }
 
 type mutator struct {
+	client client.Client
 	logger logr.Logger
+}
+
+// InjectClient injects the given client into the mutator.
+func (m *mutator) InjectClient(client client.Client) error {
+	m.client = client
+	return nil
 }
 
 // Mutate validates and if needed mutates the given object.
 func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	switch x := obj.(type) {
-	case *corev1.Service:
-		switch x.Name {
-		case "kube-apiserver":
-			return mutateKubeAPIServerService(x)
-		}
 	case *appsv1.Deployment:
 		switch x.Name {
 		case common.KubeAPIServerDeploymentName:
-			return mutateKubeAPIServerDeployment(x)
+			// Get load balancer address of the kube-apiserver service
+			address, err := controlplane.GetLoadBalancerIngress(ctx, m.client, x.Namespace, common.KubeAPIServerDeploymentName)
+			if err != nil {
+				return errors.Wrap(err, "could not get kube-apiserver service load balancer address")
+			}
+
+			return mutateKubeAPIServerDeployment(x, address)
 		}
 	}
 	return nil
 }
 
-func mutateKubeAPIServerService(svc *corev1.Service) error {
-	if svc.Annotations == nil {
-		svc.Annotations = make(map[string]string)
-	}
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout"] = "3600"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-backend-protocol"] = "ssl"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-ssl-ports"] = "443"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-timeout"] = "5"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-interval"] = "30"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold"] = "2"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold"] = "2"
-	svc.Annotations["service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy"] = "ELBSecurityPolicy-TLS-1-2-2017-01"
-	return nil
-}
-
-func mutateKubeAPIServerDeployment(dep *appsv1.Deployment) error {
+func mutateKubeAPIServerDeployment(dep *appsv1.Deployment, address string) error {
 	if c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
-		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
+		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--advertise-address=", address)
 	}
 	return nil
 }

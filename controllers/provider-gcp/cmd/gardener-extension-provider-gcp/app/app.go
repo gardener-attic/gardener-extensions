@@ -23,9 +23,11 @@ import (
 	gcpcontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
+	gcpwebhook "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -58,7 +60,17 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts)
+		webhookServerOpts = &webhookcmd.WebhookServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+
+		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts, webhookServerOpts)
 	)
 
 	cmd := &cobra.Command{
@@ -88,6 +100,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := gcpcontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
+			}
+
+			if err := gcpwebhook.AddToManager(mgr, webhookServerOpts.Completed()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {

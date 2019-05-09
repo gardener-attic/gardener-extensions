@@ -12,6 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=controlplane -destination=mocks.go github.com/gardener/gardener-extensions/pkg/webhook/controlplane Mutator,KubeletConfigCodec,UnitSerializer
+package webhook
 
-package controlplane
+import (
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplane"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplaneexposure"
+	"github.com/gardener/gardener-extensions/pkg/webhook"
+)
+
+var (
+	addToManagerBuilder = webhook.NewAddToManagerBuilder(
+		controlplaneexposure.AddToManager,
+		controlplane.AddToManager,
+	)
+
+	// AddToManager adds all provider webhooks to the given manager.
+	AddToManager = addToManagerBuilder.AddToManager
+)

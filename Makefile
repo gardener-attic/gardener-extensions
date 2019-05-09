@@ -125,6 +125,9 @@ start-provider-gcp:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-gcp/cmd/gardener-extension-provider-gcp \
 		--leader-election=$(LEADER_ELECTION) \
+		--webhook-config-mode=url \
+		--webhook-config-name=gcp-webhooks \
+		--webhook-config-host=$(HOSTNAME) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
 
 .PHONY: start-provider-openstack
