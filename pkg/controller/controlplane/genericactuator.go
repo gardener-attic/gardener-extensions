@@ -110,8 +110,8 @@ func (a *actuator) InjectConfig(config *rest.Config) error {
 	}
 
 	// Inject the config into the values provider if needed
-	if vpInjectConfig, ok := a.vp.(inject.Config); ok {
-		return vpInjectConfig.InjectConfig(config)
+	if _, err := inject.ConfigInto(config, a.vp); err != nil {
+		return errors.Wrap(err, "could not inject the config into the values provider")
 	}
 
 	return nil
@@ -122,8 +122,8 @@ func (a *actuator) InjectClient(client client.Client) error {
 	a.client = client
 
 	// Inject the client into the values provider if needed
-	if vpInjectClient, ok := a.vp.(inject.Client); ok {
-		return vpInjectClient.InjectClient(client)
+	if _, err := inject.ClientInto(client, a.vp); err != nil {
+		return errors.Wrap(err, "could not inject the client into the values provider")
 	}
 
 	return nil

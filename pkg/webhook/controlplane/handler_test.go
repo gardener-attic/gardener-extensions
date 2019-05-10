@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"net/http"
-	"testing"
 
 	mockmanager "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/manager"
 	mocktypes "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/webhook/admission/types"
@@ -35,11 +34,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
-
-func TestControlplane(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Controlplane Webhook Suite")
-}
 
 var _ = Describe("Handler", func() {
 	const (

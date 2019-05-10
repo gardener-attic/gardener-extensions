@@ -19,13 +19,10 @@ import (
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane"
-	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -34,14 +31,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
-)
-
-const (
-	oldServiceContent = "old kubelet.service content"
-	newServiceContent = "new kubelet.service content"
-
-	oldKubeletConfigData = "old kubelet config data"
-	newKubeletConfigData = "new kubelet config data"
 )
 
 func TestController(t *testing.T) {
@@ -57,11 +46,12 @@ var _ = Describe("Mutator", func() {
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 	})
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
 
-	Describe("#Mutate", func() {
+	Describe("#EnsureKubeAPIServerDeployment", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
@@ -80,11 +70,11 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(nil, nil, logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -127,15 +117,17 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(nil, nil, logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
+	})
 
+	Describe("#EnsureKubeControllerManagerDeployment", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
@@ -154,11 +146,11 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(nil, nil, logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeControllerManagerDeployment method and check the result
+			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
 		})
@@ -198,40 +190,19 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(nil, nil, logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeControllerManagerDeployment method and check the result
+			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
 		})
+	})
 
-		It("should modify existing elements of OperatingSystemConfig", func() {
+	Describe("#EnsureKubeletServiceUnitOptions", func() {
+		It("should modify existing elements of kubelet.service unit options", func() {
 			var (
-				osc = &extensionsv1alpha1.OperatingSystemConfig{
-					ObjectMeta: metav1.ObjectMeta{Name: "test"},
-					Spec: extensionsv1alpha1.OperatingSystemConfigSpec{
-						Purpose: extensionsv1alpha1.OperatingSystemConfigPurposeReconcile,
-						Units: []extensionsv1alpha1.Unit{
-							{
-								Name:    "kubelet.service",
-								Content: util.StringPtr(oldServiceContent),
-							},
-						},
-						Files: []extensionsv1alpha1.File{
-							{
-								Path: "/var/lib/kubelet/config/kubelet",
-								Content: extensionsv1alpha1.FileContent{
-									Inline: &extensionsv1alpha1.FileContentInline{
-										Data: oldKubeletConfigData,
-									},
-								},
-							},
-						},
-					},
-				}
-
 				oldUnitOptions = []*unit.UnitOption{
 					{
 						Section: "Service",
@@ -249,7 +220,21 @@ var _ = Describe("Mutator", func() {
     --cloud-provider=aws`,
 					},
 				}
+			)
 
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+
+			// Call EnsureKubeletServiceUnitOptions method and check the result
+			opts, err := ensurer.EnsureKubeletServiceUnitOptions(context.TODO(), oldUnitOptions)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(opts).To(Equal(newUnitOptions))
+		})
+	})
+
+	Describe("#EnsureKubeletConfiguration", func() {
+		It("should modify existing elements of kubelet configuration", func() {
+			var (
 				oldKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
 					FeatureGates: map[string]bool{
 						"Foo":                      true,
@@ -264,23 +249,14 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mock UnitSerializer
-			us := mockcontrolplane.NewMockUnitSerializer(ctrl)
-			us.EXPECT().Deserialize(oldServiceContent).Return(oldUnitOptions, nil)
-			us.EXPECT().Serialize(newUnitOptions).Return(newServiceContent, nil)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Create mock KubeletConfigCodec
-			kcc := mockcontrolplane.NewMockKubeletConfigCodec(ctrl)
-			kcc.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: oldKubeletConfigData}).Return(oldKubeletConfig, nil)
-			kcc.EXPECT().Encode(newKubeletConfig, "").Return(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}, nil)
-
-			// Create mutator
-			mutator := NewMutator(us, kcc, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), osc)
+			// Call EnsureKubeletConfiguration method and check the result
+			kubeletConfig := *oldKubeletConfig
+			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
-			checkOperatingSystemConfig(osc)
+			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
 		})
 	})
 })
@@ -320,13 +296,4 @@ func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {
 	// Check that the Pod spec contains all needed volumes
 	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigVolume))
 	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderSecretVolume))
-}
-
-func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
-	u := controlplane.UnitWithName(osc.Spec.Units, "kubelet.service")
-	Expect(u).To(Not(BeNil()))
-	Expect(u.Content).To(Equal(util.StringPtr(newServiceContent)))
-	f := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/config/kubelet")
-	Expect(f).To(Not(BeNil()))
-	Expect(f.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
 }
