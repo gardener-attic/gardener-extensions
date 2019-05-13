@@ -42,7 +42,7 @@ rules:
   resources:
   - configmaps
   resourceNames:
-  - os-suse-jeos-leader-election
+  - suse-jeos-leader-election
   verbs:
   - get
   - watch
