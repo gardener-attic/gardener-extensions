@@ -24,11 +24,15 @@ import (
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
+
 	"github.com/go-logr/logr"
+
 	"github.com/pkg/errors"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
@@ -140,15 +144,17 @@ func (a *actuator) Reconcile(
 	}
 
 	// Get config chart values
-	values, err := a.vp.GetConfigChartValues(ctx, cp, cluster)
-	if err != nil {
-		return err
-	}
+	if a.configChart != nil {
+		values, err := a.vp.GetConfigChartValues(ctx, cp, cluster)
+		if err != nil {
+			return err
+		}
 
-	// Apply config chart
-	a.logger.Info("Applying configuration chart", "controlplane", util.ObjectName(cp), "values", values)
-	if err := a.configChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, nil, nil, values); err != nil {
-		return errors.Wrapf(err, "could not apply configuration chart for controlplane '%s'", util.ObjectName(cp))
+		// Apply config chart
+		a.logger.Info("Applying configuration chart", "controlplane", util.ObjectName(cp), "values", values)
+		if err := a.configChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, nil, nil, values); err != nil {
+			return errors.Wrapf(err, "could not apply configuration chart for controlplane '%s'", util.ObjectName(cp))
+		}
 	}
 
 	// Compute all needed checksums
@@ -158,7 +164,7 @@ func (a *actuator) Reconcile(
 	}
 
 	// Get control plane chart values
-	values, err = a.vp.GetControlPlaneChartValues(ctx, cp, cluster, checksums)
+	values, err := a.vp.GetControlPlaneChartValues(ctx, cp, cluster, checksums)
 	if err != nil {
 		return err
 	}
@@ -185,10 +191,12 @@ func (a *actuator) Delete(
 		return errors.Wrapf(err, "could not delete control plane objects for controlplane '%s'", util.ObjectName(cp))
 	}
 
-	// Delete config objects
-	a.logger.Info("Deleting configuration objects", "controlplane", util.ObjectName(cp))
-	if err := a.configChart.Delete(ctx, a.client, cp.Namespace); err != nil {
-		return errors.Wrapf(err, "could not delete configuration objects for controlplane '%s'", util.ObjectName(cp))
+	if a.configChart != nil {
+		// Delete config objects
+		a.logger.Info("Deleting configuration objects", "controlplane", util.ObjectName(cp))
+		if err := a.configChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+			return errors.Wrapf(err, "could not delete configuration objects for controlplane '%s'", util.ObjectName(cp))
+		}
 	}
 
 	// Delete secrets
@@ -209,22 +217,25 @@ func (a *actuator) computeChecksums(
 ) (map[string]string, error) {
 	// Get cloud provider secret and config from cluster
 	cpSecret := &corev1.Secret{}
-	err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}, cpSecret)
-	if err != nil {
+	if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}, cpSecret); err != nil {
 		return nil, errors.Wrapf(err, "could not get secret '%s'", util.ObjectName(cpSecret))
 	}
-	cpConfigMap := &corev1.ConfigMap{}
-	err = a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: a.configName}, cpConfigMap)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not get configmap '%s'", util.ObjectName(cpConfigMap))
-	}
 
-	// Compute checksums
 	csSecrets := MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
 		common.CloudProviderSecretName: cpSecret,
 	})
-	csConfigMaps := map[string]*corev1.ConfigMap{
-		a.configName: cpConfigMap,
+
+	var csConfigMaps map[string]*corev1.ConfigMap
+	if len(a.configName) != 0 {
+		cpConfigMap := &corev1.ConfigMap{}
+		if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: a.configName}, cpConfigMap); err != nil {
+			return nil, errors.Wrapf(err, "could not get configmap '%s'", util.ObjectName(cpConfigMap))
+		}
+
+		csConfigMaps = map[string]*corev1.ConfigMap{
+			a.configName: cpConfigMap,
+		}
 	}
+
 	return ComputeChecksums(csSecrets, csConfigMaps), nil
 }

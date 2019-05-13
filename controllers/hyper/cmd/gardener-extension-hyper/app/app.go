@@ -12,6 +12,7 @@ import (
 	providerazure "github.com/gardener/gardener-extensions/controllers/provider-azure/cmd/gardener-extension-provider-azure/app"
 	providergcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/cmd/gardener-extension-provider-gcp/app"
 	provideropenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/cmd/gardener-extension-provider-openstack/app"
+	providerpacket "github.com/gardener/gardener-extensions/controllers/provider-packet/cmd/gardener-extension-provider-packet/app"
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +31,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		providergcp.NewControllerManagerCommand(ctx),
 		provideropenstack.NewControllerManagerCommand(ctx),
 		provideralicloud.NewControllerManagerCommand(ctx),
-		providerazure.NewControllerManagerCommand(ctx),
+		providerpacket.NewControllerManagerCommand(ctx),
 		certservice.NewServiceControllerCommand(ctx),
 	)
 

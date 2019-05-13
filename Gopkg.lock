@@ -772,6 +772,13 @@
   version = "v1.0.0-rc1"
 
 [[projects]]
+  digest = "1:7e51c2cdc74f83e13b2b12c99f246b88eb5eae0a77af0c5ceff48f40a31545a5"
+  name = "github.com/packethost/packngo"
+  packages = ["."]
+  pruneopts = "NUT"
+  revision = "b3b45f1b4979af3ace1cd5450768ab387b40ae5b"
+
+[[projects]]
   digest = "1:93b1d84c5fa6d1ea52f4114c37714cddd84d5b78f151b62bb101128dd51399bf"
   name = "github.com/pborman/uuid"
   packages = ["."]
@@ -1764,6 +1771,7 @@
     "github.com/onsi/gomega",
     "github.com/onsi/gomega/gstruct",
     "github.com/onsi/gomega/types",
+    "github.com/packethost/packngo",
     "github.com/pkg/errors",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",

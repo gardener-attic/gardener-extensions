@@ -1,0 +1,8 @@
+packet:
+  projectID: abcd-5678
+
+sshPublicKey: sshkey-12345
+clusterName: test-namespace
+
+outputKeys:
+  sshKeyName: key_pair_name
