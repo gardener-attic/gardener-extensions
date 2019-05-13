@@ -21,7 +21,7 @@ import (
 	apispacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
@@ -35,6 +35,7 @@ import (
 	"github.com/pkg/errors"
 
 	appsv1 "k8s.io/api/apps/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
@@ -81,8 +82,17 @@ var ccmChart = &chart.Chart{
 	},
 }
 
-// newValuesProvider creates a new ValuesProvider for the generic actuator.
-func newValuesProvider(logger logr.Logger) controlplane.ValuesProvider {
+var ccmShootChart = &chart.Chart{
+	Name: "cloud-controller-manager-shoot",
+	Path: filepath.Join(packet.InternalChartsPath, "cloud-controller-manager-shoot"),
+	Objects: []*chart.Object{
+		{Type: &rbacv1.ClusterRole{}, Name: "system:controller:cloud-node-controller"},
+		{Type: &rbacv1.ClusterRoleBinding{}, Name: "system:controller:cloud-node-controller"},
+	},
+}
+
+// NewValuesProvider creates a new ValuesProvider for the generic actuator.
+func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 	return &valuesProvider{
 		logger: logger.WithName("packet-values-provider"),
 	}
@@ -125,6 +135,15 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 
 	// Get CCM chart values
 	return getCCMChartValues(cpConfig, cp, cluster, checksums)
+}
+
+// GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by the generic actuator.
+func (vp *valuesProvider) GetControlPlaneShootChartValues(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) (map[string]interface{}, error) {
+	return nil, nil
 }
 
 // getCCMChartValues collects and returns the CCM chart values.

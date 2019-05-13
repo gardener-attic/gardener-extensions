@@ -1,8 +1,18 @@
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudprovider
+  namespace: shoot--foo--bar
+type: Opaque
+data:
+# accessKeyID: base64(access-key-id)
+# secretAccessKey: base64(secret-access-key)
+---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: default
+  name: shoot--foo--bar
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -30,13 +40,13 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: ControlPlane
 metadata:
   name: control-plane
-  namespace: default
+  namespace: shoot--foo--bar
 spec:
   type: aws
   region: eu-west-1
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo-bar
+    namespace: shoot--foo--bar
   providerConfig:
     apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
     kind: ControlPlaneConfig

@@ -95,7 +95,7 @@ var _ = Describe("ValuesProvider", func() {
 	Describe("#GetConfigChartValues", func() {
 		It("should return correct config chart values", func() {
 			// Create valuesProvider
-			vp := newValuesProvider(logger)
+			vp := NewValuesProvider(logger)
 			err := vp.(inject.Scheme).InjectScheme(scheme)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -109,7 +109,7 @@ var _ = Describe("ValuesProvider", func() {
 	Describe("#GetControlPlaneChartValues", func() {
 		It("should return correct control plane chart values", func() {
 			// Create valuesProvider
-			vp := newValuesProvider(logger)
+			vp := NewValuesProvider(logger)
 			err := vp.(inject.Scheme).InjectScheme(scheme)
 			Expect(err).NotTo(HaveOccurred())
 
