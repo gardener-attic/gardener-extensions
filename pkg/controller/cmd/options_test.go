@@ -17,6 +17,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	mockcontroller "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller"
 	mockcmd "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/util/test"
 	"github.com/golang/mock/gomock"
@@ -57,7 +58,9 @@ var _ = Describe("Options", func() {
 			value    = "x"
 		)
 		command := test.NewCommandBuilder(cmdName).
-			Flag(fmt.Sprintf("%s%s", prefix, flagName), value).
+			Flags(
+				test.StringFlag(fmt.Sprintf("%s%s", prefix, flagName), value),
+			).
 			Command().
 			Slice()
 
@@ -86,7 +89,9 @@ var _ = Describe("Options", func() {
 			value    = "x"
 		)
 		command := test.NewCommandBuilder(cmdName).
-			Flag(fmt.Sprintf("%s%s", prefix, flagName), value).
+			Flags(
+				test.StringFlag(fmt.Sprintf("%s%s", prefix, flagName), value),
+			).
 			Command().
 			Slice()
 
@@ -197,9 +202,11 @@ var _ = Describe("Options", func() {
 			leaderElectionNamespace = "namespace"
 		)
 		command := test.NewCommandBuilder(name).
-			BoolFlag(LeaderElectionFlag).
-			Flag(LeaderElectionIDFlag, leaderElectionID).
-			Flag(LeaderElectionNamespaceFlag, leaderElectionNamespace).
+			Flags(
+				test.BoolFlag(LeaderElectionFlag, true),
+				test.StringFlag(LeaderElectionIDFlag, leaderElectionID),
+				test.StringFlag(LeaderElectionNamespaceFlag, leaderElectionNamespace),
+			).
 			Command().
 			Slice()
 
@@ -255,7 +262,7 @@ var _ = Describe("Options", func() {
 			maxConcurrentReconciles = 5
 		)
 		command := test.NewCommandBuilder(name).
-			Flag(MaxConcurrentReconcilesFlag, maxConcurrentReconciles).
+			Flags(test.IntFlag(MaxConcurrentReconcilesFlag, maxConcurrentReconciles)).
 			Command().
 			Slice()
 
@@ -308,8 +315,10 @@ var _ = Describe("Options", func() {
 			masterURL  = "masterURL"
 		)
 		command := test.NewCommandBuilder(name).
-			Flag(KubeconfigFlag, kubeconfig).
-			Flag(MasterURLFlag, masterURL).
+			Flags(
+				test.StringFlag(KubeconfigFlag, kubeconfig),
+				test.StringFlag(MasterURLFlag, masterURL),
+			).
 			Command().
 			Slice()
 
@@ -560,6 +569,79 @@ var _ = Describe("Options", func() {
 				Expect(opts).To(Equal(controller.Options{
 					MaxConcurrentReconciles: maxConcurrentReconciles,
 				}))
+			})
+		})
+	})
+
+	Context("SwitchOptions", func() {
+		const commandName = "test"
+
+		Describe("#AddFlags", func() {
+			It("should correctly parse the flags", func() {
+				var (
+					name1    = "foo"
+					name2    = "bar"
+					switches = NewSwitchOptions(
+						Switch(name1, nil),
+						Switch(name2, nil),
+					)
+				)
+
+				fs := pflag.NewFlagSet(commandName, pflag.ContinueOnError)
+				switches.AddFlags(fs)
+
+				err := fs.Parse(test.NewCommandBuilder(commandName).
+					Flags(
+						test.StringSliceFlag(DisableFlag, name1, name2),
+					).
+					Command().
+					Slice())
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(switches.Complete()).To(Succeed())
+
+				Expect(switches.Disabled).To(Equal([]string{name1, name2}))
+			})
+
+			It("should error on an unknown controller", func() {
+				switches := NewSwitchOptions()
+
+				fs := pflag.NewFlagSet(commandName, pflag.ContinueOnError)
+				switches.AddFlags(fs)
+
+				err := fs.Parse(test.NewCommandBuilder(commandName).
+					Flags(
+						test.StringSliceFlag(DisableFlag, "unknown"),
+					).
+					Command().
+					Slice())
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(switches.Complete()).To(HaveOccurred())
+			})
+		})
+
+		Describe("#AddToManager", func() {
+			It("should return a configuration that does not add the disabled controllers", func() {
+				var (
+					f1 = mockcontroller.NewMockAddToManager(ctrl)
+					f2 = mockcontroller.NewMockAddToManager(ctrl)
+
+					name1 = "name1"
+					name2 = "name2"
+
+					switches = NewSwitchOptions(
+						Switch(name1, f1.Do),
+						Switch(name2, f2.Do),
+					)
+				)
+
+				f1.EXPECT().Do(nil)
+
+				switches.Disabled = []string{name2}
+
+				Expect(switches.Complete()).To(Succeed())
+				Expect(switches.Completed().AddToManager(nil)).To(Succeed())
 			})
 		})
 	})

@@ -31,6 +31,7 @@ spec:
         {{- if .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         {{- end }}
+        - --disable-controllers={{ .Values.disableControllers | join "," }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

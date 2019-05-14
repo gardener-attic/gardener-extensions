@@ -22,11 +22,9 @@ import (
 	awsinstall "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/install"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	awscmd "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/cmd"
-	awscontroller "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller"
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
 	awsworker "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
-	awswebhook "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -44,15 +42,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(aws.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
-		}
-		webhookServerOpts = &webhookcmd.WebhookServerOptions{
-			Port:             7890,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
 		}
 		configFileOpts = &awscmd.ConfigOptions{}
 
@@ -75,15 +64,30 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
+		controllerSwitches = awscmd.ControllerSwitchOptions()
+		webhookSwitches    = awscmd.WebhookAddToManagerOptions()
+
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			webhookServerOpts,
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+			configFileOpts,
+			controllerSwitches,
+			webhookSwitches,
 		)
 	)
+
+	webhookSwitches.Server = webhookcmd.ServerOptions{
+		Port:             7890,
+		CertDir:          "/tmp/cert",
+		Mode:             webhookcmd.ServiceMode,
+		Name:             "webhooks",
+		Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+		ServiceSelectors: "{}",
+		Host:             "localhost",
+	}
 
 	cmd := &cobra.Command{
 		Use: fmt.Sprintf("%s-controller-manager", aws.Name),
@@ -91,10 +95,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
-			}
-
-			if err := configFileOpts.Complete(); err != nil {
-				controllercmd.LogErrAndExit(err, "Error completing config options")
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -116,11 +116,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraReconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			workerCtrlOpts.Completed().Apply(&awsworker.DefaultAddOptions.Controller)
 
-			if err := awscontroller.AddToManager(mgr); err != nil {
+			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
-			if err := awswebhook.AddToManager(mgr, webhookServerOpts.Completed()); err != nil {
+			if err := webhookSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 
@@ -131,7 +131,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
-	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

@@ -36,6 +36,8 @@ spec:
         - --webhook-config-name=packet-webhooks
         - --webhook-config-namespace={{ .Release.Namespace }}
         - --webhook-config-service-selectors={"app.kubernetes.io/name":"gardener-extension-provider-packet","app.kubernetes.io/instance":"{{ .Release.Name }}"}
+        - --disable-controllers={{ .Values.disableControllers | join "," }}
+        - --disable-webhooks={{ .Values.disableWebhooks | join "," }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

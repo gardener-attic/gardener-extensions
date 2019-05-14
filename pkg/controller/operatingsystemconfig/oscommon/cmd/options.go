@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package cmd
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-var (
-	managerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
+// SwitchOptions are the cmd.SwitchOptions for the provider controllers.
+func SwitchOptions(os string, generator generator.Generator) *cmd.SwitchOptions {
+	return cmd.NewSwitchOptions(
+		cmd.Switch(operatingsystemconfig.ControllerName, func(mgr manager.Manager) error {
+			return oscommon.AddToManager(mgr, os, generator)
+		}),
 	)
-
-	// AddToManager adds all provider controllers to the given manager.
-	AddToManager = managerBuilder.AddToManager
-)
+}

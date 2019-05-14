@@ -18,16 +18,15 @@ import (
 	"context"
 	extcontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon"
+	oscommoncmd "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 	"github.com/spf13/cobra"
 	"os"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // NewControllerCommand creates a new command for running an OS controller.
-func NewControllerCommand(ctx context.Context, osName string, generator generator.Generator, options *controller.Options) *cobra.Command {
+func NewControllerCommand(ctx context.Context, osName string, generator generator.Generator) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
@@ -39,7 +38,14 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 			MaxConcurrentReconciles: 5,
 		}
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, ctrlOpts)
+		controllerSwitches = oscommoncmd.SwitchOptions(osName, generator)
+
+		aggOption = controllercmd.NewOptionAggregator(
+			restOpts,
+			mgrOpts,
+			ctrlOpts,
+			controllerSwitches,
+		)
 	)
 
 	cmd := &cobra.Command{
@@ -59,9 +65,7 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			ctrlOpts.Completed().Apply(options)
-
-			if err := oscommon.AddToManager(mgr, osName, generator); err != nil {
+			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controller to manager")
 			}
 

@@ -43,3 +43,5 @@ certificateConfig:
       region: us-east-1
       accessKeyID: your-accessKeyID
       secretAccessKey: your-secretAccessKey
+
+disableControllers: []

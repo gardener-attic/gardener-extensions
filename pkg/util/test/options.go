@@ -19,24 +19,71 @@ import (
 	"strings"
 )
 
-// Flag is a command line flag that has a key and a value.
-type Flag struct {
-	Key   string
-	Value interface{}
+type Flag interface {
+	Slice() []string
 }
 
-// Slice returns a representation of this Flag as a slice of strings.
-func (f *Flag) Slice() []string {
-	key := fmt.Sprintf("--%s", f.Key)
-	if f.Value == nil {
-		return []string{key}
+func keyToFlag(key string) string {
+	return fmt.Sprintf("--%s", key)
+}
+
+type intFlag struct {
+	key   string
+	value int
+}
+
+func (f *intFlag) Slice() []string {
+	return []string{keyToFlag(f.key), fmt.Sprintf("%d", f.value)}
+}
+
+type stringFlag struct {
+	key   string
+	value string
+}
+
+func (f *stringFlag) Slice() []string {
+	return []string{keyToFlag(f.key), f.value}
+}
+
+type boolFlag struct {
+	key   string
+	value bool
+}
+
+func (f *boolFlag) Slice() []string {
+	var value string
+	if f.value {
+		value = "true"
+	} else {
+		value = "false"
 	}
-	return []string{key, fmt.Sprintf("%v", f.Value)}
+
+	return []string{keyToFlag(f.key), value}
 }
 
-// String returns a representation of this Flag as a string.
-func (f *Flag) String() string {
-	return strings.Join(f.Slice(), " ")
+type stringSliceFlag struct {
+	key   string
+	value []string
+}
+
+func (f *stringSliceFlag) Slice() []string {
+	return []string{keyToFlag(f.key), strings.Join(f.value, ",")}
+}
+
+func IntFlag(key string, value int) Flag {
+	return &intFlag{key, value}
+}
+
+func StringFlag(key, value string) Flag {
+	return &stringFlag{key, value}
+}
+
+func BoolFlag(key string, value bool) Flag {
+	return &boolFlag{key, value}
+}
+
+func StringSliceFlag(key string, value ...string) Flag {
+	return &stringSliceFlag{key, value}
 }
 
 // Command is a command that has a name, a list of flags, and a list of arguments.
@@ -60,16 +107,6 @@ func NewCommandBuilder(name string) *CommandBuilder {
 func (c *CommandBuilder) Flags(flags ...Flag) *CommandBuilder {
 	c.command.Flags = append(c.command.Flags, flags...)
 	return c
-}
-
-// BoolFlag appends a boolean flag with the given key to this CommandBuilder.
-func (c *CommandBuilder) BoolFlag(key string) *CommandBuilder {
-	return c.Flag(key, "")
-}
-
-// Flag appends a flag with the given key and value to this CommandBuilder.
-func (c *CommandBuilder) Flag(key string, value interface{}) *CommandBuilder {
-	return c.Flags(Flag{key, value})
 }
 
 // Args appends the given arguments to this CommandBuilder.

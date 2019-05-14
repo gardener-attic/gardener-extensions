@@ -32,6 +32,7 @@ spec:
         - certificate-service-controller-manager
         - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
         - --config=/etc/certificate-service/config/config.yaml
+        - --disable-controllers={{ .Values.disableControllers | join "," }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

@@ -17,11 +17,11 @@ package app
 import (
 	"context"
 	"fmt"
+	azurecmd "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/cmd"
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/install"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
-	azurecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller"
 	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -51,7 +51,14 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts)
+		controllerSwitches = azurecmd.ControllerSwitchOptions()
+
+		aggOption = controllercmd.NewOptionAggregator(
+			restOpts,
+			mgrOpts,
+			infraOpts,
+			controllerSwitches,
+		)
 	)
 
 	cmd := &cobra.Command{
@@ -78,7 +85,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraCtrlOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
-			if err := azurecontroller.AddToManager(mgr); err != nil {
+			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 

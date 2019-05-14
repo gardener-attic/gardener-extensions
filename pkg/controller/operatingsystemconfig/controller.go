@@ -31,6 +31,9 @@ const (
 	// FinalizerName is the name of the finalizer written by this controller.
 	FinalizerName = "extensions.gardener.cloud/operatingsystemconfigs"
 
+	// ControllerName is the name of the operating system configuration controller.
+	ControllerName = "operatingsystemconfig-controller"
+
 	name = "operatingsystemconfig-controller"
 )
 
@@ -62,7 +65,7 @@ func DefaultPredicates(typeName string) []predicate.Predicate {
 }
 
 func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate) error {
-	ctrl, err := controller.New("operatingsystemconfig-controller", mgr, options)
+	ctrl, err := controller.New(ControllerName, mgr, options)
 	if err != nil {
 		return err
 	}

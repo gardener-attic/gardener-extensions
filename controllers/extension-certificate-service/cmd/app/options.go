@@ -26,11 +26,12 @@ const ExtensionName = "extension-certificate-service"
 
 // Options holds configuration passed to the Certificate Service controller.
 type Options struct {
-	certOptions       *certificateservicecmd.CertificateServiceOptions
-	restOptions       *controllercmd.RESTOptions
-	managerOptions    *controllercmd.ManagerOptions
-	controllerOptions *controllercmd.ControllerOptions
-	optionAggregator  controllercmd.OptionAggregator
+	certOptions        *certificateservicecmd.CertificateServiceOptions
+	restOptions        *controllercmd.RESTOptions
+	managerOptions     *controllercmd.ManagerOptions
+	controllerOptions  *controllercmd.ControllerOptions
+	controllerSwitches *controllercmd.SwitchOptions
+	optionAggregator   controllercmd.OptionAggregator
 }
 
 // NewOptions creates a new Options instance.
@@ -48,6 +49,7 @@ func NewOptions() *Options {
 			// This is a default value.
 			MaxConcurrentReconciles: 5,
 		},
+		controllerSwitches: certificateservicecmd.ControllerSwitches(),
 	}
 
 	options.optionAggregator = controllercmd.NewOptionAggregator(
@@ -55,6 +57,7 @@ func NewOptions() *Options {
 		options.managerOptions,
 		options.controllerOptions,
 		options.certOptions,
+		options.controllerSwitches,
 	)
 
 	return options

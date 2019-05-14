@@ -17,7 +17,6 @@ package app
 import (
 	"context"
 
-	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller"
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/certservice"
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/lifecycle"
 
@@ -65,7 +64,7 @@ func (o *Options) run(ctx context.Context) {
 	ctrlConfig.Apply(&certservice.ServiceConfig)
 	o.controllerOptions.Completed().Apply(&certservice.ControllerOptions)
 
-	if err := controller.AddToManager(mgr); err != nil {
+	if err := o.controllerSwitches.Completed().AddToManager(mgr); err != nil {
 		controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 	}
 
