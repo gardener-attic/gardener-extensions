@@ -17,10 +17,10 @@ package app
 import (
 	"context"
 	"fmt"
-	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	"os"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
+	packetinstall "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
+	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	packetcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/controlplane"
 	packetinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -44,7 +44,23 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
+		webhookServerOpts = &webhookcmd.ServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+		configFileOpts = &packetcmd.ConfigOptions{}
 
+		// options for the controlplane controller
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the infrastructure controller
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
@@ -52,12 +68,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			IgnoreOperationAnnotation: true,
 		}
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
-		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
-
-		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
-			MaxConcurrentReconciles: 5,
-		}
-		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
 		controllerSwitches = packetcmd.ControllerSwitchOptions()
 		webhookSwitches    = packetcmd.WebhookAddToManagerOptions()
@@ -65,8 +75,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			infraOpts,
-			controlPlaneOpts,
+			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
+			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllerSwitches,
 			webhookSwitches,
 		)
@@ -90,6 +100,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
 
+			if err := configFileOpts.Complete(); err != nil {
+				controllercmd.LogErrAndExit(err, "Error completing config options")
+			}
+
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
@@ -99,13 +113,14 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := packetinstall.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			configFileOpts.Completed().ApplyMachineImages(&packetworker.DefaultAddOptions.MachineImages)
+			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
-			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

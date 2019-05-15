@@ -12,32 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package install
+package helper
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
+	"fmt"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
 )
 
-var (
-	schemeBuilder = runtime.NewSchemeBuilder(
-		v1alpha1.AddToScheme,
-		packet.AddToScheme,
-		setVersionPriority,
-	)
+// FindImage takes a list of machine images, and the desired image name and version. It tries
+// to find the image with the given name and version. If it cannot be found then an error
+// is returned.
+func FindImage(machineImages []config.MachineImage, imageName, version string) (string, error) {
+	for _, machineImage := range machineImages {
+		if machineImage.Name == imageName && machineImage.Version == version {
+			return machineImage.ID, nil
+		}
+	}
 
-	// AddToScheme adds all APIs to the scheme.
-	AddToScheme = schemeBuilder.AddToScheme
-)
-
-func setVersionPriority(scheme *runtime.Scheme) error {
-	return scheme.SetVersionPriority(v1alpha1.SchemeGroupVersion)
-}
-
-// Install installs all APIs in the scheme.
-func Install(scheme *runtime.Scheme) {
-	utilruntime.Must(AddToScheme(scheme))
+	return "", fmt.Errorf("could not find an image for name %q in version %q", imageName, version)
 }

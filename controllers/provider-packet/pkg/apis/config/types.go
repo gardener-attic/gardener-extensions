@@ -12,32 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package install
+package config
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var (
-	schemeBuilder = runtime.NewSchemeBuilder(
-		v1alpha1.AddToScheme,
-		packet.AddToScheme,
-		setVersionPriority,
-	)
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-	// AddToScheme adds all APIs to the scheme.
-	AddToScheme = schemeBuilder.AddToScheme
-)
+// ControllerConfiguration defines the configuration for the Packet provider.
+type ControllerConfiguration struct {
+	metav1.TypeMeta
 
-func setVersionPriority(scheme *runtime.Scheme) error {
-	return scheme.SetVersionPriority(v1alpha1.SchemeGroupVersion)
+	// MachineImages is the list of machine images that are understood by the controller. It maps
+	// logical names and versions to Packet-specific identifiers.
+	MachineImages []MachineImage
 }
 
-// Install installs all APIs in the scheme.
-func Install(scheme *runtime.Scheme) {
-	utilruntime.Must(AddToScheme(scheme))
+// MachineImage is a mapping from logical names and versions to Packet-specific identifiers.
+type MachineImage struct {
+	// Name is the logical name of the machine image.
+	Name string
+	// Version is the logical version of the machine image.
+	Version string
+	// ID is the id of the image.
+	ID string
 }

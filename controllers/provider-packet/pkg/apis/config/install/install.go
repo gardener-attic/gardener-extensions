@@ -15,8 +15,8 @@
 package install
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -25,7 +25,7 @@ import (
 var (
 	schemeBuilder = runtime.NewSchemeBuilder(
 		v1alpha1.AddToScheme,
-		packet.AddToScheme,
+		config.AddToScheme,
 		setVersionPriority,
 	)
 
