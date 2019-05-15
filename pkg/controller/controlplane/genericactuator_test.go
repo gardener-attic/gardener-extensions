@@ -20,6 +20,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/controlplane"
+	mockutil "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -123,11 +124,11 @@ var _ = Describe("Actuator", func() {
 			client.EXPECT().Get(context.TODO(), cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
 
 			// Create mock secrets and charts
-			secrets := mockcontrolplane.NewMockSecrets(ctrl)
+			secrets := mockutil.NewMockSecrets(ctrl)
 			secrets.EXPECT().Deploy(gomock.Any(), gomock.Any(), namespace).Return(deployedSecrets, nil)
-			configChart := mockcontrolplane.NewMockChart(ctrl)
+			configChart := mockutil.NewMockChart(ctrl)
 			configChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, nil, nil, configChartValues).Return(nil)
-			ccmChart := mockcontrolplane.NewMockChart(ctrl)
+			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksums, controlPlaneChartValues).Return(nil)
 
 			// Create mock values provider
@@ -151,9 +152,9 @@ var _ = Describe("Actuator", func() {
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create mock secrets and charts
-			secrets := mockcontrolplane.NewMockSecrets(ctrl)
+			secrets := mockutil.NewMockSecrets(ctrl)
 			secrets.EXPECT().Deploy(gomock.Any(), gomock.Any(), namespace).Return(deployedSecrets, nil)
-			ccmChart := mockcontrolplane.NewMockChart(ctrl)
+			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksumsWithoutConfig, controlPlaneChartValues).Return(nil)
 
 			// Create mock values provider
@@ -177,11 +178,11 @@ var _ = Describe("Actuator", func() {
 			client := mockclient.NewMockClient(ctrl)
 
 			// Create mock secrets and charts
-			secrets := mockcontrolplane.NewMockSecrets(ctrl)
+			secrets := mockutil.NewMockSecrets(ctrl)
 			secrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
-			configChart := mockcontrolplane.NewMockChart(ctrl)
+			configChart := mockutil.NewMockChart(ctrl)
 			configChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
-			ccmChart := mockcontrolplane.NewMockChart(ctrl)
+			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
 
 			// Create actuator
@@ -199,9 +200,9 @@ var _ = Describe("Actuator", func() {
 			client := mockclient.NewMockClient(ctrl)
 
 			// Create mock secrets and charts
-			secrets := mockcontrolplane.NewMockSecrets(ctrl)
+			secrets := mockutil.NewMockSecrets(ctrl)
 			secrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
-			ccmChart := mockcontrolplane.NewMockChart(ctrl)
+			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
 
 			// Create actuator

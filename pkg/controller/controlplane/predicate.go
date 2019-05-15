@@ -15,39 +15,9 @@
 package controlplane
 
 import (
-	"strings"
-
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
-
-// TypePredicate filters the incoming ControlPlane resources for ones that have the same type
-// as the given type.
-func TypePredicate(typeName string) predicate.Predicate {
-	typeMatches := func(obj runtime.Object) bool {
-		if cp, ok := obj.(*extensionsv1alpha1.ControlPlane); ok {
-			return strings.ToLower(cp.Spec.Type) == typeName
-		}
-		return false
-	}
-
-	return predicate.Funcs{
-		CreateFunc: func(event event.CreateEvent) bool {
-			return typeMatches(event.Object)
-		},
-		UpdateFunc: func(event event.UpdateEvent) bool {
-			return typeMatches(event.ObjectNew)
-		},
-		DeleteFunc: func(event event.DeleteEvent) bool {
-			return typeMatches(event.Object)
-		},
-		GenericFunc: func(event event.GenericEvent) bool {
-			return typeMatches(event.Object)
-		},
-	}
-}
 
 // GenerationChangedPredicate is a predicate for generation changes.
 func GenerationChangedPredicate() predicate.Predicate {

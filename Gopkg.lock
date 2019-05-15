@@ -214,7 +214,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:9fe73c051c43f3f735938e569f6f698f5e0014b2afef3b7f57f15c8b7c6cefd4"
+  digest = "1:3fc0d5a819fda2c5af6122fc15487003f09653d0fc1028e603284ef4c73e0290"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -222,6 +222,7 @@
     "pkg/apis/core/v1alpha1/helper",
     "pkg/apis/extensions",
     "pkg/apis/extensions/v1alpha1",
+    "pkg/apis/extensions/v1alpha1/helper",
     "pkg/apis/garden",
     "pkg/apis/garden/v1beta1",
     "pkg/chartrenderer",
@@ -245,17 +246,19 @@
     "pkg/utils/flow",
     "pkg/utils/imagevector",
     "pkg/utils/kubernetes",
+    "pkg/utils/kubernetes/health",
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
   revision = "1ebbe303f020e91d42e8689144bac3904cacb08b"
 
 [[projects]]
-  digest = "1:b678acaf8766b6df36723a4adefc3302191a34c22b7a38b0abaf5f6d3dd24090"
+  digest = "1:0e154f96a4827f25dfca0edc8b7ee1097d55518730c816bff033ff80244b323c"
   name = "github.com/gardener/machine-controller-manager"
   packages = [
     "pkg/apis/machine",
     "pkg/apis/machine/v1alpha1",
+    "pkg/client/clientset/versioned/scheme",
   ]
   pruneopts = "NUT"
   revision = "36a42c48af0a883b9fe86b04143d14881b485116"
@@ -1255,7 +1258,7 @@
   version = "kubernetes-1.13.4"
 
 [[projects]]
-  digest = "1:c26b48906ed8f3655c18dd40b42660ffdb3cf54edcb13985d0a02dcc2f236fed"
+  digest = "1:ff2d60e8a606f2a6679122777587a1051e076519c390ba910f07dafe5689176f"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/equality",
@@ -1263,6 +1266,7 @@
     "pkg/api/meta",
     "pkg/api/resource",
     "pkg/api/validation",
+    "pkg/apis/config",
     "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
@@ -1737,6 +1741,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Masterminds/semver",
     "github.com/appscode/jsonpatch",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
@@ -1750,6 +1755,7 @@
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper",
     "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1",
+    "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper",
     "github.com/gardener/gardener/pkg/apis/garden/v1beta1",
     "github.com/gardener/gardener/pkg/chartrenderer",
     "github.com/gardener/gardener/pkg/client/kubernetes",
@@ -1761,7 +1767,10 @@
     "github.com/gardener/gardener/pkg/utils/flow",
     "github.com/gardener/gardener/pkg/utils/imagevector",
     "github.com/gardener/gardener/pkg/utils/kubernetes",
+    "github.com/gardener/gardener/pkg/utils/kubernetes/health",
     "github.com/gardener/gardener/pkg/utils/secrets",
+    "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1",
+    "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/scheme",
     "github.com/go-logr/logr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
@@ -1785,21 +1794,27 @@
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/rbac/v1",
+    "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
     "k8s.io/apimachinery/pkg/api/meta",
+    "k8s.io/apimachinery/pkg/apis/config",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/conversion",
+    "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/runtime/serializer/json",
     "k8s.io/apimachinery/pkg/types",
+    "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/apimachinery/pkg/util/runtime",
     "k8s.io/apimachinery/pkg/util/sets",
     "k8s.io/apimachinery/pkg/util/validation/field",
     "k8s.io/apimachinery/pkg/util/wait",
+    "k8s.io/apimachinery/pkg/version",
     "k8s.io/apiserver/pkg/authentication/user",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",

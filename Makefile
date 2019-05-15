@@ -105,46 +105,47 @@ start-provider-aws:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
+		--config-file=./controllers/provider-aws/example/00-componentconfig.yaml \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=aws-webhooks \
-		--webhook-config-host=$(HOSTNAME) \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-azure
 start-provider-azure:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
-		--leader-election=$(LEADER_ELECTION) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--leader-election=$(LEADER_ELECTION) \
 
 .PHONY: start-provider-gcp
 start-provider-gcp:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-gcp/cmd/gardener-extension-provider-gcp \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=gcp-webhooks \
-		--webhook-config-host=$(HOSTNAME) \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-openstack
 start-provider-openstack:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-openstack/cmd/gardener-extension-provider-openstack \
-		--leader-election=$(LEADER_ELECTION) \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--leader-election=$(LEADER_ELECTION) \
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
-		--leader-election=$(LEADER_ELECTION) \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-provider-packet
 start-provider-packet:

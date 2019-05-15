@@ -17,6 +17,7 @@ package controller
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 )
 
@@ -24,6 +25,7 @@ var (
 	addToManagerBuilder = controller.NewAddToManagerBuilder(
 		infrastructure.AddToManager,
 		controlplane.AddToManager,
+		worker.AddToManager,
 	)
 
 	// AddToManager adds all provider controllers to the given manager.

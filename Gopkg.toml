@@ -12,6 +12,10 @@ required = [
   revision = "1ebbe303f020e91d42e8689144bac3904cacb08b"
 
 [[override]]
+  name = "github.com/gardener/machine-controller-manager"
+  version = "0.14.0"
+
+[[override]]
   name = "sigs.k8s.io/controller-runtime"
   version = "0.1.10"
 

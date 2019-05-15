@@ -33,16 +33,19 @@ func GetPodNetwork(shoot *gardenv1beta1.Shoot) gardencorev1alpha1.CIDR {
 		return *cloud.OpenStack.Networks.K8SNetworks.Pods
 	case cloud.Alicloud != nil:
 		return *cloud.Alicloud.Networks.K8SNetworks.Pods
-	case cloud.Local != nil:
-		return *cloud.Local.Networks.K8SNetworks.Pods
 	default:
 		return ""
 	}
 }
 
+// IsHibernated returns true if the shoot is hibernated, or false otherwise.
+func IsHibernated(shoot *gardenv1beta1.Shoot) bool {
+	return shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled
+}
+
 // GetReplicas returns the woken up replicas of the given Shoot.
 func GetReplicas(shoot *gardenv1beta1.Shoot, wokenUp int) int {
-	if shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled {
+	if IsHibernated(shoot) {
 		return 0
 	}
 	return wokenUp

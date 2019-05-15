@@ -22,6 +22,7 @@ import (
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,44 +75,8 @@ func SecretToInfrastructureMapper(client client.Client, predicates []predicate.P
 	return &secretToInfrastructureMapper{client, predicates}
 }
 
-type clusterToInfrastructureMapper struct {
-	client     client.Client
-	predicates []predicate.Predicate
-}
-
-func (m *clusterToInfrastructureMapper) Map(obj handler.MapObject) []reconcile.Request {
-	if obj.Object == nil {
-		return nil
-	}
-
-	cluster, ok := obj.Object.(*extensions1alpha1.Cluster)
-	if !ok {
-		return nil
-	}
-
-	infrastructureList := &extensions1alpha1.InfrastructureList{}
-	if err := m.client.List(context.TODO(), client.InNamespace(cluster.Namespace), infrastructureList); err != nil {
-		return nil
-	}
-
-	var requests []reconcile.Request
-	for _, infrastructure := range infrastructureList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&infrastructure, m.predicates...) {
-			continue
-		}
-
-		requests = append(requests, reconcile.Request{
-			NamespacedName: types.NamespacedName{
-				Namespace: infrastructure.Namespace,
-				Name:      infrastructure.Name,
-			},
-		})
-	}
-	return requests
-}
-
 // ClusterToInfrastructureMapper returns a mapper that returns requests for Infrastructures whose
 // referenced clusters have been modified.
 func ClusterToInfrastructureMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return &clusterToInfrastructureMapper{client, predicates}
+	return extensionscontroller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.InfrastructureList{} }, predicates)
 }

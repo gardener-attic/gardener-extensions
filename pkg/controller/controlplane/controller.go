@@ -73,7 +73,7 @@ func add(mgr manager.Manager, typeName string, options controller.Options, predi
 	if predicates == nil {
 		predicates = DefaultPredicates(mgr)
 	}
-	predicates = append(predicates, TypePredicate(typeName))
+	predicates = append(predicates, extensionscontroller.TypePredicate(typeName))
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.ControlPlane{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err

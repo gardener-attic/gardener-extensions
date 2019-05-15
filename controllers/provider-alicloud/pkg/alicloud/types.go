@@ -17,13 +17,16 @@ package alicloud
 import "path/filepath"
 
 const (
+	// Name is the name of the Alicloud provider.
+	Name = "provider-alicloud"
+
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
 )
 
 var (
 	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-alicloud", "charts")
+	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )

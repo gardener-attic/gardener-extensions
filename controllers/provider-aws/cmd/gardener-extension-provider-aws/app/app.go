@@ -19,10 +19,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/install"
+	awsinstall "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/install"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	awscmd "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/cmd"
 	awscontroller "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller"
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
+	awsworker "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
 	awswebhook "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -33,33 +36,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the AWS provider controller.
-const Name = "provider-aws"
-
 // NewControllerManagerCommand creates a new command for running a AWS provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
-			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(aws.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
-
-		infraCtrlOpts = &controllercmd.ControllerOptions{
-			MaxConcurrentReconciles: 5,
-		}
-		infraReconcileOpts = &infrastructure.ReconcilerOptions{
-			IgnoreOperationAnnotation: true,
-		}
-		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
-		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
-
-		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
-			MaxConcurrentReconciles: 5,
-		}
-		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
-
 		webhookServerOpts = &webhookcmd.WebhookServerOptions{
 			Port:             7890,
 			CertDir:          "/tmp/cert",
@@ -69,16 +54,47 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			ServiceSelectors: "{}",
 			Host:             "localhost",
 		}
+		configFileOpts = &awscmd.ConfigOptions{}
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts, webhookServerOpts)
+		// options for the controlplane controller
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the infrastructure controller
+		infraCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+		infraReconcileOpts = &infrastructure.ReconcilerOptions{
+			IgnoreOperationAnnotation: true,
+		}
+		infraCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
+
+		// options for the worker controller
+		workerCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		aggOption = controllercmd.NewOptionAggregator(
+			restOpts,
+			mgrOpts,
+			webhookServerOpts,
+			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
+			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+		)
 	)
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", aws.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
+			}
+
+			if err := configFileOpts.Complete(); err != nil {
+				controllercmd.LogErrAndExit(err, "Error completing config options")
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -90,13 +106,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := awsinstall.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			configFileOpts.Completed().ApplyMachineImages(&awsworker.DefaultAddOptions.MachineImagesToAMIMapping)
+			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
-			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
+			workerCtrlOpts.Completed().Apply(&awsworker.DefaultAddOptions.Controller)
 
 			if err := awscontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
@@ -113,6 +131,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
+	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

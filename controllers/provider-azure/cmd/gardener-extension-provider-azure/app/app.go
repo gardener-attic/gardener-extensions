@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/install"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	azurecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller"
 	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -31,16 +32,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the Azure provider controller.
-const Name = "provider-azure"
-
 // NewControllerManagerCommand creates a new command for running a Azure provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
-			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(azure.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 
@@ -57,7 +55,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	)
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", azure.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
