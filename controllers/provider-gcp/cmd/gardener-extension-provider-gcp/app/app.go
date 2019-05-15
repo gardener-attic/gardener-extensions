@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
+	gcpinstall "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
 	gcpcmd "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/cmd"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
@@ -42,6 +42,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(gcp.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
+		configFileOpts = &gcpcmd.ConfigOptions{}
 
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
@@ -50,12 +51,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			IgnoreOperationAnnotation: true,
 		}
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
-		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
 		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
 		controllerSwitches = gcpcmd.ControllerSwitchOptions()
 		webhookSwitches    = gcpcmd.WebhookAddToManagerOptions()
@@ -63,8 +62,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			infraOpts,
-			controlPlaneOpts,
+			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
+			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllerSwitches,
 			webhookSwitches,
 		)
@@ -87,6 +86,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
 
+			if err := configFileOpts.Complete(); err != nil {
+				controllercmd.LogErrAndExit(err, "Error completing config options")
+			}
+
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
@@ -96,13 +99,14 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := gcpinstall.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			configFileOpts.Completed().ApplyMachineImages(&gcpworker.DefaultAddOptions.MachineImages)
+			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
-			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
@@ -119,6 +123,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
+	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }
