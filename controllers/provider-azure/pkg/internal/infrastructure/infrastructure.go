@@ -25,5 +25,5 @@ import (
 
 // GetClientAuthFromInfrastructure retrieves the ServiceAccount from the Secret referenced in the given Infrastructure.
 func GetClientAuthFromInfrastructure(ctx context.Context, c client.Client, config *extensionsv1alpha1.Infrastructure) (*internal.ClientAuth, error) {
-	return internal.GetClientAuthData(ctx, c, config.Spec.SecretRef.Namespace, config.Spec.SecretRef.Name)
+	return internal.GetClientAuthData(ctx, c, config.Spec.SecretRef)
 }

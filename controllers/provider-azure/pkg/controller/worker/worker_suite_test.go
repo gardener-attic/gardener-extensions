@@ -12,7 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-azure . ../../example/controller-registration.yaml Infrastructure:azure Worker:azure
+package worker_test
 
-// Package chart enables go:generate support for generating the correct controller registration.
-package chart
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+func TestWorker(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "AWS Worker Suite")
+}

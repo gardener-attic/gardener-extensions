@@ -16,6 +16,8 @@ rules:
   - infrastructures/status
   - controlplanes
   - controlplanes/status
+  - workers
+  - workers/status
   verbs:
   - get
   - list

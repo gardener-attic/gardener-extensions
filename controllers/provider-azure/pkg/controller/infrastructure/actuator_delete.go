@@ -25,7 +25,7 @@ import (
 
 // Delete implements infrastructure.Actuator.
 func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *controller.Cluster) error {
-	clientAuth, err := internal.GetClientAuthData(ctx, a.client, infra.Spec.SecretRef.Namespace, infra.Spec.SecretRef.Name)
+	clientAuth, err := internal.GetClientAuthData(ctx, a.client, infra.Spec.SecretRef)
 	if err != nil {
 		return err
 	}

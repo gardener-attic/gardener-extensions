@@ -34,6 +34,7 @@ var _ = Describe("Service Account", func() {
 		clientAuth *ClientAuth
 		secret     *corev1.Secret
 	)
+
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 		clientSecret, clientID, tenantID, subscriptionID := "secret", "client_id", "tenant_id", "subscription_id"
@@ -52,6 +53,7 @@ var _ = Describe("Service Account", func() {
 			},
 		}
 	})
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
@@ -70,7 +72,11 @@ var _ = Describe("Service Account", func() {
 				c         = mockclient.NewMockClient(ctrl)
 				namespace = "foo"
 				name      = "bar"
-				ctx       = context.TODO()
+				secretRef = corev1.SecretReference{
+					Namespace: namespace,
+					Name:      name,
+				}
+				ctx = context.TODO()
 			)
 			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).
 				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
@@ -78,7 +84,7 @@ var _ = Describe("Service Account", func() {
 					return nil
 				})
 
-			actual, err := GetClientAuthData(ctx, c, namespace, name)
+			actual, err := GetClientAuthData(ctx, c, secretRef)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(clientAuth))

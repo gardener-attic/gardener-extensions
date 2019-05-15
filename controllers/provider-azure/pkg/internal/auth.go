@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -46,10 +46,10 @@ type ClientAuth struct {
 	ClientSecret string
 }
 
-// GetClientAuthData retrieves the specified service account.
-func GetClientAuthData(ctx context.Context, c client.Client, namespace, name string) (*ClientAuth, error) {
-	secret := &corev1.Secret{}
-	if err := c.Get(ctx, kutil.Key(namespace, name), secret); err != nil {
+// GetClientAuthData retrieves the client auth data specified by the secret reference.
+func GetClientAuthData(ctx context.Context, c client.Client, secretRef corev1.SecretReference) (*ClientAuth, error) {
+	secret, err := util.GetSecretByRef(ctx, c, secretRef)
+	if err != nil {
 		return nil, err
 	}
 

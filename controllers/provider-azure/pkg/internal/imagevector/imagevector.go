@@ -18,9 +18,9 @@ import (
 	"strings"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
+
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/gobuffalo/packr/v2"
-
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
@@ -39,10 +39,14 @@ func init() {
 	runtime.Must(err)
 }
 
+// ImageVector is the image vector that contains all the needed images.
+func ImageVector() imagevector.ImageVector {
+	return imageVector
+}
+
 // TerraformerImage returns the Terraformer image.
 func TerraformerImage() string {
 	image, err := imageVector.FindImage(azure.TerraformerImageName, "", "")
 	runtime.Must(err)
-
 	return image.String()
 }
