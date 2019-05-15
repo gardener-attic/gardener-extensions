@@ -46,10 +46,8 @@ type AddArgs struct {
 	// Predicates are the predicates to use.
 	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
-	// WantsClusterWatch specifies whether the infrastructure actuator requests to have
-	// a watch on `Cluster` objects (which will result into mapping and automatic requeuing
-	// of `Infrastructure` objects).
-	WantsClusterWatch bool
+	// WatchBuilder defines additional watches on controllers that should be set up.
+	WatchBuilder extensionscontroller.WatchBuilder
 }
 
 // DefaultPredicates returns the default predicates for an infrastructure reconciler.
@@ -77,26 +75,27 @@ func DefaultPredicates(client client.Client, typeName string, ignoreOperationAnn
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(mgr, args.Actuator)
-	return add(mgr, args.ControllerOptions, args.Predicates, args.WantsClusterWatch)
+	return add(mgr, args)
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate, clusterWatch bool) error {
-	ctrl, err := controller.New(ControllerName, mgr, options)
+func add(mgr manager.Manager, args AddArgs) error {
+	ctrl, err := controller.New(ControllerName, mgr, args.ControllerOptions)
 	if err != nil {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Infrastructure{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Infrastructure{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
 		return err
 	}
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToInfrastructureMapper(mgr.GetClient(), predicates)}); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToInfrastructureMapper(mgr.GetClient(), args.Predicates)}); err != nil {
 		return err
 	}
-	if clusterWatch {
-		if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: ClusterToInfrastructureMapper(mgr.GetClient(), predicates)}); err != nil {
-			return err
-		}
+
+	// Add additional watches to the controller besides the standard one.
+	err = args.WatchBuilder.AddToController(ctrl)
+	if err != nil {
+		return err
 	}
 
 	return nil
