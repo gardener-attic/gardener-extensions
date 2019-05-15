@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudprovider
+  namespace: shoot--foo--bar
+type: Opaque
+data:
+# domainName: base64(domain-name)
+# tenantName: base64(tenant-name)
+# username: base64(username)
+# password: base64(password)
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: Cluster
+metadata:
+  name: shoot--foo--bar
+spec:
+  cloudProfile:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: CloudProfile
+    spec:
+      openstack:
+        keystoneURL: https://localhost
+  seed:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: Seed
+  shoot:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: Shoot
+    spec:
+      cloud:
+        openstack:
+          networks:
+            pods: 10.243.128.0/17
+    status:
+      lastOperation:
+        state: Succeeded
+---
+# This resource does result in the deployment of the machine-controller-manager, the machine classes,
+# and the desired MachineDeployments. However, it does not create actual virtual machines because the
+# provided infrastructure status data (subnet id, etc.) is not valid/does not exist.
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: Worker
+metadata:
+  name: worker
+  namespace: shoot--foo--bar
+spec:
+  type: openstack
+  region: eu-de-1
+  secretRef:
+    name: cloudprovider
+    namespace: shoot--foo--bar
+  infrastructureProviderStatus:
+    apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
+    kind: InfrastructureStatus
+    node:
+      keyName: ssh-key-name
+    networks:
+      id: network-id
+      subnets:
+      - purpose: nodes
+        id: subnet-id
+    securityGroups:
+    - purpose: nodes
+      name: security-group-name
+  pools:
+  - name: cpu-worker
+    machineType: medium_2_4
+    machineImage:
+      name: coreos
+      version: 1967.5.0
+    minimum: 1
+    maximum: 1
+    maxSurge: 1
+    maxUnavailable: 0
+    userData: IyEvYmluL2Jhc2gKCmVjaG8gImhlbGxvIHdvcmxkIgo=
+    zones:
+    - eu-de-1a

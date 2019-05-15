@@ -17,9 +17,10 @@ package internal
 import (
 	"context"
 	"fmt"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -33,29 +34,32 @@ type Credentials struct {
 }
 
 // GetCredentials computes for a given context and infrastructure the corresponding credentials object.
-func GetCredentials(ctx context.Context, c client.Client, infra *extensionsv1alpha1.Infrastructure) (*Credentials, error) {
-	providerSecret := &corev1.Secret{}
-	if err := c.Get(ctx, kutil.Key(infra.Spec.SecretRef.Namespace, infra.Spec.SecretRef.Name), providerSecret); err != nil {
+func GetCredentials(ctx context.Context, c client.Client, secretRef corev1.SecretReference) (*Credentials, error) {
+	secret, err := util.GetSecretByRef(ctx, c, secretRef)
+	if err != nil {
 		return nil, err
 	}
-	return ExtractCredentials(providerSecret)
+	return ExtractCredentials(secret)
 }
 
 // ExtractCredentials generates a credentials object for a given provider secret.
-func ExtractCredentials(providerSecret *corev1.Secret) (*Credentials, error) {
-	domainName, err := getRequired(providerSecret.Data, openstack.DomainName)
+func ExtractCredentials(secret *corev1.Secret) (*Credentials, error) {
+	if secret.Data == nil {
+		return nil, fmt.Errorf("secret does not contain any data")
+	}
+	domainName, err := getRequired(secret.Data, openstack.DomainName)
 	if err != nil {
 		return nil, err
 	}
-	tenantName, err := getRequired(providerSecret.Data, openstack.TenantName)
+	tenantName, err := getRequired(secret.Data, openstack.TenantName)
 	if err != nil {
 		return nil, err
 	}
-	userName, err := getRequired(providerSecret.Data, openstack.UserName)
+	userName, err := getRequired(secret.Data, openstack.UserName)
 	if err != nil {
 		return nil, err
 	}
-	password, err := getRequired(providerSecret.Data, openstack.Password)
+	password, err := getRequired(secret.Data, openstack.Password)
 	if err != nil {
 		return nil, err
 	}

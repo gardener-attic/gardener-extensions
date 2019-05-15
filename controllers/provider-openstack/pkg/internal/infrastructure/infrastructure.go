@@ -16,12 +16,14 @@ package infrastructure
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GetCredentialsFromInfrastructure retrieves the ServiceAccount from the Secret referenced in the given Infrastructure.
 func GetCredentialsFromInfrastructure(ctx context.Context, c client.Client, config *extensionsv1alpha1.Infrastructure) (*internal.Credentials, error) {
-	return internal.GetCredentials(ctx, c, config)
+	return internal.GetCredentials(ctx, c, config.Spec.SecretRef)
 }
