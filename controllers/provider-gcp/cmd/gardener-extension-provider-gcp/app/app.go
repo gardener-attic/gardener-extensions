@@ -23,6 +23,7 @@ import (
 	gcpcmd "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/cmd"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
+	gcpworker "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -56,6 +57,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
+		workerCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
 		controllerSwitches = gcpcmd.ControllerSwitchOptions()
 		webhookSwitches    = gcpcmd.WebhookAddToManagerOptions()
 
@@ -64,6 +69,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			mgrOpts,
 			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
+			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
 			webhookSwitches,
 		)
@@ -107,6 +113,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			workerCtrlOpts.Completed().Apply(&gcpworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

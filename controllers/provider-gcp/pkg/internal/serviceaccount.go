@@ -18,8 +18,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -32,9 +34,9 @@ type ServiceAccount struct {
 	ProjectID string
 }
 
-// GetServiceAccount retrieves the ServiceAccount from the secret with the given namespace and name.
-func GetServiceAccount(ctx context.Context, c client.Client, namespace, name string) (*ServiceAccount, error) {
-	data, err := GetServiceAccountData(ctx, c, namespace, name)
+// GetServiceAccount retrieves the ServiceAccount from the secret with the given secret reference.
+func GetServiceAccount(ctx context.Context, c client.Client, secretRef corev1.SecretReference) (*ServiceAccount, error) {
+	data, err := GetServiceAccountData(ctx, c, secretRef)
 	if err != nil {
 		return nil, err
 	}
@@ -50,10 +52,10 @@ func GetServiceAccount(ctx context.Context, c client.Client, namespace, name str
 	}, nil
 }
 
-// GetServiceAccountData retrieves the specified service account.
-func GetServiceAccountData(ctx context.Context, c client.Client, namespace, name string) ([]byte, error) {
-	secret := &corev1.Secret{}
-	if err := c.Get(ctx, kutil.Key(namespace, name), secret); err != nil {
+// GetServiceAccountData retrieves the service account specified by the secret reference.
+func GetServiceAccountData(ctx context.Context, c client.Client, secretRef corev1.SecretReference) ([]byte, error) {
+	secret, err := util.GetSecretByRef(ctx, c, secretRef)
+	if err != nil {
 		return nil, err
 	}
 
@@ -64,7 +66,7 @@ func GetServiceAccountData(ctx context.Context, c client.Client, namespace, name
 func ReadServiceAccountSecret(secret *corev1.Secret) ([]byte, error) {
 	data, ok := secret.Data[gcp.ServiceAccountJSONField]
 	if !ok {
-		return nil, fmt.Errorf("secret %s/%s doesn't have a service accunt json", secret.Namespace, secret.Name)
+		return nil, fmt.Errorf("secret %s/%s doesn't have a service account json", secret.Namespace, secret.Name)
 	}
 
 	return data, nil

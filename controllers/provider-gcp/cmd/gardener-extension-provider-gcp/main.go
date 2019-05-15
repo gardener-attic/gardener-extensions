@@ -17,8 +17,8 @@ package main
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/cmd/gardener-extension-provider-gcp/app"
 	"github.com/gardener/gardener-extensions/pkg/controller"
-
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 

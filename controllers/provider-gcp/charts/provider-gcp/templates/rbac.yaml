@@ -14,6 +14,10 @@ rules:
   - clusters
   - infrastructures
   - infrastructures/status
+  - controlplanes
+  - controlplanes/status
+  - workers
+  - workers/status
   verbs:
   - get
   - list
@@ -35,16 +39,19 @@ rules:
   - ""
   - batch
   - rbac.authorization.k8s.io
+  - admissionregistration.k8s.io
   resources:
   - events
   - secrets
   - configmaps
+  - services
   - serviceaccounts
   - roles
   - rolebindings
   - jobs
   - pods
   - pods/log
+  - mutatingwebhookconfigurations
   verbs:
   - "*"
 ---

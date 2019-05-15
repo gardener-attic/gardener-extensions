@@ -164,7 +164,7 @@ func (vp *valuesProvider) GetConfigChartValues(
 	}
 
 	// Get service account
-	serviceAccount, err := internal.GetServiceAccount(ctx, vp.client, cp.Spec.SecretRef.Namespace, cp.Spec.SecretRef.Name)
+	serviceAccount, err := internal.GetServiceAccount(ctx, vp.client, cp.Spec.SecretRef)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not get service account from secret '%s/%s'", cp.Spec.SecretRef.Namespace, cp.Spec.SecretRef.Name)
 	}

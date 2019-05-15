@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-gcp . ../../example/controller-registration.yaml Infrastructure:gcp ControlPlane:gcp Worker:gcp
+package gcp
 
-// Package chart enables go:generate support for generating the correct controller registration.
-package chart
+// Type is the type of resources managed by the GCP actuator.
+const Type = "gcp"
