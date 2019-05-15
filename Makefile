@@ -136,7 +136,8 @@ start-provider-openstack:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-openstack/cmd/gardener-extension-provider-openstack \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--config-file=./controllers/provider-openstack/example/00-componentconfig.yaml \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 
 .PHONY: start-provider-alicloud

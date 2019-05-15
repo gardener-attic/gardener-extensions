@@ -12,32 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package install
+package v1alpha1
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
-
 	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
-var (
-	schemeBuilder = runtime.NewSchemeBuilder(
-		v1alpha1.AddToScheme,
-		openstack.AddToScheme,
-		setVersionPriority,
-	)
-
-	// AddToScheme adds all APIs to the scheme.
-	AddToScheme = schemeBuilder.AddToScheme
-)
-
-func setVersionPriority(scheme *runtime.Scheme) error {
-	return scheme.SetVersionPriority(v1alpha1.SchemeGroupVersion)
-}
-
-// Install installs all APIs in the scheme.
-func Install(scheme *runtime.Scheme) {
-	utilruntime.Must(AddToScheme(scheme))
+func addDefaultingFuncs(scheme *runtime.Scheme) error {
+	return RegisterDefaults(scheme)
 }
