@@ -15,8 +15,8 @@
 package install
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -25,7 +25,7 @@ import (
 var (
 	schemeBuilder = runtime.NewSchemeBuilder(
 		v1alpha1.AddToScheme,
-		azure.AddToScheme,
+		config.AddToScheme,
 		setVersionPriority,
 	)
 

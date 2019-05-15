@@ -12,32 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package install
+package helper_test
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+	"testing"
 
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-var (
-	schemeBuilder = runtime.NewSchemeBuilder(
-		v1alpha1.AddToScheme,
-		azure.AddToScheme,
-		setVersionPriority,
-	)
-
-	// AddToScheme adds all APIs to the scheme.
-	AddToScheme = schemeBuilder.AddToScheme
-)
-
-func setVersionPriority(scheme *runtime.Scheme) error {
-	return scheme.SetVersionPriority(v1alpha1.SchemeGroupVersion)
-}
-
-// Install installs all APIs in the scheme.
-func Install(scheme *runtime.Scheme) {
-	utilruntime.Must(AddToScheme(scheme))
+func TestHelper(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Azure Config API Helper Suite")
 }

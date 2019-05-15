@@ -1,0 +1,9 @@
+---
+apiVersion: azure.provider.extensions.config.gardener.cloud/v1alpha1
+kind: ControllerConfiguration
+machineImages:
+- name: coreos
+  version: 1967.5.0
+  publisher: CoreOS
+  offer: CoreOS
+  sku: Stable
