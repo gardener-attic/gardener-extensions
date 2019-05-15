@@ -17,25 +17,41 @@ package packet
 import "path/filepath"
 
 const (
+	// Name is the name of the Packet provider controller.
+	Name = "provider-packet"
+
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
 	// CloudControllerManagerImageName is the name of the cloud-controller-manager image.
 	CloudControllerManagerImageName = "cloud-controller-manager"
+	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
+	MachineControllerManagerImageName = "machine-controller-manager"
 
 	// AccessKeyID is a constant for the key in a cloud provider secret and backup secret that holds the Packet API token.
 	APIToken = "apiToken"
 	// ProjectID is a constant for the key in a cloud provider secret and backup secret that holds the Packet project id.
 	ProjectID = "projectID"
+	// PacketAPIKey is a constant for the key in a cloud provider secret and backup secret that holds the Packet API key.
+	PacketAPIKey = "packetAPIKey"
 
 	// TerraformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
 	TerraformerPurposeInfra = "infra"
-	// SSHKeyName key for accessing SSH key name from outputs in terraform
-	SSHKeyName = "keyName"
+	// SSHKeyID key for accessing SSH key ID from outputs in terraform
+	SSHKeyID = "key_pair_id"
+
+	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
+	MachineControllerManagerName = "machine-controller-manager"
 )
 
 var (
 	// ChartsPath is the path to the charts
-	ChartsPath = filepath.Join("controllers", "provider-packet", "charts")
+	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )
+
+// Credentials stores Packet credentials.
+type Credentials struct {
+	APIToken  []byte
+	ProjectID []byte
+}

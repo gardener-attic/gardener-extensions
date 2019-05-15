@@ -23,6 +23,8 @@ import (
 	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	packetcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/controlplane"
 	packetinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
+	packetworker "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/worker"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -32,26 +34,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the Packet provider controller.
-const Name = "provider-packet"
-
 // NewControllerManagerCommand creates a new command for running a Packet provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
-			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(packet.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
-		}
-		webhookServerOpts = &webhookcmd.ServerOptions{
-			Port:             7890,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
 		}
 		configFileOpts = &packetcmd.ConfigOptions{}
 
@@ -69,6 +59,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 
+		// options for the worker controller
+		workerCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
 		controllerSwitches = packetcmd.ControllerSwitchOptions()
 		webhookSwitches    = packetcmd.WebhookAddToManagerOptions()
 
@@ -77,6 +72,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			mgrOpts,
 			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
+			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
 			webhookSwitches,
 		)
@@ -93,7 +89,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", packet.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
@@ -121,6 +117,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			workerCtrlOpts.Completed().Apply(&packetworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
@@ -137,6 +134,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
+	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

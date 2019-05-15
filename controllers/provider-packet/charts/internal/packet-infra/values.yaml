@@ -5,4 +5,4 @@ sshPublicKey: sshkey-12345
 clusterName: test-namespace
 
 outputKeys:
-  sshKeyName: key_pair_name
+  sshKeyID: key_pair_id

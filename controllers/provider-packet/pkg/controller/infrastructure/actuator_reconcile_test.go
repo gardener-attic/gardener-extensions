@@ -52,7 +52,7 @@ var _ = Describe("Actuator Reconcile", func() {
 				"sshPublicKey": sshKey,
 				"clusterName":  clusterName,
 				"outputKeys": map[string]interface{}{
-					"sshKeyName": packet.SSHKeyName,
+					"sshKeyID": packet.SSHKeyID,
 				},
 			}))
 		})

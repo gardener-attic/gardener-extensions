@@ -11,6 +11,8 @@ controllers:
   infrastructure:
     concurrentSyncs: 5
     ignoreOperationAnnotation: false
+  worker:
+    concurrentSyncs: 5
 
 disableControllers: []
 disableWebhooks: []
