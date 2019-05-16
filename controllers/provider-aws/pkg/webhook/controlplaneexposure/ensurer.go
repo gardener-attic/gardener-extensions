@@ -18,43 +18,27 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// NewMutator creates a new controlplaneexposure mutator.
-func NewMutator(logger logr.Logger) controlplane.Mutator {
-	return &mutator{
-		logger: logger.WithName("mutator"),
+// NewEnsurer creates a new controlplaneexposure ensurer.
+func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
+	return &ensurer{
+		logger: logger.WithName("aws-controlplaneexposure-ensurer"),
 	}
 }
 
-type mutator struct {
+type ensurer struct {
+	controlplane.NoopEnsurer
 	logger logr.Logger
 }
 
-// Mutate validates and if needed mutates the given object.
-func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
-	switch x := obj.(type) {
-	case *corev1.Service:
-		switch x.Name {
-		case "kube-apiserver":
-			return mutateKubeAPIServerService(x)
-		}
-	case *appsv1.Deployment:
-		switch x.Name {
-		case common.KubeAPIServerDeploymentName:
-			return mutateKubeAPIServerDeployment(x)
-		}
-	}
-	return nil
-}
-
-func mutateKubeAPIServerService(svc *corev1.Service) error {
+// EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
+func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, svc *corev1.Service) error {
 	if svc.Annotations == nil {
 		svc.Annotations = make(map[string]string)
 	}
@@ -69,7 +53,8 @@ func mutateKubeAPIServerService(svc *corev1.Service) error {
 	return nil
 }
 
-func mutateKubeAPIServerDeployment(dep *appsv1.Deployment) error {
+// EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
+func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
 	if c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
 		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
 	}

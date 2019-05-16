@@ -35,7 +35,7 @@ func TestController(t *testing.T) {
 
 var _ = Describe("Mutator", func() {
 
-	Describe("#Mutate", func() {
+	Describe("#EnsureKubeAPIServerService", func() {
 		It("should add annotations to kube-apiserver service", func() {
 			var (
 				svc = &corev1.Service{
@@ -43,11 +43,11 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), svc)
+			// Call EnsureKubeAPIServerService method and check the result
+			err := ensurer.EnsureKubeAPIServerService(context.TODO(), svc)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(svc.Annotations).To(HaveKeyWithValue("service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout", "3600"))
 			Expect(svc.Annotations).To(HaveKeyWithValue("service.beta.kubernetes.io/aws-load-balancer-backend-protocol", "ssl"))
@@ -58,23 +58,9 @@ var _ = Describe("Mutator", func() {
 			Expect(svc.Annotations).To(HaveKeyWithValue("service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold", "2"))
 			Expect(svc.Annotations).To(HaveKeyWithValue("service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy", "ELBSecurityPolicy-TLS-1-2-2017-01"))
 		})
+	})
 
-		It("should ignore other services than kube-apiserver", func() {
-			var (
-				svc = &corev1.Service{
-					ObjectMeta: metav1.ObjectMeta{Name: "test"},
-				}
-			)
-
-			// Create mutator
-			mutator := NewMutator(logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), svc)
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(svc.Annotations).To(BeEmpty())
-		})
-
+	Describe("#EnsureKubeAPIServerDeployment", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
@@ -93,11 +79,11 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -121,11 +107,11 @@ var _ = Describe("Mutator", func() {
 				}
 			)
 
-			// Create mutator
-			mutator := NewMutator(logger)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
 
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})

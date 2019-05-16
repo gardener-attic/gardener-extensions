@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +37,6 @@ func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
 		Kind:     extensionswebhook.SeedKind,
 		Provider: aws.Type,
 		Types:    []runtime.Object{&corev1.Service{}, &appsv1.Deployment{}},
-		Mutator:  NewMutator(logger),
+		Mutator:  genericmutator.NewMutator(NewEnsurer(logger), nil, nil, logger),
 	})
 }

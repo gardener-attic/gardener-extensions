@@ -62,11 +62,12 @@ var _ = Describe("Mutator", func() {
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 	})
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
 
-	Describe("#Mutate", func() {
+	Describe("#EnsureKubeAPIServerDeployment", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
@@ -89,13 +90,13 @@ var _ = Describe("Mutator", func() {
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
 
-			// Create mutator
-			mutator := NewMutator(logger)
-			err := mutator.(inject.Client).InjectClient(client)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
-			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -123,13 +124,13 @@ var _ = Describe("Mutator", func() {
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
 
-			// Create mutator
-			mutator := NewMutator(logger)
-			err := mutator.(inject.Client).InjectClient(client)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
-			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), dep)
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})

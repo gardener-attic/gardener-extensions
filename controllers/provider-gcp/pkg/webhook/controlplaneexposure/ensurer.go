@@ -18,52 +18,42 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// NewMutator creates a new controlplaneexposure mutator.
-func NewMutator(logger logr.Logger) controlplane.Mutator {
-	return &mutator{
-		logger: logger.WithName("mutator"),
+// NewEnsurer creates a new controlplaneexposure ensurer.
+func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
+	return &ensurer{
+		logger: logger.WithName("ensurer"),
 	}
 }
 
-type mutator struct {
+type ensurer struct {
+	controlplane.NoopEnsurer
 	client client.Client
 	logger logr.Logger
 }
 
-// InjectClient injects the given client into the mutator.
-func (m *mutator) InjectClient(client client.Client) error {
+// InjectClient injects the given client into the ensurer.
+func (m *ensurer) InjectClient(client client.Client) error {
 	m.client = client
 	return nil
 }
 
-// Mutate validates and if needed mutates the given object.
-func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
-	switch x := obj.(type) {
-	case *appsv1.Deployment:
-		switch x.Name {
-		case common.KubeAPIServerDeploymentName:
-			// Get load balancer address of the kube-apiserver service
-			address, err := controlplane.GetLoadBalancerIngress(ctx, m.client, x.Namespace, common.KubeAPIServerDeploymentName)
-			if err != nil {
-				return errors.Wrap(err, "could not get kube-apiserver service load balancer address")
-			}
-
-			return mutateKubeAPIServerDeployment(x, address)
-		}
+// EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
+func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
+	// Get load balancer address of the kube-apiserver service
+	address, err := controlplane.GetLoadBalancerIngress(ctx, e.client, dep.Namespace, common.KubeAPIServerDeploymentName)
+	if err != nil {
+		return errors.Wrap(err, "could not get kube-apiserver service load balancer address")
 	}
-	return nil
-}
 
-func mutateKubeAPIServerDeployment(dep *appsv1.Deployment, address string) error {
 	if c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
 		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--advertise-address=", address)
 	}
