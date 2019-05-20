@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-provider-config
+  namespace: {{ .Release.Namespace }}
+data:
+  cloudprovider.conf: |
+    cloud: AZUREPUBLICCLOUD
+    tenantId: {{ .Values.tenantId }}
+    subscriptionId: {{ .Values.subscriptionId }}
+    resourceGroup: {{ .Values.resourceGroup }}
+    location: {{ .Values.region }}
+    vnetName: {{ .Values.vnetName }}
+    subnetName: {{ .Values.subnetName }}
+    securityGroupName: {{ .Values.securityGroupName }}
+    routeTableName: {{ .Values.routeTableName }}
+    primaryAvailabilitySetName: {{ .Values.availabilitySetName }}
+    aadClientId: {{ .Values.aadClientId }}
+    aadClientSecret: {{ .Values.aadClientSecret }}
+    cloudProviderBackoff: true
+    {{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
+    cloudProviderBackoffMode: v2
+    {{end}}
+    cloudProviderBackoffRetries: 6
+    cloudProviderBackoffExponent: 1.5
+    cloudProviderBackoffDuration: 5
+    cloudProviderBackoffJitter: 1.0
+    cloudProviderRateLimit: true
+    cloudProviderRateLimitQPS: 10.0
+    cloudProviderRateLimitBucket: 100
+    cloudProviderRateLimitQPSWrite: 10.0
+    cloudProviderRateLimitBucketWrite: 100

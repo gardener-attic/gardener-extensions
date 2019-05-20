@@ -27,6 +27,19 @@ const (
 
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
+	HyperkubeImageName           = "hyperkube"
+
+	// SubscriptionIDKey is the key for the subscription ID
+	SubscriptionIDKey = "subscriptionID"
+	// TenantIDKey is the key for the tenant id
+	TenantIDKey = "tenantID"
+	// ClientIDKey is the key for the client id
+	ClientIDKey = "clientID"
+	// ClientSecretKey is the key for the client secret
+	ClientSecretKey = "clientSecret"
+
+	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	CloudProviderConfigName = "cloud-provider-config"
 )
 
 var (

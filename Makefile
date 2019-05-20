@@ -119,7 +119,7 @@ start-provider-azure:
 		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
 		--config-file=./controllers/provider-azure/example/00-componentconfig.yaml \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
+		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-provider-gcp
 start-provider-gcp:

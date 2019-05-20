@@ -44,7 +44,7 @@ func init() {
 	runtime.Must(err)
 }
 
-// ImageVector is the image vector that contains al the needed images
+// ImageVector is the image vector that contains all the needed images.
 func ImageVector() imagevector.ImageVector {
 	return imageVector
 }

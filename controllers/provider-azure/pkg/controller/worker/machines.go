@@ -161,10 +161,10 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		})
 
 		machineClassSpec["name"] = className
-		machineClassSpec["secret"].(map[string]interface{})[internal.ClientIDKey] = string(machineClassSecretData[machinev1alpha1.AzureClientID])
-		machineClassSpec["secret"].(map[string]interface{})[internal.ClientSecretKey] = string(machineClassSecretData[machinev1alpha1.AzureClientSecret])
-		machineClassSpec["secret"].(map[string]interface{})[internal.SubscriptionIDKey] = string(machineClassSecretData[machinev1alpha1.AzureSubscriptionID])
-		machineClassSpec["secret"].(map[string]interface{})[internal.TenantIDKey] = string(machineClassSecretData[machinev1alpha1.AzureTenantID])
+		machineClassSpec["secret"].(map[string]interface{})[azure.ClientIDKey] = string(machineClassSecretData[machinev1alpha1.AzureClientID])
+		machineClassSpec["secret"].(map[string]interface{})[azure.ClientSecretKey] = string(machineClassSecretData[machinev1alpha1.AzureClientSecret])
+		machineClassSpec["secret"].(map[string]interface{})[azure.SubscriptionIDKey] = string(machineClassSecretData[machinev1alpha1.AzureSubscriptionID])
+		machineClassSpec["secret"].(map[string]interface{})[azure.TenantIDKey] = string(machineClassSecretData[machinev1alpha1.AzureTenantID])
 
 		machineClasses = append(machineClasses, machineClassSpec)
 	}

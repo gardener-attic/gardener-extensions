@@ -24,7 +24,6 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	. "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
@@ -455,10 +454,10 @@ func expectGetSecretCallToWork(c *mockclient.MockClient, azureClientID, azureCli
 		Get(context.TODO(), gomock.Any(), gomock.AssignableToTypeOf(&corev1.Secret{})).
 		DoAndReturn(func(_ context.Context, _ client.ObjectKey, secret *corev1.Secret) error {
 			secret.Data = map[string][]byte{
-				internal.ClientIDKey:       []byte(azureClientID),
-				internal.ClientSecretKey:   []byte(azureClientSecret),
-				internal.SubscriptionIDKey: []byte(azureSubscriptionID),
-				internal.TenantIDKey:       []byte(azureTenantID),
+				azure.ClientIDKey:       []byte(azureClientID),
+				azure.ClientSecretKey:   []byte(azureClientSecret),
+				azure.SubscriptionIDKey: []byte(azureSubscriptionID),
+				azure.TenantIDKey:       []byte(azureTenantID),
 			}
 			return nil
 		})
@@ -466,8 +465,8 @@ func expectGetSecretCallToWork(c *mockclient.MockClient, azureClientID, azureCli
 
 func addNameAndSecretsToMachineClass(class map[string]interface{}, azureClientID, azureClientSecret, azureSubscriptionID, azureTenantID, name string) {
 	class["name"] = name
-	class["secret"].(map[string]interface{})[internal.ClientIDKey] = azureClientID
-	class["secret"].(map[string]interface{})[internal.ClientSecretKey] = azureClientSecret
-	class["secret"].(map[string]interface{})[internal.SubscriptionIDKey] = azureSubscriptionID
-	class["secret"].(map[string]interface{})[internal.TenantIDKey] = azureTenantID
+	class["secret"].(map[string]interface{})[azure.ClientIDKey] = azureClientID
+	class["secret"].(map[string]interface{})[azure.ClientSecretKey] = azureClientSecret
+	class["secret"].(map[string]interface{})[azure.SubscriptionIDKey] = azureSubscriptionID
+	class["secret"].(map[string]interface{})[azure.TenantIDKey] = azureTenantID
 }

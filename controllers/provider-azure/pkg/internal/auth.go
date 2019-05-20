@@ -18,20 +18,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/pkg/util"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	// SubscriptionIDKey is the key for the subscription ID
-	SubscriptionIDKey = "subscriptionID"
-	// TenantIDKey is the key for the tenant id
-	TenantIDKey = "tenantID"
-	// ClientIDKey is the key for the client id
-	ClientIDKey = "clientID"
-	// ClientSecretKey is the key for the client secret
-	ClientSecretKey = "clientSecret"
 )
 
 // ClientAuth represents a Azure Client Auth credentials.
@@ -58,22 +49,22 @@ func GetClientAuthData(ctx context.Context, c client.Client, secretRef corev1.Se
 
 // ReadClientAuthDataFromSecret reads the client auth details from the given secret.
 func ReadClientAuthDataFromSecret(secret *corev1.Secret) (*ClientAuth, error) {
-	subscriptionID, ok := secret.Data[SubscriptionIDKey]
+	subscriptionID, ok := secret.Data[azure.SubscriptionIDKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %s/%s doesn't have a subscription ID", secret.Namespace, secret.Name)
 	}
 
-	clientID, ok := secret.Data[ClientIDKey]
+	clientID, ok := secret.Data[azure.ClientIDKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %s/%s doesn't have a client ID", secret.Namespace, secret.Name)
 	}
 
-	tenantID, ok := secret.Data[TenantIDKey]
+	tenantID, ok := secret.Data[azure.TenantIDKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %s/%s doesn't have a tenant ID", secret.Namespace, secret.Name)
 	}
 
-	clientSecret, ok := secret.Data[ClientSecretKey]
+	clientSecret, ok := secret.Data[azure.ClientSecretKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %s/%s doesn't have a Client Secret", secret.Namespace, secret.Name)
 	}

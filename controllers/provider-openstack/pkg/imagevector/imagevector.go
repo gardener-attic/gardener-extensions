@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	// ImageVector is the image vector that contains al the needed images
+	// ImageVector is the image vector that contains all the needed images.
 	imageVector imagevector.ImageVector
 )
 

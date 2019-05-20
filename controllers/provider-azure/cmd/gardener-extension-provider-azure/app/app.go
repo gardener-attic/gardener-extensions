@@ -22,6 +22,7 @@ import (
 	azureinstall "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/install"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	azurecmd "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/cmd"
+	azurecontrolplane "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/controlplane"
 	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	azureworker "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -59,10 +60,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 		controllerSwitches = azurecmd.ControllerSwitchOptions()
 
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
 		)
@@ -96,6 +102,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&azureworker.DefaultAddOptions.MachineImages)
 			infraCtrlOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			controlPlaneCtrlOpts.Completed().Apply(&azurecontrolplane.Options)
 			workerCtrlOpts.Completed().Apply(&azureworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
