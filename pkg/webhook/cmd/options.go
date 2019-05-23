@@ -16,7 +16,11 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	extensionwebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/types"
@@ -38,6 +42,9 @@ const (
 	ServiceSelectorsFlag = "webhook-config-service-selectors"
 	// HostFlag is the name of the command line flag to specify the webhook config host for 'url' mode.
 	HostFlag = "webhook-config-host"
+
+	// DisableFlag is the name of the command line flag to disable individual webhooks.
+	DisableFlag = "disable-webhooks"
 )
 
 // Webhook config modes
@@ -46,8 +53,8 @@ const (
 	URLMode     = "url"
 )
 
-// WebhookServerOptions are command line options that can be set for WebhookServerConfig.
-type WebhookServerOptions struct {
+// ServerOptions are command line options that can be set for ServerConfig.
+type ServerOptions struct {
 	// Port is the webhook server port.
 	Port int32
 	// CertDir is the directory that contains the webhook server key and certificate.
@@ -63,11 +70,11 @@ type WebhookServerOptions struct {
 	// Host is the webhook config host for 'url' mode.
 	Host string
 
-	config *WebhookServerConfig
+	config *ServerConfig
 }
 
-// WebhookServerConfig is a completed webhook server configuration.
-type WebhookServerConfig struct {
+// ServerConfig is a completed webhook server configuration.
+type ServerConfig struct {
 	// Port is the webhook server port.
 	Port int32
 	// CertDir is the directory that contains the webhook server key and certificate.
@@ -77,13 +84,13 @@ type WebhookServerConfig struct {
 }
 
 // Complete implements Completer.Complete.
-func (w *WebhookServerOptions) Complete() error {
+func (w *ServerOptions) Complete() error {
 	bootstrapOptions, err := w.buildBootstrapOptions()
 	if err != nil {
 		return err
 	}
 
-	w.config = &WebhookServerConfig{
+	w.config = &ServerConfig{
 		Port:             w.Port,
 		CertDir:          w.CertDir,
 		BootstrapOptions: bootstrapOptions,
@@ -91,13 +98,22 @@ func (w *WebhookServerOptions) Complete() error {
 	return nil
 }
 
-// Completed returns the completed WebhookServerConfig. Only call this if `Complete` was successful.
-func (w *WebhookServerOptions) Completed() *WebhookServerConfig {
+// Completed returns the completed ServerConfig. Only call this if `Complete` was successful.
+func (w *ServerOptions) Completed() *ServerConfig {
 	return w.config
 }
 
+// Options returns the webhook.ServerOptions of this ServerConfig.
+func (w *ServerConfig) Options() webhook.ServerOptions {
+	return webhook.ServerOptions{
+		Port:             w.Port,
+		CertDir:          w.CertDir,
+		BootstrapOptions: w.BootstrapOptions,
+	}
+}
+
 // AddFlags implements Flagger.AddFlags.
-func (w *WebhookServerOptions) AddFlags(fs *pflag.FlagSet) {
+func (w *ServerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.Int32Var(&w.Port, PortFlag, w.Port, "The webhook server port.")
 	fs.StringVar(&w.CertDir, CertDirFlag, w.CertDir, "The directory that contains the webhook server key and certificate.")
 	fs.StringVar(&w.Mode, ModeFlag, w.Mode, "The webhook config mode, either 'service' or 'url'.")
@@ -107,7 +123,7 @@ func (w *WebhookServerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&w.Host, HostFlag, w.Host, "The webhook config host for 'url' mode.")
 }
 
-func (w *WebhookServerOptions) buildBootstrapOptions() (*webhook.BootstrapOptions, error) {
+func (w *ServerOptions) buildBootstrapOptions() (*webhook.BootstrapOptions, error) {
 	switch w.Mode {
 	case ServiceMode:
 		serviceSelectors := make(map[string]string)
@@ -134,4 +150,130 @@ func (w *WebhookServerOptions) buildBootstrapOptions() (*webhook.BootstrapOption
 	default:
 		return nil, errors.Errorf("invalid webhook config mode '%s'", w.Mode)
 	}
+}
+
+// NameToFactory binds a specific name to a webhook's factory function.
+type NameToFactory struct {
+	Name string
+	Func func(manager.Manager) (webhook.Webhook, error)
+}
+
+// SwitchOptions are options to build an AddToManager function that filters the disabled webhooks.
+type SwitchOptions struct {
+	Disabled []string
+
+	nameToWebhookFactory     map[string]func(manager.Manager) (webhook.Webhook, error)
+	webhookFactoryAggregator extensionwebhook.FactoryAggregator
+}
+
+// Register registers the given NameToWebhookFuncs in the options.
+func (w *SwitchOptions) Register(pairs ...NameToFactory) {
+	for _, pair := range pairs {
+		w.nameToWebhookFactory[pair.Name] = pair.Func
+	}
+}
+
+// AddFlags implements Option.
+func (w *SwitchOptions) AddFlags(fs *pflag.FlagSet) {
+	fs.StringSliceVar(&w.Disabled, DisableFlag, w.Disabled, "List of webhooks to disable")
+}
+
+// Complete implements Option.
+func (w *SwitchOptions) Complete() error {
+	disabled := sets.NewString()
+	for _, disabledName := range w.Disabled {
+		if _, ok := w.nameToWebhookFactory[disabledName]; !ok {
+			return fmt.Errorf("cannot disable unknown webhook %q", disabledName)
+		}
+		disabled.Insert(disabledName)
+	}
+
+	for name, addToManager := range w.nameToWebhookFactory {
+		if !disabled.Has(name) {
+			w.webhookFactoryAggregator.Register(addToManager)
+		}
+	}
+	return nil
+}
+
+// Completed returns the completed SwitchConfig. Call this only after successfully calling `Completed`.
+func (w *SwitchOptions) Completed() *SwitchConfig {
+	return &SwitchConfig{WebhooksFactory: w.webhookFactoryAggregator.Webhooks}
+}
+
+// SwitchConfig is the completed configuration of SwitchOptions.
+type SwitchConfig struct {
+	WebhooksFactory func(manager.Manager) ([]webhook.Webhook, error)
+}
+
+// Switch binds the given name to the given AddToManager function.
+func Switch(name string, f func(manager.Manager) (webhook.Webhook, error)) NameToFactory {
+	return NameToFactory{
+		Name: name,
+		Func: f,
+	}
+}
+
+// NewSwitchOptions creates new SwitchOptions with the given initial pairs.
+func NewSwitchOptions(pairs ...NameToFactory) *SwitchOptions {
+	opts := SwitchOptions{nameToWebhookFactory: make(map[string]func(manager.Manager) (webhook.Webhook, error))}
+	opts.Register(pairs...)
+	return &opts
+}
+
+// AddToManagerOptions are options to create an `AddToManager` function from ServerOptions and SwitchOptions.
+type AddToManagerOptions struct {
+	serverName string
+	Server     ServerOptions
+	Switch     SwitchOptions
+}
+
+// NewAddToManagerOptions creates new AddToManagerOptions with the given server name and initial switch pairs.
+func NewAddToManagerOptions(serverName string, pairs ...NameToFactory) *AddToManagerOptions {
+	return &AddToManagerOptions{
+		serverName: serverName,
+		Switch:     *NewSwitchOptions(pairs...),
+	}
+}
+
+// AddFlags implements Option.
+func (c *AddToManagerOptions) AddFlags(fs *pflag.FlagSet) {
+	c.Switch.AddFlags(fs)
+	c.Server.AddFlags(fs)
+}
+
+// Complete implements Option.
+func (c *AddToManagerOptions) Complete() error {
+	if err := c.Switch.Complete(); err != nil {
+		return err
+	}
+
+	return c.Server.Complete()
+}
+
+// Compoleted returns the completed AddToManagerConfig. Only call this if a previous call to `Complete` succeeded.
+func (c *AddToManagerOptions) Completed() *AddToManagerConfig {
+	return &AddToManagerConfig{
+		serverName: c.serverName,
+		Server:     *c.Server.Completed(),
+		Switch:     *c.Switch.Completed(),
+	}
+}
+
+// AddToManagerConfig is a completed AddToManager configuration.
+type AddToManagerConfig struct {
+	serverName string
+	Server     ServerConfig
+	Switch     SwitchConfig
+}
+
+// AddToManager instantiates all webhooks of this configuration. If there are any webhooks, it creates a
+// webhook server, registers the webhooks and adds the server to the manager. Otherwise, it is a no-op.
+func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) error {
+	webhooks, err := c.Switch.WebhooksFactory(mgr)
+	if err != nil {
+		return errors.Wrapf(err, "could not create webhooks")
+	}
+
+	return extensionwebhook.NewServerBuilder(c.serverName, c.Server.Options(), webhooks...).AddToManager(mgr)
 }

@@ -28,6 +28,7 @@ spec:
         - /gardener-extension-hyper
         - os-coreos-controller-manager
         - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
+        - --disable-controllers={{ .Values.disableControllers | join "," }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

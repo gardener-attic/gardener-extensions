@@ -17,6 +17,7 @@ package app
 import (
 	"context"
 	"fmt"
+	openstackcmd "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/cmd"
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
@@ -26,7 +27,6 @@ import (
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 
-	openstackcontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller"
 	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 
 	"github.com/spf13/cobra"
@@ -53,7 +53,14 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts)
+		controllerSwitches = openstackcmd.ControllerSwitchOptions()
+
+		aggOption = controllercmd.NewOptionAggregator(
+			restOpts,
+			mgrOpts,
+			infraOpts,
+			controllerSwitches,
+		)
 	)
 
 	cmd := &cobra.Command{
@@ -80,7 +87,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
-			if err := openstackcontroller.AddToManager(mgr); err != nil {
+			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 

@@ -15,6 +15,8 @@
 package cmd
 
 import (
+	mockwebhook "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/webhook"
+	mockextensionswebhook "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/pkg/util/test"
@@ -56,24 +58,26 @@ var _ = Describe("Options", func() {
 		)
 
 		Describe("#Completed", func() {
-			It("should yield correct WebhookServerConfig after completion in service mode", func() {
+			It("should yield correct ServerConfig after completion in service mode", func() {
 				command := test.NewCommandBuilder(name).
-					Flag(PortFlag, port).
-					Flag(CertDirFlag, certDir).
-					Flag(ModeFlag, ServiceMode).
-					Flag(NameFlag, name).
-					Flag(NamespaceFlag, namespace).
-					Flag(ServiceSelectorsFlag, serviceSelectors).
+					Flags(
+						test.IntFlag(PortFlag, port),
+						test.StringFlag(CertDirFlag, certDir),
+						test.StringFlag(ModeFlag, ServiceMode),
+						test.StringFlag(NameFlag, name),
+						test.StringFlag(NamespaceFlag, namespace),
+						test.StringFlag(ServiceSelectorsFlag, serviceSelectors),
+					).
 					Command().
 					Slice()
 				fs := pflag.NewFlagSet(name, pflag.ExitOnError)
-				opts := WebhookServerOptions{}
+				opts := ServerOptions{}
 
 				// Parse command into options
 				opts.AddFlags(fs)
 				err := fs.Parse(command)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(opts).To(Equal(WebhookServerOptions{
+				Expect(opts).To(Equal(ServerOptions{
 					Port:             port,
 					CertDir:          certDir,
 					Mode:             ServiceMode,
@@ -87,7 +91,7 @@ var _ = Describe("Options", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				// Check Completed result
-				Expect(opts.Completed()).To(Equal(&WebhookServerConfig{
+				Expect(opts.Completed()).To(Equal(&ServerConfig{
 					Port:    port,
 					CertDir: certDir,
 					BootstrapOptions: &webhook.BootstrapOptions{
@@ -104,23 +108,25 @@ var _ = Describe("Options", func() {
 		})
 
 		Describe("#Completed", func() {
-			It("should yield correct WebhookServerConfig after completion in url mode", func() {
+			It("should yield correct ServerConfig after completion in url mode", func() {
 				command := test.NewCommandBuilder(name).
-					Flag(PortFlag, port).
-					Flag(CertDirFlag, certDir).
-					Flag(ModeFlag, URLMode).
-					Flag(NameFlag, name).
-					Flag(HostFlag, host).
+					Flags(
+						test.IntFlag(PortFlag, port),
+						test.StringFlag(CertDirFlag, certDir),
+						test.StringFlag(ModeFlag, URLMode),
+						test.StringFlag(NameFlag, name),
+						test.StringFlag(HostFlag, host),
+					).
 					Command().
 					Slice()
 				fs := pflag.NewFlagSet(name, pflag.ExitOnError)
-				opts := WebhookServerOptions{}
+				opts := ServerOptions{}
 
 				// Parse command into options
 				opts.AddFlags(fs)
 				err := fs.Parse(command)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(opts).To(Equal(WebhookServerOptions{
+				Expect(opts).To(Equal(ServerOptions{
 					Port:    port,
 					CertDir: certDir,
 					Mode:    URLMode,
@@ -134,7 +140,7 @@ var _ = Describe("Options", func() {
 
 				// Check Completed result
 				h := host
-				Expect(opts.Completed()).To(Equal(&WebhookServerConfig{
+				Expect(opts.Completed()).To(Equal(&ServerConfig{
 					Port:    port,
 					CertDir: certDir,
 					BootstrapOptions: &webhook.BootstrapOptions{
@@ -142,6 +148,84 @@ var _ = Describe("Options", func() {
 						Host:                      &h,
 					},
 				}))
+			})
+		})
+	})
+
+	Context("SwitchOptions", func() {
+		const commandName = "test"
+
+		Describe("#AddFlags", func() {
+			It("should correctly parse the flags", func() {
+				var (
+					name1    = "foo"
+					name2    = "bar"
+					switches = NewSwitchOptions(
+						Switch(name1, nil),
+						Switch(name2, nil),
+					)
+				)
+
+				fs := pflag.NewFlagSet(commandName, pflag.ContinueOnError)
+				switches.AddFlags(fs)
+
+				err := fs.Parse(test.NewCommandBuilder(commandName).
+					Flags(
+						test.StringSliceFlag(DisableFlag, name1, name2),
+					).
+					Command().
+					Slice())
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(switches.Complete()).To(Succeed())
+
+				Expect(switches.Disabled).To(Equal([]string{name1, name2}))
+			})
+
+			It("should error on an unknown webhook", func() {
+				switches := NewSwitchOptions()
+
+				fs := pflag.NewFlagSet(commandName, pflag.ContinueOnError)
+				switches.AddFlags(fs)
+
+				err := fs.Parse(test.NewCommandBuilder(commandName).
+					Flags(
+						test.StringSliceFlag(DisableFlag, "unknown"),
+					).
+					Command().
+					Slice())
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(switches.Complete()).To(HaveOccurred())
+			})
+		})
+
+		Describe("#AddToManager", func() {
+			It("should return a configuration that does not add the disabled webhooks", func() {
+				var (
+					f1 = mockextensionswebhook.NewMockFactory(ctrl)
+					f2 = mockextensionswebhook.NewMockFactory(ctrl)
+
+					name1 = "name1"
+					name2 = "name2"
+
+					switches = NewSwitchOptions(
+						Switch(name1, f1.Do),
+						Switch(name2, f2.Do),
+					)
+
+					wh1 = mockwebhook.NewMockWebhook(ctrl)
+				)
+
+				f1.EXPECT().Do(nil).Return(wh1, nil)
+
+				switches.Disabled = []string{name2}
+
+				Expect(switches.Complete()).To(Succeed())
+
+				webhooks, err := switches.Completed().WebhooksFactory(nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(webhooks).To(Equal([]webhook.Webhook{wh1}))
 			})
 		})
 	})

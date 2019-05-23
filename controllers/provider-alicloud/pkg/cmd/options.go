@@ -12,18 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package cmd
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 )
 
-var (
-	managerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
-	)
-
-	// AddToManager adds all provider controllers to the given manager.
-	AddToManager = managerBuilder.AddToManager
-)
+// ControllerSwitchOptions are the controllercmd.SwitchOptions for the provider controllers.
+func ControllerSwitchOptions() *controllercmd.SwitchOptions {
+	return controllercmd.NewSwitchOptions()
+}

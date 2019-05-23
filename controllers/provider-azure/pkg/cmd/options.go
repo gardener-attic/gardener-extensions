@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package webhook
+package cmd
 
 import (
-	"github.com/gardener/gardener-extensions/pkg/webhook"
+	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
+	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 )
 
-var (
-	addToManagerBuilder = webhook.NewAddToManagerBuilder()
-
-	// AddToManager adds all provider webhooks to the given manager.
-	AddToManager = addToManagerBuilder.AddToManager
-)
+// ControllerSwitchOptions are the controllercmd.SwitchOptions for the provider controllers.
+func ControllerSwitchOptions() *controllercmd.SwitchOptions {
+	return controllercmd.NewSwitchOptions(
+		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
+	)
+}

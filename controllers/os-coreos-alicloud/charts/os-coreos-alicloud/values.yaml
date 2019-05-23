@@ -6,3 +6,5 @@ image:
 resources: {}
 
 concurrentSyncs: 5
+
+disableControllers: []

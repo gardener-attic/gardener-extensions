@@ -16,11 +16,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/spf13/pflag"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"os"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -43,6 +44,9 @@ const (
 	// MasterURLFlag is the name of the command line flag to specify the master URL override for
 	// a rest.Config of a manager.Manager.
 	MasterURLFlag = "master"
+
+	// DisableFlag is the name of the command line flag to disable individual controllers.
+	DisableFlag = "disable-controllers"
 )
 
 // LeaderElectionNameID returns a leader election ID for the given name.
@@ -293,4 +297,73 @@ func (r *RESTOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&r.MasterURL, MasterURLFlag, "",
 		"The address of the Kubernetes API server. Overrides any value in kubeconfig. "+
 			"Only required if out-of-cluster.")
+}
+
+// SwitchOptions are options to build an AddToManager function that filters the disabled controllers.
+type SwitchOptions struct {
+	Disabled []string
+
+	nameToAddToManager  map[string]func(manager.Manager) error
+	addToManagerBuilder extensionscontroller.AddToManagerBuilder
+}
+
+// Register registers the given NameToControllerFuncs in the options.
+func (d *SwitchOptions) Register(pairs ...NameToAddToManagerFunc) {
+	for _, pair := range pairs {
+		d.nameToAddToManager[pair.Name] = pair.Func
+	}
+}
+
+// NameToAddToManagerFunc binds a specific name to a controller's AddToManager function.
+type NameToAddToManagerFunc struct {
+	Name string
+	Func func(manager.Manager) error
+}
+
+// Switch binds the given name to the given AddToManager function.
+func Switch(name string, f func(manager.Manager) error) NameToAddToManagerFunc {
+	return NameToAddToManagerFunc{
+		Name: name,
+		Func: f,
+	}
+}
+
+// NewSwitchOptions creates new SwitchOptions with the given initial pairs.
+func NewSwitchOptions(pairs ...NameToAddToManagerFunc) *SwitchOptions {
+	opts := SwitchOptions{nameToAddToManager: make(map[string]func(manager.Manager) error)}
+	opts.Register(pairs...)
+	return &opts
+}
+
+// AddFlags implements Option.
+func (d *SwitchOptions) AddFlags(fs *pflag.FlagSet) {
+	fs.StringSliceVar(&d.Disabled, DisableFlag, d.Disabled, "List of controllers to disable")
+}
+
+// Complete implements Option.
+func (d *SwitchOptions) Complete() error {
+	disabled := sets.NewString()
+	for _, disabledName := range d.Disabled {
+		if _, ok := d.nameToAddToManager[disabledName]; !ok {
+			return fmt.Errorf("cannot disable unknown controller %q", disabledName)
+		}
+		disabled.Insert(disabledName)
+	}
+
+	for name, addToManager := range d.nameToAddToManager {
+		if !disabled.Has(name) {
+			d.addToManagerBuilder.Register(addToManager)
+		}
+	}
+	return nil
+}
+
+// Completed returns the completed SwitchConfig. Call this only after successfully calling `Completed`.
+func (d *SwitchOptions) Completed() *SwitchConfig {
+	return &SwitchConfig{d.addToManagerBuilder.AddToManager}
+}
+
+// SwitchConfig is the completed configuration of SwitchOptions.
+type SwitchConfig struct {
+	AddToManager func(manager.Manager) error
 }

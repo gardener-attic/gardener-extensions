@@ -15,14 +15,12 @@
 package webhook
 
 import (
-	"github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 	"github.com/pkg/errors"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/builder"
@@ -51,66 +49,71 @@ const (
 	ShootKind Kind = "shoot"
 )
 
-// AddToManagerBuilder aggregates various AddToManager functions.
-type AddToManagerBuilder []func(manager.Manager) (webhook.Webhook, error)
+// FactoryAggregator aggregates various Factory functions.
+type FactoryAggregator []func(manager.Manager) (webhook.Webhook, error)
 
-// NewAddToManagerBuilder creates a new AddToManagerBuilder and registers the given functions.
-func NewAddToManagerBuilder(funcs ...func(manager.Manager) (webhook.Webhook, error)) AddToManagerBuilder {
-	var builder AddToManagerBuilder
+// NewFactoryAggregator creates a new FactoryAggregator and registers the given functions.
+func NewFactoryAggregator(funcs ...func(manager.Manager) (webhook.Webhook, error)) FactoryAggregator {
+	var builder FactoryAggregator
 	builder.Register(funcs...)
 	return builder
 }
 
 // Register registers the given functions in this builder.
-func (a *AddToManagerBuilder) Register(funcs ...func(manager.Manager) (webhook.Webhook, error)) {
+func (a *FactoryAggregator) Register(funcs ...func(manager.Manager) (webhook.Webhook, error)) {
 	*a = append(*a, funcs...)
 }
 
-// AddToManager creates a webhook server adds all webhooks created by the AddToManager-functions of this builder to it.
-// It exits on the first error and returns it.
-func (a *AddToManagerBuilder) AddToManager(mgr manager.Manager, cfg *cmd.WebhookServerConfig) error {
-	logger := log.Log.WithName("webhook-server")
-
-	var whs []webhook.Webhook
+// Webhooks calls all factories with the given managers and returns all created webhooks.
+// As soon as there is an error creating a webhook, the error is returned immediately.
+func (a *FactoryAggregator) Webhooks(mgr manager.Manager) ([]webhook.Webhook, error) {
+	var webhooks []webhook.Webhook
 	for _, f := range *a {
 		wh, err := f(mgr)
 		if err != nil {
-			return err
-		}
-		whs = append(whs, wh)
-	}
-
-	if len(whs) > 0 {
-		// Create webhook server
-		logger.Info("Creating webhook server", "cfg", cfg)
-		svr, err := newServer(mgr, cfg)
-		if err != nil {
-			return err
+			return nil, err
 		}
 
-		// Register webhooks with server
-		logger.Info("Registering webhooks")
-		err = svr.Register(whs...)
-		if err != nil {
-			return errors.Wrap(err, "could not register webhooks with server")
-		}
+		webhooks = append(webhooks, wh)
 	}
-	return nil
+
+	return webhooks, nil
 }
 
-func newServer(mgr manager.Manager, cfg *cmd.WebhookServerConfig) (*webhook.Server, error) {
-	// Create webhook server
-	disableConfigInstaller := false
-	svr, err := webhook.NewServer("webhook-server", mgr, webhook.ServerOptions{
-		Port:                          cfg.Port,
-		CertDir:                       cfg.CertDir,
-		DisableWebhookConfigInstaller: &disableConfigInstaller,
-		BootstrapOptions:              cfg.BootstrapOptions,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "could not create webhook server")
+// ServerBuilder is a builder to build a webhook server.
+type ServerBuilder struct {
+	Name     string
+	Options  webhook.ServerOptions
+	Webhooks []webhook.Webhook
+}
+
+// NewServerBuilder instantiates a new ServerBuilder with the given name, options and initial set of webhooks.
+func NewServerBuilder(name string, options webhook.ServerOptions, webhooks ...webhook.Webhook) *ServerBuilder {
+	return &ServerBuilder{name, options, webhooks}
+}
+
+// Register registers the given Webhooks in this ServerBuilder.
+func (s *ServerBuilder) Register(webhooks ...webhook.Webhook) {
+	s.Webhooks = append(s.Webhooks, webhooks...)
+}
+
+// AddToManager creates and adds the webhook server to the manager if there are any webhooks.
+// If there are no webhooks, this is a no-op.
+func (s *ServerBuilder) AddToManager(mgr manager.Manager) error {
+	if len(s.Webhooks) == 0 {
+		return nil
 	}
-	return svr, nil
+
+	srv, err := webhook.NewServer(s.Name, mgr, s.Options)
+	if err != nil {
+		return errors.Wrapf(err, "could not create webhook server %s", s.Name)
+	}
+
+	if err := srv.Register(s.Webhooks...); err != nil {
+		return errors.Wrapf(err, "could not register webhooks in server %s", s.Name)
+	}
+
+	return errors.Wrapf(mgr.Add(srv), "could not add webhook server %s to manager", s.Name)
 }
 
 // NewWebhook creates a new mutating webhook for create and update operations

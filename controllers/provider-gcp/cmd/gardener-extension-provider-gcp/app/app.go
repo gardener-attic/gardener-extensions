@@ -20,12 +20,10 @@ import (
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
-	gcpcontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller"
+	gcpcmd "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/cmd"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
-	gcpwebhook "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook"
-
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -59,18 +57,27 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
-		webhookServerOpts = &webhookcmd.WebhookServerOptions{
-			Port:             7890,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
-		}
+		controllerSwitches = gcpcmd.ControllerSwitchOptions()
+		webhookSwitches    = gcpcmd.WebhookAddToManagerOptions()
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts, webhookServerOpts)
+		aggOption = controllercmd.NewOptionAggregator(
+			restOpts,
+			mgrOpts,
+			infraOpts,
+			controlPlaneOpts,
+			controllerSwitches,
+			webhookSwitches,
+		)
 	)
+	webhookSwitches.Server = webhookcmd.ServerOptions{
+		Port:             7890,
+		CertDir:          "/tmp/cert",
+		Mode:             webhookcmd.ServiceMode,
+		Name:             "webhooks",
+		Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+		ServiceSelectors: "{}",
+		Host:             "localhost",
+	}
 
 	cmd := &cobra.Command{
 		Use: fmt.Sprintf("%s-controller-manager", gcp.Name),
@@ -97,11 +104,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 
-			if err := gcpcontroller.AddToManager(mgr); err != nil {
+			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
-			if err := gcpwebhook.AddToManager(mgr, webhookServerOpts.Completed()); err != nil {
+			if err := webhookSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 

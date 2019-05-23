@@ -17,13 +17,12 @@ package app
 import (
 	"context"
 	"fmt"
+	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
-	packetcontroller "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller"
 	packetcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/controlplane"
 	packetinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
-	packetwebhook "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -60,18 +59,28 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
-		webhookServerOpts = &webhookcmd.WebhookServerOptions{
-			Port:             7890,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
-		}
+		controllerSwitches = packetcmd.ControllerSwitchOptions()
+		webhookSwitches    = packetcmd.WebhookAddToManagerOptions()
 
-		aggOption = controllercmd.NewOptionAggregator(restOpts, mgrOpts, infraOpts, controlPlaneOpts, webhookServerOpts)
+		aggOption = controllercmd.NewOptionAggregator(
+			restOpts,
+			mgrOpts,
+			infraOpts,
+			controlPlaneOpts,
+			controllerSwitches,
+			webhookSwitches,
+		)
 	)
+
+	webhookSwitches.Server = webhookcmd.ServerOptions{
+		Port:             7890,
+		CertDir:          "/tmp/cert",
+		Mode:             webhookcmd.ServiceMode,
+		Name:             "webhooks",
+		Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+		ServiceSelectors: "{}",
+		Host:             "localhost",
+	}
 
 	cmd := &cobra.Command{
 		Use: fmt.Sprintf("%s-controller-manager", Name),
@@ -98,11 +107,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			infraReconcileOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
 
-			if err := packetcontroller.AddToManager(mgr); err != nil {
+			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
-			if err := packetwebhook.AddToManager(mgr, webhookServerOpts.Completed()); err != nil {
+			if err := webhookSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 

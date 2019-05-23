@@ -16,6 +16,9 @@ package cmd
 
 import (
 	"errors"
+	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/certservice"
+	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/lifecycle"
+	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"io/ioutil"
 
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/apis/config/v1alpha1"
@@ -94,4 +97,12 @@ type CertificateServiceConfig struct {
 // Apply applies the CertificateServiceOptions to the passed ControllerOptions instance.
 func (c *CertificateServiceConfig) Apply(config *controllerconfig.Config) {
 	config.Configuration = c.config
+}
+
+// SwitchOptions are the cmd.SwitchOptions for the provider controllers.
+func ControllerSwitches() *cmd.SwitchOptions {
+	return cmd.NewSwitchOptions(
+		cmd.Switch(lifecycle.ControllerName, lifecycle.AddToManager),
+		cmd.Switch(certservice.ControllerName, certservice.AddToManager),
+	)
 }
