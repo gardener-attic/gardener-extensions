@@ -2,6 +2,9 @@
 apiVersion: aws.provider.extensions.config.gardener.cloud/v1alpha1
 kind: ControllerConfiguration
 machineImages:
+# AMIs could be found on:
+# https://coreos.com/releases/
+# https://coreos.com/os/docs/latest/booting-on-ec2.html
 - name: coreos
   version: 1967.5.0
   regions:
@@ -17,3 +20,37 @@ machineImages:
     ami: ami-07739b17529e8c1d0
   - name: ap-southeast-2
     ami: ami-02d7d488d701a460e
+# AMIs could be found on:
+# https://www.flatcar-linux.org/releases/
+# https://docs.flatcar-linux.org/os/booting-on-ec2/
+- name: flatcar-stable
+  version: 2079.4.0
+  regions:
+  - name: eu-central-1
+    ami: ami-050fb1e983d0ab2dc
+  - name: eu-west-1
+    ami: ami-067d693febaf8f1c1
+  - name: us-east-1
+    ami: ami-08057d01c5d8c85c9
+  - name: us-east-2
+    ami: ami-04c27ae49a8282c9b
+  - name: ap-southeast-1
+    ami: ami-0840c414a6864492b
+  - name: ap-southeast-2
+    ami: ami-0d9b92d3968d69621
+- name: flatcar-edge
+  version: 2135.99.0
+  regions:
+  - name: eu-central-1
+    ami: ami-0dc89e1f199a7af39
+  - name: eu-west-1
+    ami: ami-019843269aa23c667
+  - name: us-east-1
+    ami: ami-08fc0697dc0bffb4c
+  - name: us-east-2
+    ami: ami-0541147ebedb49c03
+  - name: ap-southeast-1
+    ami: ami-0f53e350258aad4ab
+  - name: ap-southeast-2
+    ami: ami-0548cbd00f3f5a8b2
+
