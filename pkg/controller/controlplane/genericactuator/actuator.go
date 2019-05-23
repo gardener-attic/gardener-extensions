@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package genericactuator
 
 import (
 	"context"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -30,6 +31,7 @@ import (
 	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -43,38 +45,59 @@ type ValuesProvider interface {
 	GetConfigChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
 	// GetControlPlaneChartValues returns the values for the control plane chart applied by this actuator.
 	GetControlPlaneChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster, map[string]string) (map[string]interface{}, error)
+	// GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by this actuator.
+	GetControlPlaneShootChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
+}
+
+// ShootClientsFactory creates ShootClients to be used by this actuator.
+type ShootClientsFactory interface {
+	// NewClientsForShoot creates a new set of clients for the given shoot namespace.
+	NewClientsForShoot(context.Context, client.Client, string, client.Options) (util.ShootClients, error)
+}
+
+// ShootClientsFactoryFunc is a function that satisfies ShootClientsFactory.
+type ShootClientsFactoryFunc func(context.Context, client.Client, string, client.Options) (util.ShootClients, error)
+
+// NewClientsForShoot creates a new set of clients for the given shoot namespace.
+func (f ShootClientsFactoryFunc) NewClientsForShoot(ctx context.Context, c client.Client, namespace string, opts client.Options) (util.ShootClients, error) {
+	return f(ctx, c, namespace, opts)
 }
 
 // NewActuator creates a new Actuator that acts upon and updates the status of ControlPlane resources.
-// It creates / deletes the given secrets and applies / deletes the 2 given charts, using the given image vector and
+// It creates / deletes the given secrets and applies / deletes the given charts, using the given image vector and
 // the values provided by the given values provider.
 func NewActuator(
 	secrets util.Secrets,
-	configChart, controlPlaneChart util.Chart,
+	configChart, controlPlaneChart, controlPlaneShootChart util.Chart,
 	vp ValuesProvider,
+	shootClientsFactory ShootClientsFactory,
 	imageVector imagevector.ImageVector,
 	configName string,
 	logger logr.Logger,
-) Actuator {
+) controlplane.Actuator {
 	return &actuator{
-		secrets:           secrets,
-		configChart:       configChart,
-		controlPlaneChart: controlPlaneChart,
-		vp:                vp,
-		imageVector:       imageVector,
-		configName:        configName,
-		logger:            logger.WithName("controlplane-actuator"),
+		secrets:                secrets,
+		configChart:            configChart,
+		controlPlaneChart:      controlPlaneChart,
+		controlPlaneShootChart: controlPlaneShootChart,
+		vp:                     vp,
+		shootClientsFactory:    shootClientsFactory,
+		imageVector:            imageVector,
+		configName:             configName,
+		logger:                 logger.WithName("controlplane-actuator"),
 	}
 }
 
 // actuator is an Actuator that acts upon and updates the status of ControlPlane resources.
 type actuator struct {
-	secrets           util.Secrets
-	configChart       util.Chart
-	controlPlaneChart util.Chart
-	vp                ValuesProvider
-	imageVector       imagevector.ImageVector
-	configName        string
+	secrets                util.Secrets
+	configChart            util.Chart
+	controlPlaneChart      util.Chart
+	controlPlaneShootChart util.Chart
+	vp                     ValuesProvider
+	shootClientsFactory    ShootClientsFactory
+	imageVector            imagevector.ImageVector
+	configName             string
 
 	clientset         kubernetes.Interface
 	gardenerClientset gardenerkubernetes.Interface
@@ -109,23 +132,12 @@ func (a *actuator) InjectConfig(config *rest.Config) error {
 		return errors.Wrap(err, "could not create chart applier")
 	}
 
-	// Inject the config into the values provider if needed
-	if _, err := inject.ConfigInto(config, a.vp); err != nil {
-		return errors.Wrap(err, "could not inject the config into the values provider")
-	}
-
 	return nil
 }
 
 // InjectClient injects the given client into the valuesProvider.
 func (a *actuator) InjectClient(client client.Client) error {
 	a.client = client
-
-	// Inject the client into the values provider if needed
-	if _, err := inject.ClientInto(client, a.vp); err != nil {
-		return errors.Wrap(err, "could not inject the client into the values provider")
-	}
-
 	return nil
 }
 
@@ -175,6 +187,24 @@ func (a *actuator) Reconcile(
 		return errors.Wrapf(err, "could not apply control plane chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
+	// Create shoot clients
+	sc, err := a.shootClientsFactory.NewClientsForShoot(ctx, a.client, cp.Namespace, client.Options{})
+	if err != nil {
+		return errors.Wrapf(err, "could not create shoot clients for shoot '%s'", cp.Namespace)
+	}
+
+	// Get control plane shoot chart values
+	values, err = a.vp.GetControlPlaneShootChartValues(ctx, cp, cluster)
+	if err != nil {
+		return err
+	}
+
+	// Apply control plane shoot chart
+	a.logger.Info("Applying control plane shoot chart", "controlplane", util.ObjectName(cp), "values", values)
+	if err := a.controlPlaneShootChart.Apply(ctx, sc.GardenerClientset(), sc.ChartApplier(), metav1.NamespaceSystem, cluster.Shoot, a.imageVector, nil, values); err != nil {
+		return errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
+	}
+
 	return nil
 }
 
@@ -185,6 +215,18 @@ func (a *actuator) Delete(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) error {
+	// Create shoot clients
+	sc, err := a.shootClientsFactory.NewClientsForShoot(ctx, a.client, cp.Namespace, client.Options{})
+	if err != nil {
+		return errors.Wrapf(err, "could not create shoot clients for shoot '%s'", cp.Namespace)
+	}
+
+	// Delete control plane shoot objects
+	a.logger.Info("Deleting control plane shoot objects", "controlplane", util.ObjectName(cp))
+	if err := a.controlPlaneShootChart.Delete(ctx, sc.Client(), metav1.NamespaceSystem); err != nil {
+		return errors.Wrapf(err, "could not delete control plane shoot objects for controlplane '%s'", util.ObjectName(cp))
+	}
+
 	// Delete control plane objects
 	a.logger.Info("Deleting control plane objects", "controlplane", util.ObjectName(cp))
 	if err := a.controlPlaneChart.Delete(ctx, a.client, cp.Namespace); err != nil {
@@ -221,7 +263,7 @@ func (a *actuator) computeChecksums(
 		return nil, errors.Wrapf(err, "could not get secret '%s'", util.ObjectName(cpSecret))
 	}
 
-	csSecrets := MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
+	csSecrets := controlplane.MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
 		common.CloudProviderSecretName: cpSecret,
 	})
 
@@ -237,5 +279,5 @@ func (a *actuator) computeChecksums(
 		}
 	}
 
-	return ComputeChecksums(csSecrets, csConfigMaps), nil
+	return controlplane.ComputeChecksums(csSecrets, csConfigMaps), nil
 }

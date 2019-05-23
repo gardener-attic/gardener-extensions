@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=util -destination=mocks.go github.com/gardener/gardener-extensions/pkg/util Secrets,Chart
+//go:generate mockgen -package=util -destination=mocks.go github.com/gardener/gardener-extensions/pkg/util Secrets,Chart,ShootClients
 
 package util

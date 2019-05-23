@@ -214,7 +214,8 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:3fc0d5a819fda2c5af6122fc15487003f09653d0fc1028e603284ef4c73e0290"
+  branch = "gardener-extensions-fixes"
+  digest = "1:47fe3ea1ec4b953002557369ecefc98b5515f7a01bf428e91c269ad6f457e2b3"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -250,7 +251,7 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "1ebbe303f020e91d42e8689144bac3904cacb08b"
+  revision = "f04dbb9083ea908bc01863146f93a8c2d3b08daa"
 
 [[projects]]
   digest = "1:0e154f96a4827f25dfca0edc8b7ee1097d55518730c816bff033ff80244b323c"
@@ -1774,6 +1775,7 @@
     "github.com/go-logr/logr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
+    "github.com/gobuffalo/packr/v2/file/resolver",
     "github.com/golang/mock/gomock",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
@@ -1803,11 +1805,11 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured",
     "k8s.io/apimachinery/pkg/conversion",
-    "k8s.io/apimachinery/pkg/labels",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/apimachinery/pkg/runtime/serializer",
     "k8s.io/apimachinery/pkg/runtime/serializer/json",
+    "k8s.io/apimachinery/pkg/runtime/serializer/versioning",
     "k8s.io/apimachinery/pkg/types",
     "k8s.io/apimachinery/pkg/util/intstr",
     "k8s.io/apimachinery/pkg/util/runtime",

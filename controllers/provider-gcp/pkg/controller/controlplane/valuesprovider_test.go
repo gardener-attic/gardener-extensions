@@ -176,7 +176,7 @@ var _ = Describe("ValuesProvider", func() {
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create valuesProvider
-			vp := newValuesProvider(logger)
+			vp := NewValuesProvider(logger)
 			err := vp.(inject.Scheme).InjectScheme(scheme)
 			Expect(err).NotTo(HaveOccurred())
 			err = vp.(inject.Client).InjectClient(client)
@@ -192,7 +192,7 @@ var _ = Describe("ValuesProvider", func() {
 	Describe("#GetControlPlaneChartValues", func() {
 		It("should return correct control plane chart values", func() {
 			// Create valuesProvider
-			vp := newValuesProvider(logger)
+			vp := NewValuesProvider(logger)
 			err := vp.(inject.Scheme).InjectScheme(scheme)
 			Expect(err).NotTo(HaveOccurred())
 

@@ -18,6 +18,8 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -35,7 +37,9 @@ var (
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator:          controlplane.NewActuator(controlPlaneSecrets, nil, ccmChart, newValuesProvider(logger), imagevector.ImageVector(), "", logger),
+		Actuator: genericactuator.NewActuator(controlPlaneSecrets, nil, ccmChart, ccmShootChart,
+			NewValuesProvider(logger), genericactuator.ShootClientsFactoryFunc(util.NewClientsForShoot),
+			imagevector.ImageVector(), "", logger),
 		Type:              packet.Type,
 		ControllerOptions: opts,
 	})
