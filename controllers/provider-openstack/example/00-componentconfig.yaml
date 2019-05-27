@@ -1,0 +1,9 @@
+---
+apiVersion: openstack.provider.extensions.config.gardener.cloud/v1alpha1
+kind: ControllerConfiguration
+machineImages:
+- name: coreos
+  version: 2023.5.0
+  cloudProfiles:
+  - name: eu-de-1
+    image: coreos-2023.5.0

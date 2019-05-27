@@ -9,5 +9,16 @@ controllers:
   infrastructure:
     concurrentSyncs: 5
     ignoreOperationAnnotation: false
+  worker:
+    concurrentSyncs: 5
+
 
 disableControllers: []
+
+config:
+  machineImages:
+  - name: coreos
+    version: 2023.5.0
+    cloudProfiles:
+    - name: eu-de-1
+      image: coreos-2023.5.0

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
+// Copyright (c) 2018 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-openstack . ../../example/controller-registration.yaml Infrastructure:openstack Worker:openstack
+// +k8s:deepcopy-gen=package
+// +k8s:conversion-gen=github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
 
-// Package chart enables go:generate support for generating the correct controller registration.
-package chart
+package v1alpha1 // import "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config/v1alpha1"

@@ -68,7 +68,7 @@ type NetworkStatus struct {
 	// ID is the Network id.
 	ID string
 	// FloatingPool contains information about the floating pool.
-	FloatingPool FloatingPoolStatus `json:"floatingPool"`
+	FloatingPool FloatingPoolStatus
 	// Router contains information about the Router and related resources.
 	Router RouterStatus
 	// Subnets is a list of subnets that have been created.

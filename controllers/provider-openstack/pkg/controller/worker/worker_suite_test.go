@@ -12,40 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package worker_test
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
-func TestInternal(t *testing.T) {
+func TestWorker(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "OpenStack Internal Suite")
+	RunSpecs(t, "OpenStack Worker Suite")
 }
-
-var _ = Describe("Infrastructure", func() {
-	var (
-		username    string
-		password    string
-		credentials *Credentials
-	)
-
-	BeforeEach(func() {
-		username = "user"
-		password = "password"
-		credentials = &Credentials{Username: username, Password: password}
-	})
-
-	Describe("#ComputeTerraformerVariablesEnvironment", func() {
-		It("should correctly compute the terraformer variables environment", func() {
-			variablesEnvironment := TerraformerVariablesEnvironmentFromCredentials(credentials)
-
-			Expect(variablesEnvironment).To(Equal(map[string]string{
-				TerraformVarNameUserName: username,
-				TerraformVarNamePassword: password,
-			}))
-		})
-	})
-})

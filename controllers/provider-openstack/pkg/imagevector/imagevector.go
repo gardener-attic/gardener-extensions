@@ -15,11 +15,10 @@
 package imagevector
 
 import (
-	"github.com/gobuffalo/packr/v2"
 	"strings"
 
 	"github.com/gardener/gardener/pkg/utils/imagevector"
-
+	"github.com/gobuffalo/packr/v2"
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
@@ -46,10 +45,14 @@ func init() {
 	runtime.Must(err)
 }
 
+// ImageVector is the image vector that contains all the needed images.
+func ImageVector() imagevector.ImageVector {
+	return imageVector
+}
+
 // TerraformerImage returns the terraformer image name.
 func TerraformerImage() string {
 	image, err := imageVector.FindImage(TerraformerImageName, "", "")
 	runtime.Must(err)
-
 	return image.String()
 }

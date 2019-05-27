@@ -20,6 +20,11 @@ const (
 	// Name is the name of the OpenStack provider.
 	Name = "provider-openstack"
 
+	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
+	MachineControllerManagerImageName = "machine-controller-manager"
+
+	// AuthURL is a constant for the key in a cloud provider secret that holds the OpenStack auth url.
+	AuthURL = "authURL"
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
@@ -28,6 +33,9 @@ const (
 	UserName = "username"
 	// Password is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack password.
 	Password = "password"
+
+	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
+	MachineControllerManagerName = "machine-controller-manager"
 )
 
 var (
