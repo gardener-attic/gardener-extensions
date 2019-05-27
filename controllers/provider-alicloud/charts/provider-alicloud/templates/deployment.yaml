@@ -15,6 +15,8 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        checksum/configmap-gardener-extension-provider-alicloud-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
         app.kubernetes.io/name: gardener-extension-provider-alicloud
         app.kubernetes.io/instance: {{ .Release.Name }}
@@ -27,6 +29,7 @@ spec:
         command:
         - /gardener-extension-hyper
         - provider-alicloud-controller-manager
+        - --config-file=/etc/gardener-extension-provider-alicloud/config/config.yaml
         - --infrastructure-max-concurrent-reconciles={{ .Values.controllers.infrastructure.concurrentSyncs }}
         {{- if .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
@@ -39,3 +42,11 @@ spec:
               fieldPath: metadata.namespace
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
+        volumeMounts:
+        - name: config
+          mountPath: /etc/gardener-extension-provider-alicloud/config
+      volumes:
+      - name: config
+        configMap:
+          name: gardener-extension-provider-alicloud-configmap
+          defaultMode: 420

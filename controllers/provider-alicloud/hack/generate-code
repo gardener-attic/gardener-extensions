@@ -51,3 +51,20 @@ $(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh 
   "alicloud:v1alpha1" \
   --extra-peer-dirs=github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud,github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime \
   -h <(headers)
+
+$(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh \
+  deepcopy,defaulter \
+  github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/client/componentconfig \
+  github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis \
+  github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis \
+  "config:v1alpha1" \
+  -h <(headers)
+
+$(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh \
+  conversion \
+  github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/client/componentconfig \
+  github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis \
+  github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis \
+  "config:v1alpha1" \
+  --extra-peer-dirs=github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config,github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/v1alpha1,k8s.io/apimachinery/pkg/apis/meta/v1,k8s.io/apimachinery/pkg/conversion,k8s.io/apimachinery/pkg/runtime \
+  -h <(headers)

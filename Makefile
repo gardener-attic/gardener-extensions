@@ -147,6 +147,7 @@ start-provider-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
+		--config-file=./controllers/provider-alicloud/example/00-componentconfig.yaml \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION)
 

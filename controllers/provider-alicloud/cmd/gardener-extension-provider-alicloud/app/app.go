@@ -20,8 +20,10 @@ import (
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
-	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
 	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
+	alicloudcontroller "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
+	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -39,7 +41,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(alicloud.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
+		configFileOpts = &alicloudcmd.ConfigOptions{}
 
+		// options for the infrastructure controller
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
@@ -66,6 +70,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
 
+			if err := configFileOpts.Complete(); err != nil {
+				controllercmd.LogErrAndExit(err, "Error completing config options")
+			}
+
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
@@ -75,6 +83,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			configFileOpts.Completed().ApplyMachineImages(&alicloudworker.DefaultAddOptions.MachineImages)
 			infraCtrlOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
@@ -89,6 +98,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
+	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }
