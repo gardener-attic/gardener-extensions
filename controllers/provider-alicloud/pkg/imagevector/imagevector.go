@@ -12,22 +12,51 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate packr2
+
 package imagevector
 
 import (
-	"path/filepath"
-
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
-// ImageVector is the image vector that contains al the needed images
-var ImageVector imagevector.ImageVector
+import (
+	"strings"
+
+	"github.com/gobuffalo/packr/v2"
+)
+
+const (
+	// TerraformerImageName is the name of the Terraformer image.
+	TerraformerImageName = "terraformer"
+)
+
+var imageVector imagevector.ImageVector
 
 func init() {
-	var err error
-	ImageVector, err = imagevector.ReadFile(filepath.Join(alicloud.ChartsPath, "images.yaml"))
+	box := packr.New("charts", "../../charts")
+
+	imagesYaml, err := box.FindString("images.yaml")
 	runtime.Must(err)
+
+	imageVector, err = imagevector.Read(strings.NewReader(imagesYaml))
+	runtime.Must(err)
+
+	imageVector, err = imagevector.WithEnvOverride(imageVector)
+	runtime.Must(err)
+}
+
+// ImageVector is the image vector that contains al the needed images
+func ImageVector() imagevector.ImageVector {
+	return imageVector
+}
+
+// TerraformerImage retrieves the Terraformer image.
+func TerraformerImage() string {
+	image, err := imageVector.FindImage(TerraformerImageName, "", "")
+	runtime.Must(err)
+
+	return image.String()
 }

@@ -16,6 +16,9 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+	corev1 "k8s.io/api/core/v1"
 	"reflect"
 	"time"
 
@@ -170,6 +173,19 @@ func DeleteFinalizer(ctx context.Context, client client.Client, finalizerName st
 	return client.Update(ctx, obj)
 }
 
+func SecretReferenceToKey(ref *corev1.SecretReference) client.ObjectKey {
+	return kutil.Key(ref.Namespace, ref.Name)
+}
+
+func GetSecretByReference(ctx context.Context, c client.Client, ref *corev1.SecretReference) (*corev1.Secret, error) {
+	secret := &corev1.Secret{}
+	if err := c.Get(ctx, SecretReferenceToKey(ref), secret); err != nil {
+		return nil, err
+	}
+
+	return secret, nil
+}
+
 // CreateOrUpdate creates or updates the object. Optionally, it executes a transformation function before the
 // request is made.
 func CreateOrUpdate(ctx context.Context, c client.Client, obj runtime.Object, transform func() error) error {
@@ -285,4 +301,16 @@ func (w *WatchBuilder) AddToController(ctrl controller.Controller) error {
 		}
 	}
 	return nil
+}
+
+// UnsafeGuessKind makes an unsafe guess what is the kind of the given object.
+//
+// The argument to this method _has_ to be a pointer, otherwise it panics.
+func UnsafeGuessKind(obj runtime.Object) string {
+	t := reflect.TypeOf(obj)
+	if t.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("kind of obj %T is not pointer", obj))
+	}
+
+	return t.Elem().Name()
 }

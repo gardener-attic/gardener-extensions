@@ -17,16 +17,16 @@ package app
 import (
 	"context"
 	"fmt"
-	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
+	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
+	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 
 	"github.com/spf13/cobra"
-
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -39,19 +39,21 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(alicloud.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
-		ctrlOpts = &controllercmd.ControllerOptions{
+
+		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		infrastructureReconcilerOpts = &infrastructure.ReconcilerOptions{
+		infraReconcileOpts = &infrastructure.ReconcilerOptions{
 			IgnoreOperationAnnotation: true,
 		}
+		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
+
 		controllerSwitches = alicloudcmd.ControllerSwitchOptions()
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			ctrlOpts,
-			infrastructureReconcilerOpts,
+			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
 			controllerSwitches,
 		)
 	)
@@ -72,6 +74,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
+
+			infraCtrlOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.Controller)
+			infraReconcileOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
