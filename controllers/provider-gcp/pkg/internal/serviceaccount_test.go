@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"fmt"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -95,6 +96,10 @@ var _ = Describe("Service Account", func() {
 				ctx       = context.TODO()
 				namespace = "foo"
 				name      = "bar"
+				secretRef = corev1.SecretReference{
+					Namespace: namespace,
+					Name:      name,
+				}
 			)
 			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).
 				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
@@ -102,7 +107,7 @@ var _ = Describe("Service Account", func() {
 					return nil
 				})
 
-			actual, err := GetServiceAccountData(ctx, c, namespace, name)
+			actual, err := GetServiceAccountData(ctx, c, secretRef)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(serviceAccountData))
@@ -116,6 +121,10 @@ var _ = Describe("Service Account", func() {
 				ctx       = context.TODO()
 				namespace = "foo"
 				name      = "bar"
+				secretRef = corev1.SecretReference{
+					Namespace: namespace,
+					Name:      name,
+				}
 			)
 			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).
 				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
@@ -123,7 +132,7 @@ var _ = Describe("Service Account", func() {
 					return nil
 				})
 
-			actual, err := GetServiceAccount(ctx, c, namespace, name)
+			actual, err := GetServiceAccount(ctx, c, secretRef)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(serviceAccount))

@@ -14,16 +14,30 @@
 
 package gcp
 
+import "path/filepath"
+
 const (
 	// Name is the name of the GCP provider.
 	Name = "provider-gcp"
 
 	// HyperkubeImageName is the name of the hyperkube image.
 	HyperkubeImageName = "hyperkube"
+	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
+	MachineControllerManagerImageName = "machine-controller-manager"
 
 	// ServiceAccountJSONField is the field in a secret where the service account JSON is stored at.
 	ServiceAccountJSONField = "serviceaccount.json"
 
-	// Type is the type of resources managed by the GCP actuator.
-	Type = "gcp"
+	// ServiceAccountJSONMCM is the field in a machine class secret where the service account JSON is stored at.
+	ServiceAccountJSONMCM = "serviceAccountJSON"
+
+	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
+	MachineControllerManagerName = "machine-controller-manager"
+)
+
+var (
+	// ChartsPath is the path to the charts
+	ChartsPath = filepath.Join("controllers", Name, "charts")
+	// InternalChartsPath is the path to the internal charts
+	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 )

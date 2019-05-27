@@ -12,41 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package internal
+package internal_test
 
 import (
-	"fmt"
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestInternal(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "GCP Internal Suite")
 }
-
-var _ = Describe("Infrastructure", func() {
-	var (
-		projectID          string
-		serviceAccountData []byte
-		serviceAccount     *ServiceAccount
-	)
-
-	BeforeEach(func() {
-		projectID = "project"
-		serviceAccountData = []byte(fmt.Sprintf(`{"project_id": "%s"}`, projectID))
-		serviceAccount = &ServiceAccount{ProjectID: projectID, Raw: serviceAccountData}
-	})
-
-	Describe("#ComputeTerraformerVariablesEnvironment", func() {
-		It("should correctly compute the terraformer variables environment", func() {
-			variablesEnvironment, err := TerraformerVariablesEnvironmentFromServiceAccount(serviceAccount)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(variablesEnvironment).To(Equal(map[string]string{
-				TerraformVarServiceAccount: fmt.Sprintf(`{"project_id":"%s"}`, projectID),
-			}))
-		})
-	})
-})

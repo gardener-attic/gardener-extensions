@@ -71,7 +71,7 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 		return err
 	}
 
-	serviceAccount, err := internal.GetServiceAccount(ctx, a.client, infra.Spec.SecretRef.Namespace, infra.Spec.SecretRef.Name)
+	serviceAccount, err := internal.GetServiceAccount(ctx, a.client, infra.Spec.SecretRef)
 	if err != nil {
 		return err
 	}
