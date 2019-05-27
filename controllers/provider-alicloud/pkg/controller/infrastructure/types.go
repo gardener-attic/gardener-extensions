@@ -42,23 +42,25 @@ const (
 
 // VPCInfo contains info about an existing VPC.
 type VPCInfo struct {
-	CIDR         string
-	NATGatewayID string
-	SNATTableIDs string
+	CIDR               string
+	NATGatewayID       string
+	SNATTableIDs       string
+	InternetChargeType string
 }
 
 // InitializerValues are values used to render a terraform initializer chart.
 type InitializerValues struct {
-	CreateVPC    bool
-	VPCID        string
-	VPCCIDR      string
-	NATGatewayID string
-	SNATTableIDs string
+	CreateVPC          bool
+	VPCID              string
+	VPCCIDR            string
+	NATGatewayID       string
+	SNATTableIDs       string
+	InternetChargeType string
 }
 
 // TerraformChartOps are operations to do for interfacing with Terraform charts.
 type TerraformChartOps interface {
-	ComputeCreateVPCInitializerValues(config *v1alpha1.InfrastructureConfig) *InitializerValues
+	ComputeCreateVPCInitializerValues(config *v1alpha1.InfrastructureConfig, internetChargeType string) *InitializerValues
 	ComputeUseVPCInitializerValues(config *v1alpha1.InfrastructureConfig, info *VPCInfo) *InitializerValues
 	ComputeChartValues(infra *extensionsv1alpha1.Infrastructure, config *v1alpha1.InfrastructureConfig, values *InitializerValues) map[string]interface{}
 }

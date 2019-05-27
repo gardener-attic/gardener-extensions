@@ -50,17 +50,17 @@ func (mr *MockTerraformChartOpsMockRecorder) ComputeChartValues(arg0, arg1, arg2
 }
 
 // ComputeCreateVPCInitializerValues mocks base method
-func (m *MockTerraformChartOps) ComputeCreateVPCInitializerValues(arg0 *v1alpha1.InfrastructureConfig) *infrastructure.InitializerValues {
+func (m *MockTerraformChartOps) ComputeCreateVPCInitializerValues(arg0 *v1alpha1.InfrastructureConfig, arg1 string) *infrastructure.InitializerValues {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ComputeCreateVPCInitializerValues", arg0)
+	ret := m.ctrl.Call(m, "ComputeCreateVPCInitializerValues", arg0, arg1)
 	ret0, _ := ret[0].(*infrastructure.InitializerValues)
 	return ret0
 }
 
 // ComputeCreateVPCInitializerValues indicates an expected call of ComputeCreateVPCInitializerValues
-func (mr *MockTerraformChartOpsMockRecorder) ComputeCreateVPCInitializerValues(arg0 interface{}) *gomock.Call {
+func (mr *MockTerraformChartOpsMockRecorder) ComputeCreateVPCInitializerValues(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeCreateVPCInitializerValues", reflect.TypeOf((*MockTerraformChartOps)(nil).ComputeCreateVPCInitializerValues), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ComputeCreateVPCInitializerValues", reflect.TypeOf((*MockTerraformChartOps)(nil).ComputeCreateVPCInitializerValues), arg0, arg1)
 }
 
 // ComputeUseVPCInitializerValues mocks base method

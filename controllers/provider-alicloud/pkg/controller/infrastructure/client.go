@@ -16,9 +16,11 @@ package infrastructure
 
 import (
 	"fmt"
-	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
-	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	"strings"
+
+	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
+
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 )
 
 // GetVPCInfo gets info of an existing VPC.
@@ -46,13 +48,55 @@ func GetVPCInfo(vpcClient alicloudclient.VPC, vpcID string) (*VPCInfo, error) {
 	if len(describeNatGatewaysRes.NatGateways.NatGateway) != 1 {
 		return nil, fmt.Errorf("ambiguous NAT Gateway response: expected 1 NAT Gateway but got %v", describeNatGatewaysRes.NatGateways.NatGateway)
 	}
+
 	natGateway := describeNatGatewaysRes.NatGateways.NatGateway[0]
 	natGatewayID := natGateway.NatGatewayId
 	sNATTableIDs := strings.Join(natGateway.SnatTableIds.SnatTableId, ",")
 
+	internetChargeType, err := FetchEIPInternetChargeType(vpcClient, vpcID)
+	if err != nil {
+		return nil, err
+	}
+
 	return &VPCInfo{
-		CIDR:         vpcCIDR,
-		NATGatewayID: natGatewayID,
-		SNATTableIDs: sNATTableIDs,
+		CIDR:               vpcCIDR,
+		NATGatewayID:       natGatewayID,
+		SNATTableIDs:       sNATTableIDs,
+		InternetChargeType: internetChargeType,
 	}, nil
+}
+
+// FetchEIPInternetChargeType fetches the internet charge type for the VPC's EIP.
+func FetchEIPInternetChargeType(vpcClient alicloudclient.VPC, vpcID string) (string, error) {
+	describeNATGatewaysReq := vpc.CreateDescribeNatGatewaysRequest()
+	describeNATGatewaysReq.VpcId = vpcID
+
+	describeNatGatewaysRes, err := vpcClient.DescribeNatGateways(describeNATGatewaysReq)
+	if err != nil {
+		return "", err
+	}
+	natGateway := describeNatGatewaysRes.NatGateways.NatGateway[0]
+
+	if len(describeNatGatewaysRes.NatGateways.NatGateway) != 1 {
+		return alicloudclient.DefaultInternetChargeType, nil
+	}
+
+	if len(natGateway.IpLists.IpList) == 0 {
+		return alicloudclient.DefaultInternetChargeType, nil
+	}
+
+	ipList := natGateway.IpLists.IpList[0]
+	eipReq := vpc.CreateDescribeEipAddressesRequest()
+	eipReq.AllocationId = ipList.AllocationId
+
+	eipResp, err := vpcClient.DescribeEipAddresses(eipReq)
+	if err != nil {
+		return "", err
+	}
+
+	if len(eipResp.EipAddresses.EipAddress) == 0 {
+		return alicloudclient.DefaultInternetChargeType, nil
+	}
+
+	return eipResp.EipAddresses.EipAddress[0].InternetChargeType, nil
 }

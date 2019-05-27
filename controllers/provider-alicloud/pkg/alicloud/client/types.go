@@ -18,6 +18,9 @@ import (
 	alicloudvpc "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 )
 
+// DefaultInternetChargeType is used for EIP
+const DefaultInternetChargeType = "PayByTraffic"
+
 // Credentials are the credentials to access the Alicloud API.
 type Credentials struct {
 	AccessKeyID     string
@@ -30,6 +33,8 @@ type VPC interface {
 	DescribeVpcs(req *alicloudvpc.DescribeVpcsRequest) (*alicloudvpc.DescribeVpcsResponse, error)
 	// DescribeNatGateways describes the NAT gateways for the request.
 	DescribeNatGateways(req *alicloudvpc.DescribeNatGatewaysRequest) (*alicloudvpc.DescribeNatGatewaysResponse, error)
+	// DescribeEipAddresses describes the EIP addresses for the request.
+	DescribeEipAddresses(req *alicloudvpc.DescribeEipAddressesRequest) (*alicloudvpc.DescribeEipAddressesResponse, error)
 }
 
 // Factory is the factory to instantiate Alicloud clients.

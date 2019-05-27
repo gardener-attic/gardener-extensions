@@ -16,6 +16,8 @@ package infrastructure
 
 import (
 	"context"
+	"time"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
@@ -26,10 +28,12 @@ import (
 	extensionschartrenderer "github.com/gardener/gardener-extensions/pkg/gardener/chartrenderer"
 	extensionsterraformer "github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
 	chartutil "github.com/gardener/gardener-extensions/pkg/util/chart"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/go-logr/logr"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -37,7 +41,6 @@ import (
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"time"
 )
 
 // StatusTypeMeta is the TypeMeta of InfrastructureStatus.
@@ -134,20 +137,39 @@ func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *e
 	return config, credentials, nil
 }
 
+func (a *actuator) fetchEIPInternetChargeType(vpcClient alicloudclient.VPC, tf extensionsterraformer.Interface) (string, error) {
+	stateVariables, err := tf.GetStateOutputVariables(TerraformerOutputKeyVPCID)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			return alicloudclient.DefaultInternetChargeType, nil
+		}
+		return "", err
+	}
+
+	return FetchEIPInternetChargeType(vpcClient, stateVariables[TerraformerOutputKeyVPCID])
+}
+
 func (a *actuator) getInitializerValues(
+	tf extensionsterraformer.Interface,
 	infra *extensionsv1alpha1.Infrastructure,
 	config *v1alpha1.InfrastructureConfig,
 	credentials *alicloudclient.Credentials,
 ) (*InitializerValues, error) {
-	if config.Networks.VPC.ID == nil {
-		return a.terraformChartOps.ComputeCreateVPCInitializerValues(config), nil
-	}
-
-	vpcID := *config.Networks.VPC.ID
 	vpcClient, err := a.alicloudClientFactory.NewVPC(infra.Spec.Region, credentials.AccessKeyID, credentials.AccessKeySecret)
 	if err != nil {
 		return nil, err
 	}
+
+	if config.Networks.VPC.ID == nil {
+		internetChargeType, err := a.fetchEIPInternetChargeType(vpcClient, tf)
+		if err != nil {
+			return nil, err
+		}
+
+		return a.terraformChartOps.ComputeCreateVPCInitializerValues(config, internetChargeType), nil
+	}
+
+	vpcID := *config.Networks.VPC.ID
 
 	vpcInfo, err := GetVPCInfo(vpcClient, vpcID)
 	if err != nil {
@@ -207,17 +229,17 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
-	initializerValues, err := a.getInitializerValues(infra, config, credentials)
+	tf, err := a.newTerraformer(infra, credentials)
+	if err != nil {
+		return err
+	}
+
+	initializerValues, err := a.getInitializerValues(tf, infra, config, credentials)
 	if err != nil {
 		return err
 	}
 
 	initializer, err := a.newInitializer(infra, config, initializerValues)
-	if err != nil {
-		return err
-	}
-
-	tf, err := a.newTerraformer(infra, credentials)
 	if err != nil {
 		return err
 	}

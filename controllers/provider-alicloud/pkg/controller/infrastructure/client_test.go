@@ -16,7 +16,9 @@ package infrastructure_test
 
 import (
 	"fmt"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
+	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	mockclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/mock/provider-alicloud/alicloud/client"
 	"github.com/golang/mock/gomock"
@@ -73,15 +75,16 @@ var _ = Describe("Client", func() {
 							},
 						},
 					},
-				}, nil),
+				}, nil).Times(2),
 			)
 
 			info, err := GetVPCInfo(client, vpcID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(info).To(Equal(&VPCInfo{
-				CIDR:         vpcCIDR,
-				NATGatewayID: natGatewayID,
-				SNATTableIDs: sNATTableIDs,
+				CIDR:               vpcCIDR,
+				NATGatewayID:       natGatewayID,
+				SNATTableIDs:       sNATTableIDs,
+				InternetChargeType: alicloudclient.DefaultInternetChargeType,
 			}))
 		})
 	})

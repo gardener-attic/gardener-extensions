@@ -40,8 +40,9 @@ var _ = Describe("TerraformChartOps", func() {
 	Describe("#ComputeCreateVPCInitializerValues", func() {
 		It("should compute the values from the config", func() {
 			var (
-				cidr   = gardencorev1alpha1.CIDR("192.168.0.0/16")
-				config = v1alpha1.InfrastructureConfig{
+				cidr               = gardencorev1alpha1.CIDR("192.168.0.0/16")
+				internetChargeType = "foo"
+				config             = v1alpha1.InfrastructureConfig{
 					Networks: v1alpha1.Networks{
 						VPC: v1alpha1.VPC{
 							CIDR: &cidr,
@@ -50,12 +51,13 @@ var _ = Describe("TerraformChartOps", func() {
 				}
 			)
 
-			Expect(ops.ComputeCreateVPCInitializerValues(&config)).To(Equal(&InitializerValues{
-				CreateVPC:    true,
-				VPCID:        TerraformDefaultVPCID,
-				VPCCIDR:      string(cidr),
-				NATGatewayID: TerraformDefaultNATGatewayID,
-				SNATTableIDs: TerraformDefaultSNATTableIDs,
+			Expect(ops.ComputeCreateVPCInitializerValues(&config, internetChargeType)).To(Equal(&InitializerValues{
+				CreateVPC:          true,
+				VPCID:              TerraformDefaultVPCID,
+				VPCCIDR:            string(cidr),
+				NATGatewayID:       TerraformDefaultNATGatewayID,
+				SNATTableIDs:       TerraformDefaultSNATTableIDs,
+				InternetChargeType: internetChargeType,
 			}))
 		})
 	})
@@ -129,16 +131,18 @@ var _ = Describe("TerraformChartOps", func() {
 					},
 				}
 
-				vpcCIDR      = "192.170.0.0/16"
-				vpcID        = "vpcID"
-				natGatewayID = "natGatewayID"
-				sNATTableIDs = "sNATTableIDs"
-				values       = InitializerValues{
-					CreateVPC:    true,
-					VPCCIDR:      vpcCIDR,
-					VPCID:        vpcID,
-					NATGatewayID: natGatewayID,
-					SNATTableIDs: sNATTableIDs,
+				vpcCIDR            = "192.170.0.0/16"
+				vpcID              = "vpcID"
+				natGatewayID       = "natGatewayID"
+				sNATTableIDs       = "sNATTableIDs"
+				internetChargeType = "internetChargeType"
+				values             = InitializerValues{
+					CreateVPC:          true,
+					VPCCIDR:            vpcCIDR,
+					VPCID:              vpcID,
+					NATGatewayID:       natGatewayID,
+					SNATTableIDs:       sNATTableIDs,
+					InternetChargeType: internetChargeType,
 				}
 			)
 
@@ -150,10 +154,11 @@ var _ = Describe("TerraformChartOps", func() {
 					"vpc": true,
 				},
 				"vpc": map[string]interface{}{
-					"cidr":         vpcCIDR,
-					"id":           vpcID,
-					"natGatewayID": natGatewayID,
-					"snatTableID":  sNATTableIDs,
+					"cidr":               vpcCIDR,
+					"id":                 vpcID,
+					"natGatewayID":       natGatewayID,
+					"snatTableID":        sNATTableIDs,
+					"internetChargeType": internetChargeType,
 				},
 				"clusterName":  namespace,
 				"sshPublicKey": sshPublicKey,

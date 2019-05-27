@@ -34,6 +34,21 @@ func (m *MockVPC) EXPECT() *MockVPCMockRecorder {
 	return m.recorder
 }
 
+// DescribeEipAddresses mocks base method
+func (m *MockVPC) DescribeEipAddresses(arg0 *vpc.DescribeEipAddressesRequest) (*vpc.DescribeEipAddressesResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DescribeEipAddresses", arg0)
+	ret0, _ := ret[0].(*vpc.DescribeEipAddressesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DescribeEipAddresses indicates an expected call of DescribeEipAddresses
+func (mr *MockVPCMockRecorder) DescribeEipAddresses(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeEipAddresses", reflect.TypeOf((*MockVPC)(nil).DescribeEipAddresses), arg0)
+}
+
 // DescribeNatGateways mocks base method
 func (m *MockVPC) DescribeNatGateways(arg0 *vpc.DescribeNatGatewaysRequest) (*vpc.DescribeNatGatewaysResponse, error) {
 	m.ctrl.T.Helper()

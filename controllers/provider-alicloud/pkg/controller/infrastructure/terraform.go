@@ -27,24 +27,26 @@ func DefaultTerraformOps() TerraformChartOps {
 }
 
 // ComputeCreateVPCInitializerValues computes the InitializerValues to create a new VPC.
-func (terraformOps) ComputeCreateVPCInitializerValues(config *v1alpha1.InfrastructureConfig) *InitializerValues {
+func (terraformOps) ComputeCreateVPCInitializerValues(config *v1alpha1.InfrastructureConfig, internetChargeType string) *InitializerValues {
 	return &InitializerValues{
-		CreateVPC:    true,
-		VPCID:        TerraformDefaultVPCID,
-		VPCCIDR:      string(*config.Networks.VPC.CIDR),
-		NATGatewayID: TerraformDefaultNATGatewayID,
-		SNATTableIDs: TerraformDefaultSNATTableIDs,
+		CreateVPC:          true,
+		VPCID:              TerraformDefaultVPCID,
+		VPCCIDR:            string(*config.Networks.VPC.CIDR),
+		NATGatewayID:       TerraformDefaultNATGatewayID,
+		SNATTableIDs:       TerraformDefaultSNATTableIDs,
+		InternetChargeType: internetChargeType,
 	}
 }
 
 // ComputeUseVPCInitializerValues computes the InitializerValues to use an existing VPC.
 func (terraformOps) ComputeUseVPCInitializerValues(config *v1alpha1.InfrastructureConfig, info *VPCInfo) *InitializerValues {
 	return &InitializerValues{
-		CreateVPC:    false,
-		VPCID:        *config.Networks.VPC.ID,
-		VPCCIDR:      info.CIDR,
-		NATGatewayID: info.NATGatewayID,
-		SNATTableIDs: info.SNATTableIDs,
+		CreateVPC:          false,
+		VPCID:              *config.Networks.VPC.ID,
+		VPCCIDR:            info.CIDR,
+		NATGatewayID:       info.NATGatewayID,
+		SNATTableIDs:       info.SNATTableIDs,
+		InternetChargeType: info.InternetChargeType,
 	}
 }
 
@@ -72,10 +74,11 @@ func (terraformOps) ComputeChartValues(
 			"vpc": values.CreateVPC,
 		},
 		"vpc": map[string]interface{}{
-			"cidr":         values.VPCCIDR,
-			"id":           values.VPCID,
-			"natGatewayID": values.NATGatewayID,
-			"snatTableID":  values.SNATTableIDs,
+			"cidr":               values.VPCCIDR,
+			"id":                 values.VPCID,
+			"natGatewayID":       values.NATGatewayID,
+			"snatTableID":        values.SNATTableIDs,
+			"internetChargeType": values.InternetChargeType,
 		},
 		"clusterName":  infra.Namespace,
 		"sshPublicKey": string(infra.Spec.SSHPublicKey),
