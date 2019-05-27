@@ -30,4 +30,6 @@ type InfrastructureConfig struct {
 // InfrastructureStatus contains information about created infrastructure resources.
 type InfrastructureStatus struct {
 	metav1.TypeMeta `json:",inline"`
+
+	SSHKeyID string `json:"sshKeyID"`
 }

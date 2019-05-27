@@ -88,12 +88,21 @@ func GenerateTerraformInfraConfig(infrastructure *extensionsv1alpha1.Infrastruct
 		"sshPublicKey": string(infrastructure.Spec.SSHPublicKey),
 		"clusterName":  infrastructure.Namespace,
 		"outputKeys": map[string]interface{}{
-			"sshKeyName": packet.SSHKeyName,
+			"sshKeyID": packet.SSHKeyID,
 		},
 	}
 }
 
 func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure) error {
+	outputVarKeys := []string{
+		packet.SSHKeyID,
+	}
+
+	output, err := tf.GetStateOutputVariables(outputVarKeys...)
+	if err != nil {
+		return err
+	}
+
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infrastructure, func() error {
 		infrastructure.Status.ProviderStatus = &runtime.RawExtension{
 			Object: &packetv1alpha1.InfrastructureStatus{
@@ -101,6 +110,7 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Ter
 					APIVersion: packetv1alpha1.SchemeGroupVersion.String(),
 					Kind:       "InfrastructureStatus",
 				},
+				SSHKeyID: output[packet.SSHKeyID],
 			},
 		}
 		return nil

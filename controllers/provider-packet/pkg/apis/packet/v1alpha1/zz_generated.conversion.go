@@ -103,6 +103,7 @@ func Convert_packet_InfrastructureConfig_To_v1alpha1_InfrastructureConfig(in *pa
 }
 
 func autoConvert_v1alpha1_InfrastructureStatus_To_packet_InfrastructureStatus(in *InfrastructureStatus, out *packet.InfrastructureStatus, s conversion.Scope) error {
+	out.SSHKeyID = in.SSHKeyID
 	return nil
 }
 
@@ -112,6 +113,7 @@ func Convert_v1alpha1_InfrastructureStatus_To_packet_InfrastructureStatus(in *In
 }
 
 func autoConvert_packet_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *packet.InfrastructureStatus, out *InfrastructureStatus, s conversion.Scope) error {
+	out.SSHKeyID = in.SSHKeyID
 	return nil
 }
 

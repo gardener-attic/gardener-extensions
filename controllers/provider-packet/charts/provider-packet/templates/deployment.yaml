@@ -15,6 +15,8 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        checksum/configmap-gardener-extension-provider-packet-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
         app.kubernetes.io/name: gardener-extension-provider-packet
         app.kubernetes.io/instance: {{ .Release.Name }}
@@ -27,11 +29,13 @@ spec:
         command:
         - /gardener-extension-hyper
         - provider-packet-controller-manager
+        - --config-file=/etc/gardener-extension-provider-packet/config/config.yaml
         - --controlplane-max-concurrent-reconciles={{ .Values.controllers.controlplane.concurrentSyncs }}
         - --infrastructure-max-concurrent-reconciles={{ .Values.controllers.infrastructure.concurrentSyncs }}
         {{- if .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         {{- end }}
+        - --worker-max-concurrent-reconciles={{ .Values.controllers.worker.concurrentSyncs }}
         - --webhook-config-mode=service
         - --webhook-config-name=packet-webhooks
         - --webhook-config-namespace={{ .Release.Namespace }}
@@ -52,10 +56,16 @@ spec:
         volumeMounts:
         - name: cert
           mountPath: /tmp/cert
+        - name: config
+          mountPath: /etc/gardener-extension-provider-packet/config
       volumes:
       - name: cert
         secret:
           secretName: packet-webhooks
+          defaultMode: 420
+      - name: config
+        configMap:
+          name: gardener-extension-provider-packet-configmap
           defaultMode: 420
 ---
 apiVersion: v1

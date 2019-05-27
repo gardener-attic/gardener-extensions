@@ -17,12 +17,14 @@ package app
 import (
 	"context"
 	"fmt"
-	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	"os"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
+	packetinstall "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
+	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	packetcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/controlplane"
 	packetinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
+	packetworker "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/worker"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -32,19 +34,23 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Name is the name of the Packet provider controller.
-const Name = "provider-packet"
-
 // NewControllerManagerCommand creates a new command for running a Packet provider controller.
 func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
 			LeaderElection:          true,
-			LeaderElectionID:        controllercmd.LeaderElectionNameID(Name),
+			LeaderElectionID:        controllercmd.LeaderElectionNameID(packet.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
+		configFileOpts = &packetcmd.ConfigOptions{}
 
+		// options for the controlplane controller
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the infrastructure controller
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
@@ -52,12 +58,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			IgnoreOperationAnnotation: true,
 		}
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
-		infraOpts           = controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts)
 
-		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+		// options for the worker controller
+		workerCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		controlPlaneOpts = controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts)
 
 		controllerSwitches = packetcmd.ControllerSwitchOptions()
 		webhookSwitches    = packetcmd.WebhookAddToManagerOptions()
@@ -65,8 +70,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			infraOpts,
-			controlPlaneOpts,
+			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
+			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
+			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
 			webhookSwitches,
 		)
@@ -83,11 +89,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use: fmt.Sprintf("%s-controller-manager", Name),
+		Use: fmt.Sprintf("%s-controller-manager", packet.Name),
 
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
+			}
+
+			if err := configFileOpts.Complete(); err != nil {
+				controllercmd.LogErrAndExit(err, "Error completing config options")
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -99,13 +109,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := install.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := packetinstall.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			configFileOpts.Completed().ApplyMachineImages(&packetworker.DefaultAddOptions.MachineImages)
+			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
-			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
+			workerCtrlOpts.Completed().Apply(&packetworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
@@ -122,6 +134,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
+	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

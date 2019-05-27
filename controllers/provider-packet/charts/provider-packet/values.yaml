@@ -11,6 +11,14 @@ controllers:
   infrastructure:
     concurrentSyncs: 5
     ignoreOperationAnnotation: false
+  worker:
+    concurrentSyncs: 5
 
 disableControllers: []
 disableWebhooks: []
+
+config:
+  machineImages:
+  - name: coreos
+    version: 2023.5.0
+    id: d61c3912-8422-4daf-835e-854efa0062e4

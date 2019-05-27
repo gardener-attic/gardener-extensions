@@ -1,0 +1,7 @@
+---
+apiVersion: packet.provider.extensions.config.gardener.cloud/v1alpha1
+kind: ControllerConfiguration
+machineImages:
+- name: coreos
+  version: 2023.5.0
+  id: d61c3912-8422-4daf-835e-854efa0062e4

@@ -155,8 +155,9 @@ start-provider-packet:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-packet/cmd/gardener-extension-provider-packet \
-		--leader-election=$(LEADER_ELECTION) \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION)
+		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
+		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-certificate-service
 start-certificate-service:

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-packet . ../../example/controller-registration.yaml Infrastructure:packet ControlPlane:packet
+//go:generate ../../../../hack/generate-controller-registration.sh provider-packet . ../../example/controller-registration.yaml ControlPlane:packet Infrastructure:packet Worker:packet
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart

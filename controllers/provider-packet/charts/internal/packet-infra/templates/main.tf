@@ -13,6 +13,6 @@ resource "packet_project_ssh_key" "publickey" {
 //= Output variables
 //=====================================================================
 
-output "{{ .Values.outputKeys.sshKeyName }}" {
-  value = "${packet_project_ssh_key.publickey.key_name}"
+output "{{ .Values.outputKeys.sshKeyID }}" {
+  value = "${packet_project_ssh_key.publickey.id}"
 }
