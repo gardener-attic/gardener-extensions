@@ -15,9 +15,10 @@
 package common
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
+
 	"github.com/gardener/gardener/pkg/logger"
 	"k8s.io/client-go/rest"
 )
@@ -28,7 +29,7 @@ const (
 )
 
 // NewTerraformer creates a new Terraformer and initializes it with the credentials.
-func NewTerraformer(factory terraformer.Factory, config *rest.Config, credentials *client.Credentials, purpose, namespace, name string) (terraformer.Interface, error) {
+func NewTerraformer(factory terraformer.Factory, config *rest.Config, credentials *alicloud.Credentials, purpose, namespace, name string) (terraformer.Interface, error) {
 	tf, err := factory.NewForConfig(logger.NewLogger("info"), config, purpose, namespace, name, imagevector.TerraformerImage())
 	if err != nil {
 		return nil, err

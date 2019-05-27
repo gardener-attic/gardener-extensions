@@ -22,7 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/install"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
+	alicloudv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/common"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
@@ -108,9 +108,9 @@ var _ = Describe("Actuator", func() {
 					chartRenderer = mockgardenerchartrenderer.NewMockInterface(ctrl)
 
 					gardenCoreCIDR = gardencorev1alpha1.CIDR("192.168.0.0/16")
-					config         = v1alpha1.InfrastructureConfig{
-						Networks: v1alpha1.Networks{
-							VPC: v1alpha1.VPC{
+					config         = alicloudv1alpha1.InfrastructureConfig{
+						Networks: alicloudv1alpha1.Networks{
+							VPC: alicloudv1alpha1.VPC{
 								CIDR: &gardenCoreCIDR,
 							},
 						},
@@ -145,7 +145,6 @@ var _ = Describe("Actuator", func() {
 					vpcID           = "vpcID"
 					vpcCIDRString   = "vpcCIDR"
 					natGatewayID    = "natGatewayID"
-					vpcCIDR         = gardencorev1alpha1.CIDR(vpcCIDRString)
 					securityGroupID = "sgID"
 					keyPairName     = "keyPairName"
 				)
@@ -159,8 +158,8 @@ var _ = Describe("Actuator", func() {
 					c.EXPECT().Get(ctx, client.ObjectKey{Namespace: secretNamespace, Name: secretName}, gomock.AssignableToTypeOf(&corev1.Secret{})).
 						SetArg(2, corev1.Secret{
 							Data: map[string][]byte{
-								alicloudclient.AccessKeyIDField:     []byte(accessKeyID),
-								alicloudclient.AccessKeySecretField: []byte(accessKeySecret),
+								alicloud.AccessKeyID:     []byte(accessKeyID),
+								alicloud.AccessKeySecret: []byte(accessKeySecret),
 							},
 						}),
 
@@ -230,14 +229,18 @@ var _ = Describe("Actuator", func() {
 				ExpectInject(inject.ConfigInto(&restConfig, actuator))
 
 				Expect(actuator.Reconcile(ctx, &infra, &cluster)).To(Succeed())
-				Expect(infra.Status.ProviderStatus.Object).To(Equal(&v1alpha1.InfrastructureStatus{
+				Expect(infra.Status.ProviderStatus.Object).To(Equal(&alicloudv1alpha1.InfrastructureStatus{
 					TypeMeta: StatusTypeMeta,
-					VPC: v1alpha1.VPC{
-						ID:   &vpcID,
-						CIDR: &vpcCIDR,
+					VPC: alicloudv1alpha1.VPCStatus{
+						ID: vpcID,
+						SecurityGroups: []alicloudv1alpha1.SecurityGroup{
+							{
+								Purpose: alicloudv1alpha1.PurposeNodes,
+								ID:      securityGroupID,
+							},
+						},
 					},
-					KeyPairName:     keyPairName,
-					SecurityGroupID: securityGroupID,
+					KeyPairName: keyPairName,
 				}))
 			})
 		})

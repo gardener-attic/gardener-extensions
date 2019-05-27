@@ -116,13 +116,13 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 
+		volumeSize, err := worker.DiskSize(pool.Volume.Size)
+		if err != nil {
+			return err
+		}
+
 		for zoneIndex, zone := range pool.Zones {
 			nodesSubnet, err := awsapihelper.FindSubnetForPurposeAndZone(infrastructureStatus.VPC.Subnets, awsapi.PurposeNodes, zone)
-			if err != nil {
-				return err
-			}
-
-			volumeSize, err := worker.DiskSize(pool.Volume.Size)
 			if err != nil {
 				return err
 			}

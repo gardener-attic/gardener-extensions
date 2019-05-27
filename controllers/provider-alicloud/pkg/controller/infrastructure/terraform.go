@@ -84,10 +84,11 @@ func (terraformOps) ComputeChartValues(
 		"sshPublicKey": string(infra.Spec.SSHPublicKey),
 		"zones":        zones,
 		"outputKeys": map[string]interface{}{
-			"vpcID":           TerraformerOutputKeyVPCID,
-			"vpcCIDR":         TerraformerOutputKeyVPCCIDR,
-			"securityGroupID": TerraformerOutputKeySecurityGroupID,
-			"keyPairName":     TerraformerOutputKeyKeyPairName,
+			"vpcID":              TerraformerOutputKeyVPCID,
+			"vpcCIDR":            TerraformerOutputKeyVPCCIDR,
+			"securityGroupID":    TerraformerOutputKeySecurityGroupID,
+			"keyPairName":        TerraformerOutputKeyKeyPairName,
+			"vswitchNodesPrefix": TerraformerOutputKeyVSwitchNodesPrefix,
 		},
 	}
 }

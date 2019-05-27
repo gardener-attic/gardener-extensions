@@ -21,12 +21,6 @@ import (
 // DefaultInternetChargeType is used for EIP
 const DefaultInternetChargeType = "PayByTraffic"
 
-// Credentials are the credentials to access the Alicloud API.
-type Credentials struct {
-	AccessKeyID     string
-	AccessKeySecret string
-}
-
 // VPC is the interface to the Alicloud VPC service.
 type VPC interface {
 	// DescribeVpcs describes the VPCs for the request.

@@ -12,21 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package client
+package alicloud
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"testing"
 )
 
-func TestClient(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Client")
-}
-
-var _ = Describe("Client Suite", func() {
+var _ = Describe("Alicloud Suite", func() {
 	Describe("#ReadSecretCredentials", func() {
 		It("should correctly read the credentials", func() {
 			var (
@@ -36,8 +30,8 @@ var _ = Describe("Client Suite", func() {
 
 			creds, err := ReadSecretCredentials(&corev1.Secret{
 				Data: map[string][]byte{
-					AccessKeyIDField:     []byte(accessKeyID),
-					AccessKeySecretField: []byte(accessKeySecret),
+					AccessKeyID:     []byte(accessKeyID),
+					AccessKeySecret: []byte(accessKeySecret),
 				},
 			})
 
@@ -60,7 +54,7 @@ var _ = Describe("Client Suite", func() {
 
 			_, err := ReadSecretCredentials(&corev1.Secret{
 				Data: map[string][]byte{
-					AccessKeySecretField: []byte(accessKeySecret),
+					AccessKeySecret: []byte(accessKeySecret),
 				},
 			})
 
@@ -74,7 +68,7 @@ var _ = Describe("Client Suite", func() {
 
 			_, err := ReadSecretCredentials(&corev1.Secret{
 				Data: map[string][]byte{
-					AccessKeyIDField: []byte(accessKeyID),
+					AccessKeyID: []byte(accessKeyID),
 				},
 			})
 

@@ -16,11 +16,14 @@ package infrastructure
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
+	alicloudv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/common"
 	extensioncontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
@@ -29,7 +32,6 @@ import (
 	extensionsterraformer "github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
 	chartutil "github.com/gardener/gardener-extensions/pkg/util/chart"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/go-logr/logr"
@@ -45,7 +47,7 @@ import (
 
 // StatusTypeMeta is the TypeMeta of InfrastructureStatus.
 var StatusTypeMeta = func() metav1.TypeMeta {
-	apiVersion, kind := v1alpha1.SchemeGroupVersion.WithKind(extensioncontroller.UnsafeGuessKind(&v1alpha1.InfrastructureStatus{})).ToAPIVersionAndKind()
+	apiVersion, kind := alicloudv1alpha1.SchemeGroupVersion.WithKind(extensioncontroller.UnsafeGuessKind(&alicloudv1alpha1.InfrastructureStatus{})).ToAPIVersionAndKind()
 	return metav1.TypeMeta{
 		APIVersion: apiVersion,
 		Kind:       kind,
@@ -118,8 +120,8 @@ func (a *actuator) InjectConfig(config *rest.Config) error {
 	return err
 }
 
-func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *extensionsv1alpha1.Infrastructure) (*v1alpha1.InfrastructureConfig, *alicloudclient.Credentials, error) {
-	config := &v1alpha1.InfrastructureConfig{}
+func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *extensionsv1alpha1.Infrastructure) (*alicloudv1alpha1.InfrastructureConfig, *alicloud.Credentials, error) {
+	config := &alicloudv1alpha1.InfrastructureConfig{}
 	if _, _, err := a.decoder.Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
 		return nil, nil, err
 	}
@@ -129,7 +131,7 @@ func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *e
 		return nil, nil, err
 	}
 
-	credentials, err := alicloudclient.ReadSecretCredentials(secret)
+	credentials, err := alicloud.ReadSecretCredentials(secret)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -152,8 +154,8 @@ func (a *actuator) fetchEIPInternetChargeType(vpcClient alicloudclient.VPC, tf e
 func (a *actuator) getInitializerValues(
 	tf extensionsterraformer.Interface,
 	infra *extensionsv1alpha1.Infrastructure,
-	config *v1alpha1.InfrastructureConfig,
-	credentials *alicloudclient.Credentials,
+	config *alicloudv1alpha1.InfrastructureConfig,
+	credentials *alicloud.Credentials,
 ) (*InitializerValues, error) {
 	vpcClient, err := a.alicloudClientFactory.NewVPC(infra.Spec.Region, credentials.AccessKeyID, credentials.AccessKeySecret)
 	if err != nil {
@@ -179,7 +181,7 @@ func (a *actuator) getInitializerValues(
 	return a.terraformChartOps.ComputeUseVPCInitializerValues(config, vpcInfo), nil
 }
 
-func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, config *v1alpha1.InfrastructureConfig, values *InitializerValues) (extensionsterraformer.Initializer, error) {
+func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, config *alicloudv1alpha1.InfrastructureConfig, values *InitializerValues) (extensionsterraformer.Initializer, error) {
 	chartValues := a.terraformChartOps.ComputeChartValues(infra, config, values)
 	release, err := a.chartRenderer.Render(alicloud.InfraChartPath, alicloud.InfraRelease, infra.Namespace, chartValues)
 	if err != nil {
@@ -194,32 +196,78 @@ func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, conf
 	return a.terraformerFactory.DefaultInitializer(a.client, files.Main, files.Variables, files.TFVars), nil
 }
 
-func (a *actuator) newTerraformer(infra *extensionsv1alpha1.Infrastructure, credentials *alicloudclient.Credentials) (extensionsterraformer.Interface, error) {
+func (a *actuator) newTerraformer(infra *extensionsv1alpha1.Infrastructure, credentials *alicloud.Credentials) (extensionsterraformer.Interface, error) {
 	return common.NewTerraformer(a.terraformerFactory, a.config, credentials, TerraformerPurpose, infra.Namespace, infra.Name)
 }
 
-func (a *actuator) extractStatus(tf extensionsterraformer.Interface) (*v1alpha1.InfrastructureStatus, error) {
-	vars, err := tf.GetStateOutputVariables(TerraformerOutputKeyVPCID, TerraformerOutputKeyVPCCIDR, TerraformerOutputKeySecurityGroupID, TerraformerOutputKeyKeyPairName)
+func (a *actuator) extractStatus(tf extensionsterraformer.Interface, infraConfig *alicloudv1alpha1.InfrastructureConfig) (*alicloudv1alpha1.InfrastructureStatus, error) {
+	outputVarKeys := []string{
+		TerraformerOutputKeyVPCID,
+		TerraformerOutputKeyVPCCIDR,
+		TerraformerOutputKeySecurityGroupID,
+		TerraformerOutputKeyKeyPairName,
+	}
+
+	for zoneIndex := range infraConfig.Networks.Zones {
+		outputVarKeys = append(outputVarKeys, fmt.Sprintf("%s%d", TerraformerOutputKeyVSwitchNodesPrefix, zoneIndex))
+	}
+
+	vars, err := tf.GetStateOutputVariables(outputVarKeys...)
 	if err != nil {
 		return nil, err
 	}
 
-	var (
-		vpcID           = vars[TerraformerOutputKeyVPCID]
-		vpcCIDR         = gardencorev1alpha1.CIDR(vars[TerraformerOutputKeyVPCCIDR])
-		securityGroupID = vars[TerraformerOutputKeySecurityGroupID]
-		keyPairName     = vars[TerraformerOutputKeyKeyPairName]
-	)
+	vswitches, err := computeProviderStatusVSwitches(infraConfig, vars)
+	if err != nil {
+		return nil, err
+	}
 
-	return &v1alpha1.InfrastructureStatus{
+	return &alicloudv1alpha1.InfrastructureStatus{
 		TypeMeta: StatusTypeMeta,
-		VPC: v1alpha1.VPC{
-			ID:   &vpcID,
-			CIDR: &vpcCIDR,
+		VPC: alicloudv1alpha1.VPCStatus{
+			ID:        vars[TerraformerOutputKeyVPCID],
+			VSwitches: vswitches,
+			SecurityGroups: []alicloudv1alpha1.SecurityGroup{
+				{
+					Purpose: alicloudv1alpha1.PurposeNodes,
+					ID:      vars[TerraformerOutputKeySecurityGroupID],
+				},
+			},
 		},
-		KeyPairName:     keyPairName,
-		SecurityGroupID: securityGroupID,
+		KeyPairName: vars[TerraformerOutputKeyKeyPairName],
 	}, nil
+}
+
+func computeProviderStatusVSwitches(infrastructure *alicloudv1alpha1.InfrastructureConfig, values map[string]string) ([]alicloudv1alpha1.VSwitch, error) {
+	var vswitchesToReturn []alicloudv1alpha1.VSwitch
+
+	for key, value := range values {
+		var (
+			prefix  string
+			purpose alicloudv1alpha1.Purpose
+		)
+
+		if strings.HasPrefix(key, TerraformerOutputKeyVSwitchNodesPrefix) {
+			prefix = TerraformerOutputKeyVSwitchNodesPrefix
+			purpose = alicloudv1alpha1.PurposeNodes
+		}
+
+		if len(prefix) == 0 {
+			continue
+		}
+
+		zoneID, err := strconv.Atoi(strings.TrimPrefix(key, prefix))
+		if err != nil {
+			return nil, err
+		}
+		vswitchesToReturn = append(vswitchesToReturn, alicloudv1alpha1.VSwitch{
+			ID:      value,
+			Purpose: purpose,
+			Zone:    infrastructure.Networks.Zones[zoneID].Name,
+		})
+	}
+
+	return vswitchesToReturn, nil
 }
 
 // Reconcile implements infrastructure.Actuator.
@@ -252,7 +300,7 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		}
 	}
 
-	status, err := a.extractStatus(tf)
+	status, err := a.extractStatus(tf, config)
 	if err != nil {
 		return err
 	}

@@ -177,10 +177,11 @@ var _ = Describe("TerraformChartOps", func() {
 					},
 				},
 				"outputKeys": map[string]interface{}{
-					"vpcID":           TerraformerOutputKeyVPCID,
-					"vpcCIDR":         TerraformerOutputKeyVPCCIDR,
-					"securityGroupID": TerraformerOutputKeySecurityGroupID,
-					"keyPairName":     TerraformerOutputKeyKeyPairName,
+					"vpcID":              TerraformerOutputKeyVPCID,
+					"vpcCIDR":            TerraformerOutputKeyVPCCIDR,
+					"securityGroupID":    TerraformerOutputKeySecurityGroupID,
+					"keyPairName":        TerraformerOutputKeyKeyPairName,
+					"vswitchNodesPrefix": TerraformerOutputKeyVSwitchNodesPrefix,
 				},
 			}))
 		})

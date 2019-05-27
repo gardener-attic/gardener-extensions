@@ -35,3 +35,4 @@ outputKeys:
   vpcID: vpc_id
   vpcCIDR: vpc_cidr
   keyPairName: key_pair_name
+  vswitchNodesPrefix: vswitch_z

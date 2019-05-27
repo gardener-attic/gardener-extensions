@@ -20,10 +20,10 @@ import (
 	"os"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
-	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
-	alicloudcontroller "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
+	alicloudinstall "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/install"
 	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
+	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
+	alicloudworker "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -52,12 +52,18 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 
+		// options for the worker controller
+		workerCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
 		controllerSwitches = alicloudcmd.ControllerSwitchOptions()
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
 			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
+			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
 		)
 	)
@@ -83,9 +89,14 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			if err := alicloudinstall.AddToScheme(mgr.GetScheme()); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
 			configFileOpts.Completed().ApplyMachineImages(&alicloudworker.DefaultAddOptions.MachineImages)
 			infraCtrlOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			workerCtrlOpts.Completed().Apply(&alicloudworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

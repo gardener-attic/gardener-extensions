@@ -31,6 +31,8 @@ const (
 	TerraformerOutputKeySecurityGroupID = "sg_id"
 	// TerraformerOutputKeyKeyPairName is the output key of the key pair name.
 	TerraformerOutputKeyKeyPairName = "key_pair_name"
+	// TerraformerOutputKeyVSwitchNodesPrefix is the prefix for the vswitches.
+	TerraformerOutputKeyVSwitchNodesPrefix = "vswitch_id_z"
 
 	// TerraformDefaultVPCID is the default value for the VPC ID in the chart.
 	TerraformDefaultVPCID = "${alicloud_vpc.vpc.id}"

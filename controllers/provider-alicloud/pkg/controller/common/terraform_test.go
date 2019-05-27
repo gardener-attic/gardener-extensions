@@ -15,9 +15,10 @@
 package common
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/gardener/terraformer"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -43,7 +44,7 @@ var _ = Describe("Terraform", func() {
 				config          rest.Config
 				accessKeyID     = "accessKeyID"
 				accessKeySecret = "accessKeySecret"
-				credentials     = client.Credentials{
+				credentials     = alicloud.Credentials{
 					AccessKeyID:     accessKeyID,
 					AccessKeySecret: accessKeySecret,
 				}

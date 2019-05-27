@@ -11,8 +11,8 @@ metadata:
   name: cloudprovider
 type: Opaque
 data:
-#  accessKeyID: base64(accessKeyID)
-#  accessKeySecret: base64(accessKeySecret)
+# accessKeyID: base64(accessKeyID)
+# accessKeySecret: base64(accessKeySecret)
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster

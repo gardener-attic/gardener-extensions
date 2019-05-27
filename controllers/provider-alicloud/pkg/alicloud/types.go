@@ -22,6 +22,11 @@ const (
 
 	// InfraRelease is the name of the alicloud-infra chart.
 	InfraRelease = "alicloud-infra"
+
+	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
+	MachineControllerManagerImageName = "machine-controller-manager"
+	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
+	MachineControllerManagerName = "machine-controller-manager"
 )
 
 var (

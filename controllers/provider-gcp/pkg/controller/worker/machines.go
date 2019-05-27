@@ -106,12 +106,12 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 
-		for zoneIndex, zone := range pool.Zones {
-			volumeSize, err := worker.DiskSize(pool.Volume.Size)
-			if err != nil {
-				return err
-			}
+		volumeSize, err := worker.DiskSize(pool.Volume.Size)
+		if err != nil {
+			return err
+		}
 
+		for zoneIndex, zone := range pool.Zones {
 			machineClassSpec := map[string]interface{}{
 				"region":             w.worker.Spec.Region,
 				"zone":               zone,

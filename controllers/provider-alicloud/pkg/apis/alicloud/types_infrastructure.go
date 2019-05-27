@@ -48,6 +48,44 @@ type VPC struct {
 	CIDR *gardencorev1alpha1.CIDR
 }
 
+// VPCStatus contains output information about the VPC.
+type VPCStatus struct {
+	// ID is the ID of the VPC.
+	ID string
+	// VSwitches is a list of vswitches.
+	VSwitches []VSwitch
+	// SecurityGroups is a list of security groups.
+	SecurityGroups []SecurityGroup
+}
+
+// Purpose is a purpose of a subnet.
+type Purpose string
+
+const (
+	// PurposeNodes is a Purpose for nodes.
+	PurposeNodes Purpose = "nodes"
+	// PurposeInternal is a Purpose for internal use.
+	PurposeInternal Purpose = "internal"
+)
+
+// VSwitch contains information about a vswitch.
+type VSwitch struct {
+	// Purpose is the purpose for which the vswitch was created.
+	Purpose Purpose
+	// ID is the id of the vswitch.
+	ID string
+	// Zone is the name of the zone.
+	Zone string
+}
+
+// SecurityGroup contains information about a security group.
+type SecurityGroup struct {
+	// Purpose is the purpose for which the security group was created.
+	Purpose Purpose
+	// ID is the id of the security group.
+	ID string
+}
+
 // Zone is a zone with a name and worker CIDR.
 type Zone struct {
 	// Name is the name of a zone.
@@ -62,7 +100,6 @@ type Zone struct {
 type InfrastructureStatus struct {
 	metav1.TypeMeta
 
-	VPC             VPC
-	SecurityGroupID string
-	KeyPairName     string
+	VPC         VPCStatus
+	KeyPairName string
 }

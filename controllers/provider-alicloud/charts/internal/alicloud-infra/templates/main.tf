@@ -53,10 +53,10 @@ resource "alicloud_snat_entry" "snat_z{{ $index }}" {
 }
 
 // Output
-output "vswitch_id_z{{ $index }}" {
+output "{{ $.Values.outputKeys.vswitchNodesPrefix }}{{ $index }}" {
   value = "${alicloud_vswitch.vsw_z{{ $index }}.id}"
 }
- 
+
 {{end}}
 // End of loop zones
 
@@ -94,7 +94,7 @@ resource "alicloud_security_group_rule" "allow_all_internal_udp_in" {
   security_group_id = "${alicloud_security_group.sg.id}"
   cidr_ip           = "{{ required "pod is required" .Values.vpc.cidr }}"
 }
- 
+
 //=====================================================================
 //= Output variables
 //=====================================================================

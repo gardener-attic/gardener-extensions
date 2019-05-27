@@ -48,6 +48,44 @@ type VPC struct {
 	CIDR *gardencorev1alpha1.CIDR `json:"cidr,omitempty"`
 }
 
+// VPCStatus contains output information about the VPC.
+type VPCStatus struct {
+	// ID is the ID of the VPC.
+	ID string `json:"id"`
+	// VSwitches is a list of vswitches.
+	VSwitches []VSwitch `json:"vswitches"`
+	// SecurityGroups is a list of security groups.
+	SecurityGroups []SecurityGroup `json:"securityGroups"`
+}
+
+// Purpose is a purpose of a subnet.
+type Purpose string
+
+const (
+	// PurposeNodes is a Purpose for nodes.
+	PurposeNodes Purpose = "nodes"
+	// PurposeInternal is a Purpose for internal use.
+	PurposeInternal Purpose = "internal"
+)
+
+// VSwitch contains information about a vswitch.
+type VSwitch struct {
+	// Purpose is the purpose for which the vswitch was created.
+	Purpose Purpose `json:"purpose"`
+	// ID is the id of the vswitch.
+	ID string `json:"id"`
+	// Zone is the name of the zone.
+	Zone string `json:"zone"`
+}
+
+// SecurityGroup contains information about a security group.
+type SecurityGroup struct {
+	// Purpose is the purpose for which the security group was created.
+	Purpose Purpose `json:"purpose"`
+	// ID is the id of the security group.
+	ID string `json:"id"`
+}
+
 // Zone is a zone with a name and worker CIDR.
 type Zone struct {
 	// Name is the name of a zone.
@@ -62,7 +100,6 @@ type Zone struct {
 type InfrastructureStatus struct {
 	metav1.TypeMeta `json:",inline"`
 
-	VPC             VPC    `json:"vpc"`
-	SecurityGroupID string `json:"securityGroupId"`
-	KeyPairName     string `json:"keyPairName"`
+	VPC         VPCStatus `json:"vpc"`
+	KeyPairName string    `json:"keyPairName"`
 }
