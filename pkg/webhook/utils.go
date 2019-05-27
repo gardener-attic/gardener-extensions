@@ -36,6 +36,10 @@ const (
 	// ShootProviderLabel is a label on shoot namespaces in the seed cluster that identifies the Shoot provider.
 	// TODO Move this constant to gardener/gardener
 	ShootProviderLabel = "shoot.gardener.cloud/provider"
+	// BackupProviderLabel is a label on shoot namespaces in the seed cluster that identifies the Backup provider.
+	// This provider can be different from both the Seed or the Shoot provider, see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md.
+	// TODO Move this constant to gardener/gardener
+	BackupProviderLabel = "backup.gardener.cloud/provider"
 )
 
 // Kind is a type for webhook kinds.
@@ -47,6 +51,8 @@ const (
 	SeedKind Kind = "seed"
 	// A shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
 	ShootKind Kind = "shoot"
+	// A backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
+	BackupKind Kind = "backup"
 )
 
 // FactoryAggregator aggregates various Factory functions.
@@ -113,7 +119,7 @@ func (s *ServerBuilder) AddToManager(mgr manager.Manager) error {
 		return errors.Wrapf(err, "could not register webhooks in server %s", s.Name)
 	}
 
-	return errors.Wrapf(mgr.Add(srv), "could not add webhook server %s to manager", s.Name)
+	return nil
 }
 
 // NewWebhook creates a new mutating webhook for create and update operations
@@ -158,6 +164,8 @@ func buildSelector(kind Kind, provider string) (*metav1.LabelSelector, error) {
 		key = SeedProviderLabel
 	case ShootKind:
 		key = ShootProviderLabel
+	case BackupKind:
+		key = BackupProviderLabel
 	default:
 		return nil, errors.Errorf("invalid webhook kind '%s'", kind)
 	}

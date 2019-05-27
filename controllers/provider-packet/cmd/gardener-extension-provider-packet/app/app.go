@@ -64,8 +64,18 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
-		controllerSwitches = packetcmd.ControllerSwitchOptions()
-		webhookSwitches    = packetcmd.WebhookAddToManagerOptions()
+		controllerSwitches   = packetcmd.ControllerSwitchOptions()
+		webhookSwitches      = packetcmd.WebhookSwitchOptions()
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+		webhookOptions = webhookcmd.NewAddToManagerOptions("packet-webhooks", webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
@@ -74,19 +84,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
-			webhookSwitches,
+			webhookOptions,
 		)
 	)
-
-	webhookSwitches.Server = webhookcmd.ServerOptions{
-		Port:             7890,
-		CertDir:          "/tmp/cert",
-		Mode:             webhookcmd.ServiceMode,
-		Name:             "webhooks",
-		Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-		ServiceSelectors: "{}",
-		Host:             "localhost",
-	}
 
 	cmd := &cobra.Command{
 		Use: fmt.Sprintf("%s-controller-manager", packet.Name),
@@ -123,7 +123,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
-			if err := webhookSwitches.Completed().AddToManager(mgr); err != nil {
+			if err := webhookOptions.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 

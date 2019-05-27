@@ -38,7 +38,7 @@ func TestController(t *testing.T) {
 	RunSpecs(t, "GCP Controlplane Webhook Suite")
 }
 
-var _ = Describe("Mutator", func() {
+var _ = Describe("Ensurer", func() {
 	var (
 		ctrl *gomock.Controller
 	)
@@ -46,6 +46,7 @@ var _ = Describe("Mutator", func() {
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 	})
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})

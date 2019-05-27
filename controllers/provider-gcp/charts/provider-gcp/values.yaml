@@ -19,9 +19,16 @@ disableControllers:
 disableWebhooks:
 - controlplane
 - controlplaneexposure
+- controlplanebackup
 
 config:
   machineImages:
   - name: coreos
     version: 2023.5.0
     image: projects/coreos-cloud/global/images/coreos-stable-2023-5-0-v20190312
+  etcd:
+    storage:
+      className: gardener.cloud-fast
+      capacity: 25Gi
+    backup:
+      schedule: "0 */24 * * *"

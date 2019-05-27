@@ -18,7 +18,9 @@ import (
 	"context"
 	"testing"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/gardener/gardener/pkg/operation/common"
@@ -27,6 +29,7 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -42,8 +45,13 @@ func TestController(t *testing.T) {
 	RunSpecs(t, "GCP Controlplane Exposure Webhook Suite")
 }
 
-var _ = Describe("Mutator", func() {
+var _ = Describe("Ensurer", func() {
 	var (
+		etcdStorage = &config.ETCDStorage{
+			ClassName: util.StringPtr("gardener.cloud-fast"),
+			Capacity:  util.QuantityPtr(resource.MustParse("25Gi")),
+		}
+
 		ctrl *gomock.Controller
 
 		svcKey = client.ObjectKey{Namespace: namespace, Name: common.KubeAPIServerDeploymentName}
@@ -91,7 +99,7 @@ var _ = Describe("Mutator", func() {
 			client.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
 
 			// Create ensurer
-			ensurer := NewEnsurer(logger)
+			ensurer := NewEnsurer(etcdStorage, logger)
 			err := ensurer.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
@@ -125,7 +133,7 @@ var _ = Describe("Mutator", func() {
 			client.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
 
 			// Create ensurer
-			ensurer := NewEnsurer(logger)
+			ensurer := NewEnsurer(etcdStorage, logger)
 			err := ensurer.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
@@ -135,6 +143,102 @@ var _ = Describe("Mutator", func() {
 			checkKubeAPIServerDeployment(dep)
 		})
 	})
+
+	Describe("#EnsureETCDStatefulSet", func() {
+		It("should add or modify elements to etcd-main statefulset", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdMainStatefulSetName},
+				}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(etcdStorage, logger)
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			Expect(err).To(Not(HaveOccurred()))
+			checkETCDMainStatefulSet(ss)
+		})
+
+		It("should modify existing elements of etcd-main statefulset", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdMainStatefulSetName},
+					Spec: appsv1.StatefulSetSpec{
+						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
+							{
+								ObjectMeta: metav1.ObjectMeta{Name: "etcd-main"},
+								Spec: corev1.PersistentVolumeClaimSpec{
+									AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceStorage: resource.MustParse("10Gi"),
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(etcdStorage, logger)
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			Expect(err).To(Not(HaveOccurred()))
+			checkETCDMainStatefulSet(ss)
+		})
+
+		It("should add or modify elements to etcd-events statefulset", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdEventsStatefulSetName},
+				}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(etcdStorage, logger)
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			Expect(err).To(Not(HaveOccurred()))
+			checkETCDEventsStatefulSet(ss)
+		})
+
+		It("should modify existing elements of etcd-events statefulset", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdEventsStatefulSetName},
+					Spec: appsv1.StatefulSetSpec{
+						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
+							{
+								ObjectMeta: metav1.ObjectMeta{Name: "etcd-events"},
+								Spec: corev1.PersistentVolumeClaimSpec{
+									AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+									Resources: corev1.ResourceRequirements{
+										Requests: corev1.ResourceList{
+											corev1.ResourceStorage: resource.MustParse("20Gi"),
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(etcdStorage, logger)
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			Expect(err).To(Not(HaveOccurred()))
+			checkETCDEventsStatefulSet(ss)
+		})
+	})
 })
 
 func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
@@ -142,6 +246,17 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(ContainElement("--advertise-address=1.2.3.4"))
+}
+
+func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
+	pvc := controlplane.PVCWithName(ss.Spec.VolumeClaimTemplates, "etcd-main")
+	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(common.EtcdMainStatefulSetName, util.StringPtr("gardener.cloud-fast"),
+		util.QuantityPtr(resource.MustParse("25Gi")))))
+}
+
+func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
+	pvc := controlplane.PVCWithName(ss.Spec.VolumeClaimTemplates, "etcd-events")
+	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(common.EtcdEventsStatefulSetName, nil, nil)))
 }
 
 func clientGet(result runtime.Object) interface{} {

@@ -25,6 +25,8 @@ import (
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
 	awsworker "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
+	awscontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplanebackup"
+	awscontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -64,8 +66,18 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
-		controllerSwitches = awscmd.ControllerSwitchOptions()
-		webhookSwitches    = awscmd.WebhookAddToManagerOptions()
+		controllerSwitches   = awscmd.ControllerSwitchOptions()
+		webhookSwitches      = awscmd.WebhookSwitchOptions()
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+		webhookOptions = webhookcmd.NewAddToManagerOptions("aws-webhooks", webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
@@ -75,19 +87,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			configFileOpts,
 			controllerSwitches,
-			webhookSwitches,
+			webhookOptions,
 		)
 	)
-
-	webhookSwitches.Server = webhookcmd.ServerOptions{
-		Port:             7890,
-		CertDir:          "/tmp/cert",
-		Mode:             webhookcmd.ServiceMode,
-		Name:             "webhooks",
-		Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-		ServiceSelectors: "{}",
-		Host:             "localhost",
-	}
 
 	cmd := &cobra.Command{
 		Use: fmt.Sprintf("%s-controller-manager", aws.Name),
@@ -111,6 +113,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&awsworker.DefaultAddOptions.MachineImagesToAMIMapping)
+			configFileOpts.Completed().ApplyETCDStorage(&awscontrolplaneexposure.DefaultAddOptions.ETCDStorage)
+			configFileOpts.Completed().ApplyETCDBackup(&awscontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
@@ -120,7 +124,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
-			if err := webhookSwitches.Completed().AddToManager(mgr); err != nil {
+			if err := webhookOptions.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 

@@ -14,6 +14,8 @@
 
 package util
 
+import "k8s.io/apimachinery/pkg/api/resource"
+
 // BoolPtr returns a bool pointer to its argument.
 func BoolPtr(b bool) *bool {
 	return &b
@@ -27,4 +29,9 @@ func Int32Ptr(i int32) *int32 {
 // StringPtr returns a String pointer to its argument.
 func StringPtr(s string) *string {
 	return &s
+}
+
+// QuantityPtr returns a Quatity pointer to its argument
+func QuantityPtr(q resource.Quantity) *resource.Quantity {
+	return &q
 }

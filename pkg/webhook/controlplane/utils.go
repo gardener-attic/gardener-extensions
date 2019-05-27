@@ -50,6 +50,14 @@ func ContainerWithName(containers []corev1.Container, name string) *corev1.Conta
 	return nil
 }
 
+// PVCWithName returns the PersistentVolumeClaim with the given name if it exists in the given slice, nil otherwise.
+func PVCWithName(pvcs []corev1.PersistentVolumeClaim, name string) *corev1.PersistentVolumeClaim {
+	if i := pvcWithNameIndex(pvcs, name); i >= 0 {
+		return &pvcs[i]
+	}
+	return nil
+}
+
 // UnitWithName returns the unit with the given name if it exists in the given slice, nil otherwise.
 func UnitWithName(units []extensionsv1alpha1.Unit, name string) *extensionsv1alpha1.Unit {
 	if i := unitWithNameIndex(units, name); i >= 0 {
@@ -179,6 +187,44 @@ func EnsureNoVolumeWithName(items []corev1.Volume, name string) []corev1.Volume 
 	return items
 }
 
+// EnsureContainerWithName ensures that a Container with a name equal to the name of the given Container exists
+// in the given slice and is equal to the given Container.
+func EnsureContainerWithName(items []corev1.Container, item corev1.Container) []corev1.Container {
+	if i := containerWithNameIndex(items, item.Name); i < 0 {
+		items = append(items, item)
+	} else if !reflect.DeepEqual(items[i], item) {
+		items = append(append(items[:i], item), items[i+1:]...)
+	}
+	return items
+}
+
+// EnsureNoContainerWithName ensures that a Container with the given name does not exist in the given slice.
+func EnsureNoContainerWithName(items []corev1.Container, name string) []corev1.Container {
+	if i := containerWithNameIndex(items, name); i >= 0 {
+		items = append(items[:i], items[i+1:]...)
+	}
+	return items
+}
+
+// EnsurePVCWithName ensures that a PVC with a name equal to the name of the given PVC exists
+// in the given slice and is equal to the given PVC.
+func EnsurePVCWithName(items []corev1.PersistentVolumeClaim, item corev1.PersistentVolumeClaim) []corev1.PersistentVolumeClaim {
+	if i := pvcWithNameIndex(items, item.Name); i < 0 {
+		items = append(items, item)
+	} else if !reflect.DeepEqual(items[i], item) {
+		items = append(append(items[:i], item), items[i+1:]...)
+	}
+	return items
+}
+
+// EnsureNoPVCWithName ensures that a PVC with the given name does not exist in the given slice.
+func EnsureNoPVCWithName(items []corev1.PersistentVolumeClaim, name string) []corev1.PersistentVolumeClaim {
+	if i := pvcWithNameIndex(items, name); i >= 0 {
+		items = append(items[:i], items[i+1:]...)
+	}
+	return items
+}
+
 // EnsureUnitOption ensures the given unit option exist in the given slice.
 func EnsureUnitOption(items []*unit.UnitOption, item *unit.UnitOption) []*unit.UnitOption {
 	if i := unitOptionIndex(items, item); i < 0 {
@@ -271,6 +317,15 @@ func volumeMountWithNameIndex(items []corev1.VolumeMount, name string) int {
 }
 
 func volumeWithNameIndex(items []corev1.Volume, name string) int {
+	for i, item := range items {
+		if item.Name == name {
+			return i
+		}
+	}
+	return -1
+}
+
+func pvcWithNameIndex(items []corev1.PersistentVolumeClaim, name string) int {
 	for i, item := range items {
 		if item.Name == name {
 			return i

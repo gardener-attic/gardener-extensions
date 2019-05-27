@@ -19,6 +19,8 @@ import "path/filepath"
 const (
 	// Name is the name of the AWS provider.
 	Name = "provider-aws"
+	// StorageProviderName is the name of the AWS storage provider.
+	StorageProviderName = "S3"
 
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
@@ -26,6 +28,8 @@ const (
 	TerraformerImageName = "terraformer"
 	// HyperkubeImageName is the name of the hyperkube image.
 	HyperkubeImageName = "hyperkube"
+	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
+	ETCDBackupRestoreImageName = "etcd-backup-restore"
 
 	// AccessKeyID is a constant for the key in a cloud provider secret and backup secret that holds the AWS access key id.
 	AccessKeyID = "accessKeyID"
@@ -33,6 +37,10 @@ const (
 	SecretAccessKey = "secretAccessKey"
 	// Region is a constant for the key in a backup secret that holds the AWS region.
 	Region = "region"
+	// BucketName is a constant for the key in a backup secret that holds the bucket name.
+	// The bucket name is written to the backup secret by Gardener as a temporary solution.
+	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+	BucketName = "bucketName"
 	// TerraformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
 	TerraformerPurposeInfra = "infra"
 	// VPCIDKey is the vpc_id tf state key
@@ -58,6 +66,8 @@ const (
 	CloudProviderConfigName = "cloud-provider-config"
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
+	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.
+	BackupSecretName = "etcd-backup"
 )
 
 var (

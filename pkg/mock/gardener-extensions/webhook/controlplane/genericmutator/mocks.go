@@ -7,6 +7,7 @@ package genericmutator
 import (
 	context "context"
 	unit "github.com/coreos/go-systemd/unit"
+	controller "github.com/gardener/gardener-extensions/pkg/controller"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
@@ -35,6 +36,20 @@ func NewMockEnsurer(ctrl *gomock.Controller) *MockEnsurer {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockEnsurer) EXPECT() *MockEnsurerMockRecorder {
 	return m.recorder
+}
+
+// EnsureETCDStatefulSet mocks base method
+func (m *MockEnsurer) EnsureETCDStatefulSet(arg0 context.Context, arg1 *v1.StatefulSet, arg2 *controller.Cluster) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureETCDStatefulSet", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureETCDStatefulSet indicates an expected call of EnsureETCDStatefulSet
+func (mr *MockEnsurerMockRecorder) EnsureETCDStatefulSet(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureETCDStatefulSet", reflect.TypeOf((*MockEnsurer)(nil).EnsureETCDStatefulSet), arg0, arg1, arg2)
 }
 
 // EnsureKubeAPIServerDeployment mocks base method

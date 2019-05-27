@@ -34,7 +34,7 @@ func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 	)
 }
 
-// WebhookAddToManagerOptions are the webhookcmd.AddToManagerOptions for the provider webhooks.
-func WebhookAddToManagerOptions() *webhookcmd.AddToManagerOptions {
-	return webhookcmd.NewAddToManagerOptions("packet-webhooks")
+// WebhookSwitchOptions are the webhookcmd.SwitchOptions for the provider webhooks.
+func WebhookSwitchOptions() *webhookcmd.SwitchOptions {
+	return webhookcmd.NewSwitchOptions()
 }

@@ -17,3 +17,9 @@ machineImages:
     ami: ami-07739b17529e8c1d0
   - name: ap-southeast-2
     ami: ami-02d7d488d701a460e
+etcd:
+  storage:
+    className: gardener.cloud-fast
+    capacity: 80Gi
+  backup:
+    schedule: "0 */24 * * *"

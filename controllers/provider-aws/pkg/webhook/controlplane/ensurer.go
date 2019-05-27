@@ -37,7 +37,7 @@ func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
 }
 
 type ensurer struct {
-	controlplane.NoopEnsurer
+	genericmutator.NoopEnsurer
 	logger logr.Logger
 }
 
