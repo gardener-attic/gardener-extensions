@@ -17,14 +17,19 @@ package azure
 import "path/filepath"
 
 const (
-	// TerraformerImageName is the name of the Terraformer image.
-	TerraformerImageName = "terraformer"
-)
-
-var (
 	// Name is the name of the Azure provider.
 	Name = "provider-azure"
 
+	// TerraformerImageName is the name of the Terraformer image.
+	TerraformerImageName = "terraformer"
+	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
+	MachineControllerManagerImageName = "machine-controller-manager"
+
+	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
+	MachineControllerManagerName = "machine-controller-manager"
+)
+
+var (
 	// ChartsPath is the path to the charts
 	ChartsPath = filepath.Join("controllers", Name, "charts")
 	// InternalChartsPath is the path to the internal charts

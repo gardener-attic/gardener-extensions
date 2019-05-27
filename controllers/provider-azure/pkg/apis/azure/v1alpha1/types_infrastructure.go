@@ -60,7 +60,7 @@ type InfrastructureStatus struct {
 	// AvailabilitySets is a list of created route tables
 	RouteTables []RouteTable `json:"routeTables"`
 	// SecurityGroups is a list of created security groups
-	SecurityGroups []SecurityGroup `json:"securityGroup"`
+	SecurityGroups []SecurityGroup `json:"securityGroups"`
 }
 
 // NetworkStatus is the current status of the infrastructure networks.

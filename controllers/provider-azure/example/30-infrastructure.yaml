@@ -11,10 +11,10 @@ metadata:
   name: core-azure
 type: Opaque
 data:
-#  clientID: base64(clientID)
-#  clientSecret: base64(clientSecret)
-#  subscriptionID: base64(subscriptionID)
-#  tenantID: base64(tenantID)
+# clientID: base64(clientID)
+# clientSecret: base64(clientSecret)
+# subscriptionID: base64(subscriptionID)
+# tenantID: base64(tenantID)
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -27,11 +27,11 @@ spec:
     spec:
       azure:
         countFaultDomains:
-          - count: 2
-            region: westeurope
+        - count: 2
+          region: westeurope
         countUpdateDomains:
-          - count: 5
-            region: westeurope
+        - count: 5
+          region: westeurope
   seed:
     apiVersion: garden.sapcloud.io/v1beta1
     kind: Seed

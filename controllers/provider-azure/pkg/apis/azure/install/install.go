@@ -17,6 +17,7 @@ package install
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )

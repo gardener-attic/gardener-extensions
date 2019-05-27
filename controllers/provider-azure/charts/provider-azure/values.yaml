@@ -9,5 +9,15 @@ controllers:
   infrastructure:
     concurrentSyncs: 5
     ignoreOperationAnnotation: false
+  worker:
+    concurrentSyncs: 5
 
 disableControllers: []
+
+config:
+  machineImages:
+  - name: coreos
+    version: 1967.5.0
+    publisher: CoreOS
+    offer: CoreOS
+    sku: Stable
