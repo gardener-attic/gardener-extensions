@@ -27,10 +27,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-	"github.com/gardener/gardener/pkg/utils/secrets"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -108,13 +105,6 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	// TODO: As soon as the SSH key is added to the `Worker` extension spec we can use it from there instead of reading
-	// the SSH key secret here.
-	sshSecret := &corev1.Secret{}
-	if err := w.client.Get(ctx, kutil.Key(w.worker.Namespace, "ssh-keypair"), sshSecret); err != nil {
-		return err
-	}
-
 	for _, pool := range w.worker.Spec.Pools {
 		machineImage, err := confighelper.FindImage(w.machineImages, pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
@@ -148,7 +138,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"version":   machineImage.Version,
 			},
 			"volumeSize":   volumeSize,
-			"sshPublicKey": string(sshSecret.Data[secrets.DataKeySSHAuthorizedKeys]),
+			"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
 		}
 
 		var (

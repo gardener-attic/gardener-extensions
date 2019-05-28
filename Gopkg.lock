@@ -234,8 +234,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  branch = "gardener-extensions-fixes"
-  digest = "1:47fe3ea1ec4b953002557369ecefc98b5515f7a01bf428e91c269ad6f457e2b3"
+  digest = "1:f885d587335c78b63e09169f3534f08a2c271c8612f03a5a6cc10f48979eebd9"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -271,7 +270,7 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "f04dbb9083ea908bc01863146f93a8c2d3b08daa"
+  revision = "60e9cb5b4dfc5d2084264f3ad004a782e1e8ec11"
 
 [[projects]]
   digest = "1:0e154f96a4827f25dfca0edc8b7ee1097d55518730c816bff033ff80244b323c"
@@ -1822,6 +1821,7 @@
     "github.com/onsi/gomega/types",
     "github.com/packethost/packngo",
     "github.com/pkg/errors",
+    "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "golang.org/x/oauth2",
@@ -1858,6 +1858,7 @@
     "k8s.io/apiserver/pkg/authentication/user",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
+    "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/record",
@@ -1868,6 +1869,7 @@
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+    "k8s.io/helm/pkg/manifest",
     "k8s.io/kubelet/config/v1beta1",
     "sigs.k8s.io/controller-runtime/pkg/cache",
     "sigs.k8s.io/controller-runtime/pkg/client",

@@ -30,7 +30,6 @@ import (
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/utils/secrets"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -180,7 +179,8 @@ var _ = Describe("Machines", func() {
 							Name:      "secret",
 							Namespace: namespace,
 						},
-						Region: region,
+						Region:       region,
+						SSHPublicKey: []byte(sshKey),
 						InfrastructureProviderStatus: &runtime.RawExtension{
 							Raw: encode(&apisazure.InfrastructureStatus{
 								ResourceGroup: apisazure.ResourceGroup{
@@ -251,7 +251,6 @@ var _ = Describe("Machines", func() {
 
 			It("should return the expected machine deployments", func() {
 				expectGetSecretCallToWork(c, azureClientID, azureClientSecret, azureSubscriptionID, azureTenantID)
-				expectGetSSHKeySecretCallToWork(c, sshKey)
 
 				// Test workerDelegate.DeployMachineClasses()
 				var (
@@ -413,7 +412,6 @@ var _ = Describe("Machines", func() {
 
 			It("should fail because the machine image information cannot be found", func() {
 				expectGetSecretCallToWork(c, azureClientID, azureClientSecret, azureSubscriptionID, azureTenantID)
-				expectGetSSHKeySecretCallToWork(c, sshKey)
 
 				workerDelegate = NewWorkerDelegate(c, decoder, nil, chartApplier, "", w, nil, nil, v, nil)
 
@@ -424,7 +422,6 @@ var _ = Describe("Machines", func() {
 
 			It("should fail because the volume size cannot be decoded", func() {
 				expectGetSecretCallToWork(c, azureClientID, azureClientSecret, azureSubscriptionID, azureTenantID)
-				expectGetSSHKeySecretCallToWork(c, sshKey)
 
 				w.Spec.Pools[0].Volume.Size = "not-decodeable"
 
@@ -462,17 +459,6 @@ func expectGetSecretCallToWork(c *mockclient.MockClient, azureClientID, azureCli
 				internal.ClientSecretKey:   []byte(azureClientSecret),
 				internal.SubscriptionIDKey: []byte(azureSubscriptionID),
 				internal.TenantIDKey:       []byte(azureTenantID),
-			}
-			return nil
-		})
-}
-
-func expectGetSSHKeySecretCallToWork(c *mockclient.MockClient, sshKey string) {
-	c.EXPECT().
-		Get(context.TODO(), gomock.Any(), gomock.AssignableToTypeOf(&corev1.Secret{})).
-		DoAndReturn(func(_ context.Context, _ client.ObjectKey, secret *corev1.Secret) error {
-			secret.Data = map[string][]byte{
-				secrets.DataKeySSHAuthorizedKeys: []byte(sshKey),
 			}
 			return nil
 		})
