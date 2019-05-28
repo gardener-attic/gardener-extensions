@@ -17,11 +17,13 @@ package cmd
 import (
 	controlplanecontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
+	workercontroller "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/worker"
 	controlplanewebhook "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplaneexposure"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	extensionscontrolplanecontroller "github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	extensionsworkercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 	extensioncontrolplanewebhook "github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 )
@@ -31,6 +33,7 @@ func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 	return controllercmd.NewSwitchOptions(
 		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
 		controllercmd.Switch(extensionscontrolplanecontroller.ControllerName, controlplanecontroller.AddToManager),
+		controllercmd.Switch(extensionsworkercontroller.ControllerName, workercontroller.AddToManager),
 	)
 }
 
