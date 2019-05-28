@@ -35,20 +35,34 @@ rules:
   - patch
 - apiGroups:
   - ""
+  - apps
   - batch
   - rbac.authorization.k8s.io
   - apiextensions.k8s.io
   resources:
+  - namespaces
   - events
   - secrets
   - configmaps
+  - deployments
   - serviceaccounts
+  - clusterrole
+  - clusterrolebindings
   - roles
   - rolebindings
   - jobs
   - pods
   - pods/log
   - customresourcedefinitions
+  verbs:
+  - "*"
+- apiGroups:
+  - machine.sapcloud.io
+  resources:
+  - machines
+  - machinesets
+  - machinedeployments
+  - azuremachineclasses
   verbs:
   - "*"
 ---
