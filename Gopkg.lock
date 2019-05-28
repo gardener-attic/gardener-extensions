@@ -234,7 +234,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:f885d587335c78b63e09169f3534f08a2c271c8612f03a5a6cc10f48979eebd9"
+  digest = "1:6447ed99424e08ca0864297b9ca4ef70e6c7511ea436d591cb16bda223491b46"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -270,10 +270,10 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "60e9cb5b4dfc5d2084264f3ad004a782e1e8ec11"
+  revision = "99f009c1fa6f274f562cb81b31510edd4c88ee8a"
 
 [[projects]]
-  digest = "1:0e154f96a4827f25dfca0edc8b7ee1097d55518730c816bff033ff80244b323c"
+  digest = "1:b64bb6e3b9f54cb2f1d79c66ad664339f4c771ff0bab305262c5d34d98ea834d"
   name = "github.com/gardener/machine-controller-manager"
   packages = [
     "pkg/apis/machine",
@@ -281,8 +281,8 @@
     "pkg/client/clientset/versioned/scheme",
   ]
   pruneopts = "NUT"
-  revision = "36a42c48af0a883b9fe86b04143d14881b485116"
-  version = "0.14.0"
+  revision = "f381000d2fd18aa596165523fc6491586b503b31"
+  version = "0.17.0"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"

@@ -21,6 +21,7 @@ import (
 	"strconv"
 
 	"github.com/gardener/gardener/pkg/utils"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
@@ -43,6 +44,9 @@ type MachineDeployment struct {
 	Maximum        int
 	MaxSurge       intstr.IntOrString
 	MaxUnavailable intstr.IntOrString
+	Labels         map[string]string
+	Annotations    map[string]string
+	Taints         []corev1.Taint
 }
 
 // MachineDeployments is a list of machine deployments.

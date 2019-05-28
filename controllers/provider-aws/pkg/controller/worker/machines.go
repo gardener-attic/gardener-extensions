@@ -170,6 +170,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				Maximum:        worker.DistributeOverZones(zoneIndex, pool.Maximum, zoneLen),
 				MaxSurge:       worker.DistributePositiveIntOrPercent(zoneIndex, pool.MaxSurge, zoneLen, pool.Maximum),
 				MaxUnavailable: worker.DistributePositiveIntOrPercent(zoneIndex, pool.MaxUnavailable, zoneLen, pool.Minimum),
+				Labels:         pool.Labels,
+				Annotations:    pool.Annotations,
+				Taints:         pool.Taints,
 			})
 
 			machineClassSpec["name"] = className

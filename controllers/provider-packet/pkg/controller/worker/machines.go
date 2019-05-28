@@ -132,6 +132,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			Maximum:        pool.Maximum,
 			MaxSurge:       pool.MaxSurge,
 			MaxUnavailable: pool.MaxUnavailable,
+			Labels:         pool.Labels,
+			Annotations:    pool.Annotations,
+			Taints:         pool.Taints,
 		})
 
 		machineClassSpec["name"] = className

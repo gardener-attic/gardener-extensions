@@ -33,6 +33,7 @@ import (
 	"github.com/gardener/gardener/pkg/utils/kubernetes/health"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -224,6 +225,15 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 						Class: machinev1alpha1.ClassSpec{
 							Kind: classKind,
 							Name: deployment.ClassName,
+						},
+						NodeTemplateSpec: machinev1alpha1.NodeTemplateSpec{
+							ObjectMeta: metav1.ObjectMeta{
+								Annotations: deployment.Annotations,
+								Labels:      deployment.Labels,
+							},
+							Spec: corev1.NodeSpec{
+								Taints: deployment.Taints,
+							},
 						},
 					},
 				},
