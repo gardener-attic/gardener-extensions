@@ -66,13 +66,15 @@ class ImagesParser(object):
             except IndexError:
                 print(str(self.names))
                 util.warning(f'could not find {self.names} in {self.images_file}')
-                self.names.remove(name)                
+                self.names.remove(name)
                 continue
             self.names.remove(name)
             self._skip_to_next_tag()
             tag_line = self._line()
             indent = len(tag_line) - len(tag_line.lstrip())
             patched_line = ' ' * indent + 'tag: "{version}"'.format(version=self.target_version)
+            if self._line_idx >= len(self.lines):
+                return
             self.lines[self._line_idx] = patched_line
 
     def write_updated_file(self):
