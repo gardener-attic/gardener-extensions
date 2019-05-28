@@ -66,6 +66,7 @@ class ImagesParser(object):
             except IndexError:
                 print(str(self.names))
                 util.warning(f'could not find {self.names} in {self.images_file}')
+                continue
             self.names.remove(name)
             self._skip_to_next_tag()
             tag_line = self._line()
