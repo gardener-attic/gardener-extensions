@@ -14,6 +14,12 @@ controllers:
   worker:
     concurrentSyncs: 5
 
+disableControllers:
+- controlplane-controller
+disableWebhooks:
+- controlplane
+- controlplaneexposure
+
 config:
   machineImages:
   - name: coreos
@@ -31,6 +37,3 @@ config:
       ami: ami-07739b17529e8c1d0
     - name: ap-southeast-2
       ami: ami-02d7d488d701a460e
-
-disableControllers: []
-disableWebhooks: []

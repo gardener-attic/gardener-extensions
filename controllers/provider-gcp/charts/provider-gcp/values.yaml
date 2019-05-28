@@ -14,8 +14,11 @@ controllers:
   worker:
     concurrentSyncs: 5
 
-disableControllers: []
-disableWebhooks: []
+disableControllers:
+- controlplane-controller
+disableWebhooks:
+- controlplane
+- controlplaneexposure
 
 config:
   machineImages:
