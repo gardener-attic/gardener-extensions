@@ -41,7 +41,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -64,7 +63,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil, nil, nil, nil)
+		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -117,7 +116,7 @@ var _ = Describe("Machines", func() {
 				zone2 string
 
 				shootVersionMajorMinor             string
-				v                                  *version.Info
+				shootVersion                       string
 				machineImageToCloudProfilesMapping []config.MachineImage
 				scheme                             *runtime.Scheme
 				decoder                            runtime.Decoder
@@ -163,7 +162,7 @@ var _ = Describe("Machines", func() {
 				zone2 = region + "b"
 
 				shootVersionMajorMinor = "1.2"
-				v = &version.Info{GitVersion: fmt.Sprintf("v%s.3", shootVersionMajorMinor)}
+				shootVersion = shootVersionMajorMinor + ".3"
 
 				machineImageToCloudProfilesMapping = []config.MachineImage{
 					{
@@ -199,6 +198,9 @@ var _ = Describe("Machines", func() {
 										},
 									},
 								},
+							},
+							Kubernetes: gardenv1beta1.Kubernetes{
+								Version: shootVersion,
 							},
 						},
 					},
@@ -273,7 +275,7 @@ var _ = Describe("Machines", func() {
 				_ = apisopenstack.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 			})
 
 			It("should return the expected machine deployments", func() {
@@ -402,8 +404,8 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				v := &version.Info{GitVersion: "invalid"}
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster, nil, v, nil)
+				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -415,7 +417,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -429,7 +431,7 @@ var _ = Describe("Machines", func() {
 					Raw: encode(&apisopenstack.InfrastructureStatus{}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -441,7 +443,7 @@ var _ = Describe("Machines", func() {
 
 				cluster.CloudProfile.Name = "another-cloud-profile"
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

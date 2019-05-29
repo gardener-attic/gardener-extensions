@@ -24,11 +24,13 @@ import (
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/worker"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -38,7 +40,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/apimachinery/pkg/version"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -61,7 +62,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil, nil, nil, nil)
+		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -119,10 +120,11 @@ var _ = Describe("Machines", func() {
 				zone2        string
 
 				shootVersionMajorMinor string
-				v                      *version.Info
+				shootVersion           string
 				machineImages          []config.MachineImage
 				scheme                 *runtime.Scheme
 				decoder                runtime.Decoder
+				cluster                *extensionscontroller.Cluster
 				w                      *extensionsv1alpha1.Worker
 			)
 
@@ -169,13 +171,23 @@ var _ = Describe("Machines", func() {
 				zone2 = region + "b"
 
 				shootVersionMajorMinor = "1.2"
-				v = &version.Info{GitVersion: fmt.Sprintf("v%s.3", shootVersionMajorMinor)}
+				shootVersion = shootVersionMajorMinor + ".3"
 
 				machineImages = []config.MachineImage{
 					{
 						Name:    machineImageName,
 						Version: machineImageVersion,
 						ID:      machineImageID,
+					},
+				}
+
+				cluster = &extensionscontroller.Cluster{
+					Shoot: &gardenv1beta1.Shoot{
+						Spec: gardenv1beta1.ShootSpec{
+							Kubernetes: gardenv1beta1.Kubernetes{
+								Version: shootVersion,
+							},
+						},
 					},
 				}
 
@@ -265,7 +277,7 @@ var _ = Describe("Machines", func() {
 				_ = apisalicloud.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, nil, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
 			})
 
 			It("should return the expected machine deployments", func() {
@@ -401,8 +413,8 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, alicloudAccessKeyID, alicloudAccessKeySecret)
 
-				v := &version.Info{GitVersion: "invalid"}
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, nil, nil, v, nil)
+				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -414,7 +426,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, nil, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -430,7 +442,7 @@ var _ = Describe("Machines", func() {
 					}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, nil, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -440,7 +452,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image cannot be found", func() {
 				expectGetSecretCallToWork(c, alicloudAccessKeyID, alicloudAccessKeySecret)
 
-				workerDelegate = NewWorkerDelegate(c, decoder, nil, chartApplier, "", w, nil, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, nil, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -464,7 +476,7 @@ var _ = Describe("Machines", func() {
 					}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, nil, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -476,7 +488,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.Pools[0].Volume.Size = "not-decodeable"
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, nil, nil, v, nil)
+				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

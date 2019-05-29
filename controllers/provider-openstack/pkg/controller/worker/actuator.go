@@ -23,14 +23,12 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
-	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/apimachinery/pkg/version"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -82,11 +80,6 @@ func (d *delegateFactory) InjectClient(client client.Client) error {
 }
 
 func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensionsv1alpha1.Worker, cluster *extensionscontroller.Cluster) (genericactuator.WorkerDelegate, error) {
-	shootClients, err := util.NewClientsForShoot(ctx, d.client, worker.Namespace, client.Options{})
-	if err != nil {
-		return nil, err
-	}
-
 	clientset, err := kubernetes.NewForConfig(d.restConfig)
 	if err != nil {
 		return nil, err
@@ -112,10 +105,6 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 		worker,
 		cluster,
-
-		shootClients.Client(),
-		shootClients.Version(),
-		shootClients.ChartApplier(),
 	), nil
 }
 
@@ -129,10 +118,6 @@ type workerDelegate struct {
 
 	cluster *extensionscontroller.Cluster
 	worker  *extensionsv1alpha1.Worker
-
-	shootClient       client.Client
-	shootVersion      *version.Info
-	shootChartApplier gardener.ChartApplier
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
@@ -149,10 +134,6 @@ func NewWorkerDelegate(
 
 	worker *extensionsv1alpha1.Worker,
 	cluster *extensionscontroller.Cluster,
-
-	shootClient client.Client,
-	shootVersion *version.Info,
-	shootChartApplier gardener.ChartApplier,
 ) genericactuator.WorkerDelegate {
 	return &workerDelegate{
 		client:  client,
@@ -164,9 +145,5 @@ func NewWorkerDelegate(
 
 		cluster: cluster,
 		worker:  worker,
-
-		shootClient:       shootClient,
-		shootVersion:      shootVersion,
-		shootChartApplier: shootChartApplier,
 	}
 }
