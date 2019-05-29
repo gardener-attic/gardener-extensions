@@ -45,6 +45,7 @@ rules:
   - secrets
   - configmaps
   - deployments
+  - services
   - serviceaccounts
   - clusterroles
   - clusterrolebindings
