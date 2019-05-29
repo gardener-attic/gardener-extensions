@@ -75,11 +75,12 @@ func FetchEIPInternetChargeType(vpcClient alicloudclient.VPC, vpcID string) (str
 	if err != nil {
 		return "", err
 	}
-	natGateway := describeNatGatewaysRes.NatGateways.NatGateway[0]
 
 	if len(describeNatGatewaysRes.NatGateways.NatGateway) != 1 {
 		return alicloudclient.DefaultInternetChargeType, nil
 	}
+
+	natGateway := describeNatGatewaysRes.NatGateways.NatGateway[0]
 
 	if len(natGateway.IpLists.IpList) == 0 {
 		return alicloudclient.DefaultInternetChargeType, nil
