@@ -95,6 +95,16 @@ resource "alicloud_security_group_rule" "allow_all_internal_udp_in" {
   cidr_ip           = "{{ required "pod is required" .Values.vpc.cidr }}"
 }
 
+// We have introduced new output variables. However, they are not applied for
+// existing clusters as Terraform won't detect a diff when we run `terraform plan`.
+// Workaround: Providing a null-resource for letting Terraform think that there are
+// differences, enabling the Gardener to start an actual `terraform apply` job.
+resource "null_resource" "outputs" {
+  triggers = {
+    recompute = "outputs"
+  }
+}
+
 //=====================================================================
 //= Output variables
 //=====================================================================
