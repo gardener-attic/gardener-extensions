@@ -26,6 +26,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/extension"
 	"github.com/gardener/gardener-extensions/pkg/util"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
@@ -78,13 +79,15 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 		return fmt.Errorf("Error creating Kubeconfig to deploy RBAC manifests: %v", err)
 	}
 
-	if err := a.createRBAC(ctx, kubecfg); err != nil {
-		return err
-	}
-
 	cluster, err := controller.GetCluster(ctx, a.client, namespace)
 	if err != nil {
 		return err
+	}
+
+	if !controller.IsHibernated(cluster.Shoot) {
+		if err := a.createRBAC(ctx, kubecfg); err != nil {
+			return err
+		}
 	}
 
 	return a.createCertBroker(ctx, cluster.Shoot, namespace)
