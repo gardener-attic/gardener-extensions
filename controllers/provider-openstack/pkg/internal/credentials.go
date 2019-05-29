@@ -20,6 +20,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -40,6 +41,15 @@ func GetCredentials(ctx context.Context, c client.Client, secretRef corev1.Secre
 		return nil, err
 	}
 	return ExtractCredentials(secret)
+}
+
+// GetCredentialsForNamespaceAndName computes for a given context and namespace and name the corresponding credentials object.
+func GetCredentialsForNamespaceAndName(ctx context.Context, c client.Client, namespace, name string) (*Credentials, error) {
+	providerSecret := &corev1.Secret{}
+	if err := c.Get(ctx, kutil.Key(namespace, name), providerSecret); err != nil {
+		return nil, err
+	}
+	return ExtractCredentials(providerSecret)
 }
 
 // ExtractCredentials generates a credentials object for a given provider secret.
