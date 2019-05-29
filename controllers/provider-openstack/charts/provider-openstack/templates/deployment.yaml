@@ -31,9 +31,7 @@ spec:
         - provider-openstack-controller-manager
         - --config-file=/etc/gardener-extension-provider-openstack/config/config.yaml
         - --infrastructure-max-concurrent-reconciles={{ .Values.controllers.infrastructure.concurrentSyncs }}
-        {{- if .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
-        {{- end }}
         - --worker-max-concurrent-reconciles={{ .Values.controllers.worker.concurrentSyncs }}
         - --disable-controllers={{ .Values.disableControllers | join "," }}
         env:
