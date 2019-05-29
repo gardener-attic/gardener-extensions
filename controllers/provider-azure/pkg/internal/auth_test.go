@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -46,10 +47,10 @@ var _ = Describe("Service Account", func() {
 		}
 		secret = &corev1.Secret{
 			Data: map[string][]byte{
-				ClientSecretKey:   []byte(clientSecret),
-				ClientIDKey:       []byte(clientID),
-				TenantIDKey:       []byte(tenantID),
-				SubscriptionIDKey: []byte(subscriptionID),
+				azure.ClientSecretKey:   []byte(clientSecret),
+				azure.ClientIDKey:       []byte(clientID),
+				azure.TenantIDKey:       []byte(tenantID),
+				azure.SubscriptionIDKey: []byte(subscriptionID),
 			},
 		}
 	})

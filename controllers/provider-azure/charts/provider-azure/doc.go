@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-azure . ../../example/controller-registration.yaml Infrastructure:azure Worker:azure
+//go:generate ../../../../hack/generate-controller-registration.sh provider-azure . ../../example/controller-registration.yaml Infrastructure:azure ControlPlane:azure Worker:azure
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart

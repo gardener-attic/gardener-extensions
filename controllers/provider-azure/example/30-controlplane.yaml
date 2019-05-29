@@ -1,0 +1,73 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shoot--foo--bar
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudprovider
+  namespace: shoot--foo--bar
+type: Opaque
+data:
+  clientID: Y2xpZW50SUQ=
+  clientSecret: Y2xpZW50U2VjcmV0
+  subscriptionID: c3Vic2NyaXB0aW9uSUQ=
+  tenantID: dGVuYW50SUQ=
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: Cluster
+metadata:
+  name: shoot--foo--bar
+spec:
+  cloudProfile:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: CloudProfile
+  seed:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: Seed
+  shoot:
+    apiVersion: garden.sapcloud.io/v1beta1
+    kind: Shoot
+    spec:
+      cloud:
+        azure:
+          networks:
+            pods: 10.250.0.0/19
+      kubernetes:
+        version: 1.13.4
+      hibernation:
+        enabled: false
+    status:
+      lastOperation:
+        state: Succeeded
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: ControlPlane
+metadata:
+  name: azure-controlplane
+  namespace: shoot--foo--bar
+spec:
+  type: azure
+  region: europe-west1
+  secretRef:
+    name: cloudprovider
+    namespace: shoot--foo--bar
+  providerConfig:
+    apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1
+    kind: ControlPlaneConfig
+    cloudControllerManager:
+      featureGates:
+        CustomResourceValidation: true
+  infrastructureProviderStatus:
+    apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1
+    kind: InfrastructureStatus
+    resourceGroup:
+      name: rg-1234
+    networks:
+      vpc:
+        name: vpc-1234
+      subnets:
+      - purpose: internal
+        name: subnet-acbd1234
