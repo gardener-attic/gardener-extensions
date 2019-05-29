@@ -150,7 +150,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 			var (
 				machineClassSpecHash = worker.MachineClassHash(machineClassSpec, shootVersionMajorMinor)
-				deploymentName       = fmt.Sprintf("%s-%s-z%d", w.worker.Namespace, pool.Name, zoneIndex+1)
+				deploymentName       = fmt.Sprintf("%s-%s-%s", w.worker.Namespace, pool.Name, zone)
 				className            = fmt.Sprintf("%s-%s", deploymentName, machineClassSpecHash)
 			)
 
