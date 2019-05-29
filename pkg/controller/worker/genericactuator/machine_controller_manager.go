@@ -34,17 +34,7 @@ import (
 )
 
 func (a *genericActuator) deployMachineControllerManager(ctx context.Context, workerObj *extensionsv1alpha1.Worker, cluster *controller.Cluster, workerDelegate WorkerDelegate) error {
-	shootClients, err := util.NewClientsForShoot(ctx, a.client, workerObj.Namespace, client.Options{})
-	if err != nil {
-		return err
-	}
-
 	mcmValues, err := workerDelegate.GetMachineControllerManagerChartValues(ctx)
-	if err != nil {
-		return err
-	}
-
-	mcmShootValues, err := workerDelegate.GetMachineControllerManagerShootChartValues(ctx)
 	if err != nil {
 		return err
 	}
@@ -71,8 +61,21 @@ func (a *genericActuator) deployMachineControllerManager(ctx context.Context, wo
 	if err := a.mcmSeedChart.Apply(ctx, a.gardenerClientset, a.chartApplier, workerObj.Namespace, cluster.Shoot, a.imageVector, nil, mcmValues); err != nil {
 		return errors.Wrapf(err, "could not apply MCM chart in seed for worker '%s'", util.ObjectName(workerObj))
 	}
-	if err := a.mcmShootChart.Apply(ctx, shootClients.GardenerClientset(), shootClients.ChartApplier(), metav1.NamespaceSystem, cluster.Shoot, a.imageVector, nil, mcmShootValues); err != nil {
-		return errors.Wrapf(err, "could not apply MCM chart in seed for worker '%s'", util.ObjectName(workerObj))
+
+	if !controller.IsHibernated(cluster.Shoot) {
+		shootClients, err := util.NewClientsForShoot(ctx, a.client, workerObj.Namespace, client.Options{})
+		if err != nil {
+			return err
+		}
+
+		mcmShootValues, err := workerDelegate.GetMachineControllerManagerShootChartValues(ctx)
+		if err != nil {
+			return err
+		}
+
+		if err := a.mcmShootChart.Apply(ctx, shootClients.GardenerClientset(), shootClients.ChartApplier(), metav1.NamespaceSystem, cluster.Shoot, a.imageVector, nil, mcmShootValues); err != nil {
+			return errors.Wrapf(err, "could not apply MCM chart in seed for worker '%s'", util.ObjectName(workerObj))
+		}
 	}
 
 	return nil
