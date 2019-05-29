@@ -44,6 +44,7 @@ rules:
   - namespaces
   - events
   - secrets
+  - endpoints
   - configmaps
   - deployments
   - services
@@ -62,10 +63,7 @@ rules:
 - apiGroups:
   - machine.sapcloud.io
   resources:
-  - machines
-  - machinesets
-  - machinedeployments
-  - packetmachineclasses
+  - "*"
   verbs:
   - "*"
 ---
