@@ -55,16 +55,6 @@ func (m *secretToWorkerMapper) Map(obj handler.MapObject) []reconcile.Request {
 
 	var requests []reconcile.Request
 	for _, worker := range workerList.Items {
-		if worker.Spec.SecretRef.Name == secret.Name {
-			requests = append(requests, reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: worker.Namespace,
-					Name:      worker.Name,
-				},
-			})
-			continue
-		}
-
 		if !extensionscontroller.EvalGenericPredicate(&worker, m.predicates...) {
 			continue
 		}
@@ -76,8 +66,10 @@ func (m *secretToWorkerMapper) Map(obj handler.MapObject) []reconcile.Request {
 					Name:      worker.Name,
 				},
 			})
+			continue
 		}
 	}
+
 	return requests
 }
 
