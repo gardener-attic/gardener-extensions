@@ -16,7 +16,7 @@ metadata:
   name: infrastructure
 spec:
   type: packet
-  region: EWR1
+  region: ewr1
   secretRef:
     name: cloudprovider
     namespace: shoot--foo--bar

@@ -3,7 +3,7 @@ machineClasses:
   projectID: abcd-1234-fff
   OS: alpine_3
   facility:
-  - EWR1
+  - ewr1
   description: An optional description for machines created by that class.
   machineType: t1.small
   sshKeys:
@@ -12,4 +12,5 @@ machineClasses:
     cloudConfig: abc
     apiToken: "abd5678"
   tags:
-    my-nodes: "1"
+  - kubernetes.io/cluster/foo
+  - kubernetes.io/role/node

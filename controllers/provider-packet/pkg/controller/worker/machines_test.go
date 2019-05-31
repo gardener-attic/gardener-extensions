@@ -242,9 +242,9 @@ var _ = Describe("Machines", func() {
 							zone2,
 						},
 						"sshKeys": []string{sshKeyID},
-						"tags": map[string]string{
-							fmt.Sprintf("kubernetes.io/cluster/%s", namespace): "1",
-							"kubernetes.io/role/node":                          "1",
+						"tags": []string{
+							fmt.Sprintf("kubernetes.io/cluster/%s", namespace),
+							"kubernetes.io/role/node",
 						},
 						"secret": map[string]interface{}{
 							"cloudConfig": string(userData),

@@ -109,9 +109,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			"machineType": pool.MachineType,
 			"facility":    pool.Zones,
 			"sshKeys":     []string{infrastructureStatus.SSHKeyID},
-			"tags": map[string]string{
-				fmt.Sprintf("kubernetes.io/cluster/%s", w.worker.Namespace): "1",
-				"kubernetes.io/role/node":                                   "1",
+			"tags": []string{
+				fmt.Sprintf("kubernetes.io/cluster/%s", w.worker.Namespace),
+				"kubernetes.io/role/node",
 			},
 			"secret": map[string]interface{}{
 				"cloudConfig": string(pool.UserData),
