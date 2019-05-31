@@ -234,7 +234,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:11fa370d62c7690a728110955f8711c885ccf20cb95d60b47ad26a08f7c3251a"
+  digest = "1:f69902710c8f38299bf22d3b1b5909ed5bf330eb7bf63f3b72ec58e0af3d3dca"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -270,7 +270,7 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "8725569dc996defe240950cc71cc4509a29c91fe"
+  revision = "bc8d091af497f90c41f66a2ffafc785a2607fd37"
 
 [[projects]]
   digest = "1:b64bb6e3b9f54cb2f1d79c66ad664339f4c771ff0bab305262c5d34d98ea834d"
