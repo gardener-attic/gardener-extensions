@@ -9,7 +9,7 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "8725569dc996defe240950cc71cc4509a29c91fe"
+  revision = "bc8d091af497f90c41f66a2ffafc785a2607fd37"
 
 [[override]]
   name = "github.com/gardener/machine-controller-manager"
