@@ -17,11 +17,12 @@ package genericactuator
 import (
 	"context"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -32,6 +33,13 @@ const (
 var machineCRDs []*apiextensionsv1beta1.CustomResourceDefinition
 
 func init() {
+	agePrinterColumn := apiextensionsv1beta1.CustomResourceColumnDefinition{
+		Name:        "Age",
+		Type:        "date",
+		Description: metav1.ObjectMeta{}.SwaggerDoc()["creationTimestamp"],
+		JSONPath:    ".metadata.creationTimestamp",
+	}
+
 	machineCRDs = []*apiextensionsv1beta1.CustomResourceDefinition{
 		{
 			ObjectMeta: metav1.ObjectMeta{
@@ -49,6 +57,33 @@ func init() {
 				},
 				Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
+				},
+				AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Ready",
+						Type:        "integer",
+						Description: "Total number of ready machines targeted by this machine deployment.",
+						JSONPath:    ".status.readyReplicas",
+					},
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Desired",
+						Type:        "integer",
+						Description: "Number of desired machines.",
+						JSONPath:    ".spec.replicas",
+					},
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Up-to-date",
+						Type:        "integer",
+						Description: "Total number of non-terminated machines targeted by this machine deployment that have the desired template spec.",
+						JSONPath:    ".status.updatedReplicas",
+					},
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Available",
+						Type:        "integer",
+						Description: "Total number of available machines (ready for at least minReadySeconds) targeted by this machine deployment.",
+						JSONPath:    ".status.availableReplicas",
+					},
+					agePrinterColumn,
 				},
 			},
 		},
@@ -69,6 +104,27 @@ func init() {
 				Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 				},
+				AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Desired",
+						Type:        "integer",
+						Description: "Number of desired replicas.",
+						JSONPath:    ".spec.replicas",
+					},
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Current",
+						Type:        "integer",
+						Description: "Number of actual replicas.",
+						JSONPath:    ".status.replicas",
+					},
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Ready",
+						Type:        "integer",
+						Description: "Number of ready replicas for this machine set.",
+						JSONPath:    ".status.readyReplicas",
+					},
+					agePrinterColumn,
+				},
 			},
 		},
 		{
@@ -88,37 +144,154 @@ func init() {
 				Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 				},
+				AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+					apiextensionsv1beta1.CustomResourceColumnDefinition{
+						Name:        "Status",
+						Type:        "string",
+						Description: "Current status of the machine.",
+						JSONPath:    ".status.currentStatus.phase",
+					},
+					agePrinterColumn,
+				},
 			},
 		},
 	}
 
-	machineClasses := map[string]string{
-		"alicloud":  "Alicloud",
-		"aws":       "AWS",
-		"azure":     "Azure",
-		"gcp":       "GCP",
-		"openstack": "OpenStack",
-		"packet":    "Packet",
+	type machineClass struct {
+		name                     string
+		kind                     string
+		additionalPrinterColumns []apiextensionsv1beta1.CustomResourceColumnDefinition
 	}
 
-	for name, kind := range machineClasses {
+	machineClasses := []machineClass{
+		machineClass{
+			name: "alicloud",
+			kind: "Alicloud",
+			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Instance Type",
+					Type:     "string",
+					JSONPath: ".spec.instanceType",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Region",
+					Type:     "string",
+					Priority: 1,
+					JSONPath: ".spec.region",
+				},
+				agePrinterColumn,
+			},
+		},
+		machineClass{
+			name: "aws",
+			kind: "AWS",
+			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Machine Type",
+					Type:     "string",
+					JSONPath: ".spec.machineType",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "AMI",
+					Type:     "string",
+					JSONPath: ".spec.ami",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Region",
+					Type:     "string",
+					Priority: 1,
+					JSONPath: ".spec.region",
+				},
+				agePrinterColumn,
+			},
+		},
+		machineClass{
+			name: "azure",
+			kind: "Azure",
+			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "VM Size",
+					Type:     "string",
+					JSONPath: ".spec.properties.hardwareProfile.vmSize",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Location",
+					Type:     "string",
+					Priority: 1,
+					JSONPath: ".spec.location",
+				},
+				agePrinterColumn,
+			},
+		},
+		machineClass{
+			name: "gcp",
+			kind: "GCP",
+			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Machine Type",
+					Type:     "string",
+					JSONPath: ".spec.machineType",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Region",
+					Type:     "string",
+					Priority: 1,
+					JSONPath: ".spec.region",
+				},
+				agePrinterColumn,
+			},
+		},
+		machineClass{
+			name: "openstack",
+			kind: "OpenStack",
+			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Flavor",
+					Type:     "string",
+					JSONPath: ".spec.flavorName",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Image",
+					Type:     "string",
+					JSONPath: ".spec.imageName",
+				},
+				apiextensionsv1beta1.CustomResourceColumnDefinition{
+					Name:     "Region",
+					Type:     "string",
+					Priority: 1,
+					JSONPath: ".spec.region",
+				},
+				agePrinterColumn,
+			},
+		},
+		machineClass{
+			name: "packet",
+			kind: "Packet",
+			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
+				agePrinterColumn,
+			},
+		},
+	}
+
+	for _, current := range machineClasses {
 		machineCRDs = append(machineCRDs, &apiextensionsv1beta1.CustomResourceDefinition{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: name + "machineclasses.machine.sapcloud.io",
+				Name: current.name + "machineclasses.machine.sapcloud.io",
 			},
 			Spec: apiextensionsv1beta1.CustomResourceDefinitionSpec{
 				Group:   machineGroup,
 				Version: machineVersion,
 				Scope:   apiextensionsv1beta1.NamespaceScoped,
 				Names: apiextensionsv1beta1.CustomResourceDefinitionNames{
-					Kind:       kind + "MachineClass",
-					Plural:     name + "machineclasses",
-					Singular:   name + "machineclass",
-					ShortNames: []string{name + "cls"},
+					Kind:       current.kind + "MachineClass",
+					Plural:     current.name + "machineclasses",
+					Singular:   current.name + "machineclass",
+					ShortNames: []string{current.name + "cls"},
 				},
 				Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 				},
+				AdditionalPrinterColumns: current.additionalPrinterColumns,
 			},
 		})
 	}
@@ -127,7 +300,17 @@ func init() {
 // TODO: Use github.com/gardener/gardener/pkg/utils/flow.Parallel as soon as we can vendor a new Gardener version again.
 func ensureMachineResources(ctx context.Context, c client.Client) error {
 	for _, crd := range machineCRDs {
-		if err := c.Create(ctx, crd); err != nil && !apierrors.IsAlreadyExists(err) {
+		obj := &apiextensionsv1beta1.CustomResourceDefinition{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: crd.Name,
+			},
+		}
+		_, err := controllerutil.CreateOrUpdate(ctx, c, obj, func(existing runtime.Object) error {
+			existingCRD := existing.(*apiextensionsv1beta1.CustomResourceDefinition)
+			existingCRD.Spec = crd.Spec
+			return nil
+		})
+		if err != nil {
 			return err
 		}
 	}
