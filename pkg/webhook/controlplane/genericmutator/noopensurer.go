@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package genericmutator
 
 import (
 	"context"
+
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	"github.com/coreos/go-systemd/unit"
 	appsv1 "k8s.io/api/apps/v1"
@@ -43,6 +45,11 @@ func (e *NoopEnsurer) EnsureKubeControllerManagerDeployment(context.Context, *ap
 
 // EnsureKubeSchedulerDeployment ensures that the kube-scheduler deployment conforms to the provider requirements.
 func (e *NoopEnsurer) EnsureKubeSchedulerDeployment(context.Context, *appsv1.Deployment) error {
+	return nil
+}
+
+// EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
+func (e *NoopEnsurer) EnsureETCDStatefulSet(context.Context, *appsv1.StatefulSet, *extensionscontroller.Cluster) error {
 	return nil
 }
 

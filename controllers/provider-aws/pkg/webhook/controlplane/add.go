@@ -30,8 +30,9 @@ import (
 
 var logger = log.Log.WithName("aws-controlplane-webhook")
 
-// Factory creates a webhook.
-func Factory(mgr manager.Manager) (webhook.Webhook, error) {
+// AddToManager creates a webhook and adds it to the manager.
+func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
+	logger.Info("Adding webhook to manager")
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Kind:     extensionswebhook.ShootKind,
 		Provider: aws.Type,

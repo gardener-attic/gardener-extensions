@@ -228,11 +228,12 @@ type AddToManagerOptions struct {
 	Switch     SwitchOptions
 }
 
-// NewAddToManagerOptions creates new AddToManagerOptions with the given server name and initial switch pairs.
-func NewAddToManagerOptions(serverName string, pairs ...NameToFactory) *AddToManagerOptions {
+// NewAddToManagerOptions creates new AddToManagerOptions with the given server name, server, and switch options.
+func NewAddToManagerOptions(serverName string, serverOpts *ServerOptions, switchOpts *SwitchOptions) *AddToManagerOptions {
 	return &AddToManagerOptions{
 		serverName: serverName,
-		Switch:     *NewSwitchOptions(pairs...),
+		Server:     *serverOpts,
+		Switch:     *switchOpts,
 	}
 }
 

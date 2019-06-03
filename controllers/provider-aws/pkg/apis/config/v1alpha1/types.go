@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,6 +28,8 @@ type ControllerConfiguration struct {
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to AWS-specific identifiers, i.e. AMIs.
 	MachineImages []MachineImage `json:"machineImages,omitempty"`
+	// ETCD is the etcd configuration.
+	ETCD ETCD `json:"etcd"`
 }
 
 // MachineImage is a mapping from logical names and versions to AWS-specific identifiers, i.e. AMIs.
@@ -45,4 +48,29 @@ type RegionAMIMapping struct {
 	Name string `json:"name"`
 	// AMI is the AMI for the machine image.
 	AMI string `json:"ami"`
+}
+
+// ETCD is an etcd configuration.
+type ETCD struct {
+	// ETCDStorage is the etcd storage configuration.
+	Storage ETCDStorage `json:"storage"`
+	// ETCDBackup is the etcd backup configuration.
+	Backup ETCDBackup `json:"backup"`
+}
+
+// ETCDStorage is an etcd storage configuration.
+type ETCDStorage struct {
+	// ClassName is the name of the storage class used in etcd-main volume claims.
+	// +optional
+	ClassName *string `json:"className,omitempty"`
+	// Capacity is the storage capacity used in etcd-main volume claims.
+	// +optional
+	Capacity *resource.Quantity `json:"capacity,omitempty"`
+}
+
+// ETCDBackup is an etcd backup configuration.
+type ETCDBackup struct {
+	// Schedule is the etcd backup schedule.
+	// +optional
+	Schedule *string `json:"schedule,omitempty"`
 }

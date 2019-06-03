@@ -15,6 +15,7 @@
 package controlplaneexposure
 
 import (
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
@@ -28,15 +29,31 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
+var (
+	// DefaultAddOptions are the default AddOptions for AddToManager.
+	DefaultAddOptions = AddOptions{}
+)
+
+// AddOptions are options to apply when adding the AWS exposure webhook to the manager.
+type AddOptions struct {
+	// ETCDStorage is the etcd storage configuration.
+	ETCDStorage config.ETCDStorage
+}
+
 var logger = log.Log.WithName("aws-controlplaneexposure-webhook")
 
-// Factory creates a webhook.
-func Factory(mgr manager.Manager) (webhook.Webhook, error) {
+// AddToManagerWithOptions creates a webhook with the given options and adds it to the manager.
+func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (webhook.Webhook, error) {
 	logger.Info("Adding webhook to manager")
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Kind:     extensionswebhook.SeedKind,
 		Provider: aws.Type,
-		Types:    []runtime.Object{&corev1.Service{}, &appsv1.Deployment{}},
-		Mutator:  genericmutator.NewMutator(NewEnsurer(logger), nil, nil, logger),
+		Types:    []runtime.Object{&corev1.Service{}, &appsv1.Deployment{}, &appsv1.StatefulSet{}},
+		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, logger),
 	})
+}
+
+// AddToManager creates a webhook with the default options and adds it to the manager.
+func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
+	return AddToManagerWithOptions(mgr, DefaultAddOptions)
 }

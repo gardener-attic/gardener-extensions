@@ -29,6 +29,8 @@ const (
 	WebhookName = "controlplane"
 	// ExposureWebhookName is the exposure webhook name.
 	ExposureWebhookName = "controlplaneexposure"
+	// BackupWebhookName is the backup webhook name.
+	BackupWebhookName = "controlplanebackup"
 )
 
 var logger = log.Log.WithName("controlplane-webhook")
@@ -67,8 +69,12 @@ func Add(mgr manager.Manager, args AddArgs) (webhook.Webhook, error) {
 }
 
 func getName(kind extensionswebhook.Kind) string {
-	if kind == extensionswebhook.SeedKind {
+	switch kind {
+	case extensionswebhook.SeedKind:
 		return ExposureWebhookName
+	case extensionswebhook.BackupKind:
+		return BackupWebhookName
+	default:
+		return WebhookName
 	}
-	return WebhookName
 }

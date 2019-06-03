@@ -17,6 +17,8 @@ package controlplaneexposure
 import (
 	"context"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -24,20 +26,23 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewEnsurer creates a new controlplaneexposure ensurer.
-func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
+func NewEnsurer(etcdStorage *config.ETCDStorage, logger logr.Logger) genericmutator.Ensurer {
 	return &ensurer{
-		logger: logger.WithName("ensurer"),
+		etcdStorage: etcdStorage,
+		logger:      logger.WithName("gcp-controlplaneexposure-ensurer"),
 	}
 }
 
 type ensurer struct {
-	controlplane.NoopEnsurer
-	client client.Client
-	logger logr.Logger
+	genericmutator.NoopEnsurer
+	etcdStorage *config.ETCDStorage
+	client      client.Client
+	logger      logr.Logger
 }
 
 // InjectClient injects the given client into the ensurer.
@@ -58,4 +63,23 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1
 		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--advertise-address=", address)
 	}
 	return nil
+}
+
+// EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.StatefulSet, cluster *extensionscontroller.Cluster) error {
+	e.ensureVolumeClaimTemplates(&ss.Spec, ss.Name)
+	return nil
+}
+
+func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name string) {
+	t := e.getVolumeClaimTemplate(name)
+	spec.VolumeClaimTemplates = controlplane.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
+}
+
+func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {
+	var etcdStorage config.ETCDStorage
+	if name == common.EtcdMainStatefulSetName {
+		etcdStorage = *e.etcdStorage
+	}
+	return controlplane.GetETCDVolumeClaimTemplate(name, etcdStorage.ClassName, etcdStorage.Capacity)
 }

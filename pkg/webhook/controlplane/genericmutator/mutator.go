@@ -17,6 +17,7 @@ package genericmutator
 import (
 	"context"
 
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/coreos/go-systemd/unit"
@@ -43,6 +44,8 @@ type Ensurer interface {
 	EnsureKubeControllerManagerDeployment(context.Context, *appsv1.Deployment) error
 	// EnsureKubeSchedulerDeployment ensures that the kube-scheduler deployment conforms to the provider requirements.
 	EnsureKubeSchedulerDeployment(context.Context, *appsv1.Deployment) error
+	// EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
+	EnsureETCDStatefulSet(context.Context, *appsv1.StatefulSet, *extensionscontroller.Cluster) error
 	// EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
 	EnsureKubeletServiceUnitOptions(context.Context, []*unit.UnitOption) ([]*unit.UnitOption, error)
 	// EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
@@ -60,6 +63,7 @@ func NewMutator(ensurer Ensurer, unitSerializer controlplane.UnitSerializer, kub
 }
 
 type mutator struct {
+	client             client.Client
 	ensurer            Ensurer
 	unitSerializer     controlplane.UnitSerializer
 	kubeletConfigCodec controlplane.KubeletConfigCodec
@@ -69,6 +73,7 @@ type mutator struct {
 // InjectClient injects the given client into the ensurer.
 // TODO Replace this with the more generic InjectFunc when controller runtime supports it
 func (m *mutator) InjectClient(client client.Client) error {
+	m.client = client
 	if _, err := inject.ClientInto(client, m.ensurer); err != nil {
 		return errors.Wrap(err, "could not inject the client into the ensurer")
 	}
@@ -91,6 +96,17 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 			return m.ensurer.EnsureKubeControllerManagerDeployment(ctx, x)
 		case common.KubeSchedulerDeploymentName:
 			return m.ensurer.EnsureKubeSchedulerDeployment(ctx, x)
+		}
+	case *appsv1.StatefulSet:
+		switch x.Name {
+		case common.EtcdMainStatefulSetName, common.EtcdEventsStatefulSetName:
+			// Get cluster info
+			cluster, err := extensionscontroller.GetCluster(ctx, m.client, x.Namespace)
+			if err != nil {
+				return errors.Wrapf(err, "could not get cluster for namespace '%s'", x.Namespace)
+			}
+
+			return m.ensurer.EnsureETCDStatefulSet(ctx, x, cluster)
 		}
 	case *extensionsv1alpha1.OperatingSystemConfig:
 		if x.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {

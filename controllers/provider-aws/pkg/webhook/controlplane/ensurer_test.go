@@ -38,7 +38,7 @@ func TestController(t *testing.T) {
 	RunSpecs(t, "AWS Controlplane Webhook Suite")
 }
 
-var _ = Describe("Mutator", func() {
+var _ = Describe("Ensurer", func() {
 	var (
 		ctrl *gomock.Controller
 	)
