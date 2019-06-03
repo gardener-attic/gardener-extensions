@@ -14,7 +14,12 @@ controllers:
   worker:
     concurrentSyncs: 5
 
-disableControllers: []
+disableControllers:
+- controlplane-controller
+disableWebhooks:
+- controlplane
+- controlplaneexposure
+- controlplanebackup
 
 config:
   machineImages:
@@ -23,3 +28,9 @@ config:
     publisher: CoreOS
     offer: CoreOS
     sku: Stable
+  etcd:
+    storage:
+      className: gardener.cloud-fast
+      capacity: 33Gi
+    backup:
+      schedule: "0 */24 * * *"

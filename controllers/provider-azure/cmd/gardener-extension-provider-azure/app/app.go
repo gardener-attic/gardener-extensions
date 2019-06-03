@@ -25,9 +25,12 @@ import (
 	azurecontrolplane "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/controlplane"
 	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	azureworker "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
+	azurecontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplanebackup"
+	azurecontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -44,6 +47,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		configFileOpts = &azurecmd.ConfigOptions{}
 
+		// options for the controlplane controller
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
 		// options for the infrastructure controller
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
@@ -58,11 +66,18 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
-		controllerSwitches = azurecmd.ControllerSwitchOptions()
-
-		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
-			MaxConcurrentReconciles: 5,
+		controllerSwitches   = azurecmd.ControllerSwitchOptions()
+		webhookSwitches      = azurecmd.WebhookSwitchOptions()
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
 		}
+		webhookOptions = webhookcmd.NewAddToManagerOptions("azure-webhooks", webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
@@ -70,7 +85,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+			configFileOpts,
 			controllerSwitches,
+			webhookOptions,
 		)
 	)
 
@@ -80,10 +97,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
-			}
-
-			if err := configFileOpts.Complete(); err != nil {
-				controllercmd.LogErrAndExit(err, "Error completing config options")
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -100,13 +113,19 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&azureworker.DefaultAddOptions.MachineImages)
+			configFileOpts.Completed().ApplyETCDStorage(&azurecontrolplaneexposure.DefaultAddOptions.ETCDStorage)
+			configFileOpts.Completed().ApplyETCDBackup(&azurecontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			controlPlaneCtrlOpts.Completed().Apply(&azurecontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
-			controlPlaneCtrlOpts.Completed().Apply(&azurecontrolplane.Options)
 			workerCtrlOpts.Completed().Apply(&azureworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
+			}
+
+			if err := webhookOptions.Completed().AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {
@@ -116,7 +135,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
-	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }
