@@ -34,6 +34,7 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
+	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -142,7 +143,7 @@ func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *e
 func (a *actuator) fetchEIPInternetChargeType(vpcClient alicloudclient.VPC, tf extensionsterraformer.Interface) (string, error) {
 	stateVariables, err := tf.GetStateOutputVariables(TerraformerOutputKeyVPCID)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) || terraformer.IsVariablesNotFoundError(err) {
 			return alicloudclient.DefaultInternetChargeType, nil
 		}
 		return "", err
