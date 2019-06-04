@@ -25,9 +25,12 @@ import (
 	alicloudcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/controlplane"
 	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	alicloudworker "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/worker"
+	alicloudcontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/webhook/controlplanebackup"
+	alicloudcontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -63,7 +66,18 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
-		controllerSwitches = alicloudcmd.ControllerSwitchOptions()
+		controllerSwitches   = alicloudcmd.ControllerSwitchOptions()
+		webhookSwitches      = alicloudcmd.WebhookSwitchOptions()
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+		webhookOptions = webhookcmd.NewAddToManagerOptions("alicloud-webhooks", webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
@@ -73,6 +87,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			configFileOpts,
 			controllerSwitches,
+			webhookOptions,
 		)
 	)
 
@@ -98,6 +113,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&alicloudworker.DefaultAddOptions.MachineImages)
+			configFileOpts.Completed().ApplyETCDStorage(&alicloudcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
+			configFileOpts.Completed().ApplyETCDBackup(&alicloudcontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			controlPlaneCtrlOpts.Completed().Apply(&alicloudcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
@@ -105,6 +122,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
+			}
+
+			if err := webhookOptions.Completed().AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {

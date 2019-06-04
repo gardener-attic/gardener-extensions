@@ -152,7 +152,10 @@ start-provider-alicloud:
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
 		--config-file=./controllers/provider-alicloud/example/00-componentconfig.yaml \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION)
+		--leader-election=$(LEADER_ELECTION) \
+		--webhook-config-mode=url \
+		--webhook-config-name=alicloud-webhooks \
+		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-packet
 start-provider-packet:

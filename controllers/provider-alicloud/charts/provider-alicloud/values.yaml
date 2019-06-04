@@ -6,16 +6,29 @@ image:
 resources: {}
 
 controllers:
+  controlplane:
+    concurrentSyncs: 5
   infrastructure:
     concurrentSyncs: 5
     ignoreOperationAnnotation: false
   worker:
     concurrentSyncs: 5
 
-disableControllers: []
+disableControllers:
+- controlplane-controller
+disableWebhooks:
+- controlplane
+- controlplaneexposure
+- controlplanebackup
 
 config:
   machineImages:
   - name: coreos
     version: 2023.5.0
     id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
+  etcd:
+    storage:
+      className: gardener.cloud-fast
+      capacity: 25Gi
+    backup:
+      schedule: "0 */24 * * *"
