@@ -23,6 +23,10 @@ spec:
       labels:
         app: {{ template "cert-broker.name" . }}
         release: {{ .Release.Name }}
+        networking.gardener.cloud/to-dns: allowed
+        networking.gardener.cloud/to-shoot-apiserver: allowed
+        networking.gardener.cloud/to-seed-apiserver: allowed
+        networking.gardener.cloud/from-prometheus: allowed
     spec:
       serviceAccountName: {{ template "cert-broker.name" . }}
       containers:
