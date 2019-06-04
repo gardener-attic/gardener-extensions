@@ -18,6 +18,10 @@ spec:
       labels:
         app: packet-cloud-controller-manager
         garden.sapcloud.io/role: controlplane
+        networking.gardener.cloud/to-dns: allowed
+        networking.gardener.cloud/to-public-networks: allowed
+        networking.gardener.cloud/to-shoot-apiserver: allowed
+        networking.gardener.cloud/from-prometheus: allowed
 {{- if .Values.podAnnotations }}
       annotations:
 {{ toYaml .Values.podAnnotations | indent 8 }}
@@ -47,6 +51,11 @@ spec:
             secretKeyRef:
               name: cloudprovider
               key: projectID
+        ports:
+        # Packet's CCM is based on K8S 1.11 and uses 10253 port by default.
+        - containerPort: 10253
+          name: metrics
+          protocol: TCP
         {{- if .Values.resources }}
         resources:
 {{ toYaml .Values.resources | indent 10 }}

@@ -19,13 +19,19 @@ spec:
     metadata:
       annotations:
         scheduler.alpha.kubernetes.io/critical-pod: ''
-      {{- if .Values.podAnnotations }}
+{{- if .Values.podAnnotations }}
 {{ toYaml .Values.podAnnotations | indent 8 }}
-      {{- end }}
+{{- end }}
       labels:
         garden.sapcloud.io/role: controlplane
         app: kubernetes
         role: machine-controller-manager
+        networking.gardener.cloud/to-dns: allowed
+        networking.gardener.cloud/to-public-networks: allowed
+        networking.gardener.cloud/to-private-networks: allowed
+        networking.gardener.cloud/to-seed-apiserver: allowed
+        networking.gardener.cloud/to-shoot-apiserver: allowed
+        networking.gardener.cloud/from-prometheus: allowed
     spec:
       serviceAccountName: machine-controller-manager
       terminationGracePeriodSeconds: 5
@@ -59,6 +65,10 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 5
+        ports:
+        - name: metrics
+          containerPort: {{ .Values.metricsPort }}
+          protocol: TCP
         resources:
           requests:
             cpu: 50m
