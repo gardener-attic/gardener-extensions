@@ -100,6 +100,13 @@ start-os-coreos-alicloud:
 		./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud \
 		--leader-election=$(LEADER_ELECTION)
 
+.PHONY: start-os-ubuntu
+start-os-ubuntu:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/os-ubuntu/cmd/gardener-extension-os-ubuntu \
+		--leader-election=--leader-election=$(LEADER_ELECTION)
+		
 .PHONY: start-provider-aws
 start-provider-aws:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
