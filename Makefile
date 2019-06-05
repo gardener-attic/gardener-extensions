@@ -144,6 +144,9 @@ start-provider-openstack:
 		--config-file=./controllers/provider-openstack/example/00-componentconfig.yaml \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
+		--webhook-config-mode=url \
+		--webhook-config-name=openstack-webhooks \
+		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
