@@ -22,9 +22,15 @@ const (
 
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
+	// HyperkubeImageName is the name of the hyperkube image.
+	HyperkubeImageName = "hyperkube"
 
 	// AuthURL is a constant for the key in a cloud provider secret that holds the OpenStack auth url.
 	AuthURL = "authURL"
+
+	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	CloudProviderConfigName = "cloud-provider-config"
+
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
