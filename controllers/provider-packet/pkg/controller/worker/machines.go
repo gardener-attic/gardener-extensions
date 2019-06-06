@@ -104,11 +104,12 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		}
 
 		machineClassSpec := map[string]interface{}{
-			"OS":          machineImage,
-			"projectID":   string(machineClassSecretData[packet.ProjectID]),
-			"machineType": pool.MachineType,
-			"facility":    pool.Zones,
-			"sshKeys":     []string{infrastructureStatus.SSHKeyID},
+			"OS":           machineImage,
+			"projectID":    string(machineClassSecretData[packet.ProjectID]),
+			"billingCycle": "hourly",
+			"machineType":  pool.MachineType,
+			"facility":     pool.Zones,
+			"sshKeys":      []string{infrastructureStatus.SSHKeyID},
 			"tags": []string{
 				fmt.Sprintf("kubernetes.io/cluster/%s", w.worker.Namespace),
 				"kubernetes.io/role/node",
@@ -138,7 +139,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		})
 
 		machineClassSpec["name"] = className
-		machineClassSpec["secret"].(map[string]interface{})[packet.PacketAPIKey] = string(machineClassSecretData[machinev1alpha1.PacketAPIKey])
+		machineClassSpec["secret"].(map[string]interface{})[packet.APIToken] = string(machineClassSecretData[machinev1alpha1.PacketAPIKey])
 
 		machineClasses = append(machineClasses, machineClassSpec)
 	}

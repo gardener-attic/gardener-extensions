@@ -20,6 +20,7 @@ metadata:
 spec:
   projectID: {{ $machineClass.projectID }}
   OS: {{ $machineClass.OS }}
+  billingCycle: {{ $machineClass.billingCycle }}
   machineType: {{ $machineClass.machineType }}
   sshKeys:
 {{ toYaml $machineClass.sshKeys | indent 4 }}
