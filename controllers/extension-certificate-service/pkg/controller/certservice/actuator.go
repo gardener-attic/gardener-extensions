@@ -84,6 +84,11 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 		return err
 	}
 
+	dns := cluster.Shoot.Spec.DNS
+	if dns.Domain == nil && dns.Provider == gardenv1beta1.DNSUnmanaged {
+		return nil
+	}
+
 	if !controller.IsHibernated(cluster.Shoot) {
 		if err := a.createRBAC(ctx, kubecfg); err != nil {
 			return err
