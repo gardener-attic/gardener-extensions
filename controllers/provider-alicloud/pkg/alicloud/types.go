@@ -25,6 +25,21 @@ const (
 
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
+	// CloudControllerManagerImageName is the name of the CloudControllerManager image.
+	CloudControllerManagerImageName = "alicloud-controller-manager"
+	// CSIAttacherImageName is the name of the CSI attacher image.
+	CSIAttacherImageName = "csi-attacher"
+	// CSINodeDriverRegistrarImageName is the name of the CSI driver registrar image.
+	CSINodeDriverRegistrarImageName = "csi-node-driver-registrar"
+	// CSIProvisionerImageName is the name of the CSI provisioner image.
+	CSIProvisionerImageName = "csi-provisioner"
+	// CSISnapshotterImageName is the name of the CSI snapshotter image.
+	CSISnapshotterImageName = "csi-snapshotter"
+	// CSIPluginImageName is the name of the CSI plugin image.
+	CSIPluginImageName = "csi-plugin-alicloud"
+
+	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	CloudProviderConfigName = "cloud-provider-config"
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
 )

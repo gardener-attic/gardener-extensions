@@ -22,6 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudinstall "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/install"
 	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
+	alicloudcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/controlplane"
 	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	alicloudworker "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -43,6 +44,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		configFileOpts = &alicloudcmd.ConfigOptions{}
 
+		// options for the controlplane controller
+		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
 		// options for the infrastructure controller
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
@@ -50,7 +56,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		infraReconcileOpts = &infrastructure.ReconcilerOptions{
 			IgnoreOperationAnnotation: true,
 		}
-		unprefixedInfraOpts = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
+		infraCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 
 		// options for the worker controller
 		workerCtrlOpts = &controllercmd.ControllerOptions{
@@ -62,8 +68,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
+			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
+			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+			configFileOpts,
 			controllerSwitches,
 		)
 	)
@@ -74,10 +82,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
-			}
-
-			if err := configFileOpts.Complete(); err != nil {
-				controllercmd.LogErrAndExit(err, "Error completing config options")
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -94,6 +98,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&alicloudworker.DefaultAddOptions.MachineImages)
+			controlPlaneCtrlOpts.Completed().Apply(&alicloudcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			workerCtrlOpts.Completed().Apply(&alicloudworker.DefaultAddOptions.Controller)
@@ -109,7 +114,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
-	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

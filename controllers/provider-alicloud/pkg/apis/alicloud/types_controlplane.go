@@ -12,18 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package alicloud
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var (
-	addToManagerBuilder = controller.NewAddToManagerBuilder(
-		infrastructure.AddToManager,
-	)
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-	// AddToManager adds all controllers to the given manager.
-	AddToManager = addToManagerBuilder.AddToManager
-)
+// ControlPlaneConfig contains configuration settings for the control plane.
+type ControlPlaneConfig struct {
+	metav1.TypeMeta
+
+	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
+	CloudControllerManager *CloudControllerManagerConfig
+}
+
+// CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.
+type CloudControllerManagerConfig struct {
+	gardenv1beta1.KubernetesConfig
+}
