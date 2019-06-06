@@ -77,7 +77,7 @@ docker-images: docker-image-hyper
 
 .PHONY: revendor
 revendor:
-	@dep ensure -update
+	@dep ensure -v -update
 
 .PHONY: start-os-coreos
 start-os-coreos:
@@ -179,4 +179,3 @@ start-certificate-service:
 		./controllers/extension-certificate-service/cmd \
 		--leader-election=$(LEADER_ELECTION) \
 		--config=$(CERTIFICATE_SERVICE_CONFIG)
-

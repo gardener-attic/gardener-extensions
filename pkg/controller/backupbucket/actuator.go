@@ -12,7 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-aws . ../../example/controller-registration.yaml BackupBucket:aws BackupEntry:aws ControlPlane:aws Infrastructure:aws Worker:aws
+package backupbucket
 
-// Package chart enables go:generate support for generating the correct controller registration.
-package chart
+import (
+	"context"
+
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+)
+
+// Actuator acts upon BackupBucket resources.
+type Actuator interface {
+	// Reconcile reconciles the BackupBucket.
+	Reconcile(context.Context, *extensionsv1alpha1.BackupBucket) error
+	// Delete deletes the BackupBucket.
+	Delete(context.Context, *extensionsv1alpha1.BackupBucket) error
+}
