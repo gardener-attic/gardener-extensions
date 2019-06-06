@@ -234,9 +234,10 @@ var _ = Describe("Machines", func() {
 				// Test workerDelegate.DeployMachineClasses()
 				var (
 					defaultMachineClass = map[string]interface{}{
-						"OS":          machineImage,
-						"projectID":   packetProjectID,
-						"machineType": machineType,
+						"OS":           machineImage,
+						"projectID":    packetProjectID,
+						"billingCycle": "hourly",
+						"machineType":  machineType,
 						"facility": []string{
 							zone1,
 							zone2,
@@ -387,5 +388,5 @@ func copyMachineClass(def map[string]interface{}) map[string]interface{} {
 
 func addNameAndSecretToMachineClass(class map[string]interface{}, packetAPIToken, name string) {
 	class["name"] = name
-	class["secret"].(map[string]interface{})[packet.PacketAPIKey] = packetAPIToken
+	class["secret"].(map[string]interface{})[packet.APIToken] = packetAPIToken
 }
