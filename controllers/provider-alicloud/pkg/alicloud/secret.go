@@ -31,6 +31,8 @@ const (
 	AccessKeyID = "accessKeyID"
 	// AccessKeySecret is the data field in a secret where the access key secret is stored at.
 	AccessKeySecret = "accessKeySecret"
+	// StorageEndpoint is the data field in a secret where the storage endpoint is stored at.
+	StorageEndpoint = "storageEndpoint"
 )
 
 // ReadSecretCredentials reads the Credentials from the given secret.

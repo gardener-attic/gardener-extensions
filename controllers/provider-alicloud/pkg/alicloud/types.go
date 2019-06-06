@@ -19,9 +19,13 @@ import "path/filepath"
 const (
 	// Name is the name of the Alicloud provider.
 	Name = "provider-alicloud"
+	// StorageProviderName is the name of the Alicloud storage provider.
+	StorageProviderName = "OSS"
 
 	// InfraRelease is the name of the alicloud-infra chart.
 	InfraRelease = "alicloud-infra"
+	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
+	ETCDBackupRestoreImageName = "etcd-backup-restore"
 
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
@@ -38,10 +42,17 @@ const (
 	// CSIPluginImageName is the name of the CSI plugin image.
 	CSIPluginImageName = "csi-plugin-alicloud"
 
+	// BucketName is a constant for the key in a backup secret that holds the bucket name.
+	// The bucket name is written to the backup secret by Gardener as a temporary solution.
+	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+	BucketName = "bucketName"
+
 	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
 	CloudProviderConfigName = "cloud-provider-config"
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
+	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.
+	BackupSecretName = "etcd-backup"
 )
 
 var (
