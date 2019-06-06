@@ -40,6 +40,7 @@ rules:
   - apps
   - batch
   - rbac.authorization.k8s.io
+  - admissionregistration.k8s.io
   - apiextensions.k8s.io
   resources:
   - namespaces
@@ -57,6 +58,7 @@ rules:
   - jobs
   - pods
   - pods/log
+  - mutatingwebhookconfigurations
   - customresourcedefinitions
   verbs:
   - "*"

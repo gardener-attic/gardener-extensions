@@ -7,3 +7,9 @@ machineImages:
   publisher: CoreOS
   offer: CoreOS
   sku: Stable
+etcd:
+  storage:
+    className: gardener.cloud-fast
+    capacity: 33Gi
+  backup:
+    schedule: "0 */24 * * *"

@@ -28,6 +28,7 @@ type ControllerConfiguration struct {
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to AWS-specific identifiers, i.e. AMIs.
 	MachineImages []MachineImage
+
 	// ETCD is the etcd configuration.
 	ETCD ETCD
 }
