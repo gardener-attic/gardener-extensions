@@ -23,7 +23,6 @@ import (
 	extensionwebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
@@ -133,7 +132,6 @@ func (w *ServerOptions) buildBootstrapOptions() (*webhook.BootstrapOptions, erro
 
 		return &webhook.BootstrapOptions{
 			MutatingWebhookConfigName: w.Name,
-			Secret:                    &types.NamespacedName{Namespace: w.Namespace, Name: w.Name},
 			Service: &webhook.Service{
 				Name:      w.Name,
 				Namespace: w.Namespace,

@@ -54,20 +54,8 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /etc/gardener-extension-provider-aws/config
-        - name: cert
-          mountPath: /tmp/cert
       volumes:
       - name: config
         configMap:
           name: gardener-extension-provider-aws-configmap
           defaultMode: 420
-      - name: cert
-        secret:
-          secretName: aws-webhooks
-          defaultMode: 420
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aws-webhooks
-  namespace: {{ .Release.Namespace }}
