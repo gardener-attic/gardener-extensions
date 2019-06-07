@@ -81,7 +81,14 @@ func add(mgr manager.Manager, typeName string, options controller.Options, predi
 	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToControlPlaneMapper(mgr.GetClient(), predicates)}); err != nil {
 		return err
 	}
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: ClusterToControlPlaneMapper(mgr.GetClient(), predicates)}); err != nil {
+	if err := ctrl.Watch(
+		&source.Kind{Type: &extensionsv1alpha1.Cluster{}},
+		&handler.EnqueueRequestsFromMapFunc{ToRequests: ClusterToControlPlaneMapper(mgr.GetClient(), predicates)},
+		extensionscontroller.OrPredicate(
+			extensionscontroller.ShootGenerationUpdatedPredicate(),
+			extensionscontroller.CloudProfileGenerationUpdatePredicate(),
+		),
+	); err != nil {
 		return err
 	}
 	return nil

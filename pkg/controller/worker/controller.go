@@ -76,9 +76,12 @@ func add(mgr manager.Manager, options controller.Options, predicates []predicate
 	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToWorkerMapper(mgr.GetClient(), predicates)}); err != nil {
 		return err
 	}
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: ClusterToWorkerMapper(mgr.GetClient(), predicates)}); err != nil {
-		return err
-	}
-
-	return nil
+	return ctrl.Watch(
+		&source.Kind{Type: &extensionsv1alpha1.Cluster{}},
+		&handler.EnqueueRequestsFromMapFunc{ToRequests: ClusterToWorkerMapper(mgr.GetClient(), predicates)},
+		extensionscontroller.OrPredicate(
+			extensionscontroller.ShootGenerationUpdatedPredicate(),
+			extensionscontroller.CloudProfileGenerationUpdatePredicate(),
+		),
+	)
 }

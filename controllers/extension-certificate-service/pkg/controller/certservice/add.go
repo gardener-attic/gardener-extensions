@@ -18,7 +18,8 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/extension"
 
 	controllerconfig "github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/config"
-	controllerutil "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	controllerextension "github.com/gardener/gardener-extensions/pkg/controller/extension"
 	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -51,15 +52,17 @@ func AddToManager(mgr manager.Manager) error {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, config controllerconfig.Config) error {
 	var (
-		cl = mgr.GetClient()
+		cl         = mgr.GetClient()
+		predicates = controllerextension.DefaultPredicates(cl, Type)
 
 		// watchBuilder determines which resources should be watched and the reconciler to be used.
-		watchBuilder = controllerutil.NewWatchBuilder(
+		watchBuilder = extensionscontroller.NewWatchBuilder(
 			// Register Watch on Cluster resources.
 			func(ctrl controller.Controller) error {
 				return ctrl.Watch(
 					&source.Kind{Type: &extensionsv1alpha1.Cluster{}},
-					&handler.EnqueueRequestsFromMapFunc{ToRequests: controllerutil.ObjectNameToExtensionTypeMapper(cl, Type)},
+					&handler.EnqueueRequestsFromMapFunc{ToRequests: controllerextension.ClusterToExtensionMapper(cl, predicates...)},
+					extensionscontroller.ShootGenerationUpdatedPredicate(),
 				)
 			},
 
@@ -67,8 +70,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, confi
 			func(ctrl controller.Controller) error {
 				return ctrl.Watch(
 					&source.Kind{Type: &corev1.Secret{}},
-					&handler.EnqueueRequestsFromMapFunc{ToRequests: controllerutil.TypeMapperWithinNamespace(cl, Type)},
-					controllerutil.NamePredicate(corev1alpha1.SecretNameCACluster),
+					&handler.EnqueueRequestsFromMapFunc{ToRequests: controllerextension.MapperWithinNamespace(cl, predicates...)},
+					extensionscontroller.NamePredicate(corev1alpha1.SecretNameCACluster),
 				)
 			})
 	)
