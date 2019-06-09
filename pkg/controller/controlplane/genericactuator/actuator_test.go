@@ -111,9 +111,9 @@ var _ = Describe("Actuator", func() {
 			"clusterName": namespace,
 		}
 
-		controlPlaneShootChartValues = map[string]interface{}{
-			"foo": "bar",
-		}
+		// controlPlaneShootChartValues = map[string]interface{}{
+		// 	"foo": "bar",
+		// }
 
 		logger = log.Log.WithName("test")
 	)
@@ -141,20 +141,20 @@ var _ = Describe("Actuator", func() {
 			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksums, controlPlaneChartValues).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
-			ccmShootChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), metav1.NamespaceSystem, cluster.Shoot, imageVector, nil, controlPlaneShootChartValues).Return(nil)
+			// ccmShootChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), metav1.NamespaceSystem, cluster.Shoot, imageVector, nil, controlPlaneShootChartValues).Return(nil)
 
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
 			vp.EXPECT().GetConfigChartValues(context.TODO(), cp, cluster).Return(configChartValues, nil)
 			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums).Return(controlPlaneChartValues, nil)
-			vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
+			// vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
 
 			// Create mock shoot clients factory
-			sc := mockutil.NewMockShootClients(ctrl)
-			sc.EXPECT().GardenerClientset().Return(nil)
-			sc.EXPECT().ChartApplier().Return(nil)
+			// sc := mockutil.NewMockShootClients(ctrl)
+			// sc.EXPECT().GardenerClientset().Return(nil)
+			// sc.EXPECT().ChartApplier().Return(nil)
 			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
+			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
 
 			// Create actuator
 			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, vp, scf, imageVector, cloudProviderConfigName, logger)
@@ -177,19 +177,19 @@ var _ = Describe("Actuator", func() {
 			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksumsWithoutConfig, controlPlaneChartValues).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
-			ccmShootChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), metav1.NamespaceSystem, cluster.Shoot, imageVector, nil, controlPlaneShootChartValues).Return(nil)
+			// ccmShootChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), metav1.NamespaceSystem, cluster.Shoot, imageVector, nil, controlPlaneShootChartValues).Return(nil)
 
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
 			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksumsWithoutConfig).Return(controlPlaneChartValues, nil)
-			vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
+			// vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
 
 			// Create mock shoot clients factory
-			sc := mockutil.NewMockShootClients(ctrl)
-			sc.EXPECT().GardenerClientset().Return(nil)
-			sc.EXPECT().ChartApplier().Return(nil)
+			// sc := mockutil.NewMockShootClients(ctrl)
+			// sc.EXPECT().GardenerClientset().Return(nil)
+			// sc.EXPECT().ChartApplier().Return(nil)
 			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
+			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
 
 			// Create actuator
 			a := NewActuator(secrets, nil, ccmChart, ccmShootChart, vp, scf, imageVector, "", logger)
@@ -206,7 +206,7 @@ var _ = Describe("Actuator", func() {
 		It("should delete secrets and charts", func() {
 			// Create mock clients
 			client := mockclient.NewMockClient(ctrl)
-			shootClient := mockclient.NewMockClient(ctrl)
+			// shootClient := mockclient.NewMockClient(ctrl)
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
@@ -216,13 +216,13 @@ var _ = Describe("Actuator", func() {
 			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
-			ccmShootChart.EXPECT().Delete(context.TODO(), shootClient, metav1.NamespaceSystem).Return(nil)
+			// ccmShootChart.EXPECT().Delete(context.TODO(), shootClient, metav1.NamespaceSystem).Return(nil)
 
 			// Create mock shoot clients factory
-			sc := mockutil.NewMockShootClients(ctrl)
-			sc.EXPECT().Client().Return(shootClient)
+			// sc := mockutil.NewMockShootClients(ctrl)
+			// sc.EXPECT().Client().Return(shootClient)
 			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
+			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
 
 			// Create actuator
 			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, nil, scf, nil, cloudProviderConfigName, logger)
@@ -237,7 +237,7 @@ var _ = Describe("Actuator", func() {
 		It("should delete secrets and charts (only controlplane chart)", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
-			shootClient := mockclient.NewMockClient(ctrl)
+			// shootClient := mockclient.NewMockClient(ctrl)
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
@@ -245,13 +245,13 @@ var _ = Describe("Actuator", func() {
 			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
-			ccmShootChart.EXPECT().Delete(context.TODO(), shootClient, metav1.NamespaceSystem).Return(nil)
+			// ccmShootChart.EXPECT().Delete(context.TODO(), shootClient, metav1.NamespaceSystem).Return(nil)
 
 			// Create mock shoot clients factory
-			sc := mockutil.NewMockShootClients(ctrl)
-			sc.EXPECT().Client().Return(shootClient)
+			// sc := mockutil.NewMockShootClients(ctrl)
+			// sc.EXPECT().Client().Return(shootClient)
 			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
+			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
 
 			// Create actuator
 			a := NewActuator(secrets, nil, ccmChart, ccmShootChart, nil, scf, nil, "", logger)
