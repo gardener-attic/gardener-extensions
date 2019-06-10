@@ -35,6 +35,7 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
@@ -256,6 +257,40 @@ var _ = Describe("Mutator", func() {
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), ss)
+			Expect(err).To(Not(HaveOccurred()))
+		})
+
+		It("should invoke ensurer.EnsureKubeAPIServerNetworkPolicy with a kube-apiserver network policy", func() {
+			var (
+				np = &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "kube-apiserver-default"},
+				}
+			)
+
+			// Create mock ensurer
+			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
+			ensurer.EXPECT().EnsureKubeAPIServerNetworkPolicy(context.TODO(), np).Return(nil)
+
+			// Create mutator
+			mutator := NewMutator(ensurer, nil, nil, logger)
+
+			// Call Mutate method and check the result
+			err := mutator.Mutate(context.TODO(), np)
+			Expect(err).To(Not(HaveOccurred()))
+		})
+
+		It("should ignore other network policies than kube-apiserver-default", func() {
+			var (
+				np = &networkingv1.NetworkPolicy{
+					ObjectMeta: metav1.ObjectMeta{Name: "random-network-policy"},
+				}
+			)
+
+			// Create mutator
+			mutator := NewMutator(nil, nil, nil, logger)
+
+			// Call Mutate method and check the result
+			err := mutator.Mutate(context.TODO(), np)
 			Expect(err).To(Not(HaveOccurred()))
 		})
 

@@ -16,17 +16,16 @@ package controlplaneexposure
 
 import (
 	"context"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -48,6 +47,39 @@ type ensurer struct {
 // InjectClient injects the given client into the ensurer.
 func (m *ensurer) InjectClient(client client.Client) error {
 	m.client = client
+	return nil
+}
+
+const (
+	AlicloudCpCidr    = "100.100.100.200/32"
+	DefaultSeedCpCidr = "169.254.169.254/32"
+
+	notFound = -1
+)
+
+// EnsureKubeAPIServerNetworkPolicy ensures that the kube-apiserver network policy conforms to the provider requirements.
+func (e *ensurer) EnsureKubeAPIServerNetworkPolicy(ctx context.Context, np *networkingv1.NetworkPolicy) error {
+	egressRules := np.Spec.Egress
+	for _, egress := range egressRules {
+		if len(egress.To) == 0 {
+			continue
+		}
+		// TODO should I check the rest of the values inside the IPBlock.Except list?
+		for _, to := range egress.To {
+			if to.IPBlock != nil {
+				cidrs := to.IPBlock.Except
+				i := find(cidrs, DefaultSeedCpCidr)
+
+				if i != notFound {
+					// Remove default CIDR
+					cidrs = append(cidrs[:i], cidrs[i+1:]...)
+				}
+				// TODO should we throw an error if the default IP is not found?
+				cidrs = append(cidrs, AlicloudCpCidr)
+				to.IPBlock.Except = cidrs
+			}
+		}
+	}
 	return nil
 }
 
@@ -83,4 +115,16 @@ func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeCl
 		etcdStorage = *e.etcdStorage
 	}
 	return controlplane.GetETCDVolumeClaimTemplate(name, etcdStorage.ClassName, etcdStorage.Capacity)
+}
+
+func find(list []string, element string) int {
+	if len(list) == 0 {
+		return notFound
+	}
+	for i, str := range list {
+		if str == element {
+			return i
+		}
+	}
+	return notFound
 }

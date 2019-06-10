@@ -27,11 +27,16 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
+
+// TODO add it in github.com/gardener/gardener/pkg/operation/common
+// KubeAPIServerNetworkPolicyName is the name of the kube-apiserver networkpolicy.
+const KubeAPIServerNetworkPolicyName = "kube-apiserver-default"
 
 // Ensurer ensures that various standard Kubernets controlplane objects conform to the provider requirements.
 // If they don't initially, they are mutated accordingly.
@@ -40,6 +45,8 @@ type Ensurer interface {
 	EnsureKubeAPIServerService(context.Context, *corev1.Service) error
 	// EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 	EnsureKubeAPIServerDeployment(context.Context, *appsv1.Deployment) error
+	// EnsureKubeAPIServerNetworkPolicy ensures that the kube-apiserver network policy conforms to the provider requirements.
+	EnsureKubeAPIServerNetworkPolicy(context.Context, *networkingv1.NetworkPolicy) error
 	// EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
 	EnsureKubeControllerManagerDeployment(context.Context, *appsv1.Deployment) error
 	// EnsureKubeSchedulerDeployment ensures that the kube-scheduler deployment conforms to the provider requirements.
@@ -112,7 +119,12 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 		if x.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {
 			return m.mutateOperatingSystemConfig(ctx, x)
 		}
+	case *networkingv1.NetworkPolicy:
+		if x.Name == KubeAPIServerNetworkPolicyName {
+			return m.ensurer.EnsureKubeAPIServerNetworkPolicy(ctx, x)
+		}
 	}
+
 	return nil
 }
 

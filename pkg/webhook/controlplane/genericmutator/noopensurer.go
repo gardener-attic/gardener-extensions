@@ -22,6 +22,7 @@ import (
 	"github.com/coreos/go-systemd/unit"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 )
 
@@ -35,6 +36,11 @@ func (e *NoopEnsurer) EnsureKubeAPIServerService(context.Context, *corev1.Servic
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *NoopEnsurer) EnsureKubeAPIServerDeployment(context.Context, *appsv1.Deployment) error {
+	return nil
+}
+
+// EnsureKubeAPIServerNetworkPolicy ensures that the kube-apiserver network policy conforms to the provider requirements.
+func (e *NoopEnsurer) EnsureKubeAPIServerNetworkPolicy(context.Context, *networkingv1.NetworkPolicy) error {
 	return nil
 }
 

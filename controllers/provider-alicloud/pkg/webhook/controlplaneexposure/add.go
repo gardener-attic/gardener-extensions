@@ -22,6 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	appsv1 "k8s.io/api/apps/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -47,7 +48,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (webhook.Webh
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Kind:     extensionswebhook.SeedKind,
 		Provider: alicloud.Type,
-		Types:    []runtime.Object{&appsv1.Deployment{}, &appsv1.StatefulSet{}},
+		Types:    []runtime.Object{&appsv1.Deployment{}, &appsv1.StatefulSet{}, &networkingv1.NetworkPolicy{}},
 		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, logger),
 	})
 }

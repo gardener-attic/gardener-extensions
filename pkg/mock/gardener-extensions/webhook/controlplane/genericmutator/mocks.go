@@ -11,6 +11,7 @@ import (
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
+	v11 "k8s.io/api/networking/v1"
 	v1beta1 "k8s.io/kubelet/config/v1beta1"
 	reflect "reflect"
 )
@@ -64,6 +65,20 @@ func (m *MockEnsurer) EnsureKubeAPIServerDeployment(arg0 context.Context, arg1 *
 func (mr *MockEnsurerMockRecorder) EnsureKubeAPIServerDeployment(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubeAPIServerDeployment", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubeAPIServerDeployment), arg0, arg1)
+}
+
+// EnsureKubeAPIServerNetworkPolicy mocks base method
+func (m *MockEnsurer) EnsureKubeAPIServerNetworkPolicy(arg0 context.Context, arg1 *v11.NetworkPolicy) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureKubeAPIServerNetworkPolicy", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureKubeAPIServerNetworkPolicy indicates an expected call of EnsureKubeAPIServerNetworkPolicy
+func (mr *MockEnsurerMockRecorder) EnsureKubeAPIServerNetworkPolicy(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubeAPIServerNetworkPolicy", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubeAPIServerNetworkPolicy), arg0, arg1)
 }
 
 // EnsureKubeAPIServerService mocks base method
