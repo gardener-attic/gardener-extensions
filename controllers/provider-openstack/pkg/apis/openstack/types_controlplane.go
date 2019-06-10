@@ -28,12 +28,6 @@ type ControlPlaneConfig struct {
 	// LoadBalancerProvider is the name of the load balancer provider in the OpenStack environment.
 	LoadBalancerProvider string
 
-	// DHCPDomain is the dhcp domain of the OpenStack system configured in nova.conf. Only meaningful for
-	// Kubernetes 1.10.1+. See https://github.com/kubernetes/kubernetes/pull/61890 for details.
-	DHCPDomain *string
-	// RequestTimeout specifies the HTTP timeout against the OpenStack API.
-	RequestTimeout *metav1.Duration
-
 	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
 	// +optional
 	CloudControllerManager *CloudControllerManagerConfig

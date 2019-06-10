@@ -23,8 +23,6 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	"time"
-
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
@@ -44,12 +42,12 @@ import (
 )
 
 const (
-	namespace      = "test"
-	authURL        = "someurl"
-	requestTimeout = 2 * time.Second
+	namespace = "test"
+	authURL   = "someurl"
 )
 
 var dhcpDomain = util.StringPtr("dhcp-domain")
+var requestTimeout = util.StringPtr("2s")
 
 var _ = Describe("ValuesProvider", func() {
 	var (
@@ -72,8 +70,6 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&openstack.ControlPlaneConfig{
 						LoadBalancerProvider: "load-balancer-provider",
-						DHCPDomain:           dhcpDomain,
-						RequestTimeout:       &metav1.Duration{Duration: requestTimeout},
 						CloudControllerManager: &openstack.CloudControllerManagerConfig{
 							KubernetesConfig: gardenv1beta1.KubernetesConfig{
 								FeatureGates: map[string]bool{
@@ -106,7 +102,9 @@ var _ = Describe("ValuesProvider", func() {
 			CloudProfile: &gardenv1beta1.CloudProfile{
 				Spec: gardenv1beta1.CloudProfileSpec{
 					OpenStack: &gardenv1beta1.OpenStackProfile{
-						KeyStoneURL: authURL,
+						KeyStoneURL:    authURL,
+						DHCPDomain:     dhcpDomain,
+						RequestTimeout: requestTimeout,
 					},
 				},
 			},

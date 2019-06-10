@@ -17,7 +17,6 @@ package controlplane
 import (
 	"context"
 	"path/filepath"
-	"time"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -210,11 +209,6 @@ func getConfigChartValues(
 		return nil, errors.Wrapf(err, "could not determine subnet ID from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
-	var requestedTimeout time.Duration
-	if cpConfig.RequestTimeout != nil {
-		requestedTimeout = cpConfig.RequestTimeout.Duration
-	}
-
 	// Collect config chart values
 	return map[string]interface{}{
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
@@ -226,8 +220,8 @@ func getConfigChartValues(
 		"floatingNetworkID": infraStatus.Networks.FloatingPool.ID,
 		"subnetID":          subnetID.ID,
 		"authUrl":           cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
-		"dhcpDomain":        cpConfig.DHCPDomain,
-		"requestTimeout":    requestedTimeout,
+		"dhcpDomain":        cluster.CloudProfile.Spec.OpenStack.DHCPDomain,
+		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,
 	}, nil
 }
 
