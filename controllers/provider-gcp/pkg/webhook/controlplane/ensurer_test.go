@@ -220,7 +220,7 @@ var _ = Describe("Ensurer", func() {
 					{
 						Section: "Service",
 						Name:    "ExecStartPre",
-						Value:   `/bin/sh -c 'hostnamectl set-hostname $(echo $HOSTNAME | cut -d '.' -f 1)'`,
+						Value:   `/bin/sh -c 'hostnamectl set-hostname $(cat /etc/hostname | cut -d '.' -f 1)'`,
 					},
 				}
 			)
