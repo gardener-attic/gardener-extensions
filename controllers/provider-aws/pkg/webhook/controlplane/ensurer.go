@@ -15,8 +15,8 @@
 package controlplane
 
 import (
+	"bytes"
 	"context"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
@@ -170,5 +170,18 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	delete(kubeletConfig.FeatureGates, "VolumeSnapshotDataSource")
 	delete(kubeletConfig.FeatureGates, "CSINodeInfo")
 	delete(kubeletConfig.FeatureGates, "CSIDriverRegistry")
+	return nil
+}
+
+// EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
+func (e *ensurer) EnsureKubernetesGeneralConfiguration(ctx context.Context, data *string) error {
+	buf := bytes.Buffer{}
+	buf.WriteString(*data)
+	buf.WriteString("\n")
+	buf.WriteString("# AWS specific settings\n")
+	buf.WriteString("# See https://github.com/kubernetes/kubernetes/issues/23395\n")
+	buf.WriteString("net.ipv4.neigh.default.gc_thresh1 = 0")
+
+	*data = buf.String()
 	return nil
 }

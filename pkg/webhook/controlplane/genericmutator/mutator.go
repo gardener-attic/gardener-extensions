@@ -16,7 +16,6 @@ package genericmutator
 
 import (
 	"context"
-
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
@@ -50,6 +49,8 @@ type Ensurer interface {
 	EnsureKubeletServiceUnitOptions(context.Context, []*unit.UnitOption) ([]*unit.UnitOption, error)
 	// EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
 	EnsureKubeletConfiguration(context.Context, *kubeletconfigv1beta1.KubeletConfiguration) error
+	// EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
+	EnsureKubernetesGeneralConfiguration(context.Context, *string) error
 }
 
 // NewMutator creates a new controlplane mutator.
@@ -131,6 +132,13 @@ func (m *mutator) mutateOperatingSystemConfig(ctx context.Context, osc *extensio
 		}
 	}
 
+	// Mutate 99 kubernetes general configuration file, if present
+	if f := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf"); f != nil && f.Content.Inline != nil {
+		if err := m.ensureKubernetesGeneralConfigFileContent(ctx, f.Content.Inline); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -174,6 +182,14 @@ func (m *mutator) ensureKubeletConfigFileContent(ctx context.Context, fci *exten
 		return errors.Wrap(err, "could not encode kubelet configuration")
 	}
 	*fci = *newFCI
+
+	return nil
+}
+
+func (m *mutator) ensureKubernetesGeneralConfigFileContent(ctx context.Context, fci *extensionsv1alpha1.FileContentInline) error {
+	if err := m.ensurer.EnsureKubernetesGeneralConfiguration(ctx, &fci.Data); err != nil {
+		return err
+	}
 
 	return nil
 }

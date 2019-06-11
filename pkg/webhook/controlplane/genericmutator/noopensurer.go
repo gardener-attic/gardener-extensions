@@ -62,3 +62,8 @@ func (e *NoopEnsurer) EnsureKubeletServiceUnitOptions(_ context.Context, opts []
 func (e *NoopEnsurer) EnsureKubeletConfiguration(context.Context, *kubeletconfigv1beta1.KubeletConfiguration) error {
 	return nil
 }
+
+// EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
+func (e *NoopEnsurer) EnsureKubernetesGeneralConfiguration(context.Context, *string) error {
+	return nil
+}

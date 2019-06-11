@@ -136,3 +136,17 @@ func (mr *MockEnsurerMockRecorder) EnsureKubeletServiceUnitOptions(arg0, arg1 in
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubeletServiceUnitOptions", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubeletServiceUnitOptions), arg0, arg1)
 }
+
+// EnsureKubernetesGeneralConfiguration mocks base method
+func (m *MockEnsurer) EnsureKubernetesGeneralConfiguration(arg0 context.Context, arg1 *string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureKubernetesGeneralConfiguration", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureKubernetesGeneralConfiguration indicates an expected call of EnsureKubernetesGeneralConfiguration
+func (mr *MockEnsurerMockRecorder) EnsureKubernetesGeneralConfiguration(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubernetesGeneralConfiguration", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubernetesGeneralConfiguration), arg0, arg1)
+}

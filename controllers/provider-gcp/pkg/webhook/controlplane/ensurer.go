@@ -15,6 +15,7 @@
 package controlplane
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -162,5 +163,17 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	delete(kubeletConfig.FeatureGates, "VolumeSnapshotDataSource")
 	delete(kubeletConfig.FeatureGates, "CSINodeInfo")
 	delete(kubeletConfig.FeatureGates, "CSIDriverRegistry")
+	return nil
+}
+
+// EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
+func (e *ensurer) EnsureKubernetesGeneralConfiguration(ctx context.Context, data *string) error {
+	buf := bytes.Buffer{}
+	buf.WriteString(*data)
+	buf.WriteString("\n")
+	buf.WriteString("# GCE specific settings\n")
+	buf.WriteString("net.ipv4.ip_forward = 1")
+
+	*data = buf.String()
 	return nil
 }

@@ -49,6 +49,9 @@ const (
 
 	oldKubeletConfigData = "old kubelet config data"
 	newKubeletConfigData = "new kubelet config data"
+
+	oldKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1"
+	newKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# Provider specific settings"
 )
 
 const (
@@ -261,6 +264,9 @@ var _ = Describe("Mutator", func() {
 
 		It("should invoke appropriate ensurer methods with OperatingSystemConfig", func() {
 			var (
+				oldFci = &extensionsv1alpha1.FileContentInline{
+					Data: oldKubernetesGeneralConfigData,
+				}
 				osc = &extensionsv1alpha1.OperatingSystemConfig{
 					ObjectMeta: metav1.ObjectMeta{Name: "test"},
 					Spec: extensionsv1alpha1.OperatingSystemConfigSpec{
@@ -278,6 +284,12 @@ var _ = Describe("Mutator", func() {
 									Inline: &extensionsv1alpha1.FileContentInline{
 										Data: oldKubeletConfigData,
 									},
+								},
+							},
+							{
+								Path: "/etc/sysctl.d/99-k8s-general.conf",
+								Content: extensionsv1alpha1.FileContent{
+									Inline: oldFci,
 								},
 							},
 						},
@@ -321,6 +333,12 @@ var _ = Describe("Mutator", func() {
 					return nil
 				},
 			)
+			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(context.TODO(), &oldFci.Data).DoAndReturn(
+				func(ctx context.Context, data *string) error {
+					*data = newKubernetesGeneralConfigData
+					return nil
+				},
+			)
 
 			// Create mock UnitSerializer
 			us := mockcontrolplane.NewMockUnitSerializer(ctrl)
@@ -350,6 +368,9 @@ func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
 	f := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/config/kubelet")
 	Expect(f).To(Not(BeNil()))
 	Expect(f.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
+	g := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf")
+	Expect(g).To(Not(BeNil()))
+	Expect(g.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
 }
 
 func clientGet(result runtime.Object) interface{} {
