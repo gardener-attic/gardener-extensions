@@ -52,22 +52,10 @@ spec:
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         volumeMounts:
-        - name: cert
-          mountPath: /tmp/cert
         - name: config
           mountPath: /etc/gardener-extension-provider-packet/config
       volumes:
-      - name: cert
-        secret:
-          secretName: packet-webhooks
-          defaultMode: 420
       - name: config
         configMap:
           name: gardener-extension-provider-packet-configmap
           defaultMode: 420
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: packet-webhooks
-  namespace: {{ .Release.Namespace }}

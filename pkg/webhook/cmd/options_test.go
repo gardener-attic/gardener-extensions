@@ -25,7 +25,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 )
 
@@ -96,7 +95,6 @@ var _ = Describe("Options", func() {
 					CertDir: certDir,
 					BootstrapOptions: &webhook.BootstrapOptions{
 						MutatingWebhookConfigName: name,
-						Secret:                    &types.NamespacedName{Namespace: namespace, Name: name},
 						Service: &webhook.Service{
 							Name:      name,
 							Namespace: namespace,

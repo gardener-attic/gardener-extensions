@@ -54,20 +54,8 @@ spec:
         volumeMounts:
         - name: config
           mountPath: /etc/gardener-extension-provider-azure/config
-        - name: cert
-          mountPath: /tmp/cert
       volumes:
       - name: config
         configMap:
           name: gardener-extension-provider-azure-configmap
           defaultMode: 420
-      - name: cert
-        secret:
-          secretName: azure-webhooks
-          defaultMode: 420
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: azure-webhooks
-  namespace: {{ .Release.Namespace }}

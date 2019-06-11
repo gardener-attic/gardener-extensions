@@ -68,7 +68,7 @@ docker-login:
 
 .PHONY: docker-image-hyper
 docker-image-hyper:
-	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-hyper:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-hyper:latest -f Dockerfile --target gardener-extension-hyper .
+	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-hyper:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-hyper:latest -f Dockerfile -m 4g --target gardener-extension-hyper .
 
 .PHONY: docker-images
 docker-images: docker-image-hyper
