@@ -21,7 +21,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -46,16 +45,6 @@ func (in *CloudControllerManagerConfig) DeepCopy() *CloudControllerManagerConfig
 func (in *ControlPlaneConfig) DeepCopyInto(out *ControlPlaneConfig) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
-	if in.DHCPDomain != nil {
-		in, out := &in.DHCPDomain, &out.DHCPDomain
-		*out = new(string)
-		**out = **in
-	}
-	if in.RequestTimeout != nil {
-		in, out := &in.RequestTimeout, &out.RequestTimeout
-		*out = new(v1.Duration)
-		**out = **in
-	}
 	if in.CloudControllerManager != nil {
 		in, out := &in.CloudControllerManager, &out.CloudControllerManager
 		*out = new(CloudControllerManagerConfig)

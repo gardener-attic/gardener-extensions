@@ -25,7 +25,6 @@ import (
 
 	openstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -182,8 +181,6 @@ func Convert_openstack_CloudControllerManagerConfig_To_v1alpha1_CloudControllerM
 
 func autoConvert_v1alpha1_ControlPlaneConfig_To_openstack_ControlPlaneConfig(in *ControlPlaneConfig, out *openstack.ControlPlaneConfig, s conversion.Scope) error {
 	out.LoadBalancerProvider = in.LoadBalancerProvider
-	out.DHCPDomain = (*string)(unsafe.Pointer(in.DHCPDomain))
-	out.RequestTimeout = (*v1.Duration)(unsafe.Pointer(in.RequestTimeout))
 	out.CloudControllerManager = (*openstack.CloudControllerManagerConfig)(unsafe.Pointer(in.CloudControllerManager))
 	return nil
 }
@@ -195,8 +192,6 @@ func Convert_v1alpha1_ControlPlaneConfig_To_openstack_ControlPlaneConfig(in *Con
 
 func autoConvert_openstack_ControlPlaneConfig_To_v1alpha1_ControlPlaneConfig(in *openstack.ControlPlaneConfig, out *ControlPlaneConfig, s conversion.Scope) error {
 	out.LoadBalancerProvider = in.LoadBalancerProvider
-	out.DHCPDomain = (*string)(unsafe.Pointer(in.DHCPDomain))
-	out.RequestTimeout = (*v1.Duration)(unsafe.Pointer(in.RequestTimeout))
 	out.CloudControllerManager = (*CloudControllerManagerConfig)(unsafe.Pointer(in.CloudControllerManager))
 	return nil
 }
