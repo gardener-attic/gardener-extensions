@@ -19,18 +19,18 @@ import "path/filepath"
 const (
 	// Name is the name of the OpenStack provider.
 	Name = "provider-openstack"
+	// StorageProviderName is the name of the Openstack storage provider.
+	StorageProviderName = "Swift"
 
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
 	// HyperkubeImageName is the name of the hyperkube image.
 	HyperkubeImageName = "hyperkube"
+	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
+	ETCDBackupRestoreImageName = "etcd-backup-restore"
 
 	// AuthURL is a constant for the key in a cloud provider secret that holds the OpenStack auth url.
 	AuthURL = "authURL"
-
-	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
-	CloudProviderConfigName = "cloud-provider-config"
-
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
@@ -40,8 +40,18 @@ const (
 	// Password is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack password.
 	Password = "password"
 
+	// BucketName is a constant for the key in a backup secret that holds the bucket name.
+	// The bucket name is written to the backup secret by Gardener as a temporary solution.
+	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+	BucketName = "bucketName"
+
+	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	CloudProviderConfigName = "cloud-provider-config"
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
+	// BackupSecretName defines the name of the secret containing the credentials which are required to
+	// authenticate against the respective cloud provider (required to store the backups of Shoot clusters).
+	BackupSecretName = "etcd-backup"
 )
 
 var (

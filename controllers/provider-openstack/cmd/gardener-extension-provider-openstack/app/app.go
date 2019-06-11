@@ -25,10 +25,12 @@ import (
 	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 	openstackworker "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
+	openstackcontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/webhook/controlplanebackup"
+	openstackcontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
-
+	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -63,7 +65,18 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 
-		controllerSwitches = openstackcmd.ControllerSwitchOptions()
+		controllerSwitches   = openstackcmd.ControllerSwitchOptions()
+		webhookSwitches      = openstackcmd.WebhookSwitchOptions()
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			Port:             7890,
+			CertDir:          "/tmp/cert",
+			Mode:             webhookcmd.ServiceMode,
+			Name:             "webhooks",
+			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+			ServiceSelectors: "{}",
+			Host:             "localhost",
+		}
+		webhookOptions = webhookcmd.NewAddToManagerOptions("openstack-webhooks", webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
@@ -72,6 +85,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
 			controllercmd.PrefixOption("worker-", workerCtrlOpts),
 			controllerSwitches,
+			configFileOpts,
+			webhookOptions,
 		)
 	)
 
@@ -81,10 +96,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
-			}
-
-			if err := configFileOpts.Complete(); err != nil {
-				controllercmd.LogErrAndExit(err, "Error completing config options")
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -101,6 +112,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&openstackworker.DefaultAddOptions.MachineImagesToCloudProfilesMapping)
+			configFileOpts.Completed().ApplyETCDStorage(&openstackcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
+			configFileOpts.Completed().ApplyETCDBackup(&openstackcontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			controlPlaneCtrlOpts.Completed().Apply(&openstackcp.Options)
 			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
@@ -110,6 +123,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
 			}
 
+			if err := webhookOptions.Completed().AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add webhooks to manager")
+			}
+
 			if err := mgr.Start(ctx.Done()); err != nil {
 				controllercmd.LogErrAndExit(err, "Error running manager")
 			}
@@ -117,7 +134,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 	}
 
 	aggOption.AddFlags(cmd.Flags())
-	configFileOpts.AddFlags(cmd.Flags())
 
 	return cmd
 }

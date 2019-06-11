@@ -18,10 +18,16 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/controlplane"
 	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 	workercontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
+	controlplanewebhook "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/webhook/controlplane"
+	controlplanebackupwebhook "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/webhook/controlplanebackup"
+	controlplaneexposurewebhook "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/webhook/controlplaneexposure"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	extensionscontrolplanecontroller "github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionsworkercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
+
+	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
+	extensioncontrolplanewebhook "github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 )
 
 // ControllerSwitchOptions are the controllercmd.SwitchOptions for the provider controllers.
@@ -30,5 +36,14 @@ func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
 		controllercmd.Switch(extensionscontrolplanecontroller.ControllerName, controlplane.AddToManager),
 		controllercmd.Switch(extensionsworkercontroller.ControllerName, workercontroller.AddToManager),
+	)
+}
+
+// WebhookSwitchOptions are the webhookcmd.SwitchOptions for the provider webhooks.
+func WebhookSwitchOptions() *webhookcmd.SwitchOptions {
+	return webhookcmd.NewSwitchOptions(
+		webhookcmd.Switch(extensioncontrolplanewebhook.WebhookName, controlplanewebhook.AddToManager),
+		webhookcmd.Switch(extensioncontrolplanewebhook.ExposureWebhookName, controlplaneexposurewebhook.AddToManager),
+		webhookcmd.Switch(extensioncontrolplanewebhook.BackupWebhookName, controlplanebackupwebhook.AddToManager),
 	)
 }

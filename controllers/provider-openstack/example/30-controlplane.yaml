@@ -1,3 +1,11 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shoot--foo--bar # shoot--dev--local
+  labels:
+#    backup.gardener.cloud/provider: openstack
+#    seed.gardener.cloud/provider: openstack
+    shoot.gardener.cloud/provider: openstack
 ---
 apiVersion: v1
 kind: Secret
