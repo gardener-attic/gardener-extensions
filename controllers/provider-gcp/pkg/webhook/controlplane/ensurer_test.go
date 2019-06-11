@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
@@ -260,6 +261,26 @@ var _ = Describe("Ensurer", func() {
 			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
+		})
+	})
+
+	Describe("#EnsureKubernetesGeneralConfiguration", func() {
+		It("should modify existing elements of kubernetes general configuration", func() {
+			var (
+				data   = util.StringPtr("# Default Socket Send Buffer\nnet.core.wmem_max = 16777216")
+				result = "# Default Socket Send Buffer\n" +
+					"net.core.wmem_max = 16777216\n" +
+					"# GCE specific settings\n" +
+					"net.ipv4.ip_forward = 1"
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+
+			// Call EnsureKubernetesGeneralConfiguration method and check the result
+			err := ensurer.EnsureKubernetesGeneralConfiguration(context.TODO(), data)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*data).To(Equal(result))
 		})
 	})
 })

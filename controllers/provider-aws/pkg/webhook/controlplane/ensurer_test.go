@@ -16,13 +16,13 @@ package controlplane
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"testing"
 
+	"github.com/coreos/go-systemd/unit"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
-
-	"github.com/coreos/go-systemd/unit"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -257,6 +257,27 @@ var _ = Describe("Ensurer", func() {
 			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
+		})
+	})
+
+	Describe("#EnsureKubernetesGeneralConfiguration", func() {
+		It("should modify existing elements of kubernetes general configuration", func() {
+			var (
+				data   = util.StringPtr("# Default Socket Send Buffer\nnet.core.wmem_max = 16777216")
+				result = "# Default Socket Send Buffer\n" +
+					"net.core.wmem_max = 16777216\n" +
+					"# AWS specific settings\n" +
+					"# See https://github.com/kubernetes/kubernetes/issues/23395\n" +
+					"net.ipv4.neigh.default.gc_thresh1 = 0"
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+
+			// Call EnsureKubernetesGeneralConfiguration method and check the result
+			err := ensurer.EnsureKubernetesGeneralConfiguration(context.TODO(), data)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*data).To(Equal(result))
 		})
 	})
 })
