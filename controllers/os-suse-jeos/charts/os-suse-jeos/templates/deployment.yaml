@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gardener-extension-os-suse-jeos 
+  name: gardener-extension-os-suse-jeos
   namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: gardener-extension-os-suse-jeos
@@ -34,5 +34,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+{{- if .Values.resources }}
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+{{ toYaml .Values.resources | nindent 10 }}
+{{- end }}

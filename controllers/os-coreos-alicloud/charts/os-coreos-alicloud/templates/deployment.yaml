@@ -34,5 +34,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+{{- if .Values.resources }}
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+{{ toYaml .Values.resources | nindent 10 }}
+{{- end }}

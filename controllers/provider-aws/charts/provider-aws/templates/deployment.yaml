@@ -49,8 +49,10 @@ spec:
         - name: webhook-server
           containerPort: 7890
           protocol: TCP
+{{- if .Values.resources }}
         resources:
-          {{- toYaml .Values.resources | nindent 12 }}
+{{ toYaml .Values.resources | nindent 10 }}
+{{- end }}
         volumeMounts:
         - name: config
           mountPath: /etc/gardener-extension-provider-aws/config
