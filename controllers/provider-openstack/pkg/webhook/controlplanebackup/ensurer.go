@@ -16,6 +16,7 @@ package controlplanebackup
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -28,6 +29,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewEnsurer creates a new controlplaneexposure ensurer.
@@ -43,7 +45,14 @@ type ensurer struct {
 	genericmutator.NoopEnsurer
 	etcdBackup  *config.ETCDBackup
 	imageVector imagevector.ImageVector
+	client      client.Client
 	logger      logr.Logger
+}
+
+// InjectClient injects the given client into the ensurer.
+func (e *ensurer) InjectClient(client client.Client) error {
+	e.client = client
+	return nil
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
@@ -51,7 +60,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 	if err := e.ensureContainers(&ss.Spec.Template.Spec, ss.Name, cluster); err != nil {
 		return err
 	}
-	return nil
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name)
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
@@ -60,6 +69,13 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 		return err
 	}
 	ps.Containers = controlplane.EnsureContainerWithName(ps.Containers, *c)
+	return nil
+}
+
+func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace, name string) error {
+	if name == common.EtcdMainStatefulSetName {
+		return controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, openstack.BackupSecretName)
+	}
 	return nil
 }
 
@@ -75,7 +91,7 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		defaultSchedule = "0 */24 * * *"
 	)
 
-	// Determine provider, container env variables, and volume mounts
+	// Determine provider and container env variables
 	// They are only specified for the etcd-main stateful set (backup is enabled)
 	var (
 		provider string
@@ -99,8 +115,8 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 				Name: "OS_AUTH_URL",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						Key:                  openstack.AuthURL,
+						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},
 			},
@@ -108,8 +124,8 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 				Name: "OS_DOMAIN_NAME",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						Key:                  openstack.DomainName,
+						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},
 			},
@@ -117,8 +133,8 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 				Name: "OS_USERNAME",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						Key:                  openstack.UserName,
+						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},
 			},
@@ -126,8 +142,8 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 				Name: "OS_PASSWORD",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						Key:                  openstack.Password,
+						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},
 			},
@@ -135,8 +151,8 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 				Name: "OS_TENANT_NAME",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						Key:                  openstack.TenantName,
+						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},
 			},

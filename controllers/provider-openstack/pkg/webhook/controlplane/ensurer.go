@@ -16,16 +16,17 @@ package controlplane
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewEnsurer creates a new controlplane ensurer.
@@ -37,29 +38,38 @@ func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
 
 type ensurer struct {
 	genericmutator.NoopEnsurer
+	client client.Client
 	logger logr.Logger
+}
+
+// InjectClient injects the given client into the ensurer.
+func (e *ensurer) InjectClient(client client.Client) error {
+	e.client = client
+	return nil
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
-	ps := &dep.Spec.Template.Spec
+	template := &dep.Spec.Template
+	ps := &template.Spec
 	if c := controlplane.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
 		ensureVolumeMounts(c)
 	}
 	ensureVolumes(ps)
-	return nil
+	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
-	ps := &dep.Spec.Template.Spec
+	template := &dep.Spec.Template
+	ps := &template.Spec
 	if c := controlplane.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
 		ensureKubeControllerManagerCommandLineArgs(c)
 		ensureVolumeMounts(c)
 	}
 	ensureVolumes(ps)
-	return nil
+	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
 func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
@@ -84,11 +94,6 @@ var (
 		Name:      openstack.CloudProviderConfigName,
 		MountPath: "/etc/kubernetes/cloudprovider",
 	}
-	cloudProviderSecretVolumeMount = corev1.VolumeMount{
-		Name:      common.CloudProviderSecretName,
-		MountPath: "/srv/cloudprovider",
-	}
-
 	cloudProviderConfigVolume = corev1.Volume{
 		Name: openstack.CloudProviderConfigName,
 		VolumeSource: corev1.VolumeSource{
@@ -97,26 +102,21 @@ var (
 			},
 		},
 	}
-	cloudProviderSecretVolume = corev1.Volume{
-		Name: common.CloudProviderSecretName,
-		VolumeSource: corev1.VolumeSource{
-			Secret: &corev1.SecretVolumeSource{
-				// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-				// See https://github.com/gardener/gardener/pull/930
-				SecretName: common.CloudProviderSecretName,
-			},
-		},
-	}
 )
 
 func ensureVolumeMounts(c *corev1.Container) {
 	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
-	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderSecretVolumeMount)
 }
 
 func ensureVolumes(ps *corev1.PodSpec) {
 	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
-	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderSecretVolume)
+}
+
+func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
+	if err := controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigName); err != nil {
+		return err
+	}
+	return nil
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.

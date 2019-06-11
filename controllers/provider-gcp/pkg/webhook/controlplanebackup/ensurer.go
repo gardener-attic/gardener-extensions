@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewEnsurer creates a new controlplaneexposure ensurer.
@@ -45,7 +46,14 @@ type ensurer struct {
 	genericmutator.NoopEnsurer
 	etcdBackup  *config.ETCDBackup
 	imageVector imagevector.ImageVector
+	client      client.Client
 	logger      logr.Logger
+}
+
+// InjectClient injects the given client into the ensurer.
+func (e *ensurer) InjectClient(client client.Client) error {
+	e.client = client
+	return nil
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
@@ -54,7 +62,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 		return err
 	}
 	e.ensureVolumes(&ss.Spec.Template.Spec, ss.Name)
-	return nil
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name)
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
@@ -63,6 +71,13 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 		return err
 	}
 	ps.Containers = controlplane.EnsureContainerWithName(ps.Containers, *c)
+	return nil
+}
+
+func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace, name string) error {
+	if name == common.EtcdMainStatefulSetName {
+		return controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, gcp.BackupSecretName)
+	}
 	return nil
 }
 
