@@ -31,7 +31,6 @@ import (
 	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -188,22 +187,22 @@ func (a *actuator) Reconcile(
 	}
 
 	// Create shoot clients
-	sc, err := a.shootClientsFactory.NewClientsForShoot(ctx, a.client, cp.Namespace, client.Options{})
-	if err != nil {
-		return errors.Wrapf(err, "could not create shoot clients for shoot '%s'", cp.Namespace)
-	}
+	// sc, err := a.shootClientsFactory.NewClientsForShoot(ctx, a.client, cp.Namespace, client.Options{})
+	// if err != nil {
+	// 	return errors.Wrapf(err, "could not create shoot clients for shoot '%s'", cp.Namespace)
+	// }
 
 	// Get control plane shoot chart values
-	values, err = a.vp.GetControlPlaneShootChartValues(ctx, cp, cluster)
-	if err != nil {
-		return err
-	}
+	// values, err = a.vp.GetControlPlaneShootChartValues(ctx, cp, cluster)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// Apply control plane shoot chart
-	a.logger.Info("Applying control plane shoot chart", "controlplane", util.ObjectName(cp), "values", values)
-	if err := a.controlPlaneShootChart.Apply(ctx, sc.GardenerClientset(), sc.ChartApplier(), metav1.NamespaceSystem, cluster.Shoot, a.imageVector, nil, values); err != nil {
-		return errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
-	}
+	// a.logger.Info("Applying control plane shoot chart", "controlplane", util.ObjectName(cp), "values", values)
+	// if err := a.controlPlaneShootChart.Apply(ctx, sc.GardenerClientset(), sc.ChartApplier(), metav1.NamespaceSystem, cluster.Shoot, a.imageVector, nil, values); err != nil {
+	// 	return errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
+	// }
 
 	return nil
 }
@@ -216,16 +215,16 @@ func (a *actuator) Delete(
 	cluster *extensionscontroller.Cluster,
 ) error {
 	// Create shoot clients
-	sc, err := a.shootClientsFactory.NewClientsForShoot(ctx, a.client, cp.Namespace, client.Options{})
-	if err != nil {
-		return errors.Wrapf(err, "could not create shoot clients for shoot '%s'", cp.Namespace)
-	}
+	// sc, err := a.shootClientsFactory.NewClientsForShoot(ctx, a.client, cp.Namespace, client.Options{})
+	// if err != nil {
+	// 	return errors.Wrapf(err, "could not create shoot clients for shoot '%s'", cp.Namespace)
+	// }
 
 	// Delete control plane shoot objects
-	a.logger.Info("Deleting control plane shoot objects", "controlplane", util.ObjectName(cp))
-	if err := a.controlPlaneShootChart.Delete(ctx, sc.Client(), metav1.NamespaceSystem); err != nil {
-		return errors.Wrapf(err, "could not delete control plane shoot objects for controlplane '%s'", util.ObjectName(cp))
-	}
+	// a.logger.Info("Deleting control plane shoot objects", "controlplane", util.ObjectName(cp))
+	// if err := a.controlPlaneShootChart.Delete(ctx, sc.Client(), metav1.NamespaceSystem); err != nil {
+	// 	return errors.Wrapf(err, "could not delete control plane shoot objects for controlplane '%s'", util.ObjectName(cp))
+	// }
 
 	// Delete control plane objects
 	a.logger.Info("Deleting control plane objects", "controlplane", util.ObjectName(cp))
