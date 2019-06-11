@@ -22,6 +22,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// EtcdMainVolumeClaimTemplateName is the name of the volume claim template in the etcd-main StatefulSet. It uses a
+// different naming scheme because Gardener was using HDD-based volumes for etcd in the past and did migrate to fast
+// SSD volumes recently. Due to the migration of the data of the old volume to the new one the PVC name is now different.
+const EtcdMainVolumeClaimTemplateName = "main-etcd"
+
 // GetBackupRestoreContainer returns an etcd backup-restore container with the given name, schedule, provider, image,
 // and additional provider-specific command line args and env variables.
 func GetBackupRestoreContainer(
