@@ -38,20 +38,20 @@ disableWebhooks:
 config:
   machineImages:
   - name: coreos
-    version: 1967.5.0
+    version: 2023.5.0
     regions:
     - name: eu-central-1
-      ami: ami-0f46c2ed46d8157aa
+      ami: ami-012abdf0d2781f0a5
     - name: eu-west-1
-      ami: ami-0628e483315b5d17e
+      ami: ami-01f5fbceb7a9fa4d0
     - name: us-east-1
-      ami: ami-0c6731558e5ca73f6
+      ami: ami-08e58b93705fb503f
     - name: us-east-2
-      ami: ami-05df30c25dffa0eaf
+      ami: ami-03172282aaa2899be
     - name: ap-southeast-1
-      ami: ami-07739b17529e8c1d0
+      ami: ami-0f8a9aa9857d8af7e
     - name: ap-southeast-2
-      ami: ami-02d7d488d701a460e
+      ami: ami-0e87752a1d331823a
   etcd:
     storage:
       className: gardener.cloud-fast
