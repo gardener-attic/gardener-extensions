@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: {{ include "name" . }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: {{ include "image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - /gardener-extension-hyper

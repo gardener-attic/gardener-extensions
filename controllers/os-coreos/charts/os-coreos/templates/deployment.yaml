@@ -22,7 +22,7 @@ spec:
       serviceAccountName: gardener-extension-os-coreos
       containers:
       - name: gardener-extension-os-coreos
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: {{ include "image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - /gardener-extension-hyper

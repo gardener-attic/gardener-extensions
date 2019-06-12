@@ -15,7 +15,7 @@ concurrentSyncs: 5
 
 certificateConfig:
   lifecycleSync: 1h
-  serviceSync: 5m
+  serviceSync: 1h
   resourceNamespace: garden
   issuerName: lets-encrypt
   acme:

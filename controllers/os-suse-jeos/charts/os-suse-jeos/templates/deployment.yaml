@@ -22,7 +22,7 @@ spec:
       serviceAccountName: gardener-extension-os-suse-jeos
       containers:
       - name: gardener-extension-os-suse-jeos
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: {{ include "image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - /gardener-extension-hyper

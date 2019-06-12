@@ -22,7 +22,7 @@ spec:
       serviceAccountName: gardener-extension-os-coreos-alicloud
       containers:
       - name: gardener-extension-os-coreos-alicloud
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: {{ include "image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - /gardener-extension-hyper
