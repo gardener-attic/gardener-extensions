@@ -30,7 +30,7 @@ const EtcdMainVolumeClaimTemplateName = "main-etcd"
 // GetBackupRestoreContainer returns an etcd backup-restore container with the given name, schedule, provider, image,
 // and additional provider-specific command line args and env variables.
 func GetBackupRestoreContainer(
-	name, schedule, provider, image string,
+	name, volumeClaimTemplateName, schedule, provider, image string,
 	args map[string]string,
 	env []corev1.EnvVar,
 	volumeMounts []corev1.VolumeMount,
@@ -78,7 +78,7 @@ func GetBackupRestoreContainer(
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				Name:      name,
+				Name:      volumeClaimTemplateName,
 				MountPath: "/var/etcd/data",
 			},
 			{

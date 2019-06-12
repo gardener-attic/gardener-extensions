@@ -228,14 +228,14 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]str
 	)
 
 	c := controlplane.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
-	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(common.EtcdMainStatefulSetName, "0 */24 * * *", azure.StorageProviderName,
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(common.EtcdMainStatefulSetName, controlplane.EtcdMainVolumeClaimTemplateName, "0 */24 * * *", azure.StorageProviderName,
 		"test-repository:test-tag", nil, env, nil)))
 	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
 	c := controlplane.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
-	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(common.EtcdEventsStatefulSetName, "0 */24 * * *", "",
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(common.EtcdEventsStatefulSetName, common.EtcdEventsStatefulSetName, "0 */24 * * *", "",
 		"test-repository:test-tag", nil, nil, nil)))
 }
 

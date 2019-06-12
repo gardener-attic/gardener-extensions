@@ -94,8 +94,9 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	// Determine provider, container env variables, and volume mounts
 	// They are only specified for the etcd-main stateful set (backup is enabled)
 	var (
-		provider string
-		env      []corev1.EnvVar
+		provider                string
+		env                     []corev1.EnvVar
+		volumeClaimTemplateName = name
 	)
 	if name == common.EtcdMainStatefulSetName {
 		provider = azure.StorageProviderName
@@ -130,6 +131,7 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 				},
 			},
 		}
+		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
 
 	// Determine schedule
@@ -138,5 +140,5 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		schedule = defaultSchedule
 	}
 
-	return controlplane.GetBackupRestoreContainer(name, schedule, provider, image.String(), nil, env, nil), nil
+	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, image.String(), nil, env, nil), nil
 }
