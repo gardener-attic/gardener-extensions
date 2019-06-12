@@ -3,9 +3,9 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: OperatingSystemConfig
 metadata:
   name: pool-01-original
-  namespace: default
+  namespace: shoot--foo--bar
 spec:
-  type: coreos-alicloud
+  type: coreos
   units:
   - name: docker.service
     dropIns:
