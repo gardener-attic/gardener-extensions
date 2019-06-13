@@ -3,6 +3,7 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
+replicaCount: 1
 resources: {}
 
 controllers:

@@ -80,7 +80,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			ServiceSelectors: "{}",
 			Host:             "localhost",
 		}
-		webhookOptions = webhookcmd.NewAddToManagerOptions("packet-webhooks", webhookServerOptions, webhookSwitches)
+		webhookOptions = webhookcmd.NewAddToManagerOptions(packet.Name, webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

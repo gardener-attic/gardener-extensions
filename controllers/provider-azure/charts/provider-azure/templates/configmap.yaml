@@ -1,11 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gardener-extension-provider-azure-configmap
+  name: {{ include "name" . }}-configmap
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: gardener-extension-provider-azure
-    app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "labels" . | indent 4 }}
 data:
   config.yaml: |
     ---

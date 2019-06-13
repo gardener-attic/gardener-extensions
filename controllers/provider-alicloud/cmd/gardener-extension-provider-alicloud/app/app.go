@@ -82,7 +82,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			ServiceSelectors: "{}",
 			Host:             "localhost",
 		}
-		webhookOptions = webhookcmd.NewAddToManagerOptions("alicloud-webhooks", webhookServerOptions, webhookSwitches)
+		webhookOptions = webhookcmd.NewAddToManagerOptions(alicloud.Name, webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

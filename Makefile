@@ -109,7 +109,7 @@ start-provider-aws:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=aws-webhooks \
+		--webhook-config-name=gardener-extensions-provider-aws \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-azure
@@ -121,7 +121,7 @@ start-provider-azure:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-  		--webhook-config-name=azure-webhooks \
+  		--webhook-config-name=gardener-extensions-provider-azure \
    		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-gcp
@@ -133,7 +133,7 @@ start-provider-gcp:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=gcp-webhooks \
+		--webhook-config-name=gardener-extensions-provider-gcp \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-openstack
@@ -145,7 +145,7 @@ start-provider-openstack:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=openstack-webhooks \
+		--webhook-config-name=gardener-extensions-provider-openstack \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-alicloud
@@ -157,7 +157,7 @@ start-provider-alicloud:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=alicloud-webhooks \
+		--webhook-config-name=gardener-extensions-provider-alicloud \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-packet

@@ -1,46 +1,41 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gardener-extension-provider-alicloud
+  name: {{ include "name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: gardener-extension-provider-alicloud
-    helm.sh/chart: gardener-extension-provider-alicloud
-    app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "labels" . | indent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: gardener-extension-provider-alicloud
-      app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "labels" . | indent 6 }}
   template:
     metadata:
       annotations:
         {{- if .Values.imageVectorOverwrite }}
-        checksum/configmap-gardener-extension-provider-alicloud-imagevector-overwrite: {{ include (print $.Template.BasePath "/configmap-imagevector-overwrite.yaml") . | sha256sum }}
+        checksum/configmap-{{ include "name" . }}-imagevector-overwrite: {{ include (print $.Template.BasePath "/configmap-imagevector-overwrite.yaml") . | sha256sum }}
         {{- end }}
-        checksum/configmap-gardener-extension-provider-alicloud-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/configmap-{{ include "name" . }}-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
-        app.kubernetes.io/name: gardener-extension-provider-alicloud
-        app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "labels" . | indent 8 }}
     spec:
-      serviceAccountName: gardener-extension-provider-alicloud
       containers:
-      - name: gardener-extension-provider-alicloud
+      - name: {{ include "name" . }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - /gardener-extension-hyper
         - provider-alicloud-controller-manager
-        - --config-file=/etc/gardener-extension-provider-alicloud/config/config.yaml
+        - --config-file=/etc/{{ include "name" . }}/config/config.yaml
         - --controlplane-max-concurrent-reconciles={{ .Values.controllers.controlplane.concurrentSyncs }}
         - --infrastructure-max-concurrent-reconciles={{ .Values.controllers.infrastructure.concurrentSyncs }}
         - --infrastructure-ignore-operation-annotation={{ .Values.controllers.infrastructure.ignoreOperationAnnotation }}
         - --worker-max-concurrent-reconciles={{ .Values.controllers.worker.concurrentSyncs }}
         - --webhook-config-mode=service
-        - --webhook-config-name=alicloud-webhooks
+        - --webhook-config-name={{ include "name" . }}
         - --webhook-config-namespace={{ .Release.Namespace }}
-        - --webhook-config-service-selectors={"app.kubernetes.io/name":"gardener-extension-provider-alicloud","app.kubernetes.io/instance":"{{ .Release.Name }}"}
+        - --webhook-config-service-selectors={"app.kubernetes.io/name":"{{ include "name" . }}","app.kubernetes.io/instance":"{{ .Release.Name }}"}
         - --disable-controllers={{ .Values.disableControllers | join "," }}
         - --disable-webhooks={{ .Values.disableWebhooks | join "," }}
         env:
@@ -62,20 +57,31 @@ spec:
 {{- end }}
         volumeMounts:
         - name: config
-          mountPath: /etc/gardener-extension-provider-alicloud/config
+          mountPath: /etc/{{ include "name" . }}/config
         {{- if .Values.imageVectorOverwrite }}
         - name: imagevector-overwrite
           mountPath: /charts_overwrite/
           readOnly: true
         {{- end }}
+      serviceAccountName: {{ include "name" . }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: {{ include "labels.app.key" . }}
+                operator: In
+                values:
+                - {{ include "labels.app.value" . }}
+            topologyKey: "kubernetes.io/hostname"
       volumes:
       - name: config
         configMap:
-          name: gardener-extension-provider-alicloud-configmap
+          name: {{ include "name" . }}-configmap
           defaultMode: 420
       {{- if .Values.imageVectorOverwrite }}
       - name: imagevector-overwrite
         configMap:
-          name: gardener-extension-provider-alicloud-imagevector-overwrite
+          name: {{ include "name" . }}-imagevector-overwrite
           defaultMode: 420
       {{- end }}

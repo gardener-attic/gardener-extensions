@@ -2,11 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gardener-extension-provider-azure-imagevector-overwrite
+  name: {{ include "name" . }}-imagevector-overwrite
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: gardener-extension-provider-azure
-    app.kubernetes.io/instance: {{ .Release.Name }}
+{{ include "labels" . | indent 4 }}
 data:
   images_overwrite.yaml: |
 {{ .Values.imageVectorOverwrite | indent 4 }}
