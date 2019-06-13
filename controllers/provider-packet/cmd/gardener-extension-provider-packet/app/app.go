@@ -80,7 +80,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
 			controllerSwitches,
 			configFileOpts,
-			webhookOptions,
 		)
 	)
 
