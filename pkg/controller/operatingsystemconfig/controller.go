@@ -16,6 +16,7 @@ package operatingsystemconfig
 
 import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -74,7 +75,9 @@ func add(mgr manager.Manager, options controller.Options, predicates []predicate
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToOSCMapper(mgr.GetClient(), predicates)}); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
+		ToRequests: extensionshandler.SimpleMapper(SecretToOSCMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
+	}); err != nil {
 		return err
 	}
 

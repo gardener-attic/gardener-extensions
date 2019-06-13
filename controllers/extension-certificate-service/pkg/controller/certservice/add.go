@@ -20,11 +20,11 @@ import (
 	controllerconfig "github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/config"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllerextension "github.com/gardener/gardener-extensions/pkg/controller/extension"
+	"github.com/gardener/gardener-extensions/pkg/handler"
 	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
@@ -61,7 +61,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, confi
 			func(ctrl controller.Controller) error {
 				return ctrl.Watch(
 					&source.Kind{Type: &extensionsv1alpha1.Cluster{}},
-					&handler.EnqueueRequestsFromMapFunc{ToRequests: controllerextension.ClusterToExtensionMapper(cl, predicates...)},
+					&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.SimpleMapper(controllerextension.ClusterToExtensionMapper(cl, predicates...), handler.UpdateWithNew)},
 					extensionscontroller.ShootGenerationUpdatedPredicate(),
 				)
 			},
@@ -70,7 +70,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, confi
 			func(ctrl controller.Controller) error {
 				return ctrl.Watch(
 					&source.Kind{Type: &corev1.Secret{}},
-					&handler.EnqueueRequestsFromMapFunc{ToRequests: controllerextension.MapperWithinNamespace(cl, predicates...)},
+					&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.SimpleMapper(controllerextension.MapperWithinNamespace(cl, predicates...), handler.UpdateWithNew)},
 					extensionscontroller.NamePredicate(corev1alpha1.SecretNameCACluster),
 				)
 			})
