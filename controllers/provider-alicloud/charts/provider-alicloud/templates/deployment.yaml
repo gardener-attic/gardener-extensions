@@ -16,6 +16,9 @@ spec:
   template:
     metadata:
       annotations:
+        {{- if .Values.imageVectorOverwrite }}
+        checksum/configmap-provider-alicloud-imagevector-overwrite: {{ include (print $.Template.BasePath "/configmap-imagevector-overwrite.yaml") . | sha256sum }}
+        {{- end}}
         checksum/configmap-gardener-extension-provider-alicloud-config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
         app.kubernetes.io/name: gardener-extension-provider-alicloud
@@ -39,13 +42,28 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        {{- if .Values.imageVectorOverwrite }}
+        - name: IMAGEVECTOR_OVERWRITE
+          value: /charts_overwrite/images_overwrite.yaml
+        {{- end }}
         resources:
           {{- toYaml .Values.resources | nindent 12 }}
         volumeMounts:
         - name: config
           mountPath: /etc/gardener-extension-provider-alicloud/config
+        {{- if .Values.imageVectorOverwrite }}
+        - name: extension-imagevector-overwrite
+          mountPath: /charts_overwrite/
+          readOnly: true
+        {{- end }}
       volumes:
       - name: config
         configMap:
           name: gardener-extension-provider-alicloud-configmap
           defaultMode: 420
+      {{- if .Values.imageVectorOverwrite }}
+      - name: extension-imagevector-overwrite
+        configMap:
+          name: gardener-extension-provider-alicloud-imagevector-overwrite
+          defaultMode: 420
+      {{- end }}
