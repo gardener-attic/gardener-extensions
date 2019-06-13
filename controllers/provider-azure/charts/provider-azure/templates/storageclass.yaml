@@ -1,3 +1,4 @@
+{{- if eq .Values.gardener.seed.provider "azure" }}
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
@@ -6,4 +7,5 @@ provisioner: kubernetes.io/azure-disk
 allowVolumeExpansion: true
 parameters:
   storageaccounttype: Premium_LRS
-  kind:               managed
+  kind: managed
+{{- end }}

@@ -48,3 +48,7 @@ config:
       capacity: 33Gi
     backup:
       schedule: "0 */24 * * *"
+
+gardener:
+  seed:
+    provider: azure

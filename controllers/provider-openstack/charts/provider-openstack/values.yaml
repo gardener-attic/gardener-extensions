@@ -49,3 +49,7 @@ config:
       capacity: 25Gi
     backup:
       schedule: "0 */24 * * *"
+
+gardener:
+  seed:
+    provider: openstack

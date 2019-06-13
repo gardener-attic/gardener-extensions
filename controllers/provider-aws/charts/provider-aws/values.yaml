@@ -58,3 +58,7 @@ config:
       capacity: 80Gi
     backup:
       schedule: "0 */24 * * *"
+
+gardener:
+  seed:
+    provider: aws
