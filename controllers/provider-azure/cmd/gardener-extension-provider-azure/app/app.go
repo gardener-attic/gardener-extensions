@@ -27,6 +27,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -56,6 +57,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		workerCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
+		workerReconcileOpts = &worker.Options{
+			DeployCRDs: true,
+		}
+		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
 		controllerSwitches = azurecmd.ControllerSwitchOptions()
 
@@ -63,7 +68,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			restOpts,
 			mgrOpts,
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
-			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
 			controllerSwitches,
 		)
 	)
@@ -78,6 +83,12 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := configFileOpts.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing config options")
+			}
+
+			if workerReconcileOpts.Completed().DeployCRDs {
+				if err := worker.ApplyMachineResourcesForConfig(ctx, restOpts.Completed().Config); err != nil {
+					controllercmd.LogErrAndExit(err, "Error ensuring the machine CRDs")
+				}
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())

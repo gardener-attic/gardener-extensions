@@ -28,6 +28,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
 	"github.com/spf13/cobra"
@@ -60,6 +61,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		workerCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
+		workerReconcileOpts = &worker.Options{
+			DeployCRDs: true,
+		}
+		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
 		controllerSwitches = gcpcmd.ControllerSwitchOptions()
 		webhookSwitches    = gcpcmd.WebhookAddToManagerOptions()
@@ -69,7 +74,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			mgrOpts,
 			controllercmd.PrefixOption("infrastructure-", &unprefixedInfraOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
-			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
 			controllerSwitches,
 			webhookSwitches,
 		)
@@ -94,6 +99,12 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			if err := configFileOpts.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing config options")
+			}
+
+			if workerReconcileOpts.Completed().DeployCRDs {
+				if err := worker.ApplyMachineResourcesForConfig(ctx, restOpts.Completed().Config); err != nil {
+					controllercmd.LogErrAndExit(err, "Error ensuring the machine CRDs")
+				}
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())

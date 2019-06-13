@@ -47,10 +47,6 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return errors.Wrapf(err, "could not instantiate actuator context")
 	}
 
-	if err := ensureMachineResources(ctx, a.client); err != nil {
-		return err
-	}
-
 	// Deploy the machine-controller-manager into the cluster.
 	a.logger.Info("Deploying the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
 	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate); err != nil {
