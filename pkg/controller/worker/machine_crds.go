@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package genericactuator
+package worker
 
 import (
 	"context"
 
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
+	apiextensionsscheme "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -30,7 +32,10 @@ const (
 	machineVersion = "v1alpha1"
 )
 
-var machineCRDs []*apiextensionsv1beta1.CustomResourceDefinition
+var (
+	machineCRDs         []*apiextensionsv1beta1.CustomResourceDefinition
+	apiextensionsScheme = runtime.NewScheme()
+)
 
 func init() {
 	agePrinterColumn := apiextensionsv1beta1.CustomResourceColumnDefinition{
@@ -295,22 +300,35 @@ func init() {
 			},
 		})
 	}
+
+	utilruntime.Must(apiextensionsscheme.AddToScheme(apiextensionsScheme))
 }
 
+// ApplyMachineResourcesForConfig ensures that all well-known machine CRDs are created or updated.
+func ApplyMachineResourcesForConfig(ctx context.Context, config *rest.Config) error {
+	c, err := client.New(config, client.Options{Scheme: apiextensionsScheme})
+	if err != nil {
+		return err
+	}
+
+	return ApplyMachineResources(ctx, c)
+}
+
+// ApplyMachineResources ensures that all well-known machine CRDs are created or updated.
 // TODO: Use github.com/gardener/gardener/pkg/utils/flow.Parallel as soon as we can vendor a new Gardener version again.
-func ensureMachineResources(ctx context.Context, c client.Client) error {
+func ApplyMachineResources(ctx context.Context, c client.Client) error {
 	for _, crd := range machineCRDs {
 		obj := &apiextensionsv1beta1.CustomResourceDefinition{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: crd.Name,
 			},
 		}
-		_, err := controllerutil.CreateOrUpdate(ctx, c, obj, func(existing runtime.Object) error {
+
+		if _, err := controllerutil.CreateOrUpdate(ctx, c, obj, func(existing runtime.Object) error {
 			existingCRD := existing.(*apiextensionsv1beta1.CustomResourceDefinition)
 			existingCRD.Spec = crd.Spec
 			return nil
-		})
-		if err != nil {
+		}); err != nil {
 			return err
 		}
 	}

@@ -21,7 +21,7 @@ import (
 
 	openstackinstall "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
 	openstackcmd "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/cmd"
-	openstackcp "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/controlplane"
+	openstackcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/controlplane"
 	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 	openstackworker "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -30,7 +30,9 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
+
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -64,6 +66,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		workerCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
+		workerReconcileOpts = &worker.Options{
+			DeployCRDs: true,
+		}
+		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
 		controllerSwitches   = openstackcmd.ControllerSwitchOptions()
 		webhookSwitches      = openstackcmd.WebhookSwitchOptions()
@@ -83,7 +89,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			mgrOpts,
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
-			controllercmd.PrefixOption("worker-", workerCtrlOpts),
+			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
 			controllerSwitches,
 			configFileOpts,
 			webhookOptions,
@@ -96,6 +102,12 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
+			}
+
+			if workerReconcileOpts.Completed().DeployCRDs {
+				if err := worker.ApplyMachineResourcesForConfig(ctx, restOpts.Completed().Config); err != nil {
+					controllercmd.LogErrAndExit(err, "Error ensuring the machine CRDs")
+				}
 			}
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
@@ -114,7 +126,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&openstackworker.DefaultAddOptions.MachineImagesToCloudProfilesMapping)
 			configFileOpts.Completed().ApplyETCDStorage(&openstackcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&openstackcontrolplanebackup.DefaultAddOptions.ETCDBackup)
-			controlPlaneCtrlOpts.Completed().Apply(&openstackcp.Options)
+			controlPlaneCtrlOpts.Completed().Apply(&openstackcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			workerCtrlOpts.Completed().Apply(&openstackworker.DefaultAddOptions.Controller)
