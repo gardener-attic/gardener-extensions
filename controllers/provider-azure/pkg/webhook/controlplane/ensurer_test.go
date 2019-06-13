@@ -16,9 +16,10 @@ package controlplane
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"testing"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
+	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
@@ -30,7 +31,14 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
+)
+
+const (
+	namespace = "test"
 )
 
 func TestController(t *testing.T) {
@@ -41,11 +49,22 @@ func TestController(t *testing.T) {
 var _ = Describe("Ensurer", func() {
 	var (
 		ctrl *gomock.Controller
+
+		cmKey = client.ObjectKey{Namespace: namespace, Name: azure.CloudProviderConfigName}
+		cm    = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: azure.CloudProviderConfigName},
+			Data:       map[string]string{"abc": "xyz"},
+		}
+
+		annotations = map[string]string{
+			"checksum/configmap-" + azure.CloudProviderConfigName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+		}
 	)
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
 	})
+
 	AfterEach(func() {
 		ctrl.Finish()
 	})
@@ -54,7 +73,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeAPIServerDeploymentName},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -69,19 +88,25 @@ var _ = Describe("Ensurer", func() {
 				}
 			)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeAPIServerDeployment(dep)
+			checkKubeAPIServerDeployment(dep, annotations)
 		})
 
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeAPIServerDeploymentName},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -96,15 +121,11 @@ var _ = Describe("Ensurer", func() {
 										},
 										VolumeMounts: []corev1.VolumeMount{
 											{Name: azure.CloudProviderConfigName, MountPath: "?"},
-											// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-											// See https://github.com/gardener/gardener/pull/930
-											{Name: common.CloudProviderSecretName, MountPath: "?"},
 										},
 									},
 								},
 								Volumes: []corev1.Volume{
 									{Name: azure.CloudProviderConfigName},
-									{Name: common.CloudProviderSecretName},
 								},
 							},
 						},
@@ -112,13 +133,19 @@ var _ = Describe("Ensurer", func() {
 				}
 			)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeAPIServerDeployment(dep)
+			checkKubeAPIServerDeployment(dep, annotations)
 		})
 	})
 
@@ -126,7 +153,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeControllerManagerDeploymentName},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -141,19 +168,25 @@ var _ = Describe("Ensurer", func() {
 				}
 			)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeControllerManagerDeployment(dep)
+			checkKubeControllerManagerDeployment(dep, annotations)
 		})
 
 		It("should modify existing elements of kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeControllerManagerDeploymentName},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -167,13 +200,11 @@ var _ = Describe("Ensurer", func() {
 										},
 										VolumeMounts: []corev1.VolumeMount{
 											{Name: azure.CloudProviderConfigName, MountPath: "?"},
-											{Name: common.CloudProviderSecretName, MountPath: "?"},
 										},
 									},
 								},
 								Volumes: []corev1.Volume{
 									{Name: azure.CloudProviderConfigName},
-									{Name: common.CloudProviderSecretName},
 								},
 							},
 						},
@@ -181,13 +212,19 @@ var _ = Describe("Ensurer", func() {
 				}
 			)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeControllerManagerDeployment(dep)
+			checkKubeControllerManagerDeployment(dep, annotations)
 		})
 	})
 
@@ -252,7 +289,7 @@ var _ = Describe("Ensurer", func() {
 	})
 })
 
-func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
+func checkKubeAPIServerDeployment(dep *appsv1.Deployment, annotations map[string]string) {
 	// Check that the kube-apiserver container still exists and contains all needed command line args,
 	// env vars, and volume mounts
 	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
@@ -262,14 +299,15 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ","))
 	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ",")))
 	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigVolumeMount))
-	Expect(c.VolumeMounts).To(ContainElement(cloudProviderSecretVolumeMount))
 
 	// Check that the Pod spec contains all needed volumes
 	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigVolume))
-	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderSecretVolume))
+
+	// Check that the Pod template contains all needed checksum annotations
+	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))
 }
 
-func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {
+func checkKubeControllerManagerDeployment(dep *appsv1.Deployment, annotations map[string]string) {
 	// Check that the kube-controller-manager container still exists and contains all needed command line args,
 	// env vars, and volume mounts
 	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-controller-manager")
@@ -278,9 +316,22 @@ func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))
 	Expect(c.Command).To(ContainElement("--external-cloud-volume-plugin=azure"))
 	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigVolumeMount))
-	Expect(c.VolumeMounts).To(ContainElement(cloudProviderSecretVolumeMount))
 
 	// Check that the Pod spec contains all needed volumes
 	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigVolume))
-	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderSecretVolume))
+
+	// Check that the Pod template contains all needed checksum annotations
+	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))
+}
+
+func clientGet(result runtime.Object) interface{} {
+	return func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+		switch obj.(type) {
+		case *corev1.Secret:
+			*obj.(*corev1.Secret) = *result.(*corev1.Secret)
+		case *corev1.ConfigMap:
+			*obj.(*corev1.ConfigMap) = *result.(*corev1.ConfigMap)
+		}
+		return nil
+	}
 }

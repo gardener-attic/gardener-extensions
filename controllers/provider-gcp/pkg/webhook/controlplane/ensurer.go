@@ -30,6 +30,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NewEnsurer creates a new controlplane ensurer.
@@ -41,31 +42,40 @@ func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
 
 type ensurer struct {
 	genericmutator.NoopEnsurer
+	client client.Client
 	logger logr.Logger
+}
+
+// InjectClient injects the given client into the ensurer.
+func (e *ensurer) InjectClient(client client.Client) error {
+	e.client = client
+	return nil
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
-	ps := &dep.Spec.Template.Spec
+	template := &dep.Spec.Template
+	ps := &template.Spec
 	if c := controlplane.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
 		ensureEnvVars(c)
 		ensureVolumeMounts(c)
 	}
 	ensureVolumes(ps)
-	return nil
+	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
-	ps := &dep.Spec.Template.Spec
+	template := &dep.Spec.Template
+	ps := &template.Spec
 	if c := controlplane.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
 		ensureKubeControllerManagerCommandLineArgs(c)
 		ensureEnvVars(c)
 		ensureVolumeMounts(c)
 	}
 	ensureVolumes(ps)
-	return nil
+	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
 func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
@@ -134,6 +144,13 @@ func ensureVolumeMounts(c *corev1.Container) {
 func ensureVolumes(ps *corev1.PodSpec) {
 	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
 	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderSecretVolume)
+}
+
+func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
+	if err := controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, common.CloudProviderSecretName); err != nil {
+		return err
+	}
+	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, internal.CloudProviderConfigName)
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.

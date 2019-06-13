@@ -259,7 +259,7 @@ func (a *actuator) computeChecksums(
 	// Get cloud provider secret and config from cluster
 	cpSecret := &corev1.Secret{}
 	if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}, cpSecret); err != nil {
-		return nil, errors.Wrapf(err, "could not get secret '%s'", util.ObjectName(cpSecret))
+		return nil, errors.Wrapf(err, "could not get secret '%s/%s'", namespace, common.CloudProviderSecretName)
 	}
 
 	csSecrets := controlplane.MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
@@ -270,7 +270,7 @@ func (a *actuator) computeChecksums(
 	if len(a.configName) != 0 {
 		cpConfigMap := &corev1.ConfigMap{}
 		if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: a.configName}, cpConfigMap); err != nil {
-			return nil, errors.Wrapf(err, "could not get configmap '%s'", util.ObjectName(cpConfigMap))
+			return nil, errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, a.configName)
 		}
 
 		csConfigMaps = map[string]*corev1.ConfigMap{

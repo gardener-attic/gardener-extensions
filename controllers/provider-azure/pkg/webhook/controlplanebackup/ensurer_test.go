@@ -16,22 +16,31 @@ package controlplanebackup
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
+)
+
+const (
+	namespace = "test"
 )
 
 func TestController(t *testing.T) {
@@ -42,6 +51,8 @@ func TestController(t *testing.T) {
 var _ = Describe("Ensurer", func() {
 	Describe("#EnsureETCDStatefulSet", func() {
 		var (
+			ctrl *gomock.Controller
+
 			etcdBackup = &config.ETCDBackup{
 				Schedule: util.StringPtr("0 */24 * * *"),
 			}
@@ -63,28 +74,52 @@ var _ = Describe("Ensurer", func() {
 					},
 				},
 			}
+
+			secretKey = client.ObjectKey{Namespace: namespace, Name: azure.BackupSecretName}
+			secret    = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{Name: azure.BackupSecretName, Namespace: namespace},
+				Data:       map[string][]byte{"foo": []byte("bar")},
+			}
+
+			annotations = map[string]string{
+				"checksum/secret-" + azure.BackupSecretName: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			}
 		)
+
+		BeforeEach(func() {
+			ctrl = gomock.NewController(GinkgoT())
+		})
+
+		AfterEach(func() {
+			ctrl.Finish()
+		})
 
 		It("should add or modify elements to etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdMainStatefulSetName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.EtcdMainStatefulSetName},
 				}
 			)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), secretKey, &corev1.Secret{}).DoAndReturn(clientGet(secret))
+
 			// Create ensurer
 			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
 			Expect(err).To(Not(HaveOccurred()))
-			checkETCDMainStatefulSet(ss)
+			checkETCDMainStatefulSet(ss, annotations)
 		})
 
 		It("should modify existing elements of etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdMainStatefulSetName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.EtcdMainStatefulSetName},
 					Spec: appsv1.StatefulSetSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -99,13 +134,19 @@ var _ = Describe("Ensurer", func() {
 				}
 			)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), secretKey, &corev1.Secret{}).DoAndReturn(clientGet(secret))
+
 			// Create ensurer
 			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
 			Expect(err).To(Not(HaveOccurred()))
-			checkETCDMainStatefulSet(ss)
+			checkETCDMainStatefulSet(ss, annotations)
 		})
 
 		It("should add or modify elements to etcd-events statefulset", func() {
@@ -153,7 +194,7 @@ var _ = Describe("Ensurer", func() {
 	})
 })
 
-func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
+func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]string) {
 	var (
 		env = []corev1.EnvVar{
 			{
@@ -189,10 +230,21 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
 	c := controlplane.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
 	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(common.EtcdMainStatefulSetName, "0 */24 * * *", azure.StorageProviderName,
 		"test-repository:test-tag", nil, env, nil)))
+	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
 	c := controlplane.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
 	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(common.EtcdEventsStatefulSetName, "0 */24 * * *", "",
 		"test-repository:test-tag", nil, nil, nil)))
+}
+
+func clientGet(result runtime.Object) interface{} {
+	return func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+		switch obj.(type) {
+		case *corev1.Secret:
+			*obj.(*corev1.Secret) = *result.(*corev1.Secret)
+		}
+		return nil
+	}
 }
