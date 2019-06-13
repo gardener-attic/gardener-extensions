@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: packet-cloud-controller-manager
+  name: cloud-controller-manager
   namespace: {{ .Release.Namespace }}
   labels:
-    app: packet-cloud-controller-manager
+    app: cloud-controller-manager
     garden.sapcloud.io/role: controlplane
 spec:
   revisionHistoryLimit: 0
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
-      app: packet-cloud-controller-manager
+      app: cloud-controller-manager
   template:
     metadata:
       labels:
-        app: packet-cloud-controller-manager
+        app: cloud-controller-manager
         garden.sapcloud.io/role: controlplane
         networking.gardener.cloud/to-dns: allowed
         networking.gardener.cloud/to-public-networks: allowed
@@ -35,7 +35,7 @@ spec:
         image: {{ index .Values.images "cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:
-          - ./packet-cloud-controller-manager
+          - ./cloud-controller-manager
           - --cloud-provider=packet
           - --leader-elect=false
           - --allow-untagged-cloud=true

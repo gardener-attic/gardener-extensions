@@ -15,3 +15,37 @@ images:
 # component descriptor work properly. The Packet worker controller, however, requires the mentioned fix to function properly.
 # tag: "0.19.0-dev-67239235d15eb3d8d0b384bb1ff4067ae5b0e153"
   tag: "0.18.0"
+- name: csi-attacher
+  sourceRepository: https://github.com/kubernetes-csi/external-attacher
+  repository: quay.io/k8scsi/csi-attacher
+  tag: v1.0.1
+  runtimeVersion: 1.13.x
+- name: csi-attacher
+  sourceRepository: https://github.com/kubernetes-csi/external-attacher
+  repository: quay.io/k8scsi/csi-attacher
+  tag: v1.1.0
+  runtimeVersion: 1.14.x
+- name: csi-node-driver-registrar
+  sourceRepository: https://github.com/kubernetes-csi/node-driver-registrar
+  repository: quay.io/k8scsi/csi-node-driver-registrar
+  tag: v1.0.1
+  runtimeVersion: 1.13.x
+- name: csi-node-driver-registrar
+  sourceRepository: https://github.com/kubernetes-csi/node-driver-registrar
+  repository: quay.io/k8scsi/csi-node-driver-registrar
+  tag: v1.1.0
+  runtimeVersion: 1.14.x
+- name: csi-provisioner
+  sourceRepository: https://github.com/kubernetes-csi/external-provisioner
+  repository: quay.io/k8scsi/csi-provisioner
+  tag: v1.0.1
+  runtimeVersion: 1.13.x
+- name: csi-provisioner
+  sourceRepository: https://github.com/kubernetes-csi/external-provisioner
+  repository: quay.io/k8scsi/csi-provisioner
+  tag: v1.1.0
+  runtimeVersion: 1.14.x
+- name: packet-storage-interface
+  sourceRepository: https://github.com/packethost/csi-packet
+  repository: docker.io/packethost/csi-packet
+  tag: "73641b0"

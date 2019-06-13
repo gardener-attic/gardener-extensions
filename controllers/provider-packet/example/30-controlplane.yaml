@@ -6,8 +6,9 @@ metadata:
   namespace: shoot--foo--bar
 type: Opaque
 data:
-# accessKeyID: base64(access-key-id)
-# secretAccessKey: base64(secret-access-key)
+  apiToken: YXBpVG9rZW4K # apiToken
+  projectID: cHJvamVjdElkCg== # projectId
+
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -23,6 +24,11 @@ spec:
   shoot:
     apiVersion: garden.sapcloud.io/v1beta1
     kind: Shoot
+    spec:
+      cloud:
+        packet:
+          networks:
+            pods: 10.250.0.0/19
       kubernetes:
         version: 1.13.4
       hibernation:
@@ -30,6 +36,7 @@ spec:
     status:
       lastOperation:
         state: Succeeded
+
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: ControlPlane
@@ -43,8 +50,8 @@ spec:
     name: cloudprovider
     namespace: shoot--foo--bar
   providerConfig:
-    apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
+    apiVersion: packet.provider.extensions.gardener.cloud/v1alpha1
     kind: ControlPlaneConfig
   infrastructureProviderStatus:
-    apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
+    apiVersion: packet.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureStatus
