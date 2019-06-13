@@ -28,7 +28,7 @@ import (
 // KubernetesFirewallNamePrefix is the name prefix that Kubernetes related firewall rules have.
 const (
 	KubernetesFirewallNamePrefix string = "k8s"
-	routePrefix                  string = "shoot--"
+	shootPrefix                  string = "shoot--"
 )
 
 // ListKubernetesFirewalls lists all firewalls that are in the given network and have the KubernetesFirewallNamePrefix.
@@ -36,7 +36,7 @@ func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, pr
 	var names []string
 	err := client.Firewalls().List(projectID).Pages(ctx, func(list *compute.FirewallList) error {
 		for _, firewall := range list.Items {
-			if strings.HasSuffix(firewall.Network, network) && strings.HasPrefix(firewall.Name, KubernetesFirewallNamePrefix) {
+			if strings.HasSuffix(firewall.Network, network) && (strings.HasPrefix(firewall.Name, KubernetesFirewallNamePrefix) || strings.HasPrefix(firewall.Name, shootPrefix)) {
 				names = append(names, firewall.Name)
 			}
 		}
@@ -53,7 +53,7 @@ func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, proje
 	var routes []string
 	if err := client.Routes().List(projectID).Pages(ctx, func(page *compute.RouteList) error {
 		for _, route := range page.Items {
-			if strings.HasPrefix(route.Name, routePrefix) && strings.HasSuffix(route.Network, network) {
+			if strings.HasPrefix(route.Name, shootPrefix) && strings.HasSuffix(route.Network, network) {
 				routes = append(routes, route.Name)
 			}
 		}
