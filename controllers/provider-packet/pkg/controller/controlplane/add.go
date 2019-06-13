@@ -37,7 +37,7 @@ var (
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator: genericactuator.NewActuator(controlPlaneSecrets, nil, ccmChart, ccmShootChart,
+		Actuator: genericactuator.NewActuator(controlPlaneSecrets, nil, controlPlaneChart, controlPlaneShootChart,
 			NewValuesProvider(logger), genericactuator.ShootClientsFactoryFunc(util.NewClientsForShoot),
 			imagevector.ImageVector(), "", logger),
 		Type:              packet.Type,

@@ -33,6 +33,8 @@ func GetPodNetwork(shoot *gardenv1beta1.Shoot) gardencorev1alpha1.CIDR {
 		return *cloud.OpenStack.Networks.K8SNetworks.Pods
 	case cloud.Alicloud != nil:
 		return *cloud.Alicloud.Networks.K8SNetworks.Pods
+	case cloud.Packet != nil:
+		return *cloud.Packet.Networks.K8SNetworks.Pods
 	default:
 		return ""
 	}

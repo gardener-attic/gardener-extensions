@@ -33,6 +33,14 @@ const (
 	ProjectID = "projectID"
 	// PacketAPIKey is a constant for the key in a cloud provider secret and backup secret that holds the Packet API key.
 	PacketAPIKey = "packetAPIKey"
+	// CSIAttacherImageName is the name of the CSI attacher image.
+	CSIAttacherImageName = "csi-attacher"
+	// CSINodeDriverRegistrarImageName is the name of the CSI driver registrar image.
+	CSINodeDriverRegistrarImageName = "csi-node-driver-registrar"
+	// CSIProvisionerImageName is the name of the CSI provisioner image.
+	CSIProvisionerImageName = "csi-provisioner"
+	// CSIPluginImageName is the name of the CSI plugin image.
+	CSIPluginImageName = "packet-storage-interface"
 
 	// TerraformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
 	TerraformerPurposeInfra = "infra"
