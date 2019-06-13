@@ -129,12 +129,12 @@ func (a *genericActuator) markAllMachinesForcefulDeletion(ctx context.Context, n
 	// TODO: Use github.com/gardener/gardener/pkg/utils/flow.Parallel as soon as we can vendor a new Gardener version again.
 	for _, machine := range existingMachines.Items {
 		wg.Add(1)
-		go func(machine *machinev1alpha1.Machine) {
+		go func(m machinev1alpha1.Machine) {
 			defer wg.Done()
-			if err := a.markMachineForcefulDeletion(ctx, machine); err != nil {
+			if err := a.markMachineForcefulDeletion(ctx, &m); err != nil {
 				errorList = append(errorList, err)
 			}
-		}(&machine)
+		}(machine)
 	}
 
 	wg.Wait()
