@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
@@ -38,7 +39,8 @@ import (
 )
 
 const (
-	namespace = "test"
+	namespace                  = "test"
+	cloudProviderConfigContent = "[Global]\nauth-url: https://cluster.eu-de-200.cloud.sap:5000/v3/\n"
 )
 
 func TestController(t *testing.T) {
@@ -53,11 +55,11 @@ var _ = Describe("Ensurer", func() {
 		cmKey = client.ObjectKey{Namespace: namespace, Name: azure.CloudProviderConfigName}
 		cm    = &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: azure.CloudProviderConfigName},
-			Data:       map[string]string{"abc": "xyz"},
+			Data:       map[string]string{"abc": "xyz", azure.CloudProviderConfigMapKey: cloudProviderConfigContent},
 		}
 
 		annotations = map[string]string{
-			"checksum/configmap-" + azure.CloudProviderConfigName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"checksum/configmap-" + azure.CloudProviderConfigName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
 		}
 	)
 
@@ -285,6 +287,43 @@ var _ = Describe("Ensurer", func() {
 			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
+		})
+	})
+
+	Describe("#EnsureKubeletCloudProviderConfig", func() {
+		var (
+			existingData = util.StringPtr("[LoadBalancer]\nlb-version=v2\nlb-provider:\n")
+			emptydata    = util.StringPtr("")
+		)
+		It("should create element containing cloud provider config content", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call EnsureKubeletConfiguration method and check the result
+			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), emptydata, namespace)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*emptydata).To(Equal(cloudProviderConfigContent))
+		})
+		It("should modify existing element containing cloud provider config content", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call EnsureKubeletConfiguration method and check the result
+			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), existingData, namespace)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*existingData).To(Equal(cloudProviderConfigContent))
 		})
 	})
 })

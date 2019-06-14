@@ -108,6 +108,20 @@ func (mr *MockEnsurerMockRecorder) EnsureKubeSchedulerDeployment(arg0, arg1 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubeSchedulerDeployment", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubeSchedulerDeployment), arg0, arg1)
 }
 
+// EnsureKubeletCloudProviderConfig mocks base method
+func (m *MockEnsurer) EnsureKubeletCloudProviderConfig(arg0 context.Context, arg1 *string, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureKubeletCloudProviderConfig", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureKubeletCloudProviderConfig indicates an expected call of EnsureKubeletCloudProviderConfig
+func (mr *MockEnsurerMockRecorder) EnsureKubeletCloudProviderConfig(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubeletCloudProviderConfig", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubeletCloudProviderConfig), arg0, arg1, arg2)
+}
+
 // EnsureKubeletConfiguration mocks base method
 func (m *MockEnsurer) EnsureKubeletConfiguration(arg0 context.Context, arg1 *v1beta1.KubeletConfiguration) error {
 	m.ctrl.T.Helper()
@@ -149,4 +163,18 @@ func (m *MockEnsurer) EnsureKubernetesGeneralConfiguration(arg0 context.Context,
 func (mr *MockEnsurerMockRecorder) EnsureKubernetesGeneralConfiguration(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureKubernetesGeneralConfiguration", reflect.TypeOf((*MockEnsurer)(nil).EnsureKubernetesGeneralConfiguration), arg0, arg1)
+}
+
+// ShouldProvisionKubeletCloudProviderConfig mocks base method
+func (m *MockEnsurer) ShouldProvisionKubeletCloudProviderConfig() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ShouldProvisionKubeletCloudProviderConfig")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// ShouldProvisionKubeletCloudProviderConfig indicates an expected call of ShouldProvisionKubeletCloudProviderConfig
+func (mr *MockEnsurerMockRecorder) ShouldProvisionKubeletCloudProviderConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShouldProvisionKubeletCloudProviderConfig", reflect.TypeOf((*MockEnsurer)(nil).ShouldProvisionKubeletCloudProviderConfig))
 }

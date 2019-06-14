@@ -52,6 +52,9 @@ const (
 
 	oldKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1"
 	newKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# Provider specific settings"
+
+	encoding          = "b64"
+	cloudproviderconf = "W0dsb2JhbF1cbmF1dGgtdXJsOiBodHRwczovL2NsdXN0ZXIuZXUtZGUtMjAwLmNsb3VkLnNhcDo1MDAwL3Yz"
 )
 
 const (
@@ -268,7 +271,7 @@ var _ = Describe("Mutator", func() {
 					Data: oldKubernetesGeneralConfigData,
 				}
 				osc = &extensionsv1alpha1.OperatingSystemConfig{
-					ObjectMeta: metav1.ObjectMeta{Name: "test"},
+					ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
 					Spec: extensionsv1alpha1.OperatingSystemConfigSpec{
 						Purpose: extensionsv1alpha1.OperatingSystemConfigPurposeReconcile,
 						Units: []extensionsv1alpha1.Unit{
@@ -339,6 +342,13 @@ var _ = Describe("Mutator", func() {
 					return nil
 				},
 			)
+			ensurer.EXPECT().ShouldProvisionKubeletCloudProviderConfig().Return(true)
+			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), gomock.Any(), osc.Namespace).DoAndReturn(
+				func(ctx context.Context, data *string, _ string) error {
+					*data = cloudproviderconf
+					return nil
+				},
+			)
 
 			// Create mock UnitSerializer
 			us := mockcontrolplane.NewMockUnitSerializer(ctrl)
@@ -350,11 +360,17 @@ var _ = Describe("Mutator", func() {
 			kcc.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: oldKubeletConfigData}).Return(oldKubeletConfig, nil)
 			kcc.EXPECT().Encode(newKubeletConfig, "").Return(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}, nil)
 
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Update(context.TODO(), gomock.Any()).Times(1)
+
 			// Create mutator
 			mutator := NewMutator(ensurer, us, kcc, logger)
+			err := mutator.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
 
 			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), osc)
+			err = mutator.Mutate(context.TODO(), osc)
 			Expect(err).To(Not(HaveOccurred()))
 			checkOperatingSystemConfig(osc)
 		})
@@ -371,6 +387,11 @@ func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
 	g := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf")
 	Expect(g).To(Not(BeNil()))
 	Expect(g.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
+	c := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/cloudprovider.conf")
+	Expect(c).To(Not(BeNil()))
+	Expect(c.Path).To(Equal(cloudProviderConfigPath))
+	Expect(c.Permissions).To(Equal(util.Int32Ptr(0644)))
+	Expect(c.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconf, Encoding: encoding}))
 }
 
 func clientGet(result runtime.Object) interface{} {

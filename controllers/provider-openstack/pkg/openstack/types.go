@@ -47,6 +47,8 @@ const (
 
 	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
 	CloudProviderConfigName = "cloud-provider-config"
+	// CloudProviderConfigMapKey is the key storing the cloud provider config as value in the cloud provider configmap.
+	CloudProviderConfigMapKey = "cloudprovider.conf"
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
 	// BackupSecretName defines the name of the secret containing the credentials which are required to
