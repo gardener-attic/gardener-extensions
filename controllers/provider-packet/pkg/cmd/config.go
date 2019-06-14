@@ -75,6 +75,11 @@ func (c *Config) ApplyMachineImages(machineImages *[]config.MachineImage) {
 	*machineImages = c.Config.MachineImages
 }
 
+// ApplyETCDStorage sets the given etcd storage configuration to that of this Config.
+func (c *Config) ApplyETCDStorage(etcdStorage *config.ETCDStorage) {
+	*etcdStorage = c.Config.ETCD.Storage
+}
+
 // Options initializes empty config.ControllerConfiguration, applies the set values and returns it.
 func (c *Config) Options() config.ControllerConfiguration {
 	var cfg config.ControllerConfiguration

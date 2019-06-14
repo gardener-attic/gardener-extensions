@@ -49,3 +49,8 @@ images:
   sourceRepository: https://github.com/packethost/csi-packet
   repository: docker.io/packethost/csi-packet
   tag: "73641b0"
+- name: etcd-backup-restore
+  sourceRepository: github.com/gardener/etcd-backup-restore
+  repository: eu.gcr.io/gardener-project/gardener/etcdbrctl
+  tag: "0.6.4"
+

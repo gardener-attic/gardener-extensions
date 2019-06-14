@@ -5,3 +5,7 @@ machineImages:
 - name: coreos
   version: 2079.3.0
   id: d61c3912-8422-4daf-835e-854efa0062e4
+etcd:
+  storage:
+    className: gardener.cloud-fast
+    capacity: 25Gi
