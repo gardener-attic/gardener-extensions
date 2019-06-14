@@ -16,12 +16,8 @@ controllers:
     concurrentSyncs: 5
 
 
-disableControllers:
-- controlplane-controller
-disableWebhooks:
-- controlplane
-- controlplaneexposure
-- controlplanebackup
+disableControllers: []
+disableWebhooks: []
 
 # imageVectorOverwrite: |
 #   images:
