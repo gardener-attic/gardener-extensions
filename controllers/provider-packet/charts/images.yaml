@@ -6,7 +6,7 @@ images:
 - name: cloud-controller-manager
   sourceRepository: https://github.com/packethost/packet-ccm
   repository: docker.io/packethost/packet-ccm
-  tag: "d0abe6c"
+  tag: "master"
 - name: machine-controller-manager
   sourceRepository: github.com/gardener/machine-controller-manager
   repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager
