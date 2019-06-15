@@ -44,8 +44,8 @@ rules:
   - namespaces
   - events
   - secrets
-  - endpoints
   - configmaps
+  - endpoints
   - deployments
   - services
   - serviceaccounts

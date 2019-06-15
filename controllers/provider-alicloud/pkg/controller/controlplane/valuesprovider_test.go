@@ -151,6 +151,7 @@ var _ = Describe("ValuesProvider", func() {
 				},
 			},
 			"csi-alicloud": map[string]interface{}{
+				"replicas":          1,
 				"kubernetesVersion": "1.13.4",
 				"regionID":          "eu-central-1",
 				"podAnnotations": map[string]interface{}{

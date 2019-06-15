@@ -43,9 +43,9 @@ rules:
   resources:
   - namespaces
   - events
-  - endpoints
   - secrets
   - configmaps
+  - endpoints
   - deployments
   - services
   - serviceaccounts

@@ -14,6 +14,8 @@ rules:
   - infrastructures/status
   - controlplanes
   - controlplanes/status
+  - workers
+  - workers/status
   verbs:
   - get
   - list
@@ -42,8 +44,8 @@ rules:
   - namespaces
   - events
   - secrets
-  - endpoints
   - configmaps
+  - endpoints
   - deployments
   - services
   - serviceaccounts
