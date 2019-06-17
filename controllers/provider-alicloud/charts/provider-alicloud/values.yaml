@@ -34,9 +34,9 @@ disableWebhooks: []
 
 config:
   machineImages:
-  - name: coreos
-    version: 2023.5.0
-    id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
+  - name: coreos-alicloud
+    version: 1745.7.0
+    id: coreos_1745_7_0_64_30G_alibase_20180705.vhd
   etcd:
     storage:
       className: gardener.cloud-fast

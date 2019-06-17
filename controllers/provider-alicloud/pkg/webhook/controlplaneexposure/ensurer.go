@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -27,6 +28,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -78,15 +80,9 @@ func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name 
 }
 
 func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {
-	var (
-		etcdStorage             config.ETCDStorage
-		volumeClaimTemplateName = name
-	)
-
 	if name == common.EtcdMainStatefulSetName {
-		etcdStorage = *e.etcdStorage
-		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
+		return controlplane.GetETCDVolumeClaimTemplate(controlplane.EtcdMainVolumeClaimTemplateName, e.etcdStorage.ClassName, e.etcdStorage.Capacity)
+	} else {
+		return controlplane.GetETCDVolumeClaimTemplate(name, nil, util.QuantityPtr(resource.MustParse("20Gi")))
 	}
-
-	return controlplane.GetETCDVolumeClaimTemplate(volumeClaimTemplateName, etcdStorage.ClassName, etcdStorage.Capacity)
 }

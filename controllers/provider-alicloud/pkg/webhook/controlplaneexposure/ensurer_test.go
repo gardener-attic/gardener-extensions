@@ -257,7 +257,7 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
 	pvc := controlplane.PVCWithName(ss.Spec.VolumeClaimTemplates, common.EtcdEventsStatefulSetName)
-	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(common.EtcdEventsStatefulSetName, nil, nil)))
+	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(common.EtcdEventsStatefulSetName, nil, util.QuantityPtr(resource.MustParse("20Gi")))))
 }
 
 func clientGet(result runtime.Object) interface{} {

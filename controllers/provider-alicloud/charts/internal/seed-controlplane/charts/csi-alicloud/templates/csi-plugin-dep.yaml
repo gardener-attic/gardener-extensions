@@ -8,6 +8,7 @@ labels:
   app: kubernetes
   role: csi-plugin-controller
 spec:
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: kubernetes

@@ -68,7 +68,7 @@ docker-login:
 
 .PHONY: docker-image-hyper
 docker-image-hyper:
-	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-hyper:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-hyper:latest -f Dockerfile -m 4g --target gardener-extension-hyper .
+	@docker build --build-arg VERIFY=$(VERIFY) -t $(IMAGE_PREFIX)/gardener-extension-hyper:$(VERSION) -t $(IMAGE_PREFIX)/gardener-extension-hyper:latest -f Dockerfile -m 6g --target gardener-extension-hyper .
 
 .PHONY: docker-images
 docker-images: docker-image-hyper
@@ -109,7 +109,7 @@ start-provider-aws:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extensions-provider-aws \
+		--webhook-config-name=gardener-extension-provider-aws \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-azure
@@ -121,7 +121,7 @@ start-provider-azure:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-  		--webhook-config-name=gardener-extensions-provider-azure \
+  		--webhook-config-name=gardener-extension-provider-azure \
    		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-gcp
@@ -133,7 +133,7 @@ start-provider-gcp:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extensions-provider-gcp \
+		--webhook-config-name=gardener-extension-provider-gcp \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-openstack
@@ -145,7 +145,7 @@ start-provider-openstack:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extensions-provider-openstack \
+		--webhook-config-name=gardener-extension-provider-openstack \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-alicloud
@@ -157,7 +157,7 @@ start-provider-alicloud:
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extensions-provider-alicloud \
+		--webhook-config-name=gardener-extension-provider-alicloud \
 		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-provider-packet

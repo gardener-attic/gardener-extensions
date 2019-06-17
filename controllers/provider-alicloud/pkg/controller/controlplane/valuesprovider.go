@@ -347,6 +347,7 @@ func getControlPlaneChartValues(
 			},
 		},
 		"csi-alicloud": map[string]interface{}{
+			"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
 			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"regionID":          cp.Spec.Region,
 			"podAnnotations": map[string]interface{}{
