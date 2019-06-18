@@ -26,6 +26,16 @@ const (
 	CloudControllerManagerImageName = "cloud-controller-manager"
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
+	// SecretNameCloudProvider is a constant for the name of a Kubernetes secret object that contains the provider
+	// specific credentials that shall be used to create/delete the shoot.
+	SecretNameCloudProvider = "cloudprovider"
+	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
+	ETCDBackupRestoreImageName = "etcd-backup-restore"
+
+	// BucketName is a constant for the key in a backup secret that holds the bucket name.
+	// The bucket name is written to the backup secret by Gardener as a temporary solution.
+	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+	BucketName = "bucketName"
 
 	// AccessKeyID is a constant for the key in a cloud provider secret and backup secret that holds the Packet API token.
 	APIToken = "apiToken"

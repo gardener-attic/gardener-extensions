@@ -1,0 +1,12 @@
+{{- if eq .Values.gardener.seed.provider "packet" }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .Values.config.etcd.storage.className }}
+  labels:
+{{ include "labels" . | indent 4 }}
+provisioner: net.packet.csi
+allowVolumeExpansion: true
+parameters:
+  plan: standard
+{{- end }}

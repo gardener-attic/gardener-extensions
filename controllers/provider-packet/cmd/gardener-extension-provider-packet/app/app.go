@@ -25,6 +25,7 @@ import (
 	packetinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
 	packetworker "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
+	packetcontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -122,6 +123,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&packetworker.DefaultAddOptions.MachineImages)
+			configFileOpts.Completed().ApplyETCDStorage(&packetcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)

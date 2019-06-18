@@ -15,6 +15,7 @@
 package config
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -27,6 +28,8 @@ type ControllerConfiguration struct {
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to Packet-specific identifiers.
 	MachineImages []MachineImage
+	// ETCD is the etcd configuration.
+	ETCD ETCD
 }
 
 // MachineImage is a mapping from logical names and versions to Packet-specific identifiers.
@@ -37,4 +40,18 @@ type MachineImage struct {
 	Version string
 	// ID is the id of the image.
 	ID string
+}
+
+// ETCD is an etcd configuration.
+type ETCD struct {
+	// ETCDStorage is the etcd storage configuration.
+	Storage ETCDStorage
+}
+
+// ETCDStorage is an etcd storage configuration.
+type ETCDStorage struct {
+	// ClassName is the name of the storage class used in etcd-main volume claims.
+	ClassName *string
+	// Capacity is the storage capacity used in etcd-main volume claims.
+	Capacity *resource.Quantity
 }

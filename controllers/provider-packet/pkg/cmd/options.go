@@ -18,11 +18,15 @@ import (
 	controlplanecontroller "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/controlplane"
 	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
 	workercontroller "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/worker"
+	controlplanewebhook "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/webhook/controlplane"
+	controlplanebackupwebhook "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/webhook/controlplanebackup"
+	controlplaneexposurewebhook "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/webhook/controlplaneexposure"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	extensionscontrolplanecontroller "github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionsworkercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
+	extensioncontrolplanewebhook "github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 )
 
 // ControllerSwitchOptions are the controllercmd.SwitchOptions for the provider controllers.
@@ -36,5 +40,9 @@ func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 
 // WebhookSwitchOptions are the webhookcmd.SwitchOptions for the provider webhooks.
 func WebhookSwitchOptions() *webhookcmd.SwitchOptions {
-	return webhookcmd.NewSwitchOptions()
+	return webhookcmd.NewSwitchOptions(
+		webhookcmd.Switch(extensioncontrolplanewebhook.WebhookName, controlplanewebhook.AddToManager),
+		webhookcmd.Switch(extensioncontrolplanewebhook.ExposureWebhookName, controlplaneexposurewebhook.AddToManager),
+		webhookcmd.Switch(extensioncontrolplanewebhook.BackupWebhookName, controlplanebackupwebhook.AddToManager),
+	)
 }

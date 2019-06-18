@@ -167,7 +167,10 @@ start-provider-packet:
 		./controllers/provider-packet/cmd/gardener-extension-provider-packet \
 		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
 		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION)
+		--leader-election=$(LEADER_ELECTION) \
+		--webhook-config-mode=url \
+		--webhook-config-name=gardener-extension-provider-packet \
+		--webhook-config-host=$(HOSTNAME)
 
 .PHONY: start-certificate-service
 start-certificate-service:
