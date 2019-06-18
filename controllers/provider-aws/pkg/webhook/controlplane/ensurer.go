@@ -17,6 +17,8 @@ package controlplane
 import (
 	"bytes"
 	"context"
+	"regexp"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
@@ -175,8 +177,18 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	return nil
 }
 
+var regexFindProperty = regexp.MustCompile("net.ipv4.neigh.default.gc_thresh1[[:space:]]*=[[:space:]]*([[:alnum:]]+)")
+
 // EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
 func (e *ensurer) EnsureKubernetesGeneralConfiguration(ctx context.Context, data *string) error {
+	// If the needed property exists, ensure the correct value
+	if regexFindProperty.MatchString(*data) {
+		res := regexFindProperty.ReplaceAll([]byte(*data), []byte("net.ipv4.neigh.default.gc_thresh1 = 0"))
+		*data = string(res)
+		return nil
+	}
+
+	// If the property do not exist, append it in the end of the string
 	buf := bytes.Buffer{}
 	buf.WriteString(*data)
 	buf.WriteString("\n")
