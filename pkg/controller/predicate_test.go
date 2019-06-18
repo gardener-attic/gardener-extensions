@@ -15,13 +15,18 @@
 package controller_test
 
 import (
+	"encoding/json"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
+
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
@@ -121,6 +126,88 @@ var _ = Describe("Predicate", func() {
 			Expect(predicate.Generic(genericEvent)).To(BeFalse())
 		})
 	})
+
+	DescribeTable("#CloudProfileGenerationUpdatePredicate",
+		func(oldMachine, newMachine string, conditionMatcher types.GomegaMatcher) {
+			oldCloudProfile := &v1beta1.CloudProfile{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "CloudProfile",
+					APIVersion: "garden.sapcloud.io/v1beta1",
+				},
+				Spec: v1beta1.CloudProfileSpec{
+					AWS: &v1beta1.AWSProfile{
+						Constraints: v1beta1.AWSConstraints{
+							MachineTypes: []v1beta1.MachineType{
+								v1beta1.MachineType{
+									Name: oldMachine,
+								},
+							},
+						},
+					},
+				},
+			}
+			newCloudProfile := oldCloudProfile.DeepCopy()
+			newCloudProfile.Spec.AWS.Constraints.MachineTypes = []v1beta1.MachineType{v1beta1.MachineType{Name: newMachine}}
+
+			updateEvent := event.UpdateEvent{
+				ObjectNew: &v1alpha1.Cluster{
+					Spec: v1alpha1.ClusterSpec{
+						CloudProfile: runtime.RawExtension{
+							Raw: encode(newCloudProfile),
+						},
+					},
+				},
+				ObjectOld: &v1alpha1.Cluster{
+					Spec: v1alpha1.ClusterSpec{
+						CloudProfile: runtime.RawExtension{
+							Raw: encode(oldCloudProfile),
+						},
+					},
+				},
+			}
+
+			Expect(controller.CloudProfileGenerationUpdatePredicate().Update(updateEvent)).To(conditionMatcher)
+		},
+		Entry("no update", "machineFoo", "machineFoo", BeFalse()),
+		Entry("generation update", "machineFoo", "machineBar", BeTrue()),
+	)
+
+	DescribeTable("#ShootGenerationUpdatedPredicate",
+		func(oldGeneration, newGeneration int64, conditionMatcher types.GomegaMatcher) {
+			oldShoot := &v1beta1.Shoot{
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "Shoot",
+					APIVersion: "garden.sapcloud.io/v1beta1",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					Generation: oldGeneration,
+				},
+			}
+			newShoot := oldShoot.DeepCopy()
+			newShoot.Generation = newGeneration
+
+			updateEvent := event.UpdateEvent{
+				ObjectNew: &v1alpha1.Cluster{
+					Spec: v1alpha1.ClusterSpec{
+						Shoot: runtime.RawExtension{
+							Raw: encode(newShoot),
+						},
+					},
+				},
+				ObjectOld: &v1alpha1.Cluster{
+					Spec: v1alpha1.ClusterSpec{
+						Shoot: runtime.RawExtension{
+							Raw: encode(oldShoot),
+						},
+					},
+				},
+			}
+
+			Expect(controller.ShootGenerationUpdatedPredicate().Update(updateEvent)).To(conditionMatcher)
+		},
+		Entry("no update", int64(1), int64(1), BeFalse()),
+		Entry("generation update", int64(1), int64(2), BeTrue()),
+	)
 })
 
 type extensionDummy struct {
@@ -130,4 +217,9 @@ type extensionDummy struct {
 
 func (e *extensionDummy) GetExtensionType() string {
 	return e.extensionType
+}
+
+func encode(obj runtime.Object) []byte {
+	data, _ := json.Marshal(obj)
+	return data
 }

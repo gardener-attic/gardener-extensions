@@ -73,6 +73,14 @@ func Add(mgr manager.Manager, args AddArgs) error {
 	return add(mgr, args)
 }
 
+// DefaultPredicates returns the default predicates for an extension reconciler.
+func DefaultPredicates(client client.Client, extensionType string) []predicate.Predicate {
+	return []predicate.Predicate{
+		extensionscontroller.ShootFailedPredicate(client),
+		extensionscontroller.TypePredicate(extensionType),
+	}
+}
+
 func add(mgr manager.Manager, args AddArgs) error {
 	ctrl, err := controller.New(args.Name, mgr, args.ControllerOptions)
 	if err != nil {
@@ -80,9 +88,9 @@ func add(mgr manager.Manager, args AddArgs) error {
 	}
 
 	if args.Predicates == nil {
-		args.Predicates = append(args.Predicates, extensionscontroller.GenerationChangedPredicate())
+		args.Predicates = DefaultPredicates(mgr.GetClient(), args.Type)
 	}
-	args.Predicates = append(args.Predicates, extensionscontroller.TypePredicate(args.Type))
+	args.Predicates = append(args.Predicates, extensionscontroller.GenerationChangedPredicate())
 
 	// Add standard watch.
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Extension{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {

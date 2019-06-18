@@ -19,6 +19,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
 	. "github.com/onsi/gomega/gstruct"
 
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
@@ -42,9 +43,10 @@ var _ = Describe("Controller Mapper", func() {
 		ctrl *gomock.Controller
 		c    *mockclient.MockClient
 
-		extensionType string
-		objectName    string
-		resourceName  string
+		extensionType  string
+		objectName     string
+		resourceName   string
+		newObjListFunc = func() runtime.Object { return &extensionsv1alpha1.ExtensionList{} }
 	)
 
 	BeforeEach(func() {
@@ -60,110 +62,6 @@ var _ = Describe("Controller Mapper", func() {
 		ctrl.Finish()
 	})
 
-	Describe("#ObjectNameToExtensionTypeMapper", func() {
-		var (
-			requestFunc handler.ToRequestsFunc
-			object      handler.MapObject
-		)
-
-		BeforeEach(func() {
-			requestFunc = ObjectNameToExtensionTypeMapper(c, extensionType)
-			object = handler.MapObject{
-				Meta: &metav1.ObjectMeta{
-					Name: objectName,
-				},
-			}
-		})
-
-		It("should find the extension for the passed object", func() {
-			geList := extensionsv1alpha1.ExtensionList{
-				Items: []extensionsv1alpha1.Extension{
-					extensionsv1alpha1.Extension{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: resourceName,
-						},
-						Spec: extensionsv1alpha1.ExtensionSpec{
-							DefaultSpec: extensionsv1alpha1.DefaultSpec{
-								Type: extensionType,
-							},
-						},
-					},
-				},
-			}
-
-			c.EXPECT().
-				List(
-					gomock.AssignableToTypeOf(context.TODO()),
-					gomock.Eq(client.InNamespace(object.Meta.GetName())),
-					gomock.AssignableToTypeOf(&extensionsv1alpha1.ExtensionList{}),
-				).
-				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.ExtensionList) error {
-					*actual = geList
-					return nil
-				})
-
-			result := requestFunc(object)
-
-			Expect(result).To(ConsistOf(MatchAllFields(
-				Fields{
-					"NamespacedName": MatchAllFields(
-						Fields{
-							"Name":      Equal(resourceName),
-							"Namespace": Equal(objectName),
-						}),
-				},
-			)))
-		})
-
-		It("should not find the extension for the passed object because extension type is not in the list", func() {
-			geList := extensionsv1alpha1.ExtensionList{
-				Items: []extensionsv1alpha1.Extension{
-					extensionsv1alpha1.Extension{
-						ObjectMeta: metav1.ObjectMeta{
-							Name: resourceName,
-						},
-						Spec: extensionsv1alpha1.ExtensionSpec{
-							DefaultSpec: extensionsv1alpha1.DefaultSpec{
-								Type: "anotherType",
-							},
-						},
-					},
-				},
-			}
-
-			c.EXPECT().
-				List(
-					gomock.AssignableToTypeOf(context.TODO()),
-					gomock.Eq(client.InNamespace(object.Meta.GetName())),
-					gomock.AssignableToTypeOf(&extensionsv1alpha1.ExtensionList{}),
-				).
-				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.ExtensionList) error {
-					*actual = geList
-					return nil
-				})
-
-			result := requestFunc(object)
-
-			Expect(result).To(BeEmpty())
-		})
-
-		It("should not find the extension for the passed object because extension list is empty", func() {
-			c.EXPECT().
-				List(
-					gomock.AssignableToTypeOf(context.TODO()),
-					gomock.Eq(client.InNamespace(object.Meta.GetName())),
-					gomock.AssignableToTypeOf(&extensionsv1alpha1.ExtensionList{}),
-				).
-				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.ExtensionList) error {
-					return nil
-				})
-
-			result := requestFunc(object)
-
-			Expect(result).To(BeEmpty())
-		})
-	})
-
 	Describe("#TypeMapperWithinNamespace", func() {
 		var (
 			namespace   string
@@ -173,7 +71,7 @@ var _ = Describe("Controller Mapper", func() {
 
 		BeforeEach(func() {
 			namespace = "default"
-			requestFunc = TypeMapperWithinNamespace(c, extensionType)
+			requestFunc = MapperWithinNamespace(c, newObjListFunc, nil)
 			object = handler.MapObject{
 				Meta: &metav1.ObjectMeta{
 					Name:      objectName,
@@ -233,12 +131,13 @@ var _ = Describe("Controller Mapper", func() {
 						},
 						Spec: extensionsv1alpha1.ExtensionSpec{
 							DefaultSpec: extensionsv1alpha1.DefaultSpec{
-								Type: "anotherType",
+								Type: "bar",
 							},
 						},
 					},
 				},
 			}
+			requestFunc := MapperWithinNamespace(c, newObjListFunc, []predicate.Predicate{TypePredicate("foo")})
 
 			c.EXPECT().
 				List(
