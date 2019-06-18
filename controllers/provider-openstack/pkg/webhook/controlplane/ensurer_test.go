@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -38,7 +39,8 @@ import (
 )
 
 const (
-	namespace = "test"
+	namespace                  = "test"
+	cloudProviderConfigContent = "[Global]\nauth-url: https://cluster.eu-de-200.cloud.sap:5000/v3/\n"
 )
 
 func TestController(t *testing.T) {
@@ -53,11 +55,11 @@ var _ = Describe("Ensurer", func() {
 		cmKey = client.ObjectKey{Namespace: namespace, Name: openstack.CloudProviderConfigName}
 		cm    = &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: openstack.CloudProviderConfigName},
-			Data:       map[string]string{"abc": "xyz"},
+			Data:       map[string]string{"abc": "xyz", openstack.CloudProviderConfigMapKey: cloudProviderConfigContent},
 		}
 
 		annotations = map[string]string{
-			"checksum/configmap-" + openstack.CloudProviderConfigName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"checksum/configmap-" + openstack.CloudProviderConfigName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
 		}
 	)
 
@@ -245,7 +247,13 @@ var _ = Describe("Ensurer", func() {
 						Name:    "ExecStart",
 						Value: `/opt/bin/hyperkube kubelet \
     --config=/var/lib/kubelet/config/kubelet \
-    --cloud-provider=openstack`,
+    --cloud-provider=openstack \
+    --cloud-config=/var/lib/kubelet/cloudprovider.conf`,
+					},
+					{
+						Section: "Service",
+						Name:    "ExecStartPre",
+						Value:   `/bin/sh -c 'hostnamectl set-hostname $(cat /etc/hostname | cut -d '.' -f 1)'`,
 					},
 				}
 			)
@@ -285,6 +293,43 @@ var _ = Describe("Ensurer", func() {
 			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
+		})
+	})
+
+	Describe("#EnsureKubeletCloudProviderConfig", func() {
+		var (
+			existingData = util.StringPtr("[LoadBalancer]\nlb-version=v2\nlb-provider:\n")
+			emptydata    = util.StringPtr("")
+		)
+		It("should create element containing cloud provider config content", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call EnsureKubeletConfiguration method and check the result
+			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), emptydata, namespace)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*emptydata).To(Equal(cloudProviderConfigContent))
+		})
+		It("should modify existing element containing cloud provider config content", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call EnsureKubeletConfiguration method and check the result
+			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), existingData, namespace)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*existingData).To(Equal(cloudProviderConfigContent))
 		})
 	})
 })

@@ -16,12 +16,13 @@ package controlplane
 
 import (
 	"context"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
+	"github.com/pkg/errors"
 
 	"github.com/coreos/go-systemd/unit"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -126,11 +127,18 @@ func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, opts []*u
 		command = ensureKubeletCommandLineArgs(command)
 		opt.Value = controlplane.SerializeCommandLine(command, 1, " \\\n    ")
 	}
+
+	opts = controlplane.EnsureUnitOption(opts, &unit.UnitOption{
+		Section: "Service",
+		Name:    "ExecStartPre",
+		Value:   `/bin/sh -c 'hostnamectl set-hostname $(cat /etc/hostname | cut -d '.' -f 1)'`,
+	})
 	return opts, nil
 }
 
 func ensureKubeletCommandLineArgs(command []string) []string {
 	command = controlplane.EnsureStringWithPrefix(command, "--cloud-provider=", "openstack")
+	command = controlplane.EnsureStringWithPrefix(command, "--cloud-config=", "/var/lib/kubelet/cloudprovider.conf")
 	return command
 }
 
@@ -141,5 +149,29 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	delete(kubeletConfig.FeatureGates, "VolumeSnapshotDataSource")
 	delete(kubeletConfig.FeatureGates, "CSINodeInfo")
 	delete(kubeletConfig.FeatureGates, "CSIDriverRegistry")
+	return nil
+}
+
+//ShouldProvisionKubeletCloudProviderConfig returns if the cloudprovider.config file should be added to the kubelet configuration.
+func (e *ensurer) ShouldProvisionKubeletCloudProviderConfig() bool {
+	return true
+}
+
+//EnsureKubeletCloudProviderConfig ensures that the cloudprovider.config file conforms to the provider requirements.
+func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, data *string, namespace string) error {
+	// Get `cloud-provider-config` ConfigMap
+	var cm corev1.ConfigMap
+	err := e.client.Get(ctx, kutil.Key(namespace, openstack.CloudProviderConfigName), &cm)
+	if err != nil {
+		return errors.Wrapf(err, "could not get configmap with name '%s' and namespace '%s'", openstack.CloudProviderConfigName, namespace)
+	}
+
+	// Check if the data has "cloudprovider.conf" key
+	if cm.Data == nil || cm.Data[openstack.CloudProviderConfigMapKey] == "" {
+		return nil
+	}
+
+	// Overwrite data variable
+	*data = cm.Data[openstack.CloudProviderConfigMapKey]
 	return nil
 }
