@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
@@ -183,8 +184,18 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	return nil
 }
 
+var regexFindProperty = regexp.MustCompile("net.ipv4.ip_forward[[:space:]]*=[[:space:]]*([[:alnum:]]+)")
+
 // EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
 func (e *ensurer) EnsureKubernetesGeneralConfiguration(ctx context.Context, data *string) error {
+	// If the needed property exists, ensure the correct value
+	if regexFindProperty.MatchString(*data) {
+		res := regexFindProperty.ReplaceAll([]byte(*data), []byte("net.ipv4.ip_forward = 1"))
+		*data = string(res)
+		return nil
+	}
+
+	// If the property do not exist, append it in the end of the string
 	buf := bytes.Buffer{}
 	buf.WriteString(*data)
 	buf.WriteString("\n")

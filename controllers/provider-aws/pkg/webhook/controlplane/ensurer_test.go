@@ -310,6 +310,31 @@ var _ = Describe("Ensurer", func() {
 	Describe("#EnsureKubernetesGeneralConfiguration", func() {
 		It("should modify existing elements of kubernetes general configuration", func() {
 			var (
+				modifiedData = util.StringPtr("# Default Socket Send Buffer\n" +
+					"net.core.wmem_max = 16777216\n" +
+					"# AWS specific settings\n" +
+					"# See https://github.com/kubernetes/kubernetes/issues/23395\n" +
+					"net.ipv4.neigh.default.gc_thresh1 = 67" +
+					"# For persistent HTTP connections\n" +
+					"net.ipv4.tcp_slow_start_after_idle = 0")
+				result = "# Default Socket Send Buffer\n" +
+					"net.core.wmem_max = 16777216\n" +
+					"# AWS specific settings\n" +
+					"# See https://github.com/kubernetes/kubernetes/issues/23395\n" +
+					"net.ipv4.neigh.default.gc_thresh1 = 0" +
+					"# For persistent HTTP connections\n" +
+					"net.ipv4.tcp_slow_start_after_idle = 0"
+			)
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+
+			// Call EnsureKubernetesGeneralConfiguration method and check the result
+			err := ensurer.EnsureKubernetesGeneralConfiguration(context.TODO(), modifiedData)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*modifiedData).To(Equal(result))
+		})
+		It("should add needed elements of kubernetes general configuration", func() {
+			var (
 				data   = util.StringPtr("# Default Socket Send Buffer\nnet.core.wmem_max = 16777216")
 				result = "# Default Socket Send Buffer\n" +
 					"net.core.wmem_max = 16777216\n" +
