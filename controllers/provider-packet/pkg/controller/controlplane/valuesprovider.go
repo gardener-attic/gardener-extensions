@@ -199,6 +199,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,
+	scaledDown bool,
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
 	cpConfig := &apispacket.ControlPlaneConfig{}
@@ -207,7 +208,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	}
 
 	// Get control plane chart values
-	return getControlPlaneChartValues(cp, cluster, checksums)
+	return getControlPlaneChartValues(cp, cluster, checksums, scaledDown)
 }
 
 // GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by the generic actuator.
@@ -247,10 +248,11 @@ func getControlPlaneChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,
+	scaledDown bool,
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
 		"packet-cloud-controller-manager": map[string]interface{}{
-			"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
+			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
 			"clusterName":       cp.Namespace,
 			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),

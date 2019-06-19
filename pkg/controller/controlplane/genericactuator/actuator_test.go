@@ -146,7 +146,7 @@ var _ = Describe("Actuator", func() {
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
 			vp.EXPECT().GetConfigChartValues(context.TODO(), cp, cluster).Return(configChartValues, nil)
-			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums).Return(controlPlaneChartValues, nil)
+			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums, false).Return(controlPlaneChartValues, nil)
 			// vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
 
 			// Create mock shoot clients factory
@@ -162,7 +162,8 @@ var _ = Describe("Actuator", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call Reconcile method and check the result
-			err = a.Reconcile(context.TODO(), cp, cluster)
+			requeue, err := a.Reconcile(context.TODO(), cp, cluster)
+			Expect(requeue).To(Equal(false))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -181,7 +182,7 @@ var _ = Describe("Actuator", func() {
 
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
-			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksumsWithoutConfig).Return(controlPlaneChartValues, nil)
+			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksumsWithoutConfig, false).Return(controlPlaneChartValues, nil)
 			// vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
 
 			// Create mock shoot clients factory
@@ -197,7 +198,8 @@ var _ = Describe("Actuator", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call Reconcile method and check the result
-			err = a.Reconcile(context.TODO(), cp, cluster)
+			requeue, err := a.Reconcile(context.TODO(), cp, cluster)
+			Expect(requeue).To(Equal(false))
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

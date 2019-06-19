@@ -175,6 +175,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,
+	scaledDown bool,
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
 	cpConfig := &openstack.ControlPlaneConfig{}
@@ -183,7 +184,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	}
 
 	// Get CCM chart values
-	return getCCMChartValues(cpConfig, cp, cluster, checksums)
+	return getCCMChartValues(cpConfig, cp, cluster, checksums, scaledDown)
 }
 
 // GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by this actuator.
@@ -231,9 +232,10 @@ func getCCMChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,
+	scaledDown bool,
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
-		"replicas":          extensionscontroller.GetReplicas(cluster.Shoot, 1),
+		"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
 		"clusterName":       cp.Namespace,
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
