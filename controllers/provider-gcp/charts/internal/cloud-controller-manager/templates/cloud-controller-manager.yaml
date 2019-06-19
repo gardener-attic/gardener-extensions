@@ -81,9 +81,6 @@ spec:
         - --tls-cipher-suites={{ include "kubernetes.tlsCipherSuites" . | replace "\n" "," | trimPrefix "," }}
         - --use-service-account-credentials
         - --v=2
-        {{- range $index, $param := $.Values.additionalParameters }}
-        - {{ $param }}
-        {{- end }}
         env:
         - name: GOOGLE_APPLICATION_CREDENTIALS
           value: /srv/cloudprovider/serviceaccount.json

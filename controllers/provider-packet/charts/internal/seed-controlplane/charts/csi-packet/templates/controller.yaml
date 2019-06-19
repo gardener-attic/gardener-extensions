@@ -15,7 +15,7 @@ spec:
 ---
 
 kind: StatefulSet
-apiVersion: {{ include "statefulsetversion" . }}
+apiVersion: apps/v1
 metadata:
   name: csi-packet-controller
   namespace: {{ .Release.Namespace }}

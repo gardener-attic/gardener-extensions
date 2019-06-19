@@ -16,11 +16,11 @@ package controlplane
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/pkg/util"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
@@ -247,7 +247,8 @@ var _ = Describe("Ensurer", func() {
 						Name:    "ExecStart",
 						Value: `/opt/bin/hyperkube kubelet \
     --config=/var/lib/kubelet/config/kubelet \
-    --cloud-provider=azure`,
+    --cloud-provider=azure \
+    --cloud-config=/var/lib/kubelet/cloudprovider.conf`,
 					},
 				}
 			)

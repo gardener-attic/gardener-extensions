@@ -53,8 +53,9 @@ const (
 	oldKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1"
 	newKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# Provider specific settings"
 
-	encoding          = "b64"
-	cloudproviderconf = "W0dsb2JhbF1cbmF1dGgtdXJsOiBodHRwczovL2NsdXN0ZXIuZXUtZGUtMjAwLmNsb3VkLnNhcDo1MDAwL3Yz"
+	encoding                 = "b64"
+	cloudproviderconf        = "[Global]\nauth-url: https://cluster.eu-de-200.cloud.sap:5000/v3"
+	cloudproviderconfEncoded = "W0dsb2JhbF1cbmF1dGgtdXJsOiBodHRwczovL2NsdXN0ZXIuZXUtZGUtMjAwLmNsb3VkLnNhcDo1MDAwL3Yz"
 )
 
 const (
@@ -106,7 +107,7 @@ var _ = Describe("Mutator", func() {
 			ensurer.EXPECT().EnsureKubeAPIServerService(context.TODO(), svc).Return(nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, nil, nil, logger)
+			mutator := NewMutator(ensurer, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), svc)
@@ -121,7 +122,7 @@ var _ = Describe("Mutator", func() {
 			)
 
 			// Create mutator
-			mutator := NewMutator(nil, nil, nil, logger)
+			mutator := NewMutator(nil, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), svc)
@@ -140,7 +141,7 @@ var _ = Describe("Mutator", func() {
 			ensurer.EXPECT().EnsureKubeAPIServerDeployment(context.TODO(), dep).Return(nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, nil, nil, logger)
+			mutator := NewMutator(ensurer, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), dep)
@@ -159,7 +160,7 @@ var _ = Describe("Mutator", func() {
 			ensurer.EXPECT().EnsureKubeControllerManagerDeployment(context.TODO(), dep).Return(nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, nil, nil, logger)
+			mutator := NewMutator(ensurer, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), dep)
@@ -178,7 +179,7 @@ var _ = Describe("Mutator", func() {
 			ensurer.EXPECT().EnsureKubeSchedulerDeployment(context.TODO(), dep).Return(nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, nil, nil, logger)
+			mutator := NewMutator(ensurer, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), dep)
@@ -193,7 +194,7 @@ var _ = Describe("Mutator", func() {
 			)
 
 			// Create mutator
-			mutator := NewMutator(nil, nil, nil, logger)
+			mutator := NewMutator(nil, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), dep)
@@ -216,7 +217,7 @@ var _ = Describe("Mutator", func() {
 			ensurer.EXPECT().EnsureETCDStatefulSet(context.TODO(), ss, cluster).Return(nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, nil, nil, logger)
+			mutator := NewMutator(ensurer, nil, nil, nil, logger)
 			err := mutator.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
@@ -241,7 +242,7 @@ var _ = Describe("Mutator", func() {
 			ensurer.EXPECT().EnsureETCDStatefulSet(context.TODO(), ss, cluster).Return(nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, nil, nil, logger)
+			mutator := NewMutator(ensurer, nil, nil, nil, logger)
 			err := mutator.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
@@ -258,7 +259,7 @@ var _ = Describe("Mutator", func() {
 			)
 
 			// Create mutator
-			mutator := NewMutator(nil, nil, nil, logger)
+			mutator := NewMutator(nil, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
 			err := mutator.Mutate(context.TODO(), ss)
@@ -267,9 +268,6 @@ var _ = Describe("Mutator", func() {
 
 		It("should invoke appropriate ensurer methods with OperatingSystemConfig", func() {
 			var (
-				oldFci = &extensionsv1alpha1.FileContentInline{
-					Data: oldKubernetesGeneralConfigData,
-				}
 				osc = &extensionsv1alpha1.OperatingSystemConfig{
 					ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
 					Spec: extensionsv1alpha1.OperatingSystemConfigSpec{
@@ -292,7 +290,9 @@ var _ = Describe("Mutator", func() {
 							{
 								Path: "/etc/sysctl.d/99-k8s-general.conf",
 								Content: extensionsv1alpha1.FileContent{
-									Inline: oldFci,
+									Inline: &extensionsv1alpha1.FileContentInline{
+										Data: oldKubernetesGeneralConfigData,
+									},
 								},
 							},
 						},
@@ -336,14 +336,14 @@ var _ = Describe("Mutator", func() {
 					return nil
 				},
 			)
-			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(context.TODO(), &oldFci.Data).DoAndReturn(
+			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(context.TODO(), util.StringPtr(oldKubernetesGeneralConfigData)).DoAndReturn(
 				func(ctx context.Context, data *string) error {
 					*data = newKubernetesGeneralConfigData
 					return nil
 				},
 			)
 			ensurer.EXPECT().ShouldProvisionKubeletCloudProviderConfig().Return(true)
-			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), gomock.Any(), osc.Namespace).DoAndReturn(
+			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), util.StringPtr(""), osc.Namespace).DoAndReturn(
 				func(ctx context.Context, data *string, _ string) error {
 					*data = cloudproviderconf
 					return nil
@@ -360,17 +360,17 @@ var _ = Describe("Mutator", func() {
 			kcc.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: oldKubeletConfigData}).Return(oldKubeletConfig, nil)
 			kcc.EXPECT().Encode(newKubeletConfig, "").Return(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}, nil)
 
-			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Update(context.TODO(), gomock.Any()).Times(1)
+			// Create mock FileContentInlineCodec
+			fcic := mockcontrolplane.NewMockFileContentInlineCodec(ctrl)
+			fcic.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: oldKubernetesGeneralConfigData}).Return([]byte(oldKubernetesGeneralConfigData), nil)
+			fcic.EXPECT().Encode([]byte(newKubernetesGeneralConfigData), "").Return(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}, nil)
+			fcic.EXPECT().Encode([]byte(cloudproviderconf), encoding).Return(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconfEncoded, Encoding: encoding}, nil)
 
 			// Create mutator
-			mutator := NewMutator(ensurer, us, kcc, logger)
-			err := mutator.(inject.Client).InjectClient(client)
-			Expect(err).To(Not(HaveOccurred()))
+			mutator := NewMutator(ensurer, us, kcc, fcic, logger)
 
 			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), osc)
+			err := mutator.Mutate(context.TODO(), osc)
 			Expect(err).To(Not(HaveOccurred()))
 			checkOperatingSystemConfig(osc)
 		})
@@ -391,7 +391,7 @@ func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Path).To(Equal(cloudProviderConfigPath))
 	Expect(c.Permissions).To(Equal(util.Int32Ptr(0644)))
-	Expect(c.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconf, Encoding: encoding}))
+	Expect(c.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconfEncoded, Encoding: encoding}))
 }
 
 func clientGet(result runtime.Object) interface{} {

@@ -16,11 +16,11 @@ package controlplane
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/pkg/util"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 

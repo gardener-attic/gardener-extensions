@@ -6,17 +6,17 @@ metadata:
 data:
   cloudprovider.conf: |
     cloud: AZUREPUBLICCLOUD
-    tenantId: {{ .Values.tenantId }}
-    subscriptionId: {{ .Values.subscriptionId }}
-    resourceGroup: {{ .Values.resourceGroup }}
-    location: {{ .Values.region }}
-    vnetName: {{ .Values.vnetName }}
-    subnetName: {{ .Values.subnetName }}
-    securityGroupName: {{ .Values.securityGroupName }}
-    routeTableName: {{ .Values.routeTableName }}
-    primaryAvailabilitySetName: {{ .Values.availabilitySetName }}
-    aadClientId: {{ .Values.aadClientId }}
-    aadClientSecret: {{ .Values.aadClientSecret }}
+    tenantId: "{{ .Values.tenantId }}"
+    subscriptionId: "{{ .Values.subscriptionId }}"
+    resourceGroup: "{{ .Values.resourceGroup }}"
+    location: "{{ .Values.region }}"
+    vnetName: "{{ .Values.vnetName }}"
+    subnetName: "{{ .Values.subnetName }}"
+    securityGroupName: "{{ .Values.securityGroupName }}"
+    routeTableName: "{{ .Values.routeTableName }}"
+    primaryAvailabilitySetName: "{{ .Values.availabilitySetName }}"
+    aadClientId: "{{ .Values.aadClientId }}"
+    aadClientSecret: "{{ .Values.aadClientSecret }}"
     cloudProviderBackoff: true
     {{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
     cloudProviderBackoffMode: v2

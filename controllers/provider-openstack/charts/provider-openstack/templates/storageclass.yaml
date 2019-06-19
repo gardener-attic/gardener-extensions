@@ -7,5 +7,4 @@ metadata:
 {{ include "labels" . | indent 4 }}
 provisioner: kubernetes.io/cinder
 allowVolumeExpansion: true
-parameters: {}
 {{- end }}

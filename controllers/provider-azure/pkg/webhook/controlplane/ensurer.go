@@ -16,7 +16,6 @@ package controlplane
 
 import (
 	"context"
-	"github.com/pkg/errors"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
@@ -25,6 +24,7 @@ import (
 	"github.com/coreos/go-systemd/unit"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
@@ -130,6 +130,7 @@ func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, opts []*u
 
 func ensureKubeletCommandLineArgs(command []string) []string {
 	command = controlplane.EnsureStringWithPrefix(command, "--cloud-provider=", "azure")
+	command = controlplane.EnsureStringWithPrefix(command, "--cloud-config=", "/var/lib/kubelet/cloudprovider.conf")
 	return command
 }
 
@@ -143,18 +144,18 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	return nil
 }
 
-//ShouldProvisionKubeletCloudProviderConfig returns if the cloudprovider.config file should be added to the kubelet configuration.
+// ShouldProvisionKubeletCloudProviderConfig returns true if the cloud provider config file should be added to the kubelet configuration.
 func (e *ensurer) ShouldProvisionKubeletCloudProviderConfig() bool {
 	return true
 }
 
-//EnsureKubeletCloudProviderConfig ensures that the cloudprovider.config file conforms to the provider requirements.
+// EnsureKubeletCloudProviderConfig ensures that the cloud provider config file conforms to the provider requirements.
 func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, data *string, namespace string) error {
 	// Get `cloud-provider-config` ConfigMap
 	var cm corev1.ConfigMap
 	err := e.client.Get(ctx, kutil.Key(namespace, azure.CloudProviderConfigName), &cm)
 	if err != nil {
-		return errors.Wrapf(err, "could not get configmap with name '%s' and namespace '%s'", azure.CloudProviderConfigName, namespace)
+		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, azure.CloudProviderConfigName)
 	}
 
 	// Check if the data has "cloudprovider.conf" key
