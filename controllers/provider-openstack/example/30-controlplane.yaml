@@ -64,10 +64,7 @@ spec:
   providerConfig:
     apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
     kind: ControlPlaneConfig
-    dhcpDomain: "somedhcpdomain"
-    requestTimeout: "2s"
     loadBalancerProvider: "provider"
-#   zone: europe-west1a
     cloudControllerManager:
       featureGates:
         CustomResourceValidation: true

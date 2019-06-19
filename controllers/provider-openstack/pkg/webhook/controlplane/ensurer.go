@@ -16,14 +16,15 @@ package controlplane
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-	"github.com/pkg/errors"
 
 	"github.com/coreos/go-systemd/unit"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
@@ -114,10 +115,7 @@ func ensureVolumes(ps *corev1.PodSpec) {
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
-	if err := controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigName); err != nil {
-		return err
-	}
-	return nil
+	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigName)
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
@@ -152,18 +150,18 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	return nil
 }
 
-//ShouldProvisionKubeletCloudProviderConfig returns if the cloudprovider.config file should be added to the kubelet configuration.
+// ShouldProvisionKubeletCloudProviderConfig returns true if the cloud provider config file should be added to the kubelet configuration.
 func (e *ensurer) ShouldProvisionKubeletCloudProviderConfig() bool {
 	return true
 }
 
-//EnsureKubeletCloudProviderConfig ensures that the cloudprovider.config file conforms to the provider requirements.
+// EnsureKubeletCloudProviderConfig ensures that the cloud provider config file conforms to the provider requirements.
 func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, data *string, namespace string) error {
 	// Get `cloud-provider-config` ConfigMap
 	var cm corev1.ConfigMap
 	err := e.client.Get(ctx, kutil.Key(namespace, openstack.CloudProviderConfigName), &cm)
 	if err != nil {
-		return errors.Wrapf(err, "could not get configmap with name '%s' and namespace '%s'", openstack.CloudProviderConfigName, namespace)
+		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, openstack.CloudProviderConfigName)
 	}
 
 	// Check if the data has "cloudprovider.conf" key

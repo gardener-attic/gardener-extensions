@@ -37,6 +37,6 @@ func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
 		Kind:     extensionswebhook.BackupKind,
 		Provider: packet.Type,
 		Types:    []runtime.Object{&appsv1.StatefulSet{}},
-		Mutator:  genericmutator.NewMutator(NewEnsurer(imagevector.ImageVector(), logger), nil, nil, logger),
+		Mutator:  genericmutator.NewMutator(NewEnsurer(imagevector.ImageVector(), logger), nil, nil, nil, logger),
 	})
 }

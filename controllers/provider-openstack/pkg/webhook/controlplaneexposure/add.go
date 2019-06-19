@@ -49,7 +49,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (webhook.Webh
 		Kind:     extensionswebhook.SeedKind,
 		Provider: openstack.Type,
 		Types:    []runtime.Object{&appsv1.Deployment{}, &corev1.Service{}, &appsv1.StatefulSet{}},
-		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, logger),
+		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, nil, logger),
 	})
 }
 
