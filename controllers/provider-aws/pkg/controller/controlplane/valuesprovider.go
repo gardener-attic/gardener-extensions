@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
@@ -182,18 +183,18 @@ func getConfigChartValues(
 	infraStatus *apisaws.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 ) (map[string]interface{}, error) {
-	// Determine subnet ID and zone
-	subnetID, zone, err := getSubnetIDAndZone(infraStatus)
+	// Get the first subnet with purpose "nodes"
+	subnet, err := helper.FindSubnetForPurpose(infraStatus.VPC.Subnets, apisaws.PurposePublic)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not determine subnet ID or zone from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
+		return nil, errors.Wrapf(err, "could not determine subnet from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Collect config chart values
 	return map[string]interface{}{
 		"vpcID":       infraStatus.VPC.ID,
-		"subnetID":    subnetID,
+		"subnetID":    subnet.ID,
 		"clusterName": cp.Namespace,
-		"zone":        zone,
+		"zone":        subnet.Zone,
 	}, nil
 }
 
@@ -225,16 +226,4 @@ func getCCMChartValues(
 	}
 
 	return values, nil
-}
-
-// getSubnetIDAndZone determines the subnet ID and zone from the given infrastructure status by looking for the first
-// subnet with purpose "public".
-// TODO: Move to pkg/apis/aws/v1alpha1/helper once https://github.com/gardener/gardener-extensions/pull/71 is merged.
-func getSubnetIDAndZone(infraStatus *apisaws.InfrastructureStatus) (string, string, error) {
-	for _, subnet := range infraStatus.VPC.Subnets {
-		if subnet.Purpose == apisaws.PurposePublic {
-			return subnet.ID, subnet.Zone, nil
-		}
-	}
-	return "", "", errors.Errorf("subnet with purpose 'public' not found")
 }

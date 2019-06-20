@@ -1,5 +1,14 @@
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: shoot--foo--bar
+  labels:
+#    backup.gardener.cloud/provider: alicloud
+#    seed.gardener.cloud/provider: alicloud
+    shoot.gardener.cloud/provider: alicloud
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: cloudprovider
@@ -50,6 +59,7 @@ spec:
   providerConfig:
     apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
     kind: ControlPlaneConfig
+    zone: eu-west-1a
     cloudControllerManager:
       featureGates:
         CustomResourceValidation: true

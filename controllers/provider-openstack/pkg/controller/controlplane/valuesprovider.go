@@ -204,10 +204,10 @@ func getConfigChartValues(
 	c *internal.Credentials,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
-	// get the first subnet ID with purpose "nodes".
-	subnetID, err := helper.FindSubnetByPurpose(infraStatus.Networks.Subnets, openstack.PurposeNodes)
+	// Get the first subnet with purpose "nodes"
+	subnet, err := helper.FindSubnetByPurpose(infraStatus.Networks.Subnets, openstack.PurposeNodes)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not determine subnet ID from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
+		return nil, errors.Wrapf(err, "could not determine subnet from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Collect config chart values
@@ -219,7 +219,7 @@ func getConfigChartValues(
 		"password":          c.Password,
 		"lbProvider":        cpConfig.LoadBalancerProvider,
 		"floatingNetworkID": infraStatus.Networks.FloatingPool.ID,
-		"subnetID":          subnetID.ID,
+		"subnetID":          subnet.ID,
 		"authUrl":           cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 		"dhcpDomain":        cluster.CloudProfile.Spec.OpenStack.DHCPDomain,
 		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,

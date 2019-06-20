@@ -63,6 +63,7 @@ var _ = Describe("ValuesProvider", func() {
 				},
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisalicloud.ControlPlaneConfig{
+						Zone: "eu-central-1a",
 						CloudControllerManager: &apisalicloud.CloudControllerManagerConfig{
 							KubernetesConfig: gardenv1beta1.KubernetesConfig{
 								FeatureGates: map[string]bool{

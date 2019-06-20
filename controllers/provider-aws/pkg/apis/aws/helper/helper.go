@@ -56,6 +56,18 @@ func FindSecurityGroupForPurpose(securityGroups []aws.SecurityGroup, purpose str
 	return nil, fmt.Errorf("no security group with purpose %q found", purpose)
 }
 
+// FindSubnetForPurpose takes a list of subnets and tries to find the first entry
+// whose purpose matches with the given purpose. If no such entry is found then
+// an error will be returned.
+func FindSubnetForPurpose(subnets []aws.Subnet, purpose string) (*aws.Subnet, error) {
+	for _, subnet := range subnets {
+		if subnet.Purpose == purpose {
+			return &subnet, nil
+		}
+	}
+	return nil, fmt.Errorf("no subnet with purpose %q found", purpose)
+}
+
 // FindSubnetForPurposeAndZone takes a list of subnets and tries to find the first entry
 // whose purpose and zone matches with the given purpose and zone. If no such entry is found then
 // an error will be returned.

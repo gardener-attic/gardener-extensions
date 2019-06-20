@@ -160,6 +160,7 @@ func Convert_alicloud_CloudControllerManagerConfig_To_v1alpha1_CloudControllerMa
 }
 
 func autoConvert_v1alpha1_ControlPlaneConfig_To_alicloud_ControlPlaneConfig(in *ControlPlaneConfig, out *alicloud.ControlPlaneConfig, s conversion.Scope) error {
+	out.Zone = in.Zone
 	out.CloudControllerManager = (*alicloud.CloudControllerManagerConfig)(unsafe.Pointer(in.CloudControllerManager))
 	return nil
 }
@@ -170,6 +171,7 @@ func Convert_v1alpha1_ControlPlaneConfig_To_alicloud_ControlPlaneConfig(in *Cont
 }
 
 func autoConvert_alicloud_ControlPlaneConfig_To_v1alpha1_ControlPlaneConfig(in *alicloud.ControlPlaneConfig, out *ControlPlaneConfig, s conversion.Scope) error {
+	out.Zone = in.Zone
 	out.CloudControllerManager = (*CloudControllerManagerConfig)(unsafe.Pointer(in.CloudControllerManager))
 	return nil
 }
