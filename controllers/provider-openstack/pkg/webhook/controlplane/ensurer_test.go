@@ -16,6 +16,8 @@ package controlplane
 
 import (
 	"context"
+	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -301,6 +303,21 @@ var _ = Describe("Ensurer", func() {
 			existingData = util.StringPtr("[LoadBalancer]\nlb-version=v2\nlb-provider:\n")
 			emptydata    = util.StringPtr("")
 		)
+		It("cloud provider configmap do not exist", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).Return(errors.NewNotFound(schema.GroupResource{}, cm.Name))
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call EnsureKubeletConfiguration method and check the result
+			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), emptydata, namespace)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(*emptydata).To(Equal(""))
+		})
 		It("should create element containing cloud provider config content", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
