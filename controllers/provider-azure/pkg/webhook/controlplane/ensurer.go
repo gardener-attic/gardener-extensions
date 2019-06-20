@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -155,6 +156,10 @@ func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, data *st
 	var cm corev1.ConfigMap
 	err := e.client.Get(ctx, kutil.Key(namespace, azure.CloudProviderConfigName), &cm)
 	if err != nil {
+		if apierrors.IsNotFound(err) {
+			e.logger.Info("configmap not found", "name", azure.CloudProviderConfigName, "namespace", namespace)
+			return nil
+		}
 		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, azure.CloudProviderConfigName)
 	}
 
