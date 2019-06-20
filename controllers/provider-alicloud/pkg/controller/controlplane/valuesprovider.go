@@ -22,6 +22,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -211,6 +212,12 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
+	// Decode providerConfig
+	cpConfig := &apisalicloud.ControlPlaneConfig{}
+	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
+		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
+	}
+
 	// Decode infrastructureProviderStatus
 	infraStatus := &apisalicloud.InfrastructureStatus{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
@@ -224,7 +231,7 @@ func (vp *valuesProvider) GetConfigChartValues(
 	}
 
 	// Get config chart values
-	return getConfigChartValues(infraStatus, cp, credentials)
+	return getConfigChartValues(cpConfig, infraStatus, cp, credentials)
 }
 
 // GetControlPlaneChartValues returns the values for the control plane chart applied by the generic actuator.
@@ -295,22 +302,23 @@ type cloudConfig struct {
 
 // getConfigChartValues collects and returns the configuration chart values.
 func getConfigChartValues(
+	cpConfig *apisalicloud.ControlPlaneConfig,
 	infraStatus *apisalicloud.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 	credentials *alicloud.Credentials,
 ) (map[string]interface{}, error) {
-	// Determine vswitch ID and zone
-	vswitchID, zone, err := getVswitchIDAndZone(infraStatus)
+	// Find first vswitch with purpose "nodes" in the specified zone
+	vswitch, err := helper.FindVSwitchForPurposeAndZone(infraStatus.VPC.VSwitches, apisalicloud.PurposeNodes, cpConfig.Zone)
 	if err != nil {
-		return nil, errors.Wrapf(err, "could not determine vswitch ID or zone from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
+		return nil, errors.Wrapf(err, "could not determine vswitch from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Initialize cloud config
 	cfg := &cloudConfig{}
 	cfg.Global.KubernetesClusterTag = cp.Namespace
 	cfg.Global.VpcID = infraStatus.VPC.ID
-	cfg.Global.ZoneID = zone
-	cfg.Global.VswitchID = vswitchID
+	cfg.Global.ZoneID = vswitch.Zone
+	cfg.Global.VswitchID = vswitch.ID
 	cfg.Global.AccessKeyID = base64.StdEncoding.EncodeToString([]byte(credentials.AccessKeyID))
 	cfg.Global.AccessKeySecret = base64.StdEncoding.EncodeToString([]byte(credentials.AccessKeySecret))
 	cfg.Global.Region = cp.Spec.Region
@@ -384,15 +392,4 @@ func getControlPlaneShootChartValues(
 	}
 
 	return values, nil
-}
-
-// getVswitchIDAndZone determines the vswitch ID and zone from the given infrastructure status by looking for the first
-// subnet with purpose "nodes".
-func getVswitchIDAndZone(infraStatus *apisalicloud.InfrastructureStatus) (string, string, error) {
-	for _, vswitch := range infraStatus.VPC.VSwitches {
-		if vswitch.Purpose == apisalicloud.PurposeNodes {
-			return vswitch.ID, vswitch.Zone, nil
-		}
-	}
-	return "", "", errors.Errorf("vswitch with purpose 'nodes' not found")
 }

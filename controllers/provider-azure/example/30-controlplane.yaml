@@ -2,11 +2,11 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: shoot--foo--bar # shoot--dev--local
-#  labels:
+  name: shoot--foo--bar
+  labels:
 #    backup.gardener.cloud/provider: azure
 #    seed.gardener.cloud/provider: azure
-#    shoot.gardener.cloud/provider: azure
+    shoot.gardener.cloud/provider: azure
 ---
 apiVersion: v1
 kind: Secret

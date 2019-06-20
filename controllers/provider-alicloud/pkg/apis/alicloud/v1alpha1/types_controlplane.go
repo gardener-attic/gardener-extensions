@@ -25,6 +25,9 @@ import (
 type ControlPlaneConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
+	// Zone is the Alicloud zone
+	Zone string `json:"zone"`
+
 	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
 	// +optional
 	CloudControllerManager *CloudControllerManagerConfig `json:"cloudControllerManager,omitempty"`

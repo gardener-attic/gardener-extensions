@@ -1,13 +1,22 @@
 ---
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: shoot--foo--bar
+  labels:
+#    backup.gardener.cloud/provider: aws
+#    seed.gardener.cloud/provider: aws
+    shoot.gardener.cloud/provider: aws
+---
+apiVersion: v1
 kind: Secret
 metadata:
   name: cloudprovider
   namespace: shoot--foo--bar
 type: Opaque
 data:
-# accessKeyID: base64(access-key-id)
-# secretAccessKey: base64(secret-access-key)
+  accessKeyID: Zm9v # foo
+  secretAccessKey: YmFy # bar
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
