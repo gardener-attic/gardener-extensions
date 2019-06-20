@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	apisazure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
+	azureapihelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
@@ -206,7 +207,10 @@ func getConfigChartValues(
 	cluster *extensionscontroller.Cluster,
 	ca *internal.ClientAuth,
 ) (map[string]interface{}, error) {
-	subnetName, availabilitySetName, routeTableName, securityGroupName := getInfraNames(infraStatus)
+	subnetName, availabilitySetName, routeTableName, securityGroupName, err := getInfraNames(infraStatus)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not determine subnet, availability set, route table or security group name from infrastructureStatus of controlplane '%s'", util.ObjectName(cp))
+	}
 
 	// Collect config chart values
 	return map[string]interface{}{
@@ -256,25 +260,23 @@ func getCCMChartValues(
 }
 
 // getInfraNames determines the subnet, availability set, route table and security group names from the given infrastructure status.
-func getInfraNames(infraStatus *apisazure.InfrastructureStatus) (string, string, string, string) {
-	subnets := infraStatus.Networks.Subnets
-	availabilitySets := infraStatus.AvailabilitySets
-	routeTables := infraStatus.RouteTables
-	securityGroups := infraStatus.SecurityGroups
-
-	var subnetName, availabilitySetName, routeTableName, securityGroupName string
-	if len(subnets) > 0 {
-		subnetName = subnets[0].Name
+func getInfraNames(infraStatus *apisazure.InfrastructureStatus) (string, string, string, string, error) {
+	nodesSubnet, err := azureapihelper.FindSubnetByPurpose(infraStatus.Networks.Subnets, apisazure.PurposeNodes)
+	if err != nil {
+		return "", "", "", "", errors.Wrapf(err, "could not determine subnet for purpose 'nodes'")
 	}
-	if len(availabilitySets) > 0 {
-		subnetName = availabilitySets[0].Name
+	nodesAvailabilitySet, err := azureapihelper.FindAvailabilitySetByPurpose(infraStatus.AvailabilitySets, apisazure.PurposeNodes)
+	if err != nil {
+		return "", "", "", "", errors.Wrapf(err, "could not determine availability set for purpose 'nodes'")
 	}
-	if len(routeTables) > 0 {
-		subnetName = routeTables[0].Name
+	nodesRouteTable, err := azureapihelper.FindRouteTableByPurpose(infraStatus.RouteTables, apisazure.PurposeNodes)
+	if err != nil {
+		return "", "", "", "", errors.Wrapf(err, "could not determine route table for purpose 'nodes'")
 	}
-	if len(securityGroups) > 0 {
-		subnetName = securityGroups[0].Name
+	nodesSecurityGroup, err := azureapihelper.FindSecurityGroupByPurpose(infraStatus.SecurityGroups, apisazure.PurposeNodes)
+	if err != nil {
+		return "", "", "", "", errors.Wrapf(err, "could not determine security group for purpose 'nodes'")
 	}
 
-	return subnetName, availabilitySetName, routeTableName, securityGroupName
+	return nodesSubnet.Name, nodesAvailabilitySet.Name, nodesRouteTable.Name, nodesSecurityGroup.Name, nil
 }
