@@ -3,10 +3,10 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: shoot--foo--bar # shoot--dev--local
-  labels:
+#  labels:
 #    backup.gardener.cloud/provider: azure
 #    seed.gardener.cloud/provider: azure
-    shoot.gardener.cloud/provider: azure
+#    shoot.gardener.cloud/provider: azure
 ---
 apiVersion: v1
 kind: Secret
@@ -70,8 +70,18 @@ spec:
     resourceGroup:
       name: rg-1234
     networks:
-      vpc:
-        name: vpc-1234
+      vnet:
+        name: vnet-1234
       subnets:
-      - purpose: internal
+      - purpose: nodes
         name: subnet-acbd1234
+    availabilitySets:
+    - id: /example/id
+      name: azure-avset-workers
+      purpose: nodes
+    routeTables:
+    - name: route-table
+      purpose: nodes
+    securityGroups:
+    - name: sec-groups
+      purpose: nodes

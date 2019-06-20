@@ -87,9 +87,269 @@ var _ = Describe("ValuesProvider", func() {
 							},
 							Subnets: []apisazure.Subnet{
 								{
-									Name:    "subnet-abcd1234",
+									Name:    "subnet-abcd1234-nodes",
 									Purpose: "nodes",
 								},
+							},
+						},
+						SecurityGroups: []apisazure.SecurityGroup{
+							{
+								Purpose: "nodes",
+								Name:    "security-group-name-workers",
+							},
+						},
+						RouteTables: []apisazure.RouteTable{
+							{
+								Purpose: "nodes",
+								Name:    "route-table-name",
+							},
+						},
+						AvailabilitySets: []apisazure.AvailabilitySet{
+							{
+								Name:    "availability-set-name",
+								Purpose: "nodes",
+								ID:      "/my/azure/id",
+							},
+						},
+					}),
+				},
+			},
+		}
+
+		cpNoSubnet = &extensionsv1alpha1.ControlPlane{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "control-plane",
+				Namespace: namespace,
+			},
+			Spec: extensionsv1alpha1.ControlPlaneSpec{
+				Region: "eu-west-1a",
+				SecretRef: corev1.SecretReference{
+					Name:      common.CloudProviderSecretName,
+					Namespace: namespace,
+				},
+				ProviderConfig: &runtime.RawExtension{
+					Raw: encode(&apisazure.ControlPlaneConfig{
+						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
+							KubernetesConfig: gardenv1beta1.KubernetesConfig{
+								FeatureGates: map[string]bool{
+									"CustomResourceValidation": true,
+								},
+							},
+						},
+					}),
+				},
+				InfrastructureProviderStatus: &runtime.RawExtension{
+					Raw: encode(&apisazure.InfrastructureStatus{
+						ResourceGroup: apisazure.ResourceGroup{
+							Name: "rg-abcd1234",
+						},
+						Networks: apisazure.NetworkStatus{
+							VNet: apisazure.VNetStatus{
+								Name: "vnet-abcd1234",
+							},
+							Subnets: []apisazure.Subnet{
+								{
+									Name:    "subnet-abcd1234-nodes",
+									Purpose: "internal",
+								},
+							},
+						},
+						SecurityGroups: []apisazure.SecurityGroup{
+							{
+								Purpose: "nodes",
+								Name:    "security-group-name-workers",
+							},
+						},
+						RouteTables: []apisazure.RouteTable{
+							{
+								Purpose: "nodes",
+								Name:    "route-table-name",
+							},
+						},
+						AvailabilitySets: []apisazure.AvailabilitySet{
+							{
+								Name:    "availability-set-name",
+								Purpose: "nodes",
+								ID:      "/my/azure/id",
+							},
+						},
+					}),
+				},
+			},
+		}
+
+		cpNoAvailabilitySet = &extensionsv1alpha1.ControlPlane{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "control-plane",
+				Namespace: namespace,
+			},
+			Spec: extensionsv1alpha1.ControlPlaneSpec{
+				Region: "eu-west-1a",
+				SecretRef: corev1.SecretReference{
+					Name:      common.CloudProviderSecretName,
+					Namespace: namespace,
+				},
+				ProviderConfig: &runtime.RawExtension{
+					Raw: encode(&apisazure.ControlPlaneConfig{
+						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
+							KubernetesConfig: gardenv1beta1.KubernetesConfig{
+								FeatureGates: map[string]bool{
+									"CustomResourceValidation": true,
+								},
+							},
+						},
+					}),
+				},
+				InfrastructureProviderStatus: &runtime.RawExtension{
+					Raw: encode(&apisazure.InfrastructureStatus{
+						ResourceGroup: apisazure.ResourceGroup{
+							Name: "rg-abcd1234",
+						},
+						Networks: apisazure.NetworkStatus{
+							VNet: apisazure.VNetStatus{
+								Name: "vnet-abcd1234",
+							},
+							Subnets: []apisazure.Subnet{
+								{
+									Name:    "subnet-abcd1234-nodes",
+									Purpose: "nodes",
+								},
+							},
+						},
+						SecurityGroups: []apisazure.SecurityGroup{
+							{
+								Purpose: "nodes",
+								Name:    "security-group-name-workers",
+							},
+						},
+						RouteTables: []apisazure.RouteTable{
+							{
+								Purpose: "nodes",
+								Name:    "route-table-name",
+							},
+						},
+					}),
+				},
+			},
+		}
+
+		cpNoSecurityGroups = &extensionsv1alpha1.ControlPlane{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "control-plane",
+				Namespace: namespace,
+			},
+			Spec: extensionsv1alpha1.ControlPlaneSpec{
+				Region: "eu-west-1a",
+				SecretRef: corev1.SecretReference{
+					Name:      common.CloudProviderSecretName,
+					Namespace: namespace,
+				},
+				ProviderConfig: &runtime.RawExtension{
+					Raw: encode(&apisazure.ControlPlaneConfig{
+						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
+							KubernetesConfig: gardenv1beta1.KubernetesConfig{
+								FeatureGates: map[string]bool{
+									"CustomResourceValidation": true,
+								},
+							},
+						},
+					}),
+				},
+				InfrastructureProviderStatus: &runtime.RawExtension{
+					Raw: encode(&apisazure.InfrastructureStatus{
+						ResourceGroup: apisazure.ResourceGroup{
+							Name: "rg-abcd1234",
+						},
+						Networks: apisazure.NetworkStatus{
+							VNet: apisazure.VNetStatus{
+								Name: "vnet-abcd1234",
+							},
+							Subnets: []apisazure.Subnet{
+								{
+									Name:    "subnet-abcd1234-nodes",
+									Purpose: "nodes",
+								},
+							},
+						},
+						SecurityGroups: []apisazure.SecurityGroup{
+							{
+								Purpose: "internal",
+								Name:    "security-group-name-workers",
+							},
+						},
+						RouteTables: []apisazure.RouteTable{
+							{
+								Purpose: "nodes",
+								Name:    "route-table-name",
+							},
+						},
+						AvailabilitySets: []apisazure.AvailabilitySet{
+							{
+								Name:    "availability-set-name",
+								Purpose: "nodes",
+								ID:      "/my/azure/id",
+							},
+						},
+					}),
+				},
+			},
+		}
+
+		cpNoRouteTables = &extensionsv1alpha1.ControlPlane{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "control-plane",
+				Namespace: namespace,
+			},
+			Spec: extensionsv1alpha1.ControlPlaneSpec{
+				Region: "eu-west-1a",
+				SecretRef: corev1.SecretReference{
+					Name:      common.CloudProviderSecretName,
+					Namespace: namespace,
+				},
+				ProviderConfig: &runtime.RawExtension{
+					Raw: encode(&apisazure.ControlPlaneConfig{
+						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
+							KubernetesConfig: gardenv1beta1.KubernetesConfig{
+								FeatureGates: map[string]bool{
+									"CustomResourceValidation": true,
+								},
+							},
+						},
+					}),
+				},
+				InfrastructureProviderStatus: &runtime.RawExtension{
+					Raw: encode(&apisazure.InfrastructureStatus{
+						ResourceGroup: apisazure.ResourceGroup{
+							Name: "rg-abcd1234",
+						},
+						Networks: apisazure.NetworkStatus{
+							VNet: apisazure.VNetStatus{
+								Name: "vnet-abcd1234",
+							},
+							Subnets: []apisazure.Subnet{
+								{
+									Name:    "subnet-abcd1234-nodes",
+									Purpose: "nodes",
+								},
+							},
+						},
+						SecurityGroups: []apisazure.SecurityGroup{
+							{
+								Purpose: "nodes",
+								Name:    "security-group-name-workers",
+							},
+						},
+						RouteTables: []apisazure.RouteTable{
+							{
+								Purpose: "internal",
+								Name:    "route-table-name",
+							},
+						},
+						AvailabilitySets: []apisazure.AvailabilitySet{
+							{
+								Name:    "availability-set-name",
+								Purpose: "nodes",
+								ID:      "/my/azure/id",
 							},
 						},
 					}),
@@ -146,11 +406,11 @@ var _ = Describe("ValuesProvider", func() {
 			"aadClientSecret":     "ClientSecret",
 			"resourceGroup":       "rg-abcd1234",
 			"vnetName":            "vnet-abcd1234",
-			"subnetName":          "subnet-abcd1234",
+			"subnetName":          "subnet-abcd1234-nodes",
 			"region":              "eu-west-1a",
-			"availabilitySetName": "",
-			"routeTableName":      "",
-			"securityGroupName":   "",
+			"availabilitySetName": "availability-set-name",
+			"routeTableName":      "route-table-name",
+			"securityGroupName":   "security-group-name-workers",
 			"kubernetesVersion":   "1.13.4",
 		}
 
@@ -198,6 +458,86 @@ var _ = Describe("ValuesProvider", func() {
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(values).To(Equal(configChartValues))
+		})
+	})
+
+	Describe("#GetConfigChartValuesNoSubnet", func() {
+		It("should return error, missing subnet", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetConfigChartValues method and check the result
+			_, err = vp.GetConfigChartValues(context.TODO(), cpNoSubnet, cluster)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("could not determine subnet for purpose 'nodes'"))
+		})
+	})
+
+	Describe("#GetConfigChartValuesNoAvailabilitySet", func() {
+		It("should return error, missing availability set", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetConfigChartValues method and check the result
+			_, err = vp.GetConfigChartValues(context.TODO(), cpNoAvailabilitySet, cluster)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("could not determine availability set for purpose 'nodes'"))
+		})
+	})
+
+	Describe("#GetConfigChartValuesNoRouteTable", func() {
+		It("should return error, missing route tables", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetConfigChartValues method and check the result
+			_, err = vp.GetConfigChartValues(context.TODO(), cpNoRouteTables, cluster)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("could not determine route table for purpose 'nodes'"))
+		})
+	})
+
+	Describe("#GetConfigChartValuesNoSecurityGroups", func() {
+		It("should return error, missing security groups", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetConfigChartValues method and check the result
+			_, err = vp.GetConfigChartValues(context.TODO(), cpNoSecurityGroups, cluster)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("could not determine security group for purpose 'nodes'"))
 		})
 	})
 

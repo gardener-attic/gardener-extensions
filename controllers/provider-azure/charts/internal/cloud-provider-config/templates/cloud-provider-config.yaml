@@ -18,9 +18,6 @@ data:
     aadClientId: "{{ .Values.aadClientId }}"
     aadClientSecret: "{{ .Values.aadClientSecret }}"
     cloudProviderBackoff: true
-    {{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
-    cloudProviderBackoffMode: v2
-    {{end}}
     cloudProviderBackoffRetries: 6
     cloudProviderBackoffExponent: 1.5
     cloudProviderBackoffDuration: 5
@@ -30,3 +27,6 @@ data:
     cloudProviderRateLimitBucket: 100
     cloudProviderRateLimitQPSWrite: 10.0
     cloudProviderRateLimitBucketWrite: 100
+{{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
+    cloudProviderBackoffMode: v2
+{{end}}

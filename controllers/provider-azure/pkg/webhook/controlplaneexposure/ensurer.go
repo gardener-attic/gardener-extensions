@@ -21,8 +21,6 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-	"github.com/gardener/gardener/pkg/utils"
-
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -54,20 +52,11 @@ func (m *ensurer) InjectClient(client client.Client) error {
 
 // EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, svc *corev1.Service) error {
-	cluster, err := extensionscontroller.GetCluster(ctx, e.client, svc.Namespace)
-	if err != nil {
-		return err
+	// TODO: Assuming seed kubernetes version is >= 1.12. Validate it correctly
+	if svc.Annotations == nil {
+		svc.Annotations = make(map[string]string)
 	}
-	comparedVersion, err := utils.CompareVersions(cluster.Shoot.Spec.Kubernetes.Version, ">=", "1.12")
-	if err != nil {
-		return err
-	}
-	if comparedVersion {
-		if svc.Annotations == nil {
-			svc.Annotations = make(map[string]string)
-		}
-		svc.Annotations["service.beta.kubernetes.io/azure-load-balancer-tcp-idle-timeout"] = "30"
-	}
+	svc.Annotations["service.beta.kubernetes.io/azure-load-balancer-tcp-idle-timeout"] = "30"
 	return nil
 }
 
