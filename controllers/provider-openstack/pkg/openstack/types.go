@@ -26,6 +26,8 @@ const (
 	MachineControllerManagerImageName = "machine-controller-manager"
 	// HyperkubeImageName is the name of the hyperkube image.
 	HyperkubeImageName = "hyperkube"
+	// CloudControllerImageName is the name of the external OpenStackCloudProvider image.
+	CloudControllerImageName = "openstack-cloud-controller-manager"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
 	ETCDBackupRestoreImageName = "etcd-backup-restore"
 

@@ -15,7 +15,12 @@ data:
     lb-version=v2
     lb-provider="{{ .Values.lbProvider }}"
     floating-network-id="{{ .Values.floatingNetworkID }}"
+    {{- if .Values.floatingSubnetID }}
+    floating-subnet-id="{{ .Values.floatingSubnetID }}"
+    {{- end }}
+    {{- if .Values.subnetID }}
     subnet-id="{{ .Values.subnetID }}"
+    {{- end }}
     create-monitor=true
     monitor-delay=60s
     monitor-timeout=30s
@@ -27,5 +32,17 @@ data:
     {{- end }}
     {{- if (ne .Values.requestTimeout "") }}
     request-timeout={{ .Values.requestTimeout }}
+    {{- end }}
+    {{- end }}
+    {{- range $i, $class := .Values.floatingClasses }}
+    [LoadBalancerClass {{ $class.name | quote }}]
+    {{- if $class.floatingNetworkID }}
+    floating-network-id="{{ $class.floatingNetworkID }}"
+    {{- end }}
+    {{- if $class.floatingSubnetID }}
+    floating-subnet-id="{{ $class.floatingSubnetID }}"
+    {{- end }}
+    {{- if $class.subnetID }}
+    subnet-id="{{ $class.subnetID }}"
     {{- end }}
     {{- end }}

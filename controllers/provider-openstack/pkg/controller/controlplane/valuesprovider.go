@@ -37,6 +37,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	openstacktypes "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
+	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/utils"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
@@ -99,7 +100,7 @@ var configChart = &chart.Chart{
 var ccmChart = &chart.Chart{
 	Name:   "cloud-controller-manager",
 	Path:   filepath.Join(openstacktypes.InternalChartsPath, "cloud-controller-manager"),
-	Images: []string{openstacktypes.HyperkubeImageName},
+	Images: []string{openstacktypes.CloudControllerImageName},
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
@@ -211,7 +212,7 @@ func getConfigChartValues(
 	}
 
 	// Collect config chart values
-	return map[string]interface{}{
+	values := map[string]interface{}{
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"domainName":        c.DomainName,
 		"tenantName":        c.TenantName,
@@ -223,7 +224,42 @@ func getConfigChartValues(
 		"authUrl":           cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 		"dhcpDomain":        cluster.CloudProfile.Spec.OpenStack.DHCPDomain,
 		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,
-	}, nil
+	}
+
+	for _, class := range cpConfig.LoadBalancerClasses {
+		if class.Name == openstack.DefaultLoadBalancerClass {
+			SetStringValue(values, "floatingNetworkID", class.FloatingNetworkID)
+			SetStringValue(values, "floatingSubnetID", class.FloatingSubnetID)
+			SetStringValue(values, "subnetID", class.SubnetID)
+			break
+		}
+	}
+	for _, class := range cpConfig.LoadBalancerClasses {
+		if class.Name == openstack.PrivateLoadBalancerClass {
+			SetStringValue(values, "subnetID", class.SubnetID)
+			break
+		}
+	}
+
+	var floatingClasses []map[string]interface{}
+
+	for _, class := range cpConfig.LoadBalancerClasses {
+		floatingClass := map[string]interface{}{"name": class.Name}
+		if !IsEmptyString(class.FloatingSubnetID) && IsEmptyString(class.FloatingNetworkID) {
+			floatingClass["floatingNetworkID"] = infraStatus.Networks.FloatingPool.ID
+		} else {
+			SetStringValue(floatingClass, "floatingNetworkID", class.FloatingNetworkID)
+		}
+		SetStringValue(floatingClass, "floatingSubnetID", class.FloatingSubnetID)
+		SetStringValue(floatingClass, "subnetID", class.SubnetID)
+		floatingClasses = append(floatingClasses, floatingClass)
+	}
+
+	if floatingClasses != nil {
+		values["floatingClasses"] = floatingClasses
+	}
+
+	return values, nil
 }
 
 // getCCMChartValues collects and returns the CCM chart values.

@@ -49,6 +49,51 @@ const (
 var dhcpDomain = util.StringPtr("dhcp-domain")
 var requestTimeout = util.StringPtr("2s")
 
+func defaultControlPlane() *extensionsv1alpha1.ControlPlane {
+	return controlPlane(
+		"floating-network-id",
+		&openstack.ControlPlaneConfig{
+			LoadBalancerProvider: "load-balancer-provider",
+			CloudControllerManager: &openstack.CloudControllerManagerConfig{
+				FeatureGates: map[string]bool{
+					"CustomResourceValidation": true,
+				},
+			},
+		})
+}
+func controlPlane(fnid string, cfg *openstack.ControlPlaneConfig) *extensionsv1alpha1.ControlPlane {
+	return &extensionsv1alpha1.ControlPlane{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "control-plane",
+			Namespace: namespace,
+		},
+		Spec: extensionsv1alpha1.ControlPlaneSpec{
+			SecretRef: corev1.SecretReference{
+				Name:      common.CloudProviderSecretName,
+				Namespace: namespace,
+			},
+			ProviderConfig: &runtime.RawExtension{
+				Raw: encode(cfg),
+			},
+			InfrastructureProviderStatus: &runtime.RawExtension{
+				Raw: encode(&openstack.InfrastructureStatus{
+					Networks: openstack.NetworkStatus{
+						FloatingPool: openstack.FloatingPoolStatus{
+							ID: fnid,
+						},
+						Subnets: []openstack.Subnet{
+							{
+								ID:      "subnet-acbd1234",
+								Purpose: openstack.PurposeNodes,
+							},
+						},
+					},
+				}),
+			},
+		},
+	}
+}
+
 var _ = Describe("ValuesProvider", func() {
 	var (
 		ctrl *gomock.Controller
@@ -57,45 +102,7 @@ var _ = Describe("ValuesProvider", func() {
 		scheme = runtime.NewScheme()
 		_      = openstack.AddToScheme(scheme)
 
-		cp = &extensionsv1alpha1.ControlPlane{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "control-plane",
-				Namespace: namespace,
-			},
-			Spec: extensionsv1alpha1.ControlPlaneSpec{
-				SecretRef: corev1.SecretReference{
-					Name:      common.CloudProviderSecretName,
-					Namespace: namespace,
-				},
-				ProviderConfig: &runtime.RawExtension{
-					Raw: encode(&openstack.ControlPlaneConfig{
-						LoadBalancerProvider: "load-balancer-provider",
-						CloudControllerManager: &openstack.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
-							},
-						},
-					}),
-				},
-				InfrastructureProviderStatus: &runtime.RawExtension{
-					Raw: encode(&openstack.InfrastructureStatus{
-						Networks: openstack.NetworkStatus{
-							FloatingPool: openstack.FloatingPoolStatus{
-								ID: "floating-network-id",
-							},
-							Subnets: []openstack.Subnet{
-								{
-									ID:      "subnet-acbd1234",
-									Purpose: openstack.PurposeNodes,
-								},
-							},
-						},
-					}),
-				},
-			},
-		}
+		cp = defaultControlPlane()
 
 		cidr    = gardencorev1alpha1.CIDR("10.250.0.0/19")
 		cluster = &extensionscontroller.Cluster{
@@ -220,6 +227,101 @@ var _ = Describe("ValuesProvider", func() {
 			values, err := vp.GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(values).To(Equal(ccmChartValues))
+		})
+	})
+
+	Describe("#GetConfigChartValues with Classes", func() {
+		It("should return correct config chart values", func() {
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			fnid := "4711"
+			fnid2 := "pub"
+			fsid := "0815"
+			fsid2 := "pub0815"
+			psid := "priv"
+			dfsid := "default-floating-subnet-id"
+			cp := controlPlane(
+				fnid,
+				&openstack.ControlPlaneConfig{
+					LoadBalancerProvider: "load-balancer-provider",
+					LoadBalancerClasses: []openstack.LoadBalancerClass{
+						{
+							Name:             "test",
+							FloatingSubnetID: &fsid,
+							SubnetID:         nil,
+						},
+						{
+							Name:             "default",
+							FloatingSubnetID: &dfsid,
+							SubnetID:         nil,
+						},
+						{
+							Name:              "public",
+							FloatingSubnetID:  &fsid2,
+							FloatingNetworkID: &fnid2,
+							SubnetID:          nil,
+						},
+						{
+							Name:     "other",
+							SubnetID: &psid,
+						},
+					},
+					CloudControllerManager: &openstack.CloudControllerManagerConfig{
+						FeatureGates: map[string]bool{
+							"CustomResourceValidation": true,
+						},
+					},
+				},
+			)
+
+			configChartValues = map[string]interface{}{
+				"kubernetesVersion": "1.13.4",
+				"domainName":        "domain-name",
+				"tenantName":        "tenant-name",
+				"username":          "username",
+				"password":          "password",
+				"subnetID":          "subnet-acbd1234",
+				"lbProvider":        "load-balancer-provider",
+				"floatingNetworkID": fnid,
+				"floatingSubnetID":  dfsid,
+				"floatingClasses": []map[string]interface{}{
+					{
+						"name":              "test",
+						"floatingNetworkID": fnid,
+						"floatingSubnetID":  fsid,
+					},
+					{
+						"name":              "default",
+						"floatingNetworkID": fnid,
+						"floatingSubnetID":  dfsid,
+					},
+					{
+						"name":              "public",
+						"floatingNetworkID": fnid2,
+						"floatingSubnetID":  fsid2,
+					},
+					{
+						"name":     "other",
+						"subnetID": psid,
+					},
+				},
+				"authUrl":        authURL,
+				"dhcpDomain":     dhcpDomain,
+				"requestTimeout": requestTimeout,
+			}
+			// Call GetConfigChartValues method and check the result
+			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(configChartValues))
 		})
 	})
 })

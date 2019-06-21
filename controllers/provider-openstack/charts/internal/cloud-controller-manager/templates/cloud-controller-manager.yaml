@@ -54,11 +54,10 @@ spec:
         operator: Exists
       containers:
       - name: cloud-controller-manager
-        image: {{ index .Values.images "hyperkube" }}
+        image: {{ index .Values.images "openstack-cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:
-        - /hyperkube
-        - cloud-controller-manager
+        - /bin/openstack-cloud-controller-manager
         - --allocate-node-cidrs=true
         - --cloud-provider=openstack
         - --cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf
