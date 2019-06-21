@@ -30,6 +30,7 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
+	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -182,7 +183,7 @@ func (a *actuator) createCertBroker(ctx context.Context, shoot *gardenv1beta1.Sh
 		},
 	}
 
-	certBrokerConfig, err = imagevector.ImageVector().InjectImages(certBrokerConfig, "", "", utils.CertBrokerImageName)
+	certBrokerConfig, err = chart.InjectImages(certBrokerConfig, imagevector.ImageVector(), []string{utils.CertBrokerImageName})
 	if err != nil {
 		return fmt.Errorf("failed to find image version for %s: %v", utils.CertBrokerImageName, err)
 	}

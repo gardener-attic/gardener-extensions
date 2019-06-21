@@ -82,7 +82,7 @@ func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev
 func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscontroller.Cluster) (*corev1.Container, error) {
 	// Find etcd-backup-restore image
 	// TODO Get seed version from clientset when it's possible to inject it
-	image, err := e.imageVector.FindImage(azure.ETCDBackupRestoreImageName, "", cluster.Shoot.Spec.Kubernetes.Version)
+	image, err := e.imageVector.FindImage(azure.ETCDBackupRestoreImageName, imagevector.TargetVersion(cluster.Shoot.Spec.Kubernetes.Version))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find image %s", azure.ETCDBackupRestoreImageName)
 	}

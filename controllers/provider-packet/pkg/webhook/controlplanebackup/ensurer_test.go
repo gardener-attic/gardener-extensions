@@ -16,10 +16,11 @@ package controlplanebackup
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	"testing"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -51,7 +52,7 @@ var _ = Describe("Ensurer", func() {
 				{
 					Name:       packet.ETCDBackupRestoreImageName,
 					Repository: "test-repository",
-					Tag:        "test-tag",
+					Tag:        util.StringPtr("test-tag"),
 				},
 			}
 

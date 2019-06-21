@@ -61,7 +61,7 @@ var _ = Describe("Ensurer", func() {
 				{
 					Name:       aws.ETCDBackupRestoreImageName,
 					Repository: "test-repository",
-					Tag:        "test-tag",
+					Tag:        util.StringPtr("test-tag"),
 				},
 			}
 
