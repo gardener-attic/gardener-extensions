@@ -1,6 +1,11 @@
 ---
 apiVersion: gcp.provider.extensions.config.gardener.cloud/v1alpha1
 kind: ControllerConfiguration
+clientConnection:
+  acceptContentTypes: application/json
+  contentType: application/json
+  qps: 100
+  burst: 130
 machineImages:
 - name: coreos
   version: 2023.5.0

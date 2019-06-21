@@ -9,7 +9,7 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "f718e4bd65f08a62a8fa7836dcebb8e7d2476c1e"
+  revision = "6f15652d2cf893aadc019989035e419437aa77c8"
 
 [[override]]
   name = "github.com/gardener/machine-controller-manager"
@@ -42,6 +42,10 @@ required = [
 [[override]]
   name = "k8s.io/code-generator"
   version = "kubernetes-1.13.4"
+
+[[override]]
+  name = "k8s.io/component-base"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/kube-aggregator"

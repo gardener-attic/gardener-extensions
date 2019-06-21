@@ -234,7 +234,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:59b55d57e1c4616eb376183c42b1b6ffd3c3fef868e96495c222fc4c53627ee8"
+  digest = "1:1490d9290e9f28c4d8d3c7161ec0c00789ca9f67b81121681914091f77ab72ad"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -270,7 +270,7 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "f718e4bd65f08a62a8fa7836dcebb8e7d2476c1e"
+  revision = "6f15652d2cf893aadc019989035e419437aa77c8"
 
 [[projects]]
   digest = "1:be08b3a88137d497fc3008eaadba7b05d151c6106ebd3d1df54af7b07320562a"
@@ -1504,6 +1504,17 @@
   version = "kubernetes-1.13.4"
 
 [[projects]]
+  digest = "1:2775547502bd15edd729014d53c138eb4b706980aa3e8a748d5b51f9e0b61cb3"
+  name = "k8s.io/component-base"
+  packages = [
+    "config",
+    "config/v1alpha1",
+  ]
+  pruneopts = "NUT"
+  revision = "4a91899592f42b2f5859587cc5a676a5b94d2ee3"
+  version = "kubernetes-1.14.0"
+
+[[projects]]
   branch = "master"
   digest = "1:462e6076bc1fde8da364901873fde3a9e66160d853d766b797a657d66e4b2cc4"
   name = "k8s.io/gengo"
@@ -1832,6 +1843,7 @@
     "k8s.io/api/admissionregistration/v1beta1",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/policy/v1beta1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme",
@@ -1863,12 +1875,15 @@
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/retry",
+    "k8s.io/client-go/util/workqueue",
     "k8s.io/code-generator/cmd/client-gen",
     "k8s.io/code-generator/cmd/conversion-gen",
     "k8s.io/code-generator/cmd/deepcopy-gen",
     "k8s.io/code-generator/cmd/defaulter-gen",
     "k8s.io/code-generator/cmd/informer-gen",
     "k8s.io/code-generator/cmd/lister-gen",
+    "k8s.io/component-base/config",
+    "k8s.io/component-base/config/v1alpha1",
     "k8s.io/helm/pkg/manifest",
     "k8s.io/kubelet/config/v1beta1",
     "sigs.k8s.io/controller-runtime/pkg/cache",

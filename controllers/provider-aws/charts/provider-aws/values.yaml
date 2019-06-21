@@ -33,6 +33,11 @@ disableWebhooks: []
 #   ...
 
 config:
+  clientConnection:
+    acceptContentTypes: application/json
+    contentType: application/json
+    qps: 100
+    burst: 130
   machineImages:
   - name: coreos
     version: 1967.5.0
