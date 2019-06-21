@@ -273,6 +273,17 @@
   revision = "ec7b30ef26a4b69ee236eecdde716d0d838e7898"
 
 [[projects]]
+  digest = "1:4098f6b647f7809ed8371eaa46c5de92a324467297551de2d819cbe6a7769606"
+  name = "github.com/gardener/gardener-resource-manager"
+  packages = [
+    "pkg/apis/resources",
+    "pkg/apis/resources/v1alpha1",
+  ]
+  pruneopts = "NUT"
+  revision = "cbdcb8cad53cebedaed082d4a5d6ff27ddc56b3e"
+  version = "0.1.0"
+
+[[projects]]
   digest = "1:be08b3a88137d497fc3008eaadba7b05d151c6106ebd3d1df54af7b07320562a"
   name = "github.com/gardener/machine-controller-manager"
   packages = [
@@ -1799,6 +1810,7 @@
     "github.com/aws/aws-sdk-go/service/elb",
     "github.com/aws/aws-sdk-go/service/sts",
     "github.com/coreos/go-systemd/unit",
+    "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper",

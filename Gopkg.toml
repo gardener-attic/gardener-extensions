@@ -16,6 +16,10 @@ required = [
   revision = "119056ee3fddc24a33b206ba89958da30535bd02"
 
 [[override]]
+  name = "github.com/gardener/gardener-resource-manager"
+  version = "0.1.0"
+
+[[override]]
   name = "sigs.k8s.io/controller-runtime"
   version = "0.1.10"
 
@@ -46,7 +50,7 @@ required = [
 [[override]]
   name = "k8s.io/component-base"
   version = "kubernetes-1.14.0"
-
+  
 [[override]]
   name = "k8s.io/kube-aggregator"
   version = "kubernetes-1.13.4"
