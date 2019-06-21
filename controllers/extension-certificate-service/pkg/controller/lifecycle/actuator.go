@@ -26,6 +26,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
+	"github.com/gardener/gardener/pkg/utils/chart"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -102,7 +103,7 @@ func (a *actuator) DeployCertManager(ctx context.Context, config config.Configur
 		return fmt.Errorf("failed to create values for cluster issuer: %v", err)
 	}
 
-	configValues, err = imagevector.ImageVector().InjectImages(configValues, "", "", certManagerName)
+	configValues, err = chart.InjectImages(configValues, imagevector.ImageVector(), []string{certManagerName})
 	if err != nil {
 		return fmt.Errorf("failed to find image version for %s: %v", certManagerName, err)
 	}

@@ -52,7 +52,7 @@ func ImageVector() imagevector.ImageVector {
 
 // TerraformerImage returns the terraformer image name.
 func TerraformerImage() string {
-	image, err := imageVector.FindImage(TerraformerImageName, "", "")
+	image, err := imageVector.FindImage(TerraformerImageName)
 	runtime.Must(err)
 	return image.String()
 }

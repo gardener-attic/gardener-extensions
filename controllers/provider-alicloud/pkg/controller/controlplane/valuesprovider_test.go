@@ -104,7 +104,7 @@ var _ = Describe("ValuesProvider", func() {
 						},
 					},
 					Kubernetes: gardenv1beta1.Kubernetes{
-						Version: "1.13.4",
+						Version: "1.14.0",
 					},
 				},
 			},
@@ -140,7 +140,7 @@ var _ = Describe("ValuesProvider", func() {
 			"alicloud-cloud-controller-manager": map[string]interface{}{
 				"replicas":          1,
 				"clusterName":       namespace,
-				"kubernetesVersion": "1.13.4",
+				"kubernetesVersion": "1.14.0",
 				"podNetwork":        cidr,
 				"podAnnotations": map[string]interface{}{
 					"checksum/secret-cloud-controller-manager": "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
@@ -153,13 +153,19 @@ var _ = Describe("ValuesProvider", func() {
 			},
 			"csi-alicloud": map[string]interface{}{
 				"replicas":          1,
-				"kubernetesVersion": "1.13.4",
+				"kubernetesVersion": "1.14.0",
 				"regionID":          "eu-central-1",
 				"podAnnotations": map[string]interface{}{
 					"checksum/secret-csi-attacher":    "2da58ad61c401a2af779a909d22fb42eed93a1524cbfdab974ceedb413fcb914",
 					"checksum/secret-csi-provisioner": "f75b42d40ab501428c383dfb2336cb1fc892bbee1fc1d739675171e4acc4d911",
 					"checksum/secret-csi-snapshotter": "bf417dd97dc3e8c2092bb5b2ba7b0f1093ebc4bb5952091ee554cf5b7ea74508",
 					"checksum/secret-cloudprovider":   "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+				},
+				"images": map[string]interface{}{
+					"csi-provisioner":     "quay.io/k8scsi/csi-provisioner:v1.1.0",
+					"csi-snapshotter":     "quay.io/k8scsi/csi-snapshotter:v1.1.0",
+					"csi-plugin-alicloud": "registry.eu-central-1.aliyuncs.com/gardener-de/csi-plugin-alicloud:v1.13.2",
+					"csi-attacher":        "quay.io/k8scsi/csi-attacher:v1.1.0",
 				},
 			},
 		}
@@ -170,7 +176,7 @@ var _ = Describe("ValuesProvider", func() {
 					"accessKeyID":     "Zm9v",
 					"accessKeySecret": "YmFy",
 				},
-				"kubernetesVersion": "1.13.4",
+				"kubernetesVersion": "1.14.0",
 			},
 		}
 
