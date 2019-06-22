@@ -35,6 +35,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/version"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -243,6 +244,30 @@ var _ = Describe("Shoot", func() {
 			v, err := VersionMajorMinor(fmt.Sprintf("%s.88", expectedVersion))
 
 			Expect(v).To(Equal(expectedVersion))
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("#VersionInfo", func() {
+		It("should return an error due to an invalid version format", func() {
+			v, err := VersionInfo("invalid-semver")
+
+			Expect(v).To(BeNil())
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should convert the given version to a correct version.Info", func() {
+			var (
+				expectedVersionInfo = &version.Info{
+					Major:      "14",
+					Minor:      "123",
+					GitVersion: "v14.123.42",
+				}
+			)
+
+			v, err := VersionInfo("14.123.42")
+
+			Expect(v).To(Equal(expectedVersionInfo))
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

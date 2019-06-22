@@ -6,7 +6,7 @@ package util
 
 import (
 	context "context"
-	v1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+	chartrenderer "github.com/gardener/gardener/pkg/chartrenderer"
 	kubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	imagevector "github.com/gardener/gardener/pkg/utils/imagevector"
 	gomock "github.com/golang/mock/gomock"
@@ -93,17 +93,17 @@ func (m *MockChart) EXPECT() *MockChartMockRecorder {
 }
 
 // Apply mocks base method
-func (m *MockChart) Apply(arg0 context.Context, arg1 kubernetes.Interface, arg2 kubernetes.ChartApplier, arg3 string, arg4 *v1beta1.Shoot, arg5 imagevector.ImageVector, arg6 map[string]string, arg7 map[string]interface{}) error {
+func (m *MockChart) Apply(arg0 context.Context, arg1 kubernetes.ChartApplier, arg2 string, arg3 imagevector.ImageVector, arg4, arg5 string, arg6 map[string]interface{}) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Apply", arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+	ret := m.ctrl.Call(m, "Apply", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Apply indicates an expected call of Apply
-func (mr *MockChartMockRecorder) Apply(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 interface{}) *gomock.Call {
+func (mr *MockChartMockRecorder) Apply(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockChart)(nil).Apply), arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockChart)(nil).Apply), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // Delete mocks base method
@@ -118,6 +118,22 @@ func (m *MockChart) Delete(arg0 context.Context, arg1 client.Client, arg2 string
 func (mr *MockChartMockRecorder) Delete(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockChart)(nil).Delete), arg0, arg1, arg2)
+}
+
+// Render mocks base method
+func (m *MockChart) Render(arg0 chartrenderer.Interface, arg1 string, arg2 imagevector.ImageVector, arg3, arg4 string, arg5 map[string]interface{}) (string, []byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Render", arg0, arg1, arg2, arg3, arg4, arg5)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].([]byte)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// Render indicates an expected call of Render
+func (mr *MockChartMockRecorder) Render(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Render", reflect.TypeOf((*MockChart)(nil).Render), arg0, arg1, arg2, arg3, arg4, arg5)
 }
 
 // MockShootClients is a mock of ShootClients interface

@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=kubernetes -destination=mocks.go github.com/gardener/gardener/pkg/client/kubernetes Interface,ChartApplier
+// +k8s:deepcopy-gen=package
+// +k8s:conversion-gen=github.com/gardener/gardener-resource-manager/pkg/apis/resources
+// +k8s:openapi-gen=true
+// +k8s:defaulter-gen=TypeMeta
 
-package kubernetes
+package v1alpha1 // import "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"

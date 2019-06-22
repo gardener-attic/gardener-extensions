@@ -38,7 +38,7 @@ var (
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Actuator: genericactuator.NewActuator(controlPlaneSecrets, configChart, controlPlaneChart, controlPlaneShootChart,
-			NewValuesProvider(logger), genericactuator.ShootClientsFactoryFunc(util.NewClientsForShoot),
+			NewValuesProvider(logger), genericactuator.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), alicloud.CloudProviderConfigName, logger),
 		Type:              alicloud.Type,
 		ControllerOptions: opts,
