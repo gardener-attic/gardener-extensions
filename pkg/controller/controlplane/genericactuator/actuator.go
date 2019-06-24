@@ -163,7 +163,7 @@ func (a *actuator) Reconcile(
 		}
 
 		// Apply config chart
-		a.logger.Info("Applying configuration chart", "controlplane", util.ObjectName(cp), "values", values)
+		a.logger.Info("Applying configuration chart", "controlplane", util.ObjectName(cp))
 		if err := a.configChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, nil, nil, values); err != nil {
 			return false, errors.Wrapf(err, "could not apply configuration chart for controlplane '%s'", util.ObjectName(cp))
 		}
@@ -199,7 +199,7 @@ func (a *actuator) Reconcile(
 	}
 
 	// Apply control plane chart
-	a.logger.Info("Applying control plane chart", "controlplane", util.ObjectName(cp), "values", values)
+	a.logger.Info("Applying control plane chart", "controlplane", util.ObjectName(cp))
 	if err := a.controlPlaneChart.Apply(ctx, a.gardenerClientset, a.chartApplier, cp.Namespace, cluster.Shoot, a.imageVector, checksums, values); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane chart for controlplane '%s'", util.ObjectName(cp))
 	}
