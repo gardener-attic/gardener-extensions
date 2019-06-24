@@ -12,18 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package backupentry
+//go:generate mockgen -package=genericactuator -destination=mocks.go github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator BackupEntryDelegate
 
-import (
-	"context"
-
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-)
-
-// Actuator acts upon BackupEntry resources.
-type Actuator interface {
-	// Reconcile reconciles the BackupEntry.
-	Reconcile(context.Context, *extensionsv1alpha1.BackupEntry) error
-	// Delete deletes the BackupEntry.
-	Delete(context.Context, *extensionsv1alpha1.BackupEntry) error
-}
+package genericactuator

@@ -23,9 +23,9 @@ import (
 	awsapihelper "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
 	confighelper "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
-
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -62,7 +62,7 @@ func (w *workerDelegate) GenerateMachineDeployments(ctx context.Context) (worker
 }
 
 func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (map[string][]byte, error) {
-	secret, err := util.GetSecretByRef(ctx, w.client, w.worker.Spec.SecretRef)
+	secret, err := extensionscontroller.GetSecretByReference(ctx, w.client, &w.worker.Spec.SecretRef)
 	if err != nil {
 		return nil, err
 	}

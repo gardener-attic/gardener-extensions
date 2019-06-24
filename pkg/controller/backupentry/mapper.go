@@ -17,15 +17,12 @@ package backupentry
 import (
 	"context"
 
-	"github.com/gardener/gardener/pkg/operation/common"
-
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/operation/common"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
@@ -99,7 +96,7 @@ func (m *namespaceToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Re
 			continue
 		}
 
-		expectedTechnicalID, expectedUID := extractShootDetailsFromBackupEntryName(backupEntry.Name)
+		expectedTechnicalID, expectedUID := ExtractShootDetailsFromBackupEntryName(backupEntry.Name)
 		if namespace.Name == expectedTechnicalID && shootUID == expectedUID {
 			requests = append(requests, reconcile.Request{
 				NamespacedName: types.NamespacedName{

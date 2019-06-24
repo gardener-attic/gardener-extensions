@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
-	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	corev1 "k8s.io/api/core/v1"
@@ -36,7 +36,7 @@ type Credentials struct {
 
 // GetCredentials computes for a given context and infrastructure the corresponding credentials object.
 func GetCredentials(ctx context.Context, c client.Client, secretRef corev1.SecretReference) (*Credentials, error) {
-	secret, err := util.GetSecretByRef(ctx, c, secretRef)
+	secret, err := extensionscontroller.GetSecretByReference(ctx, c, &secretRef)
 	if err != nil {
 		return nil, err
 	}

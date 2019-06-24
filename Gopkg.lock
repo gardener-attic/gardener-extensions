@@ -1400,7 +1400,7 @@
   revision = "11047e25a94a7eaa541b92a8bbfd3e1243607219"
 
 [[projects]]
-  digest = "1:a61daa23ebc1e5fd33b82a9948d2295a00ac70a3aac0a83b6fc8213599b6c363"
+  digest = "1:6d0867b1bdcb6655e3b9a99f3f279214d9c3af823a23e5e2fc4a59f3746cedd8"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -1456,6 +1456,7 @@
     "scale/scheme/autoscalingv1",
     "scale/scheme/extensionsint",
     "scale/scheme/extensionsv1beta1",
+    "testing",
     "third_party/forked/golang/template",
     "tools/auth",
     "tools/cache",
@@ -1743,7 +1744,7 @@
   revision = "21c4ce38f2a793ec01e925ddc31216500183b773"
 
 [[projects]]
-  digest = "1:4b9b99bc92d556e9a976d9ea79df065f5ffc6f59b686706b9f9efb9ee49fa960"
+  digest = "1:992bc319972cc108ef73351e5876eb52d587b90187a0d8450cef47264ba52f79"
   name = "sigs.k8s.io/controller-runtime"
   packages = [
     "pkg/cache",
@@ -1751,6 +1752,7 @@
     "pkg/client",
     "pkg/client/apiutil",
     "pkg/client/config",
+    "pkg/client/fake",
     "pkg/controller",
     "pkg/controller/controllerutil",
     "pkg/event",
@@ -1849,7 +1851,6 @@
     "github.com/go-logr/logr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
-    "github.com/gobuffalo/packr/v2/file/resolver",
     "github.com/golang/mock/gomock",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
@@ -1922,6 +1923,7 @@
     "sigs.k8s.io/controller-runtime/pkg/cache",
     "sigs.k8s.io/controller-runtime/pkg/client",
     "sigs.k8s.io/controller-runtime/pkg/client/apiutil",
+    "sigs.k8s.io/controller-runtime/pkg/client/fake",
     "sigs.k8s.io/controller-runtime/pkg/controller",
     "sigs.k8s.io/controller-runtime/pkg/controller/controllerutil",
     "sigs.k8s.io/controller-runtime/pkg/event",

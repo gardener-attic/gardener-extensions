@@ -30,6 +30,9 @@ spec:
     type: string
     description: The bucket into which the backup entry should be created.
     JSONPath: .spec.bucketName
+  - name: State
+    type: string
+    JSONPath: .status.lastOperation.status
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

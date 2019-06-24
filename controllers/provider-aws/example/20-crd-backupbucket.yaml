@@ -26,6 +26,9 @@ spec:
     type: string
     description: The region into which the backup bucket should be created.
     JSONPath: .spec.region
+  - name: State
+    type: string
+    JSONPath: .status.lastOperation.status
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

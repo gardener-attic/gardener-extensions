@@ -212,10 +212,18 @@ func (c *Client) DeleteObjectsWithPrefix(ctx context.Context, bucket, prefix str
 	return nil
 }
 
-// CreateBucket creates the s3 bucket with name <bucket>. If it already exist,
+// CreateBucketIfNotExists creates the s3 bucket with name <bucket> in <region>. If it already exist,
 // no error is returned.
-func (c *Client) CreateBucket(ctx context.Context, bucket string) error {
-	if _, err := c.S3.CreateBucketWithContext(ctx, &s3.CreateBucketInput{Bucket: aws.String(bucket)}); err != nil {
+func (c *Client) CreateBucketIfNotExists(ctx context.Context, bucket, region string) error {
+	createBucketInput := &s3.CreateBucketInput{
+		Bucket: aws.String(bucket),
+		ACL:    aws.String(s3.BucketCannedACLPrivate),
+		CreateBucketConfiguration: &s3.CreateBucketConfiguration{
+			LocationConstraint: aws.String(region),
+		},
+	}
+
+	if _, err := c.S3.CreateBucketWithContext(ctx, createBucketInput); err != nil {
 		if aerr, ok := err.(awserr.Error); ok && (aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou) {
 			return nil
 		}
@@ -224,9 +232,9 @@ func (c *Client) CreateBucket(ctx context.Context, bucket string) error {
 	return nil
 }
 
-// DeleteBucket deletes the s3 bucket with name <bucket>. If it does not exist,
+// DeleteBucketIfExists deletes the s3 bucket with name <bucket>. If it does not exist,
 // no error is returned.
-func (c *Client) DeleteBucket(ctx context.Context, bucket string) error {
+func (c *Client) DeleteBucketIfExists(ctx context.Context, bucket string) error {
 	if _, err := c.S3.DeleteBucketWithContext(ctx, &s3.DeleteBucketInput{Bucket: aws.String(bucket)}); err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
 			if aerr.Code() == s3.ErrCodeNoSuchBucket {
@@ -236,7 +244,7 @@ func (c *Client) DeleteBucket(ctx context.Context, bucket string) error {
 				if err := c.DeleteObjectsWithPrefix(ctx, bucket, ""); err != nil {
 					return err
 				}
-				return c.DeleteBucket(ctx, bucket)
+				return c.DeleteBucketIfExists(ctx, bucket)
 			}
 		}
 		return err

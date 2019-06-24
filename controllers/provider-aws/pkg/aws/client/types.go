@@ -41,8 +41,8 @@ type Interface interface {
 
 	// S3 wrappers
 	DeleteObjectsWithPrefix(ctx context.Context, bucket, prefix string) error
-	CreateBucket(ctx context.Context, bucket string) error
-	DeleteBucket(ctx context.Context, bucket string) error
+	CreateBucketIfNotExists(ctx context.Context, bucket, region string) error
+	DeleteBucketIfExists(ctx context.Context, bucket string) error
 
 	// The following functions are only temporary needed due to https://github.com/gardener/gardener/issues/129.
 	ListKubernetesELBs(ctx context.Context, vpcID, clusterName string) ([]string, error)

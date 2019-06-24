@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package backupentry
+package backupentry_test
 
 import (
-	"context"
+	"testing"
 
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-// Actuator acts upon BackupEntry resources.
-type Actuator interface {
-	// Reconcile reconciles the BackupEntry.
-	Reconcile(context.Context, *extensionsv1alpha1.BackupEntry) error
-	// Delete deletes the BackupEntry.
-	Delete(context.Context, *extensionsv1alpha1.BackupEntry) error
+func TestBackupentry(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Backupentry Suite")
 }

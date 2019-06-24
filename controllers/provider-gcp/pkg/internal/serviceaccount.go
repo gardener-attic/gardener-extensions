@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
-	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -54,7 +54,7 @@ func GetServiceAccount(ctx context.Context, c client.Client, secretRef corev1.Se
 
 // GetServiceAccountData retrieves the service account specified by the secret reference.
 func GetServiceAccountData(ctx context.Context, c client.Client, secretRef corev1.SecretReference) ([]byte, error) {
-	secret, err := util.GetSecretByRef(ctx, c, secretRef)
+	secret, err := extensionscontroller.GetSecretByReference(ctx, c, &secretRef)
 	if err != nil {
 		return nil, err
 	}

@@ -21,7 +21,6 @@ import (
 
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	. "github.com/gardener/gardener-extensions/pkg/util"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
@@ -49,58 +48,6 @@ var _ = Describe("Util", func() {
 
 	AfterEach(func() {
 		ctrl.Finish()
-	})
-
-	Describe("#GetSecretByRef", func() {
-		var (
-			ctx = context.TODO()
-
-			name      = "foo"
-			namespace = "bar"
-		)
-
-		It("should get the secret", func() {
-			var (
-				objectMeta = metav1.ObjectMeta{
-					Name:      name,
-					Namespace: namespace,
-				}
-				data = map[string][]byte{
-					"foo": []byte("bar"),
-				}
-			)
-
-			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).DoAndReturn(func(_ context.Context, _ client.ObjectKey, secret *corev1.Secret) error {
-				secret.ObjectMeta = objectMeta
-				secret.Data = data
-				return nil
-			})
-
-			secret, err := GetSecretByRef(ctx, c, corev1.SecretReference{
-				Name:      name,
-				Namespace: namespace,
-			})
-
-			Expect(err).NotTo(HaveOccurred())
-			Expect(secret).To(Equal(&corev1.Secret{
-				ObjectMeta: objectMeta,
-				Data:       data,
-			}))
-		})
-
-		It("should return the error", func() {
-			ctx := context.TODO()
-
-			c.EXPECT().Get(ctx, kutil.Key(namespace, name), gomock.AssignableToTypeOf(&corev1.Secret{})).Return(fmt.Errorf("error"))
-
-			secret, err := GetSecretByRef(ctx, c, corev1.SecretReference{
-				Name:      name,
-				Namespace: namespace,
-			})
-
-			Expect(err).To(HaveOccurred())
-			Expect(secret).To(Equal(&corev1.Secret{}))
-		})
 	})
 
 	Describe("#WaitUntilResourceDeleted", func() {

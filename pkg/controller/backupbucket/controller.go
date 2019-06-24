@@ -16,8 +16,9 @@ package backupbucket
 
 import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -63,6 +64,10 @@ func Add(mgr manager.Manager, args AddArgs) error {
 func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate) error {
 	ctrl, err := controller.New(ControllerName, mgr, options)
 	if err != nil {
+		return err
+	}
+
+	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToBackupBucketMapper(mgr.GetClient(), predicates)}); err != nil {
 		return err
 	}
 

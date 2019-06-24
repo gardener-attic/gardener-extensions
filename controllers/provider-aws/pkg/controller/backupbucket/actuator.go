@@ -17,15 +17,11 @@ package backupbucket
 import (
 	"context"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/pkg/controller/backupbucket"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	awsclient "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws/client"
-	"github.com/gardener/gardener-extensions/pkg/controller/backupbucket"
-
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
@@ -48,29 +44,19 @@ func (a *actuator) InjectClient(client client.Client) error {
 }
 
 func (a *actuator) Reconcile(ctx context.Context, bb *extensionsv1alpha1.BackupBucket) error {
-	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(bb.Spec.SecretRef.Namespace, bb.Spec.SecretRef.Name), providerSecret); err != nil {
-		return err
-	}
-
-	awsClient, err := awsclient.NewClient(string(providerSecret.Data[aws.AccessKeyID]), string(providerSecret.Data[aws.SecretAccessKey]), bb.Spec.Region)
+	awsClient, err := aws.NewClientFromSecretRef(ctx, a.client, bb.Spec.SecretRef, bb.Spec.Region)
 	if err != nil {
 		return err
 	}
 
-	return awsClient.CreateBucket(ctx, bb.Name)
+	return awsClient.CreateBucketIfNotExists(ctx, bb.Name, bb.Spec.Region)
 }
 
 func (a *actuator) Delete(ctx context.Context, bb *extensionsv1alpha1.BackupBucket) error {
-	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(bb.Spec.SecretRef.Namespace, bb.Spec.SecretRef.Name), providerSecret); err != nil {
-		return err
-	}
-
-	awsClient, err := awsclient.NewClient(string(providerSecret.Data[aws.AccessKeyID]), string(providerSecret.Data[aws.SecretAccessKey]), bb.Spec.Region)
+	awsClient, err := aws.NewClientFromSecretRef(ctx, a.client, bb.Spec.SecretRef, bb.Spec.Region)
 	if err != nil {
 		return err
 	}
 
-	return awsClient.DeleteBucket(ctx, bb.Name)
+	return awsClient.DeleteBucketIfExists(ctx, bb.Name)
 }

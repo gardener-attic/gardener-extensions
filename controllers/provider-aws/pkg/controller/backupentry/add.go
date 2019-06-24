@@ -16,6 +16,7 @@ package backupentry
 
 import (
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry"
+	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -33,7 +34,7 @@ var (
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return backupentry.Add(mgr, backupentry.AddArgs{
-		Actuator:          backupentry.NewActuator(newActuator(), logger),
+		Actuator:          genericactuator.NewActuator(newActuator(), logger),
 		ControllerOptions: opts,
 		Predicates:        backupentry.DefaultPredicates(mgr),
 	})

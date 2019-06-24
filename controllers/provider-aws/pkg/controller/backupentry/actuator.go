@@ -19,13 +19,10 @@ import (
 	"fmt"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	awsclient "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws/client"
-	"github.com/gardener/gardener-extensions/pkg/controller/backupentry"
+	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
 
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,7 +31,7 @@ type actuator struct {
 	logger logr.Logger
 }
 
-func newActuator() backupentry.ProviderActuator {
+func newActuator() genericactuator.BackupEntryDelegate {
 	return &actuator{
 		logger: logger,
 	}
@@ -51,12 +48,7 @@ func (a *actuator) GetETCDSecretData(ctx context.Context, be *extensionsv1alpha1
 }
 
 func (a *actuator) Delete(ctx context.Context, be *extensionsv1alpha1.BackupEntry) error {
-	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(be.Spec.SecretRef.Namespace, be.Spec.SecretRef.Name), providerSecret); err != nil {
-		return err
-	}
-
-	awsClient, err := awsclient.NewClient(string(providerSecret.Data[aws.AccessKeyID]), string(providerSecret.Data[aws.SecretAccessKey]), be.Spec.Region)
+	awsClient, err := aws.NewClientFromSecretRef(ctx, a.client, be.Spec.SecretRef, be.Spec.Region)
 	if err != nil {
 		return err
 	}

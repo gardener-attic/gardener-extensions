@@ -15,15 +15,13 @@
 package backupentry
 
 import (
-	"context"
-
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"strings"
 )
 
-// Actuator acts upon BackupEntry resources.
-type Actuator interface {
-	// Reconcile reconciles the BackupEntry.
-	Reconcile(context.Context, *extensionsv1alpha1.BackupEntry) error
-	// Delete deletes the BackupEntry.
-	Delete(context.Context, *extensionsv1alpha1.BackupEntry) error
+// ExtractShootDetailsFromBackupEntryName returns Shoot resource technicalID its UID from provided <backupEntryName>.
+func ExtractShootDetailsFromBackupEntryName(backupEntryName string) (shootTechnicalID, shootUID string) {
+	tokens := strings.Split(backupEntryName, "--")
+	shootUID = tokens[len(tokens)-1]
+	shootTechnicalID = strings.TrimSuffix(backupEntryName, "--"+shootUID)
+	return shootTechnicalID, shootUID
 }

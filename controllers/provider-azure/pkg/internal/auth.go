@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
-	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -39,7 +39,7 @@ type ClientAuth struct {
 
 // GetClientAuthData retrieves the client auth data specified by the secret reference.
 func GetClientAuthData(ctx context.Context, c client.Client, secretRef corev1.SecretReference) (*ClientAuth, error) {
-	secret, err := util.GetSecretByRef(ctx, c, secretRef)
+	secret, err := extensionscontroller.GetSecretByReference(ctx, c, &secretRef)
 	if err != nil {
 		return nil, err
 	}

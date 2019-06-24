@@ -15,9 +15,14 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 
+	awsclient "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws/client"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ReadCredentialsSecret reads a secret containing credentials.
@@ -40,4 +45,20 @@ func ReadCredentialsSecret(secret *corev1.Secret) (*Credentials, error) {
 		AccessKeyID:     accessKeyID,
 		SecretAccessKey: secretAccessKey,
 	}, nil
+}
+
+// NewClientFromSecretRef creates a new Client for the given AWS credentials from given k8s <secretRef> and
+// the AWS region <region>.
+func NewClientFromSecretRef(ctx context.Context, client client.Client, secretRef corev1.SecretReference, region string) (awsclient.Interface, error) {
+	secret, err := extensionscontroller.GetSecretByReference(ctx, client, &secretRef)
+	if err != nil {
+		return nil, err
+	}
+
+	credentials, err := ReadCredentialsSecret(secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return awsclient.NewClient(string(credentials.AccessKeyID), string(credentials.SecretAccessKey), region)
 }
