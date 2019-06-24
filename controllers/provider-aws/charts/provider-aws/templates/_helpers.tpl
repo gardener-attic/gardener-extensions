@@ -12,7 +12,6 @@ app.kubernetes.io/name
 {{- define "labels" -}}
 {{ include "labels.app.key" . }}: {{ include "labels.app.value" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-helm.sh/chart: {{ include "name" . }}
 {{- end -}}
 
 {{-  define "image" -}}
