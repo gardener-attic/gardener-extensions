@@ -34,6 +34,7 @@ func (a *actuator) cleanupKubernetesFirewallRules(
 	client gcpclient.Interface,
 	tf *terraformer.Terraformer,
 	account *internal.ServiceAccount,
+	shootSeedNamespace string,
 ) error {
 	state, err := infrastructure.ExtractTerraformState(tf, config)
 	if err != nil {
@@ -43,7 +44,7 @@ func (a *actuator) cleanupKubernetesFirewallRules(
 		return err
 	}
 
-	return infrastructure.CleanupKubernetesFirewalls(ctx, client, account.ProjectID, state.VPCName)
+	return infrastructure.CleanupKubernetesFirewalls(ctx, client, account.ProjectID, state.VPCName, shootSeedNamespace)
 }
 
 func (a *actuator) cleanupKubernetesRoutes(
@@ -96,7 +97,7 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 		destroyKubernetesFirewallRules = g.Add(flow.Task{
 			Name: "Destroying Kubernetes firewall rules",
 			Fn: flow.TaskFn(func(ctx context.Context) error {
-				return a.cleanupKubernetesFirewallRules(ctx, config, gcpClient, tf, serviceAccount)
+				return a.cleanupKubernetesFirewallRules(ctx, config, gcpClient, tf, serviceAccount, infra.Namespace)
 			}).
 				RetryUntilTimeout(10*time.Second, 5*time.Minute).
 				DoIf(configExists),
