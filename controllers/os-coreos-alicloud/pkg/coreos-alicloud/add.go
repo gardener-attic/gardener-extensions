@@ -33,6 +33,8 @@ var (
 type AddOptions struct {
 	// Controller are the controller related options.
 	Controller controller.Options
+	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
+	IgnoreOperationAnnotation bool
 }
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
@@ -41,7 +43,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
 		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
-		Predicates:        operatingsystemconfig.DefaultPredicates(Type),
+		Predicates:        operatingsystemconfig.DefaultPredicates(Type, opts.IgnoreOperationAnnotation),
 	})
 }
 

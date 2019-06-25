@@ -32,7 +32,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error
 	return backupbucket.Add(mgr, backupbucket.AddArgs{
 		Actuator:          newActuator(),
 		ControllerOptions: opts,
-		Predicates:        backupbucket.DefaultPredicates(mgr),
+		Predicates:        backupbucket.DefaultPredicates(),
 	})
 }
 

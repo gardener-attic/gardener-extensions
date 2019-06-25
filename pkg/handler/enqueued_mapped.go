@@ -21,6 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
 var _ handler.EventHandler = (*EnqueueRequestsFromMapFunc)(nil)
@@ -35,6 +36,11 @@ var _ handler.EventHandler = (*EnqueueRequestsFromMapFunc)(nil)
 type EnqueueRequestsFromMapFunc struct {
 	// Mapper transforms the argument into a slice of keys to be reconciled
 	ToRequests Mapper
+}
+
+// InjectFunc implements Injector.
+func (e *EnqueueRequestsFromMapFunc) InjectFunc(f inject.Func) error {
+	return f(e.ToRequests)
 }
 
 // Create implements EventHandler
@@ -132,6 +138,11 @@ const (
 type handlerMapper struct {
 	updateBehavior UpdateBehavior
 	mapper         handler.Mapper
+}
+
+// InjectFunc implements Injector.
+func (h *handlerMapper) InjectFunc(f inject.Func) error {
+	return f(h.mapper)
 }
 
 func (h *handlerMapper) MapCreate(c MapCreateObject) []reconcile.Request {

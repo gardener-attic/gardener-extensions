@@ -38,9 +38,9 @@ type AddOptions struct {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, options AddOptions) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
-		Actuator:          infrastructure.OperationAnnotationWrapper(NewActuator()),
+		Actuator:          NewActuator(),
 		ControllerOptions: options.Controller,
-		Predicates:        infrastructure.DefaultPredicates(mgr.GetClient(), azure.Type, options.IgnoreOperationAnnotation),
+		Predicates:        infrastructure.DefaultPredicates(azure.Type, options.IgnoreOperationAnnotation),
 	})
 }
 

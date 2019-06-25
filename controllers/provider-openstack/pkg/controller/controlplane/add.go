@@ -21,32 +21,39 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var (
-	// Options are the default controller.Options for AddToManager.
-	Options = controller.Options{}
+	// DefaultAddOptions are the default AddOptions for AddToManager.
+	DefaultAddOptions = AddOptions{}
 
 	logger = log.Log.WithName("openstack-controlplane-controller")
 )
 
+// AddOptions are options to apply when adding the OpenStack controlplane controller to the manager.
+type AddOptions struct {
+	// Controller are the controller.Options.
+	Controller controller.Options
+	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
+	IgnoreOperationAnnotation bool
+}
+
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
+func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Actuator: &wrapper{genericactuator.NewActuator(controlPlaneSecrets, configChart, ccmChart, ccmShootChart,
 			storageClassChart, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), openstack.CloudProviderConfigName, logger)},
-		Type:              openstack.Type,
-		ControllerOptions: opts,
+		ControllerOptions: opts.Controller,
+		Predicates:        controlplane.DefaultPredicates(openstack.Type, opts.IgnoreOperationAnnotation),
 	})
 }
 
 // AddToManager adds a controller with the default Options.
 func AddToManager(mgr manager.Manager) error {
-	return AddToManagerWithOptions(mgr, Options)
+	return AddToManagerWithOptions(mgr, DefaultAddOptions)
 }

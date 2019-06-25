@@ -17,11 +17,8 @@ package infrastructure
 import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	corev1 "k8s.io/api/core/v1"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -45,30 +42,29 @@ type AddArgs struct {
 	// given actuator.
 	ControllerOptions controller.Options
 	// Predicates are the predicates to use.
-	// If unset, GenerationChangedPredicate will be used.
+	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
 	// WatchBuilder defines additional watches on controllers that should be set up.
 	WatchBuilder extensionscontroller.WatchBuilder
 }
 
 // DefaultPredicates returns the default predicates for an infrastructure reconciler.
-func DefaultPredicates(client client.Client, typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionscontroller.TypePredicate(typeName),
-			extensionscontroller.ShootFailedPredicate(client),
-			extensionscontroller.GenerationChangedPredicate(),
+			extensionspredicate.HasType(typeName),
+			extensionspredicate.GenerationChanged(),
 		}
 	}
 
 	return []predicate.Predicate{
-		extensionscontroller.TypePredicate(typeName),
-		extensionscontroller.ShootFailedPredicate(client),
-		OperationAnnotationPredicate(),
-		extensionscontroller.OrPredicate(
-			extensionscontroller.GenerationChangedPredicate(),
-			extensionscontroller.AnnotationsChangedPredicate(),
+		extensionspredicate.HasType(typeName),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.LastOperationNotSuccessful(),
+			extensionspredicate.IsDeleting(),
 		),
+		extensionspredicate.ShootNotFailed(),
 	}
 }
 
@@ -89,8 +85,9 @@ func add(mgr manager.Manager, args AddArgs) error {
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Infrastructure{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
 		return err
 	}
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
-		ToRequests: extensionshandler.SimpleMapper(SecretToInfrastructureMapper(mgr.GetClient(), args.Predicates), extensionshandler.UpdateWithNew),
+
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
+		ToRequests: extensionshandler.SimpleMapper(ClusterToInfrastructureMapper(args.Predicates), extensionshandler.UpdateWithNew),
 	}); err != nil {
 		return err
 	}

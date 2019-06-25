@@ -17,7 +17,6 @@ package infrastructure
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -39,9 +38,9 @@ type AddOptions struct {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, options AddOptions) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
-		Actuator:          infrastructure.OperationAnnotationWrapper(NewActuator()),
+		Actuator:          NewActuator(),
 		ControllerOptions: options.Controller,
-		Predicates:        infrastructure.DefaultPredicates(mgr.GetClient(), openstack.Type, options.IgnoreOperationAnnotation),
+		Predicates:        infrastructure.DefaultPredicates(openstack.Type, options.IgnoreOperationAnnotation),
 	})
 }
 

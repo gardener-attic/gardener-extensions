@@ -16,8 +16,8 @@ package backupentry
 
 import (
 	"context"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
 
@@ -51,7 +51,7 @@ func (m *secretToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Reque
 
 	var requests []reconcile.Request
 	for _, backupEntry := range backupEntryList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&backupEntry, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(&backupEntry, m.predicates...) {
 			continue
 		}
 		requests = append(requests, reconcile.Request{
@@ -92,7 +92,7 @@ func (m *namespaceToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Re
 	shootUID := namespace.Annotations[common.ShootUID]
 	var requests []reconcile.Request
 	for _, backupEntry := range backupEntryList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&backupEntry, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(&backupEntry, m.predicates...) {
 			continue
 		}
 

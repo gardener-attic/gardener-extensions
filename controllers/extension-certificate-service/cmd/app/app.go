@@ -68,8 +68,9 @@ func (o *Options) run(ctx context.Context) {
 	ctrlConfig := o.certOptions.Completed()
 
 	ctrlConfig.Apply(&lifecycle.ServiceConfig)
-	ctrlConfig.Apply(&certservice.ServiceConfig)
-	o.controllerOptions.Completed().Apply(&certservice.ControllerOptions)
+	ctrlConfig.Apply(&certservice.DefaultAddOptions.ServiceConfig)
+	o.controllerOptions.Completed().Apply(&certservice.DefaultAddOptions.ControllerOptions)
+	o.reconcileOptions.Completed().Apply(&certservice.DefaultAddOptions.IgnoreOperationAnnotation)
 
 	if err := o.controllerSwitches.Completed().AddToManager(mgr); err != nil {
 		controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

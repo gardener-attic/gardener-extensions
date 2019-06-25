@@ -11,7 +11,9 @@ resources:
    cpu: "50m"
    memory: "128Mi"
 
-concurrentSyncs: 5
+controllers:
+  concurrentSyncs: 5
+  ignoreOperationAnnotation: false
 
 certificateConfig:
   lifecycleSync: 1h

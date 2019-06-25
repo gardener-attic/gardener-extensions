@@ -17,6 +17,7 @@ package operatingsystemconfig
 import (
 	"context"
 	"fmt"
+
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -56,7 +57,10 @@ var _ reconcile.Reconciler = &reconciler{}
 // OperatingSystemConfig resources of Gardener's `extensions.gardener.cloud` API group.
 func NewReconciler(actuator Actuator) reconcile.Reconciler {
 	logger := log.Log.WithName(name)
-	return &reconciler{logger: logger, actuator: actuator}
+	return extensionscontroller.OperationAnnotationWrapper(
+		&extensionsv1alpha1.OperatingSystemConfig{},
+		&reconciler{logger: logger, actuator: actuator},
+	)
 }
 
 // InjectFunc enables dependency injection into the actuator.
