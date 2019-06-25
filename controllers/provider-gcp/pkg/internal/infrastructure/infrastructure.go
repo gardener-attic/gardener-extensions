@@ -31,13 +31,22 @@ const (
 	shootPrefix                  string = "shoot--"
 )
 
-// ListKubernetesFirewalls lists all firewalls that are in the given network and have the KubernetesFirewallNamePrefix.
-func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, projectID, network string) ([]string, error) {
+// ListKubernetesFirewalls lists all firewalls that are in the given network and for the given shoot and have the KubernetesFirewallNamePrefix.
+func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, projectID, network, shootSeedNamespace string) ([]string, error) {
 	var names []string
 	err := client.Firewalls().List(projectID).Pages(ctx, func(list *compute.FirewallList) error {
 		for _, firewall := range list.Items {
-			if strings.HasSuffix(firewall.Network, network) && (strings.HasPrefix(firewall.Name, KubernetesFirewallNamePrefix) || strings.HasPrefix(firewall.Name, shootPrefix)) {
-				names = append(names, firewall.Name)
+			if strings.HasSuffix(firewall.Network, network) {
+				if strings.HasPrefix(firewall.Name, KubernetesFirewallNamePrefix) {
+					for _, targetTag := range firewall.TargetTags {
+						if targetTag == shootSeedNamespace {
+							names = append(names, firewall.Name)
+							break
+						}
+					}
+				} else if strings.HasPrefix(firewall.Name, shootSeedNamespace) {
+					names = append(names, firewall.Name)
+				}
 			}
 		}
 		return nil
@@ -91,8 +100,8 @@ func DeleteRoutes(ctx context.Context, client gcpclient.Interface, projectID str
 // CleanupKubernetesFirewalls lists all Kubernetes firewall rules and then deletes them one after another.
 //
 // If a deletion fails, this method returns immediately with the encountered error.
-func CleanupKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, projectID, network string) error {
-	firewallNames, err := ListKubernetesFirewalls(ctx, client, projectID, network)
+func CleanupKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, projectID, network, shootSeedNamespace string) error {
+	firewallNames, err := ListKubernetesFirewalls(ctx, client, projectID, network, shootSeedNamespace)
 	if err != nil {
 		return err
 	}
