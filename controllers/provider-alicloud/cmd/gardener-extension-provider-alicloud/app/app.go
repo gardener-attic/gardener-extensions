@@ -75,7 +75,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		controllerSwitches   = alicloudcmd.ControllerSwitchOptions()
 		webhookSwitches      = alicloudcmd.WebhookSwitchOptions()
 		webhookServerOptions = &webhookcmd.ServerOptions{
-			Port:             7890,
+			Port:             443,
 			CertDir:          "/tmp/cert",
 			Mode:             webhookcmd.ServiceMode,
 			Name:             "webhooks",

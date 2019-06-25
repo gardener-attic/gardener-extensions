@@ -74,7 +74,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		controllerSwitches   = packetcmd.ControllerSwitchOptions()
 		webhookSwitches      = packetcmd.WebhookSwitchOptions()
 		webhookServerOptions = &webhookcmd.ServerOptions{
-			Port:             7890,
+			Port:             443,
 			CertDir:          "/tmp/cert",
 			Mode:             webhookcmd.ServiceMode,
 			Name:             "webhooks",

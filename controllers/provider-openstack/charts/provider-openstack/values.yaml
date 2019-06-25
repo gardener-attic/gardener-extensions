@@ -33,6 +33,9 @@ disableWebhooks: []
 #     version: ">= 1.12"
 #   ...
 
+webhookConfig:
+  serverPort: 443
+
 config:
   clientConnection:
     acceptContentTypes: application/json
