@@ -16,11 +16,15 @@ package app
 
 import (
 	"context"
+	"os"
+
 	"github.com/gardener/gardener-extensions/controllers/os-coreos/pkg/coreos"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	"github.com/spf13/cobra"
-	"os"
+	componentbaseconfig "k8s.io/component-base/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -56,6 +60,12 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
+
+			// TODO: Make these flags configurable via command line parameters or component config file.
+			util.ApplyClientConnectionConfigurationToRESTConfig(&componentbaseconfig.ClientConnectionConfiguration{
+				QPS:   100.0,
+				Burst: 130,
+			}, restOpts.Completed().Config)
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {

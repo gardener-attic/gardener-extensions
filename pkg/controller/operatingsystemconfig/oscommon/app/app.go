@@ -16,12 +16,16 @@ package app
 
 import (
 	"context"
+	"os"
+
 	extcontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	oscommoncmd "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	"github.com/spf13/cobra"
-	"os"
+	componentbaseconfig "k8s.io/component-base/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -55,6 +59,12 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
+
+			// TODO: Make these flags configurable via command line parameters or component config file.
+			util.ApplyClientConnectionConfigurationToRESTConfig(&componentbaseconfig.ClientConnectionConfiguration{
+				QPS:   100.0,
+				Burst: 130,
+			}, restOpts.Completed().Config)
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {

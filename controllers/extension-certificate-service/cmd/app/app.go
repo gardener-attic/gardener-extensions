@@ -19,12 +19,13 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/certservice"
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/lifecycle"
-
-	gcontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/spf13/cobra"
+	componentbaseconfig "k8s.io/component-base/config"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 // NewServiceControllerCommand creates a new command that is used to start the Certificate Service controller.
@@ -49,12 +50,18 @@ func NewServiceControllerCommand(ctx context.Context) *cobra.Command {
 }
 
 func (o *Options) run(ctx context.Context) {
+	// TODO: Make these flags configurable via command line parameters or component config file.
+	util.ApplyClientConnectionConfigurationToRESTConfig(&componentbaseconfig.ClientConnectionConfiguration{
+		QPS:   100.0,
+		Burst: 130,
+	}, o.restOptions.Completed().Config)
+
 	mgr, err := manager.New(o.restOptions.Completed().Config, o.managerOptions.Completed().Options())
 	if err != nil {
 		controllercmd.LogErrAndExit(err, "Could not instantiate controller-manager")
 	}
 
-	if err := gcontroller.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := extensionscontroller.AddToScheme(mgr.GetScheme()); err != nil {
 		controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 	}
 
