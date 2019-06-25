@@ -20,6 +20,7 @@ import (
 
 	extcontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon"
 	oscommoncmd "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -42,12 +43,17 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 			MaxConcurrentReconciles: 5,
 		}
 
+		reconcileOpts = &controllercmd.ReconcilerOptions{
+			IgnoreOperationAnnotation: true,
+		}
+
 		controllerSwitches = oscommoncmd.SwitchOptions(osName, generator)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
 			ctrlOpts,
+			reconcileOpts,
 			controllerSwitches,
 		)
 	)
@@ -74,6 +80,10 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 			if err := extcontroller.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
+
+			ctrlOpts.Completed().Apply(&oscommon.DefaultAddOptions.Controller)
+
+			reconcileOpts.Completed().Apply(&oscommon.DefaultAddOptions.IgnoreOperationAnnotation)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controller to manager")

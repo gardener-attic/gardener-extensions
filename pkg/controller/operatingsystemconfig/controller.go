@@ -16,7 +16,7 @@ package operatingsystemconfig
 
 import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -24,8 +24,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	corev1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -47,21 +45,35 @@ type AddArgs struct {
 	// given actuator.
 	ControllerOptions controller.Options
 	// Predicates are the predicates to use.
-	// If unset, GenerationChangedPredicate will be used.
+	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
 }
 
 // Add adds an operatingsystemconfig controller to the given manager using the given AddArgs.
 func Add(mgr manager.Manager, args AddArgs) error {
-	args.ControllerOptions.Reconciler = NewReconciler(args.Actuator)
+	args.ControllerOptions.Reconciler = extensionscontroller.OperationAnnotationWrapper(
+		&extensionsv1alpha1.OperatingSystemConfig{},
+		NewReconciler(args.Actuator),
+	)
 	return add(mgr, args.ControllerOptions, args.Predicates)
 }
 
 // DefaultPredicates returns the default predicates for an operatingsystemconfig reconciler.
-func DefaultPredicates(typeName string) []predicate.Predicate {
+func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+	if ignoreOperationAnnotation {
+		return []predicate.Predicate{
+			extensionspredicate.HasType(typeName),
+			extensionspredicate.GenerationChanged(),
+		}
+	}
+
 	return []predicate.Predicate{
-		extensionscontroller.TypePredicate(typeName),
-		extensionscontroller.GenerationChangedPredicate(),
+		extensionspredicate.HasType(typeName),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.LastOperationNotSuccessful(),
+			extensionspredicate.IsDeleting(),
+		),
 	}
 }
 
@@ -72,12 +84,6 @@ func add(mgr manager.Manager, options controller.Options, predicates []predicate
 	}
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
-		return err
-	}
-
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
-		ToRequests: extensionshandler.SimpleMapper(SecretToOSCMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
-	}); err != nil {
 		return err
 	}
 

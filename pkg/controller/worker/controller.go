@@ -15,11 +15,10 @@
 package worker
 
 import (
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -43,16 +42,27 @@ type AddArgs struct {
 	// given actuator.
 	ControllerOptions controller.Options
 	// Predicates are the predicates to use.
-	// If unset, GenerationChangedPredicate will be used.
+	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
 }
 
 // DefaultPredicates returns the default predicates for a Worker reconciler.
-func DefaultPredicates(client client.Client, typeName string) []predicate.Predicate {
+func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+	if ignoreOperationAnnotation {
+		return []predicate.Predicate{
+			extensionspredicate.HasType(typeName),
+			extensionspredicate.GenerationChanged(),
+		}
+	}
+
 	return []predicate.Predicate{
-		extensionscontroller.TypePredicate(typeName),
-		extensionscontroller.ShootFailedPredicate(client),
-		extensionscontroller.GenerationChangedPredicate(),
+		extensionspredicate.HasType(typeName),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.LastOperationNotSuccessful(),
+			extensionspredicate.IsDeleting(),
+		),
+		extensionspredicate.ShootNotFailed(),
 	}
 }
 
@@ -73,19 +83,8 @@ func add(mgr manager.Manager, options controller.Options, predicates []predicate
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Worker{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err
 	}
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
-		ToRequests: extensionshandler.SimpleMapper(SecretToWorkerMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
-	}); err != nil {
-		return err
-	}
-	return ctrl.Watch(
-		&source.Kind{Type: &extensionsv1alpha1.Cluster{}},
-		&extensionshandler.EnqueueRequestsFromMapFunc{
-			ToRequests: extensionshandler.SimpleMapper(ClusterToWorkerMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
-		},
-		extensionscontroller.OrPredicate(
-			extensionscontroller.ShootGenerationUpdatedPredicate(),
-			extensionscontroller.CloudProfileGenerationUpdatePredicate(),
-		),
-	)
+
+	return ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
+		ToRequests: extensionshandler.SimpleMapper(ClusterToWorkerMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
+	})
 }

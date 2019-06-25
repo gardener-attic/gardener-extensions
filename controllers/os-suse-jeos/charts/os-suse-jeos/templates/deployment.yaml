@@ -30,6 +30,7 @@ spec:
         - os-suse-jeos-controller-manager
         - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
         - --disable-controllers={{ .Values.disableControllers | join "," }}
+        - --ignore-operation-annotation={{ .Values.ignoreOperationAnnotation }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:

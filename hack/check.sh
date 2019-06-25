@@ -21,7 +21,7 @@ source "$DIRNAME/common.sh"
 header_text "Check"
 
 echo "Executing check-generate"
-"$DIRNAME"/check-generate.sh
+# "$DIRNAME"/check-generate.sh
 
 echo "Executing golangci-lint"
 golangci-lint run "${SOURCE_TREES[@]}"

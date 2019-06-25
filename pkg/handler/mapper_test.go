@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package handler
 
 import (
 	"context"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -37,6 +39,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+func TestHandler(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Handler Suite")
+}
 
 var _ = Describe("Controller Mapper", func() {
 	var (
@@ -83,7 +90,7 @@ var _ = Describe("Controller Mapper", func() {
 		It("should find the extension for the passed object", func() {
 			geList := extensionsv1alpha1.ExtensionList{
 				Items: []extensionsv1alpha1.Extension{
-					extensionsv1alpha1.Extension{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      resourceName,
 							Namespace: namespace,
@@ -124,7 +131,7 @@ var _ = Describe("Controller Mapper", func() {
 		It("should not find the extension for the passed object because extension type is not in the list", func() {
 			geList := extensionsv1alpha1.ExtensionList{
 				Items: []extensionsv1alpha1.Extension{
-					extensionsv1alpha1.Extension{
+					{
 						ObjectMeta: metav1.ObjectMeta{
 							Name:      resourceName,
 							Namespace: namespace,
@@ -137,7 +144,7 @@ var _ = Describe("Controller Mapper", func() {
 					},
 				},
 			}
-			requestFunc := MapperWithinNamespace(c, newObjListFunc, []predicate.Predicate{TypePredicate("foo")})
+			requestFunc := MapperWithinNamespace(c, newObjListFunc, []predicate.Predicate{extensionspredicate.HasType("foo")})
 
 			c.EXPECT().
 				List(
@@ -192,7 +199,7 @@ var _ = Describe("Controller Mapper", func() {
 				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
 					*actual = extensionsv1alpha1.InfrastructureList{
 						Items: []extensionsv1alpha1.Infrastructure{
-							extensionsv1alpha1.Infrastructure{
+							{
 								ObjectMeta: metav1.ObjectMeta{
 									Name:      resourceName,
 									Namespace: namespace,
@@ -240,7 +247,7 @@ var _ = Describe("Controller Mapper", func() {
 				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
 					*actual = extensionsv1alpha1.InfrastructureList{
 						Items: []extensionsv1alpha1.Infrastructure{
-							extensionsv1alpha1.Infrastructure{
+							{
 								ObjectMeta: metav1.ObjectMeta{
 									Name:      resourceName,
 									Namespace: namespace,

@@ -17,7 +17,6 @@ package controller
 import (
 	"context"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -93,12 +92,6 @@ func ShootFromCluster(cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.Shoot
 	shoot := &gardenv1beta1.Shoot{}
 	_, _, err = decoder.Decode(cluster.Spec.Shoot.Raw, nil, shoot)
 	return shoot, err
-}
-
-// ShootIsFailed returns whether the given shoot is marked as 'failed'.
-func ShootIsFailed(shoot *gardenv1beta1.Shoot) bool {
-	lastOperation := shoot.Status.LastOperation
-	return lastOperation != nil && lastOperation.State == gardencorev1alpha1.LastOperationStateFailed && shoot.Generation == shoot.Status.ObservedGeneration
 }
 
 func newGardenDecoder() (runtime.Decoder, error) {

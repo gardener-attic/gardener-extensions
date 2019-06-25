@@ -16,8 +16,7 @@ package operatingsystemconfig
 
 import (
 	"context"
-
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
@@ -52,7 +51,7 @@ func (m *secretToOSCMapper) Map(obj handler.MapObject) []reconcile.Request {
 
 	var requests []reconcile.Request
 	for _, osc := range oscList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&osc, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(&osc, m.predicates...) {
 			continue
 		}
 

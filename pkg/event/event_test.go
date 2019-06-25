@@ -12,20 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package event
 
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"testing"
 )
+
+func TestEvent(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Event Suite")
+}
 
 var _ = Describe("Event", func() {
 	Describe("#NewGenericEventFromObject", func() {
 		It("should extract the metadata and return a generic event", func() {
 			obj := &corev1.ConfigMap{}
 
-			event := NewGenericEventFromObject(obj)
+			event := NewFromObject(obj)
 
 			Expect(event.Object).To(BeIdenticalTo(obj))
 			Expect(event.Meta).To(BeIdenticalTo(obj))

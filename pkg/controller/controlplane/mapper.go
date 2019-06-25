@@ -16,8 +16,8 @@ package controlplane
 
 import (
 	"context"
-
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	handler2 "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -51,7 +51,7 @@ func (m *secretToControlPlaneMapper) Map(obj handler.MapObject) []reconcile.Requ
 
 	var requests []reconcile.Request
 	for _, cp := range cpList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&cp, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(&cp, m.predicates...) {
 			continue
 		}
 
@@ -76,5 +76,5 @@ func SecretToControlPlaneMapper(client client.Client, predicates []predicate.Pre
 // ClusterToControlPlaneMapper returns a mapper that returns requests for ControlPlanes whose
 // referenced clusters have been modified.
 func ClusterToControlPlaneMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return extensionscontroller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.ControlPlaneList{} }, predicates)
+	return handler2.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.ControlPlaneList{} }, predicates)
 }

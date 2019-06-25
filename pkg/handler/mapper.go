@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package handler
 
 import (
 	"context"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -44,7 +45,7 @@ func MapperWithinNamespace(cl client.Client, newObjListFunc func() runtime.Objec
 				return err
 			}
 
-			if !EvalGenericPredicate(obj, predicates...) {
+			if !extensionspredicate.EvalGeneric(obj, predicates...) {
 				return nil
 			}
 
@@ -92,7 +93,7 @@ func (m *clusterToObjectMapper) Map(obj handler.MapObject) []reconcile.Request {
 			return err
 		}
 
-		if !EvalGenericPredicate(obj, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(obj, m.predicates...) {
 			return nil
 		}
 

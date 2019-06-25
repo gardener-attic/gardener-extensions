@@ -16,12 +16,14 @@ package cmd
 
 import (
 	"fmt"
+	extensionscache "github.com/gardener/gardener-extensions/pkg/cache"
+	"os"
+
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"os"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -184,6 +186,7 @@ func (c *ManagerConfig) Apply(opts *manager.Options) {
 // Options initializes empty manager.Options, applies the set values and returns it.
 func (c *ManagerConfig) Options() manager.Options {
 	var opts manager.Options
+	opts.NewCache = extensionscache.New
 	c.Apply(&opts)
 	return opts
 }

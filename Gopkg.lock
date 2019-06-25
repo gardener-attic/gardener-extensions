@@ -240,9 +240,10 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:c2432108a9b93c9c6921e48daeecedb9761f12d0e940781de94feccb2797ced8"
+  digest = "1:2c199c6050444a25ed19d6dfc3d771f74a970ef931e8a9b896fedbde3756b448"
   name = "github.com/gardener/gardener"
   packages = [
+    "pkg/api/extensions",
     "pkg/apis/core",
     "pkg/apis/core/v1alpha1",
     "pkg/apis/core/v1alpha1/helper",
@@ -276,7 +277,7 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "0fe4fccadc48e62b6f7d7a4a6965dfa369f90531"
+  revision = "d3ee78a23b2859105ec1be72a59219445a7984c5"
 
 [[projects]]
   digest = "1:786c4c7a02ae4fe79962043b651dc0d187cc3935f7d2e33451b4cd7ca8c21f90"
@@ -1825,6 +1826,7 @@
     "github.com/coreos/go-systemd/unit",
     "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1",
     "github.com/gardener/gardener-resource-manager/pkg/manager",
+    "github.com/gardener/gardener/pkg/api/extensions",
     "github.com/gardener/gardener/pkg/apis/core",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper",

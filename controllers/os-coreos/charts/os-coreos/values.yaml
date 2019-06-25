@@ -8,3 +8,5 @@ resources: {}
 concurrentSyncs: 5
 
 disableControllers: []
+
+ignoreOperationAnnotation: false

@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller_test
+package predicate_test
 
 import (
 	"encoding/json"
-
+	"github.com/gardener/gardener-extensions/pkg/predicate"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 
-	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -31,7 +30,7 @@ import (
 )
 
 var _ = Describe("Predicate", func() {
-	Describe("#TypePredicate", func() {
+	Describe("#HasType", func() {
 		var (
 			extensionType string
 			object        runtime.Object
@@ -62,7 +61,7 @@ var _ = Describe("Predicate", func() {
 		})
 
 		It("should match the type", func() {
-			predicate := controller.TypePredicate(extensionType)
+			predicate := predicate.HasType(extensionType)
 
 			Expect(predicate.Create(createEvent)).To(BeTrue())
 			Expect(predicate.Update(updateEvent)).To(BeTrue())
@@ -71,7 +70,7 @@ var _ = Describe("Predicate", func() {
 		})
 
 		It("should not match the type", func() {
-			predicate := controller.TypePredicate("anotherType")
+			predicate := predicate.HasType("anotherType")
 
 			Expect(predicate.Create(createEvent)).To(BeFalse())
 			Expect(predicate.Update(updateEvent)).To(BeFalse())
@@ -80,7 +79,7 @@ var _ = Describe("Predicate", func() {
 		})
 	})
 
-	Describe("#NamePredicate", func() {
+	Describe("#HasName", func() {
 		var (
 			name         string
 			createEvent  event.CreateEvent
@@ -109,7 +108,7 @@ var _ = Describe("Predicate", func() {
 		})
 
 		It("should match the name", func() {
-			predicate := controller.NamePredicate(name)
+			predicate := predicate.HasName(name)
 
 			Expect(predicate.Create(createEvent)).To(BeTrue())
 			Expect(predicate.Update(updateEvent)).To(BeTrue())
@@ -118,7 +117,7 @@ var _ = Describe("Predicate", func() {
 		})
 
 		It("should not match the name", func() {
-			predicate := controller.NamePredicate("anotherName")
+			predicate := predicate.HasName("anotherName")
 
 			Expect(predicate.Create(createEvent)).To(BeFalse())
 			Expect(predicate.Update(updateEvent)).To(BeFalse())
@@ -127,7 +126,7 @@ var _ = Describe("Predicate", func() {
 		})
 	})
 
-	DescribeTable("#CloudProfileGenerationUpdatePredicate",
+	DescribeTable("#ClusterCloudProfileGenerationChanged",
 		func(oldMachine, newMachine string, conditionMatcher types.GomegaMatcher) {
 			oldCloudProfile := &v1beta1.CloudProfile{
 				TypeMeta: metav1.TypeMeta{
@@ -166,47 +165,10 @@ var _ = Describe("Predicate", func() {
 				},
 			}
 
-			Expect(controller.CloudProfileGenerationUpdatePredicate().Update(updateEvent)).To(conditionMatcher)
+			Expect(predicate.ClusterCloudProfileGenerationChanged().Update(updateEvent)).To(conditionMatcher)
 		},
 		Entry("no update", "machineFoo", "machineFoo", BeFalse()),
 		Entry("generation update", "machineFoo", "machineBar", BeTrue()),
-	)
-
-	DescribeTable("#ShootGenerationUpdatedPredicate",
-		func(oldGeneration, newGeneration int64, conditionMatcher types.GomegaMatcher) {
-			oldShoot := &v1beta1.Shoot{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Shoot",
-					APIVersion: "garden.sapcloud.io/v1beta1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Generation: oldGeneration,
-				},
-			}
-			newShoot := oldShoot.DeepCopy()
-			newShoot.Generation = newGeneration
-
-			updateEvent := event.UpdateEvent{
-				ObjectNew: &v1alpha1.Cluster{
-					Spec: v1alpha1.ClusterSpec{
-						Shoot: runtime.RawExtension{
-							Raw: encode(newShoot),
-						},
-					},
-				},
-				ObjectOld: &v1alpha1.Cluster{
-					Spec: v1alpha1.ClusterSpec{
-						Shoot: runtime.RawExtension{
-							Raw: encode(oldShoot),
-						},
-					},
-				},
-			}
-
-			Expect(controller.ShootGenerationUpdatedPredicate().Update(updateEvent)).To(conditionMatcher)
-		},
-		Entry("no update", int64(1), int64(1), BeFalse()),
-		Entry("generation update", int64(1), int64(2), BeTrue()),
 	)
 })
 

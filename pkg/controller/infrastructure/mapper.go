@@ -16,8 +16,8 @@ package infrastructure
 
 import (
 	"context"
-
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	handler2 "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
@@ -53,7 +53,7 @@ func (m *secretToInfrastructureMapper) Map(obj handler.MapObject) []reconcile.Re
 
 	var requests []reconcile.Request
 	for _, infrastructure := range infrastructureList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&infrastructure, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(&infrastructure, m.predicates...) {
 			continue
 		}
 
@@ -78,5 +78,5 @@ func SecretToInfrastructureMapper(client client.Client, predicates []predicate.P
 // ClusterToInfrastructureMapper returns a mapper that returns requests for Infrastructures whose
 // referenced clusters have been modified.
 func ClusterToInfrastructureMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return extensionscontroller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.InfrastructureList{} }, predicates)
+	return handler2.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.InfrastructureList{} }, predicates)
 }

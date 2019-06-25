@@ -19,7 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
-// GenerationChangedPredicate is a predicate for generation changes.
+// GenerationChanged is a predicate for generation changes.
 func GenerationChangedPredicate() predicate.Predicate {
 	return predicate.Funcs{
 		UpdateFunc: func(event event.UpdateEvent) bool {

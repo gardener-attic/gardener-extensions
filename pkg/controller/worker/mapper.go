@@ -16,8 +16,8 @@ package worker
 
 import (
 	"context"
-
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	handler2 "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
@@ -55,7 +55,7 @@ func (m *secretToWorkerMapper) Map(obj handler.MapObject) []reconcile.Request {
 
 	var requests []reconcile.Request
 	for _, worker := range workerList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&worker, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(&worker, m.predicates...) {
 			continue
 		}
 
@@ -82,5 +82,5 @@ func SecretToWorkerMapper(client client.Client, predicates []predicate.Predicate
 // ClusterToWorkerMapper returns a mapper that returns requests for Worker whose
 // referenced clusters have been modified.
 func ClusterToWorkerMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return extensionscontroller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.WorkerList{} }, predicates)
+	return handler2.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.WorkerList{} }, predicates)
 }

@@ -29,7 +29,6 @@ import (
 	gcpcontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
-	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
@@ -58,10 +57,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		infraReconcileOpts = &infrastructure.ReconcilerOptions{
+		reconcileOpts = &controllercmd.ReconcilerOptions{
 			IgnoreOperationAnnotation: true,
 		}
-		infraCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 
 		// options for the worker controller
 		workerCtrlOpts = &controllercmd.ControllerOptions{
@@ -89,10 +87,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			restOpts,
 			mgrOpts,
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
-			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
 			configFileOpts,
 			controllerSwitches,
+			reconcileOpts,
 			webhookOptions,
 		)
 	)
@@ -129,9 +128,13 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&gcpworker.DefaultAddOptions.MachineImages)
 			configFileOpts.Completed().ApplyETCDStorage(&gcpcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&gcpcontrolplanebackup.DefaultAddOptions.ETCDBackup)
-			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
+			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.DefaultAddOptions.Controller)
 			infraCtrlOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.Controller)
-			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			reconcileOpts.Completed().Apply(
+				&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation,
+				&gcpcontrolplane.DefaultAddOptions.IgnoreOperationAnnotation,
+				&gcpworker.DefaultAddOptions.IgnoreOperationAnnotation,
+			)
 			workerCtrlOpts.Completed().Apply(&gcpworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {

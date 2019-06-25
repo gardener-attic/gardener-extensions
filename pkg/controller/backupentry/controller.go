@@ -15,7 +15,8 @@
 package backupentry
 
 import (
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
+	predicate2 "github.com/gardener/gardener-extensions/pkg/predicate"
 	corev1 "k8s.io/api/core/v1"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -42,14 +43,14 @@ type AddArgs struct {
 	// given actuator.
 	ControllerOptions controller.Options
 	// Predicates are the predicates to use.
-	// If unset, GenerationChangedPredicate will be used.
+	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
 }
 
 // DefaultPredicates returns the default predicates for a controlplane reconciler.
 func DefaultPredicates(mgr manager.Manager) []predicate.Predicate {
 	return []predicate.Predicate{
-		extensionscontroller.GenerationChangedPredicate(),
+		predicate2.GenerationChanged(),
 	}
 }
 
@@ -67,11 +68,19 @@ func add(mgr manager.Manager, options controller.Options, predicates []predicate
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Namespace{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: NamespaceToBackupEntryMapper(mgr.GetClient(), predicates)}); err != nil {
+	if err := ctrl.Watch(
+		&source.Kind{Type: &corev1.Namespace{}},
+		&extensionshandler.EnqueueRequestsFromMapFunc{
+			ToRequests: extensionshandler.SimpleMapper(NamespaceToBackupEntryMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
+		}); err != nil {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: SecretToBackupEntryMapper(mgr.GetClient(), predicates)}); err != nil {
+	if err := ctrl.Watch(
+		&source.Kind{Type: &corev1.Secret{}},
+		&extensionshandler.EnqueueRequestsFromMapFunc{
+			ToRequests: extensionshandler.SimpleMapper(SecretToBackupEntryMapper(mgr.GetClient(), predicates), extensionshandler.UpdateWithNew),
+		}); err != nil {
 		return err
 	}
 

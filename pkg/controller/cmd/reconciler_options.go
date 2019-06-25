@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package infrastructure
+package cmd
 
 import (
 	"github.com/spf13/pflag"
@@ -55,6 +55,8 @@ type ReconcilerConfig struct {
 }
 
 // Apply sets the values of this ReconcilerConfig in the given controller.Options.
-func (c *ReconcilerConfig) Apply(ignore *bool) {
-	*ignore = c.IgnoreOperationAnnotation
+func (c *ReconcilerConfig) Apply(ignore ...*bool) {
+	for _, ign := range ignore {
+		*ign = c.IgnoreOperationAnnotation
+	}
 }
