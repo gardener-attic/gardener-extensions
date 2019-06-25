@@ -136,8 +136,9 @@ var controlPlaneChart = &chart.Chart{
 			},
 		},
 		{
-			Name:   "csi-alicloud",
-			Images: []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName},
+			Name: "csi-alicloud",
+			// TODO Uncomment again when image vector is enhanced to support specifying the shoot version
+			// Images: []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName},
 			Objects: []*chart.Object{
 				{Type: &appsv1.Deployment{}, Name: "csi-plugin-controller"},
 			},
@@ -346,9 +347,12 @@ func getControlPlaneChartValues(
 ) (map[string]interface{}, error) {
 	// Inject CSI images explicitly to make sure that the correct images for the shoot version are injected
 	// TODO Remove when image vector is enhanced to support specifying the shoot version
-	var err error
-	var csiValues map[string]interface{}
-	if csiValues, err = chart.InjectImages(csiValues, alicloudimagevector.ImageVector(), controlPlaneChart.SubCharts[1].Images,
+	var (
+		err       error
+		csiValues map[string]interface{}
+		csiImages = []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName}
+	)
+	if csiValues, err = chart.InjectImages(csiValues, alicloudimagevector.ImageVector(), csiImages,
 		imagevector.RuntimeVersion(cluster.Shoot.Spec.Kubernetes.Version), imagevector.TargetVersion(cluster.Shoot.Spec.Kubernetes.Version)); err != nil {
 		return nil, errors.Wrap(err, "could not inject CSI images")
 	}
