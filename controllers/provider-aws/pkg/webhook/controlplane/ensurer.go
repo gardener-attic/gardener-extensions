@@ -73,6 +73,7 @@ func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep
 		ensureEnvVars(c)
 		ensureVolumeMounts(c)
 	}
+	ensureKubeControllerManagerAnnotations(template)
 	ensureVolumes(ps)
 	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
@@ -92,6 +93,13 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-config=",
 		"/etc/kubernetes/cloudprovider/cloudprovider.conf")
 	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--external-cloud-volume-plugin=", "aws")
+}
+
+func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
+	// TODO: These labels should be exposed as constants in Gardener
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-public-networks", "allowed")
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-private-networks", "allowed")
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-blocked-cidrs", "allowed")
 }
 
 var (

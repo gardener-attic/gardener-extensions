@@ -244,6 +244,15 @@ func EnsureFileWithPath(items []extensionsv1alpha1.File, item extensionsv1alpha1
 	return items
 }
 
+// EnsureAnnotationOrLabel ensures the given key/value exists in the annotationOrLabelMap map.
+func EnsureAnnotationOrLabel(annotationOrLabelMap map[string]string, key, value string) map[string]string {
+	if annotationOrLabelMap == nil {
+		annotationOrLabelMap = make(map[string]string, 1)
+	}
+	annotationOrLabelMap[key] = value
+	return annotationOrLabelMap
+}
+
 // StringIndex returns the index of the first occurrence of the given string in the given slice, or -1 if not found.
 func StringIndex(items []string, value string) int {
 	for i, item := range items {

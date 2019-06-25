@@ -16,8 +16,6 @@ package controlplane
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	"testing"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -33,8 +31,10 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -62,6 +62,12 @@ var _ = Describe("Ensurer", func() {
 
 		annotations = map[string]string{
 			"checksum/configmap-" + openstack.CloudProviderConfigName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
+		}
+
+		kubeControllerManagerLabels = map[string]string{
+			"networking.gardener.cloud/to-public-networks":  "allowed",
+			"networking.gardener.cloud/to-private-networks": "allowed",
+			"networking.gardener.cloud/to-blocked-cidrs":    "allowed",
 		}
 	)
 
@@ -184,7 +190,7 @@ var _ = Describe("Ensurer", func() {
 			// Call EnsureKubeControllerManagerDeployment method and check the result
 			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeControllerManagerDeployment(dep, annotations)
+			checkKubeControllerManagerDeployment(dep, annotations, kubeControllerManagerLabels)
 		})
 
 		It("should modify existing elements of kube-controller-manager deployment", func() {
@@ -228,7 +234,7 @@ var _ = Describe("Ensurer", func() {
 			// Call EnsureKubeControllerManagerDeployment method and check the result
 			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeControllerManagerDeployment(dep, annotations)
+			checkKubeControllerManagerDeployment(dep, annotations, kubeControllerManagerLabels)
 		})
 	})
 
@@ -369,7 +375,7 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment, annotations map[string
 	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))
 }
 
-func checkKubeControllerManagerDeployment(dep *appsv1.Deployment, annotations map[string]string) {
+func checkKubeControllerManagerDeployment(dep *appsv1.Deployment, annotations, labels map[string]string) {
 	// Check that the kube-controller-manager container still exists and contains all needed command line args,
 	// env vars, and volume mounts
 	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-controller-manager")
@@ -384,6 +390,9 @@ func checkKubeControllerManagerDeployment(dep *appsv1.Deployment, annotations ma
 
 	// Check that the Pod template contains all needed checksum annotations
 	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))
+
+	// Check that the labels for network policies are added
+	Expect(dep.Spec.Template.Labels).To(Equal(labels))
 }
 
 func clientGet(result runtime.Object) interface{} {
