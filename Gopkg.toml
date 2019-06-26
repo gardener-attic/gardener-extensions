@@ -107,6 +107,10 @@ required = [
   version = "0.2.0"
 
 [[constraint]]
+name = "cloud.google.com/go"
+version = "0.40.0"
+
+[[constraint]]
   name = "github.com/coreos/go-systemd"
   version = "v19"
 

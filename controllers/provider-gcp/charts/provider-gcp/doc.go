@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-gcp . ../../example/controller-registration.yaml Infrastructure:gcp ControlPlane:gcp Worker:gcp
+//go:generate ../../../../hack/generate-controller-registration.sh provider-gcp . ../../example/controller-registration.yaml BackupBucket:gcp BackupEntry:gcp ControlPlane:gcp Infrastructure:gcp Worker:gcp
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart
