@@ -39,12 +39,19 @@ var _ = Describe("Infrastructure", func() {
 	Describe("#ListKubernetesFirewalls", func() {
 		It("should list all kubernetes related firewall names", func() {
 			var (
-				ctx       = context.TODO()
-				projectID = "foo"
-				network   = "bar"
+				ctx                     = context.TODO()
+				projectID               = "foo"
+				network                 = "bar"
+				shootSeedNamespace      = "shoot--foo--bar"
+				otherShootSeedNamespace = "shoot--foo--other"
 
-				firewallName  = fmt.Sprintf("%sfw", KubernetesFirewallNamePrefix)
-				firewallNames = []string{firewallName}
+				k8sFirewallName   = fmt.Sprintf("%sbar-fw", KubernetesFirewallNamePrefix)
+				shootFirewallName = fmt.Sprintf("%sbar-fw", shootSeedNamespace)
+
+				оtherK8SFirewallName   = fmt.Sprintf("%sother-fw", KubernetesFirewallNamePrefix)
+				otherShootFirewallName = fmt.Sprintf("%sother-fw", otherShootSeedNamespace)
+
+				firewallNames = []string{k8sFirewallName, shootFirewallName}
 
 				client            = mockgcpclient.NewMockInterface(ctrl)
 				firewalls         = mockgcpclient.NewMockFirewallsService(ctrl)
@@ -58,13 +65,16 @@ var _ = Describe("Infrastructure", func() {
 					DoAndReturn(func(_ context.Context, f func(*compute.FirewallList) error) error {
 						return f(&compute.FirewallList{
 							Items: []*compute.Firewall{
-								{Name: firewallName, Network: network},
+								{Name: k8sFirewallName, Network: network, TargetTags: []string{shootSeedNamespace}},
+								{Name: shootFirewallName, Network: network},
+								{Name: оtherK8SFirewallName, Network: network, TargetTags: []string{otherShootSeedNamespace}},
+								{Name: otherShootFirewallName, Network: network},
 							},
 						})
 					}),
 			)
 
-			actual, err := ListKubernetesFirewalls(ctx, client, projectID, network)
+			actual, err := ListKubernetesFirewalls(ctx, client, projectID, network, shootSeedNamespace)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(firewallNames))
