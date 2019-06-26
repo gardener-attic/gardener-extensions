@@ -8,9 +8,7 @@ metadata:
     helm.sh/chart: gardener-extension-certificate-service
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
-  metadata:
-    annotations:
-      checksum/secret-certifiate-service-config: {{ include "certconfig" . | sha256sum }}
+  revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -18,6 +16,8 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      annotations:
+        checksum/secret-certificate-service-config: {{ include "certconfig" . | sha256sum }}
       labels:
         app.kubernetes.io/name: gardener-extension-certificate-service
         app.kubernetes.io/instance: {{ .Release.Name }}
@@ -50,5 +50,3 @@ spec:
       - name: certificate-service-config
         secret:
           secretName: extension-certificate-service
-
-      

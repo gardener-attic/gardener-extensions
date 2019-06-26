@@ -16,6 +16,7 @@ metadata:
     name: {{ .Values.namespaceRef.namespace | quote }}
     uid: {{ .Values.namespaceRef.uid | quote }}
 spec:
+  revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:

@@ -8,6 +8,7 @@ metadata:
     helm.sh/chart: gardener-extension-os-suse-jeos
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  revisionHistoryLimit: 0
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
