@@ -23,6 +23,12 @@ rules:
   - patch
   - update
 - apiGroups:
+  - resources.gardener.cloud
+  resources:
+  - managedresources
+  verbs:
+  - "*"
+- apiGroups:
   - ""
   resources:
   - configmaps

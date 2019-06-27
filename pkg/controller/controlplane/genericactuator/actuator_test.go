@@ -22,18 +22,25 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockgenericactuator "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/controlplane/genericactuator"
 	mockutil "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/util"
+	mockchartrenderer "github.com/gardener/gardener-extensions/pkg/mock/gardener/chartrenderer"
+	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 
+	resourcemanagerv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
+
 	"github.com/golang/mock/gomock"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -45,6 +52,11 @@ import (
 const (
 	namespace               = "test"
 	cloudProviderConfigName = "cloud-provider-config"
+	chartName               = "chartName"
+	renderedContent         = "renderedContent"
+
+	seedVersion  = "1.13.0"
+	shootVersion = "1.14.0"
 )
 
 func TestControlplane(t *testing.T) {
@@ -57,14 +69,17 @@ var _ = Describe("Actuator", func() {
 		ctrl *gomock.Controller
 
 		cp = &extensionsv1alpha1.ControlPlane{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "control-plane",
-				Namespace: namespace,
-			},
-			Spec: extensionsv1alpha1.ControlPlaneSpec{},
+			ObjectMeta: metav1.ObjectMeta{Name: "control-plane", Namespace: namespace},
+			Spec:       extensionsv1alpha1.ControlPlaneSpec{},
 		}
 		cluster = &extensionscontroller.Cluster{
-			Shoot: &gardenv1beta1.Shoot{},
+			Shoot: &gardenv1beta1.Shoot{
+				Spec: gardenv1beta1.ShootSpec{
+					Kubernetes: gardenv1beta1.Kubernetes{
+						Version: shootVersion,
+					},
+				},
+			},
 		}
 
 		deployedSecrets = map[string]*corev1.Secret{
@@ -77,18 +92,39 @@ var _ = Describe("Actuator", func() {
 		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}
 		cpConfigMapKey = client.ObjectKey{Namespace: namespace, Name: cloudProviderConfigName}
 		cpSecret       = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      common.CloudProviderSecretName,
-				Namespace: namespace,
-			},
-			Data: map[string][]byte{"foo": []byte("bar")},
+			ObjectMeta: metav1.ObjectMeta{Name: common.CloudProviderSecretName, Namespace: namespace},
+			Data:       map[string][]byte{"foo": []byte("bar")},
 		}
 		cpConfigMap = &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      cloudProviderConfigName,
-				Namespace: namespace,
+			ObjectMeta: metav1.ObjectMeta{Name: cloudProviderConfigName, Namespace: namespace},
+			Data:       map[string]string{"abc": "xyz"},
+		}
+
+		resourceKey   = client.ObjectKey{Namespace: namespace, Name: resourceName}
+		createdSecret = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			Data:       map[string][]byte{chartName: []byte(renderedContent)},
+			Type:       corev1.SecretTypeOpaque,
+		}
+		createdManagedResource = &resourcemanagerv1alpha1.ManagedResource{
+			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
+				SecretRefs: []corev1.LocalObjectReference{
+					{Name: resourceName},
+				},
+				InjectLabels: map[string]string{ShootNoCleanupLabel: "true"},
 			},
-			Data: map[string]string{"abc": "xyz"},
+		}
+		deletedSecret = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			Type:       corev1.SecretTypeOpaque,
+		}
+		deletedManagedResource = &resourcemanagerv1alpha1.ManagedResource{
+			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
+				SecretRefs:   []corev1.LocalObjectReference{},
+				InjectLabels: map[string]string{},
+			},
 		}
 
 		imageVector = imagevector.ImageVector([]*imagevector.ImageSource{})
@@ -98,7 +134,7 @@ var _ = Describe("Actuator", func() {
 			cloudProviderConfigName:        "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
 			"cloud-controller-manager":     "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
-		checksumsWithoutConfig = map[string]string{
+		checksumsNoConfig = map[string]string{
 			common.CloudProviderSecretName: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 			"cloud-controller-manager":     "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
@@ -111,11 +147,12 @@ var _ = Describe("Actuator", func() {
 			"clusterName": namespace,
 		}
 
-		// controlPlaneShootChartValues = map[string]interface{}{
-		// 	"foo": "bar",
-		// }
+		controlPlaneShootChartValues = map[string]interface{}{
+			"foo": "bar",
+		}
 
-		logger = log.Log.WithName("test")
+		errNotFound = &errors.StatusError{ErrStatus: metav1.Status{Reason: metav1.StatusReasonNotFound}}
+		logger      = log.Log.WithName("test")
 	)
 
 	BeforeEach(func() {
@@ -126,145 +163,98 @@ var _ = Describe("Actuator", func() {
 		ctrl.Finish()
 	})
 
-	Describe("#Reconcile", func() {
-		It("should deploy secrets and apply charts with correct parameters", func() {
+	DescribeTable("#Reconcile",
+		func(configName string, checksums map[string]string) {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
-			client.EXPECT().Get(context.TODO(), cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
+			if configName != "" {
+				client.EXPECT().Get(context.TODO(), cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
+			}
+			client.EXPECT().Get(context.TODO(), resourceKey, createdSecret).Return(errNotFound)
+			client.EXPECT().Create(context.TODO(), createdSecret).Return(nil)
+			client.EXPECT().Get(context.TODO(), resourceKey, createdManagedResource).Return(errNotFound)
+			client.EXPECT().Create(context.TODO(), createdManagedResource).Return(nil)
+
+			// Create mock Gardener clientset and chart applier
+			gardenerClientset := mockkubernetes.NewMockInterface(ctrl)
+			gardenerClientset.EXPECT().Version().Return(seedVersion)
+			chartApplier := mockkubernetes.NewMockChartApplier(ctrl)
+
+			// Create mock chart renderer and factory
+			chartRenderer := mockchartrenderer.NewMockInterface(ctrl)
+			crf := mockgenericactuator.NewMockChartRendererFactory(ctrl)
+			crf.EXPECT().NewChartRendererForShoot(shootVersion).Return(chartRenderer, nil)
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
-			secrets.EXPECT().Deploy(gomock.Any(), gomock.Any(), namespace).Return(deployedSecrets, nil)
-			configChart := mockutil.NewMockChart(ctrl)
-			configChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, nil, nil, configChartValues).Return(nil)
+			secrets.EXPECT().Deploy(gomock.Any(), gardenerClientset, namespace).Return(deployedSecrets, nil)
+			var configChart util.Chart
+			if configName != "" {
+				cc := mockutil.NewMockChart(ctrl)
+				cc.EXPECT().Apply(context.TODO(), chartApplier, namespace, nil, "", "", configChartValues).Return(nil)
+				configChart = cc
+			}
 			ccmChart := mockutil.NewMockChart(ctrl)
-			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksums, controlPlaneChartValues).Return(nil)
+			ccmChart.EXPECT().Apply(context.TODO(), chartApplier, namespace, imageVector, seedVersion, shootVersion, controlPlaneChartValues).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
-			// ccmShootChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), metav1.NamespaceSystem, cluster.Shoot, imageVector, nil, controlPlaneShootChartValues).Return(nil)
+			ccmShootChart.EXPECT().Render(chartRenderer, metav1.NamespaceSystem, imageVector, shootVersion, shootVersion, controlPlaneShootChartValues).Return(chartName, []byte(renderedContent), nil)
 
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
-			vp.EXPECT().GetConfigChartValues(context.TODO(), cp, cluster).Return(configChartValues, nil)
+			if configName != "" {
+				vp.EXPECT().GetConfigChartValues(context.TODO(), cp, cluster).Return(configChartValues, nil)
+			}
 			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums, false).Return(controlPlaneChartValues, nil)
-			// vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
-
-			// Create mock shoot clients factory
-			// sc := mockutil.NewMockShootClients(ctrl)
-			// sc.EXPECT().GardenerClientset().Return(nil)
-			// sc.EXPECT().ChartApplier().Return(nil)
-			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
+			vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
 
 			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, vp, scf, imageVector, cloudProviderConfigName, logger)
+			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, vp, crf, imageVector, configName, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
+			a.(*actuator).gardenerClientset = gardenerClientset
+			a.(*actuator).chartApplier = chartApplier
 
 			// Call Reconcile method and check the result
 			requeue, err := a.Reconcile(context.TODO(), cp, cluster)
 			Expect(requeue).To(Equal(false))
 			Expect(err).NotTo(HaveOccurred())
-		})
+		},
+		Entry("should deploy secrets and apply charts with correct parameters", cloudProviderConfigName, checksums),
+		Entry("should deploy secrets and apply charts with correct parameters (no config)", "", checksumsNoConfig),
+	)
 
-		It("should deploy secrets and apply charts with correct parameters (only controlplane chart)", func() {
-			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
-
-			// Create mock secrets and charts
-			secrets := mockutil.NewMockSecrets(ctrl)
-			secrets.EXPECT().Deploy(gomock.Any(), gomock.Any(), namespace).Return(deployedSecrets, nil)
-			ccmChart := mockutil.NewMockChart(ctrl)
-			ccmChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), namespace, cluster.Shoot, imageVector, checksumsWithoutConfig, controlPlaneChartValues).Return(nil)
-			ccmShootChart := mockutil.NewMockChart(ctrl)
-			// ccmShootChart.EXPECT().Apply(context.TODO(), gomock.Any(), gomock.Any(), metav1.NamespaceSystem, cluster.Shoot, imageVector, nil, controlPlaneShootChartValues).Return(nil)
-
-			// Create mock values provider
-			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
-			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksumsWithoutConfig, false).Return(controlPlaneChartValues, nil)
-			// vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
-
-			// Create mock shoot clients factory
-			// sc := mockutil.NewMockShootClients(ctrl)
-			// sc.EXPECT().GardenerClientset().Return(nil)
-			// sc.EXPECT().ChartApplier().Return(nil)
-			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
-
-			// Create actuator
-			a := NewActuator(secrets, nil, ccmChart, ccmShootChart, vp, scf, imageVector, "", logger)
-			err := a.(inject.Client).InjectClient(client)
-			Expect(err).NotTo(HaveOccurred())
-
-			// Call Reconcile method and check the result
-			requeue, err := a.Reconcile(context.TODO(), cp, cluster)
-			Expect(requeue).To(Equal(false))
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Describe("#Delete", func() {
-		It("should delete secrets and charts", func() {
+	DescribeTable("#Delete",
+		func(configName string) {
 			// Create mock clients
 			client := mockclient.NewMockClient(ctrl)
-			// shootClient := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Delete(context.TODO(), deletedSecret).Return(nil)
+			client.EXPECT().Delete(context.TODO(), deletedManagedResource).Return(nil)
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
 			secrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
-			configChart := mockutil.NewMockChart(ctrl)
-			configChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
+			var configChart util.Chart
+			if configName != "" {
+				cc := mockutil.NewMockChart(ctrl)
+				cc.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
+				configChart = cc
+			}
 			ccmChart := mockutil.NewMockChart(ctrl)
 			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
-			ccmShootChart := mockutil.NewMockChart(ctrl)
-			// ccmShootChart.EXPECT().Delete(context.TODO(), shootClient, metav1.NamespaceSystem).Return(nil)
-
-			// Create mock shoot clients factory
-			// sc := mockutil.NewMockShootClients(ctrl)
-			// sc.EXPECT().Client().Return(shootClient)
-			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
 
 			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, nil, scf, nil, cloudProviderConfigName, logger)
+			a := NewActuator(secrets, configChart, ccmChart, nil, nil, nil, nil, configName, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call Delete method and check the result
 			err = a.Delete(context.TODO(), cp, cluster)
 			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("should delete secrets and charts (only controlplane chart)", func() {
-			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			// shootClient := mockclient.NewMockClient(ctrl)
-
-			// Create mock secrets and charts
-			secrets := mockutil.NewMockSecrets(ctrl)
-			secrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
-			ccmChart := mockutil.NewMockChart(ctrl)
-			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
-			ccmShootChart := mockutil.NewMockChart(ctrl)
-			// ccmShootChart.EXPECT().Delete(context.TODO(), shootClient, metav1.NamespaceSystem).Return(nil)
-
-			// Create mock shoot clients factory
-			// sc := mockutil.NewMockShootClients(ctrl)
-			// sc.EXPECT().Client().Return(shootClient)
-			scf := mockgenericactuator.NewMockShootClientsFactory(ctrl)
-			// scf.EXPECT().NewClientsForShoot(context.TODO(), client, namespace, gomock.Any()).Return(sc, nil)
-
-			// Create actuator
-			a := NewActuator(secrets, nil, ccmChart, ccmShootChart, nil, scf, nil, "", logger)
-			err := a.(inject.Client).InjectClient(client)
-			Expect(err).NotTo(HaveOccurred())
-
-			// Call Delete method and check the result
-			err = a.Delete(context.TODO(), cp, cluster)
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
+		},
+		Entry("should delete secrets and charts", cloudProviderConfigName),
+		Entry("should delete secrets and charts (no config)", ""),
+	)
 })
 
 func clientGet(result runtime.Object) interface{} {

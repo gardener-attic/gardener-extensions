@@ -234,7 +234,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:103f13c84d6a23980f5f3b1565a366419b724b5fadb817e50414d42c6c43fe07"
+  digest = "1:c2432108a9b93c9c6921e48daeecedb9761f12d0e940781de94feccb2797ced8"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -270,7 +270,18 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "297e837ad45faa92a81cc7c8c0590f51fcdf1b25"
+  revision = "0fe4fccadc48e62b6f7d7a4a6965dfa369f90531"
+
+[[projects]]
+  digest = "1:786c4c7a02ae4fe79962043b651dc0d187cc3935f7d2e33451b4cd7ca8c21f90"
+  name = "github.com/gardener/gardener-resource-manager"
+  packages = [
+    "pkg/apis/resources",
+    "pkg/apis/resources/v1alpha1",
+    "pkg/manager",
+  ]
+  pruneopts = "NUT"
+  revision = "e0f770704e8c97f8a4a5003f14d88a1ae55253a1"
 
 [[projects]]
   digest = "1:be08b3a88137d497fc3008eaadba7b05d151c6106ebd3d1df54af7b07320562a"
@@ -1799,6 +1810,8 @@
     "github.com/aws/aws-sdk-go/service/elb",
     "github.com/aws/aws-sdk-go/service/sts",
     "github.com/coreos/go-systemd/unit",
+    "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1",
+    "github.com/gardener/gardener-resource-manager/pkg/manager",
     "github.com/gardener/gardener/pkg/apis/core",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper",
@@ -1806,7 +1819,10 @@
     "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper",
     "github.com/gardener/gardener/pkg/apis/garden/v1beta1",
     "github.com/gardener/gardener/pkg/chartrenderer",
+    "github.com/gardener/gardener/pkg/client/core/clientset/versioned",
+    "github.com/gardener/gardener/pkg/client/garden/clientset/versioned",
     "github.com/gardener/gardener/pkg/client/kubernetes",
+    "github.com/gardener/gardener/pkg/client/machine/clientset/versioned",
     "github.com/gardener/gardener/pkg/logger",
     "github.com/gardener/gardener/pkg/operation/common",
     "github.com/gardener/gardener/pkg/operation/terraformer",
@@ -1842,10 +1858,12 @@
     "k8s.io/api/admission/v1beta1",
     "k8s.io/api/admissionregistration/v1beta1",
     "k8s.io/api/apps/v1",
+    "k8s.io/api/batch/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/policy/v1beta1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",
+    "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset",
     "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme",
     "k8s.io/apimachinery/pkg/api/equality",
     "k8s.io/apimachinery/pkg/api/errors",
@@ -1884,7 +1902,11 @@
     "k8s.io/code-generator/cmd/lister-gen",
     "k8s.io/component-base/config",
     "k8s.io/component-base/config/v1alpha1",
+    "k8s.io/helm/pkg/chartutil",
+    "k8s.io/helm/pkg/engine",
     "k8s.io/helm/pkg/manifest",
+    "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1",
+    "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset",
     "k8s.io/kubelet/config/v1beta1",
     "sigs.k8s.io/controller-runtime/pkg/cache",
     "sigs.k8s.io/controller-runtime/pkg/client",

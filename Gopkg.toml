@@ -9,11 +9,15 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "297e837ad45faa92a81cc7c8c0590f51fcdf1b25"
+  revision = "0fe4fccadc48e62b6f7d7a4a6965dfa369f90531"
 
 [[override]]
   name = "github.com/gardener/machine-controller-manager"
   revision = "119056ee3fddc24a33b206ba89958da30535bd02"
+
+[[override]]
+  name = "github.com/gardener/gardener-resource-manager"
+  revision = "e0f770704e8c97f8a4a5003f14d88a1ae55253a1"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
@@ -89,6 +93,10 @@ required = [
 [[constraint]]
   name = "github.com/spf13/cobra"
   version = "0.0.3"
+
+[[constraint]]
+  name = "github.com/Masterminds/semver"
+  version = "~1.4.0"
 
 [[constraint]]
   name = "golang.org/x/oauth2"
