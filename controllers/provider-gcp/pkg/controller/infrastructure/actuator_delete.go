@@ -53,6 +53,7 @@ func (a *actuator) cleanupKubernetesRoutes(
 	client gcpclient.Interface,
 	tf *terraformer.Terraformer,
 	account *internal.ServiceAccount,
+	shootSeedNamespace string,
 ) error {
 	state, err := infrastructure.ExtractTerraformState(tf, config)
 	if err != nil {
@@ -62,7 +63,7 @@ func (a *actuator) cleanupKubernetesRoutes(
 		return err
 	}
 
-	return infrastructure.CleanupKubernetesRoutes(ctx, client, account.ProjectID, state.VPCName)
+	return infrastructure.CleanupKubernetesRoutes(ctx, client, account.ProjectID, state.VPCName, shootSeedNamespace)
 }
 
 // Delete implements infrastructure.Actuator.
@@ -106,7 +107,7 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 		destroyKubernetesRoutes = g.Add(flow.Task{
 			Name: "Destroying Kubernetes route entries",
 			Fn: flow.TaskFn(func(ctx context.Context) error {
-				return a.cleanupKubernetesRoutes(ctx, config, gcpClient, tf, serviceAccount)
+				return a.cleanupKubernetesRoutes(ctx, config, gcpClient, tf, serviceAccount, infra.Namespace)
 			}).
 				RetryUntilTimeout(10*time.Second, 5*time.Minute).
 				DoIf(configExists),

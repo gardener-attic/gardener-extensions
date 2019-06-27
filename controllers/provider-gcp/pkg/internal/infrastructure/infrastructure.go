@@ -57,13 +57,16 @@ func ListKubernetesFirewalls(ctx context.Context, client gcpclient.Interface, pr
 	return names, nil
 }
 
-// ListKubernetesRoutes returns a list of all routes within the shoot network which have "shoot--" as prefix.
-func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network string) ([]string, error) {
+// ListKubernetesRoutes returns a list of all routes within the shoot network which have the shoot's seed namespace as prefix.
+func ListKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network, shootSeedNamespace string) ([]string, error) {
 	var routes []string
 	if err := client.Routes().List(projectID).Pages(ctx, func(page *compute.RouteList) error {
 		for _, route := range page.Items {
 			if strings.HasPrefix(route.Name, shootPrefix) && strings.HasSuffix(route.Network, network) {
-				routes = append(routes, route.Name)
+				urlParts := strings.Split(route.NextHopInstance, "/")
+				if strings.HasPrefix(urlParts[len(urlParts)-1], shootSeedNamespace) {
+					routes = append(routes, route.Name)
+				}
 			}
 		}
 		return nil
@@ -112,8 +115,8 @@ func CleanupKubernetesFirewalls(ctx context.Context, client gcpclient.Interface,
 // CleanupKubernetesRoutes lists all Kubernetes route rules and then deletes them one after another.
 //
 // If a deletion fails, this method returns immediately with the encountered error.
-func CleanupKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network string) error {
-	routeNames, err := ListKubernetesRoutes(ctx, client, projectID, network)
+func CleanupKubernetesRoutes(ctx context.Context, client gcpclient.Interface, projectID, network, shootSeedNamespace string) error {
+	routeNames, err := ListKubernetesRoutes(ctx, client, projectID, network, shootSeedNamespace)
 	if err != nil {
 		return err
 	}
