@@ -84,11 +84,24 @@ var _ = Describe("Infrastructure", func() {
 	Describe("#ListKubernetesRoutes", func() {
 		It("should list all kubernetes related route names with the shoot namespace as prefix", func() {
 			var (
-				ctx       = context.TODO()
-				projectID = "foo"
-				network   = "shoot--foo--bar"
+				ctx                     = context.TODO()
+				projectID               = "foo"
+				network                 = "bar"
+				shootSeedNamespace      = "shoot--foo--bar"
+				otherShootSeedNamespace = "shoot--foo--other"
 
-				routeName  = fmt.Sprintf("shoot--foo--bar-2690fa98-450f-11e9-8ebe-ce2a79d67b14")
+				routeName      = fmt.Sprintf("%s-2690fa98-450f-11e9-8ebe-ce2a79d67b14", shootSeedNamespace)
+				otherRouteName = fmt.Sprintf("%s-4123f123-4351-6234-91ee-asd3612op412", otherShootSeedNamespace)
+
+				nextHopInstance = fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/zone-id/instances/%s-worker-tqba1-z1-7b74dd4b94-nsplm",
+					projectID,
+					shootSeedNamespace,
+				)
+				otherNextHopInstance = fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/zone-id/instances/%s-worker-tqba1-z1-7b74dd4b94-nsplm",
+					projectID,
+					otherShootSeedNamespace,
+				)
+
 				routeNames = []string{routeName}
 
 				client         = mockgcpclient.NewMockInterface(ctrl)
@@ -103,13 +116,15 @@ var _ = Describe("Infrastructure", func() {
 					DoAndReturn(func(_ context.Context, f func(*compute.RouteList) error) error {
 						return f(&compute.RouteList{
 							Items: []*compute.Route{
-								{Name: routeName, Network: network},
+								{Name: routeName, Network: network, NextHopInstance: nextHopInstance},
+								{Name: otherRouteName, Network: network, NextHopInstance: otherNextHopInstance},
+								{Name: otherRouteName, Network: network},
 							},
 						})
 					}),
 			)
 
-			actual, err := ListKubernetesRoutes(ctx, client, projectID, network)
+			actual, err := ListKubernetesRoutes(ctx, client, projectID, network, shootSeedNamespace)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(routeNames))
