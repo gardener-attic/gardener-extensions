@@ -65,6 +65,14 @@ func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
 		"PersistentVolumeLabel", ",")
 
 	// Ensure CSI-related feature gates
+	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"VolumeSnapshotDataSource=false", ",")
+	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"CSINodeInfo=false", ",")
+	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"CSIDriverRegistry=false", ",")
+	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"KubeletPluginsWatcher=false", ",")
 	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
 		"VolumeSnapshotDataSource=true", ",")
 	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
