@@ -55,3 +55,4 @@ config:
 gardener:
   seed:
     provider: alicloud
+    volumeProvider: csi
