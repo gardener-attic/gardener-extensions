@@ -5,10 +5,15 @@ metadata:
   name: {{ .Values.config.etcd.storage.className }}
   labels:
 {{ include "labels" . | indent 4 }}
+{{- if eq .Values.gardener.seed.volumeProvider "FlexVolume" }}
+provisioner: "alicloud/disk",
+parameters:
+  type: cloud_ssd
+{{- else }}
 provisioner: diskplugin.csi.alibabacloud.com
-allowVolumeExpansion: true
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: cloud_ssd
   readOnly: "false"
+{{- end }}
 {{- end }}
