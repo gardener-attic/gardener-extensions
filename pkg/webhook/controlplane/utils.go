@@ -108,7 +108,11 @@ func EnsureStringWithPrefixContains(items []string, prefix, value, sep string) [
 	if i := StringWithPrefixIndex(items, prefix); i < 0 {
 		items = append(items, prefix+value)
 	} else {
-		values := strings.Split(strings.TrimPrefix(items[i], prefix), sep)
+		valuesList := strings.TrimPrefix(items[i], prefix)
+		var values []string
+		if valuesList != "" {
+			values = strings.Split(valuesList, sep)
+		}
 		if j := StringIndex(values, value); j < 0 {
 			values = append(values, value)
 			items = append(append(items[:i], prefix+strings.Join(values, sep)), items[i+1:]...)
