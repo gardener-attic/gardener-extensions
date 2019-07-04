@@ -6,7 +6,7 @@ metadata:
   labels:
 {{ include "labels" . | indent 4 }}
 {{- if eq .Values.gardener.seed.volumeProvider "FlexVolume" }}
-provisioner: "alicloud/disk",
+provisioner: alicloud/disk
 parameters:
   type: cloud_ssd
 {{- else }}
