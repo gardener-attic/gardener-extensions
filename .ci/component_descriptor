@@ -9,6 +9,7 @@ for images_yaml_path in "$dir/../controllers/"*"/charts/images.yaml"; do
   images="$(yaml2json < $images_yaml_path)"
 
   echo "enriching creating component descriptor from ${BASE_DEFINITION_PATH}"
+  controller_dir="$(basename "$(dirname "$(dirname "${images_yaml_path}")")")"
 
   eval "$(jq -r ".images |
     map(if (.name == \"hyperkube\") then
@@ -16,7 +17,7 @@ for images_yaml_path in "$dir/../controllers/"*"/charts/images.yaml"; do
     elif (.repository | startswith(\"eu.gcr.io/gardener-project/gardener\")) then
       \"--component-dependencies '{\\\"name\\\": \\\"\" + .sourceRepository + \"\\\", \\\"version\\\": \\\"\" + .tag + \"\\\"}'\"
     else
-      \"--container-image-dependencies '{\\\"name\\\": \\\"\" + .name + \"\\\", \\\"image_reference\\\": \\\"\" + .repository + \":\" + .tag + \"\\\", \\\"version\\\": \\\"\" + .tag + \"\\\"}'\"
+      \"--container-image-dependencies '{\\\"name\\\": \\\"${controller_dir}-\" + .name + \"\\\", \\\"image_reference\\\": \\\"\" + .repository + \":\" + .tag + \"\\\", \\\"version\\\": \\\"\" + .tag + \"\\\"}'\"
     end) |
     \"${ADD_DEPENDENCIES_CMD} \\\\\n\" +
     join(\" \\\\\n\")" <<< "$images")"
