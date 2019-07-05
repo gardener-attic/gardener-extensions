@@ -10,8 +10,8 @@ images:
   hyperkube: image-repository:image-tag
 resources:
   requests:
-    cpu: 100m
-    memory: 64Mi
+    cpu: 23m
+    memory: 75Mi
   limits:
     cpu: 500m
     memory: 512Mi
