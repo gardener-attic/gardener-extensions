@@ -162,13 +162,13 @@ func (e *ensurer) ShouldProvisionKubeletCloudProviderConfig() bool {
 func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, data *string, namespace string) error {
 	// Get `cloud-provider-config` ConfigMap
 	var cm corev1.ConfigMap
-	err := e.client.Get(ctx, kutil.Key(namespace, azure.CloudProviderConfigName), &cm)
+	err := e.client.Get(ctx, kutil.Key(namespace, azure.CloudProviderKubeletConfigName), &cm)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			e.logger.Info("configmap not found", "name", azure.CloudProviderConfigName, "namespace", namespace)
+			e.logger.Info("configmap not found", "name", azure.CloudProviderKubeletConfigName, "namespace", namespace)
 			return nil
 		}
-		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, azure.CloudProviderConfigName)
+		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, azure.CloudProviderKubeletConfigName)
 	}
 
 	// Check if the data has "cloudprovider.conf" key

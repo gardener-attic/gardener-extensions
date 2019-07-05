@@ -301,6 +301,12 @@ var _ = Describe("Ensurer", func() {
 
 	Describe("#EnsureKubeletCloudProviderConfig", func() {
 		var (
+			cmKey = client.ObjectKey{Namespace: namespace, Name: azure.CloudProviderKubeletConfigName}
+			cm    = &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: azure.CloudProviderKubeletConfigName},
+				Data:       map[string]string{"abc": "xyz", azure.CloudProviderConfigMapKey: cloudProviderConfigContent},
+			}
+
 			existingData = util.StringPtr("[LoadBalancer]\nlb-version=v2\nlb-provider:\n")
 			emptydata    = util.StringPtr("")
 		)

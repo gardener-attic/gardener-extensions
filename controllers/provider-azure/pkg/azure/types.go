@@ -65,6 +65,8 @@ const (
 
 	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
 	CloudProviderConfigName = "cloud-provider-config"
+	// CloudProviderKubeletConfigName is the name of the configmap containing the cloud provider config for the shoot nodes.
+	CloudProviderKubeletConfigName = "cloud-provider-kubelet-config"
 	// CloudProviderConfigMapKey is the key storing the cloud provider config as value in the cloud provider configmap.
 	CloudProviderConfigMapKey = "cloudprovider.conf"
 	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.

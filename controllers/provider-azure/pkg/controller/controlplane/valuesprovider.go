@@ -16,8 +16,9 @@ package controlplane
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"path/filepath"
+
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 
 	apisazure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	azureapihelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
@@ -96,6 +97,10 @@ var configChart = &chart.Chart{
 		{
 			Type: &corev1.ConfigMap{},
 			Name: azure.CloudProviderConfigName,
+		},
+		{
+			Type: &corev1.ConfigMap{},
+			Name: azure.CloudProviderKubeletConfigName,
 		},
 	},
 }
