@@ -2,7 +2,7 @@
 
 set -e
 
-descriptor_file="${COMPONENT_DESCRIPTOR_PATH}"
+descriptor_out_file="${COMPONENT_DESCRIPTOR_PATH}"
 dir="$(dirname "$0")"
 
 for images_yaml_path in "$dir/../controllers/"*"/charts/images.yaml"; do
@@ -22,4 +22,4 @@ for images_yaml_path in "$dir/../controllers/"*"/charts/images.yaml"; do
     join(\" \\\\\n\")" <<< "$images")"
 done
 
-cp "${BASE_DEFINITION_PATH}" "${COMPONENT_DESCRIPTOR_PATH}"
+cp "${BASE_DEFINITION_PATH}" "${descriptor_out_file}"
