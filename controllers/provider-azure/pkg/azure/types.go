@@ -31,7 +31,8 @@ const (
 
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
-	HyperkubeImageName           = "hyperkube"
+	// HyperkubeImageName is the name of the hyperkube image
+	HyperkubeImageName = "hyperkube"
 
 	// SubscriptionIDKey is the key for the subscription ID
 	SubscriptionIDKey = "subscriptionID"
@@ -46,6 +47,16 @@ const (
 	StorageAccount = "storage-account"
 	// StorageKey is a constant for the key in a cloud provider secret and backup secret that holds the Azure secret storage access key.
 	StorageKey = "storage-key"
+	//TOREMOVE: To keep up with naming convention we will change these constant related to storage. But will removed at the time we completely move to
+	// shared bucket approach.
+
+	// NewStorageAccount is a constant for the key in a cloud provider secret and backup secret that holds the Azure account name.
+	NewStorageAccount = "storageAccount"
+	// NewStorageKey is a constant for the key in a cloud provider secret and backup secret that holds the Azure secret storage access key.
+	NewStorageKey = "storageKey"
+
+	// AzureBlobStorageHostName is the host name for azure blob storage service.
+	AzureBlobStorageHostName = "blob.core.windows.net"
 
 	// BucketName is a constant for the key in a backup secret that holds the bucket name.
 	// The bucket name is written to the backup secret by Gardener as a temporary solution.

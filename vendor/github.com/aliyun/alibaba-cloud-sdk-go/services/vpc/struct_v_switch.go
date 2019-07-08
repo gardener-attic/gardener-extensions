@@ -23,12 +23,13 @@ type VSwitch struct {
 	CidrBlock               string                  `json:"CidrBlock" xml:"CidrBlock"`
 	Ipv6CidrBlock           string                  `json:"Ipv6CidrBlock" xml:"Ipv6CidrBlock"`
 	ZoneId                  string                  `json:"ZoneId" xml:"ZoneId"`
-	AvailableIpAddressCount int                     `json:"AvailableIpAddressCount" xml:"AvailableIpAddressCount"`
+	AvailableIpAddressCount int64                   `json:"AvailableIpAddressCount" xml:"AvailableIpAddressCount"`
 	Description             string                  `json:"Description" xml:"Description"`
 	VSwitchName             string                  `json:"VSwitchName" xml:"VSwitchName"`
 	CreationTime            string                  `json:"CreationTime" xml:"CreationTime"`
 	IsDefault               bool                    `json:"IsDefault" xml:"IsDefault"`
 	ResourceGroupId         string                  `json:"ResourceGroupId" xml:"ResourceGroupId"`
+	NetworkAclId            string                  `json:"NetworkAclId" xml:"NetworkAclId"`
 	RouteTable              RouteTable              `json:"RouteTable" xml:"RouteTable"`
 	Tags                    TagsInDescribeVSwitches `json:"Tags" xml:"Tags"`
 }

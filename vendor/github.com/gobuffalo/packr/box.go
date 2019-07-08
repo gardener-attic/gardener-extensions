@@ -3,6 +3,7 @@ package packr
 import (
 	"bytes"
 	"compress/gzip"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,12 +13,11 @@ import (
 	"strings"
 
 	"github.com/gobuffalo/packd"
-	"github.com/pkg/errors"
 )
 
 var (
 	// ErrResOutsideBox gets returned in case of the requested resources being outside the box
-	ErrResOutsideBox = errors.New("Can't find a resource outside the box")
+	ErrResOutsideBox = fmt.Errorf("Can't find a resource outside the box")
 )
 
 var _ packd.Box = Box{}
@@ -128,6 +128,8 @@ func (b Box) decompress(bb []byte) []byte {
 	if err != nil {
 		return bb
 	}
+	defer reader.Close()
+
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return bb

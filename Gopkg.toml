@@ -83,6 +83,10 @@ required = [
   revision = "b3b45f1b4979af3ace1cd5450768ab387b40ae5b"
 
 [[constraint]]
+  name = "github.com/Azure/azure-storage-blob-go"
+  version = "v0.7.0"
+
+[[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.2"
 
