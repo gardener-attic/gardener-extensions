@@ -13,7 +13,7 @@ gardener-extensions:
             dockerfile: 'Dockerfile'
             target: gardener-extension-hyper
     steps: ~
-  variants:
+  jobs:
     head-update:
       traits:
         component_descriptor: ~
@@ -43,7 +43,7 @@ gardener-extensions:
               tag_as_latest: true
 gardener-extensions-updates:
   template: 'default'
-  variants:
+  jobs:
     create_update_pull_requests:
       repo:
         trigger: false
