@@ -238,6 +238,9 @@ type OpenStackConstraints struct {
 	Kubernetes KubernetesConstraints `json:"kubernetes"`
 	// LoadBalancerProviders contains constraints regarding allowed values of the 'loadBalancerProvider' block in the Shoot specification.
 	LoadBalancerProviders []OpenStackLoadBalancerProvider `json:"loadBalancerProviders"`
+	// future extension option, support provider network usage besides router configuration
+	// // LoadBalancerClasses contains a list of supported labeled load balancer network settings.
+	// LoadBalancerClasses []openstackapi.ProfileLoadBalancerClass `json:"loadBalancerClasses"`
 	// MachineImages contains constraints regarding allowed values for machine images in the Shoot specification.
 	MachineImages []OpenStackMachineImage `json:"machineImages"`
 	// MachineTypes contains constraints regarding allowed values for machine types in the 'workers' block in the Shoot specification.
@@ -250,9 +253,11 @@ type OpenStackConstraints struct {
 type OpenStackFloatingPool struct {
 	// Name is the name of the floating pool.
 	Name string `json:"name"`
+	// LoadBalancerClasses contains a list of supported labeled load balancer network settings.
+	LoadBalancerClasses []OpenStackLoadBalancerClass
 }
 
-// LoadBalancerProviders contains constraints regarding allowed values of the 'loadBalancerProvider' block in the Shoot specification.
+// OpenStackLoadBalancerProvider contains constraints regarding allowed values of the 'loadBalancerProvider' block in the Shoot specification.
 type OpenStackLoadBalancerProvider struct {
 	// Name is the name of the load balancer provider.
 	Name string `json:"name"`
@@ -1010,6 +1015,9 @@ type OpenStackCloud struct {
 	FloatingPoolName string `json:"floatingPoolName"`
 	// LoadBalancerProvider is the name of the load balancer provider in the OpenStack environment.
 	LoadBalancerProvider string `json:"loadBalancerProvider"`
+	// LoadBalancerClasses available for a dedicated Shoot.
+	// +optional
+	LoadBalancerClasses []OpenStackLoadBalancerClass `json:"loadBalancerClasses,omitempty"`
 	// MachineImage holds information about the machine image to use for all workers.
 	// It will default to the first image stated in the referenced CloudProfile if no
 	// value has been provided.
@@ -1021,6 +1029,22 @@ type OpenStackCloud struct {
 	Workers []OpenStackWorker `json:"workers"`
 	// Zones is a list of availability zones to deploy the Shoot cluster to.
 	Zones []string `json:"zones"`
+}
+
+// OpenStackLoadBalancerClass defines a restricted network setting for generic LoadBalancer classes usable in CloudProfiles.
+type OpenStackLoadBalancerClass struct {
+	// Name is the name of the LB class
+	Name string `json:"name"`
+	// FloatingSubnetID is the subnetwork ID of a dedicated subnet in floating network pool.
+	// +optional
+	FloatingSubnetID *string `json:"floatingSubnetID,omitempty"`
+	// FloatingNetworkID is the network ID of the floating network pool.
+	// +optional
+	FloatingNetworkID *string
+	// SubnetID is the ID of a local subnet used for LoadBalancer provisioning. Only usable if no FloatingPool
+	// configuration is done.
+	// +optional
+	SubnetID *string `json:"subnetID,omitempty"`
 }
 
 // OpenStackNetworks holds information about the Kubernetes and infrastructure networks.

@@ -20,6 +20,7 @@ import (
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
@@ -226,6 +227,15 @@ func getConfigChartValues(
 		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,
 	}
 
+	if cpConfig.LoadBalancerClasses == nil {
+		for _, pool := range cluster.CloudProfile.Spec.OpenStack.Constraints.FloatingPools {
+			if pool.Name == cluster.Shoot.Spec.Cloud.OpenStack.FloatingPoolName {
+				cpConfig.LoadBalancerClasses = gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(pool.LoadBalancerClasses)
+				break
+			}
+		}
+	}
+
 	for _, class := range cpConfig.LoadBalancerClasses {
 		if class.Name == openstack.DefaultLoadBalancerClass {
 			SetStringValue(values, "floatingNetworkID", class.FloatingNetworkID)
@@ -290,4 +300,17 @@ func getCCMChartValues(
 	}
 
 	return values, nil
+}
+
+func gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(loadBalancerClasses []gardenv1beta1.OpenStackLoadBalancerClass) []openstack.LoadBalancerClass {
+	out := make([]openstack.LoadBalancerClass, 0, len(loadBalancerClasses))
+	for _, loadBalancerClass := range loadBalancerClasses {
+		out = append(out, openstack.LoadBalancerClass{
+			Name:              loadBalancerClass.Name,
+			FloatingSubnetID:  loadBalancerClass.FloatingSubnetID,
+			FloatingNetworkID: loadBalancerClass.FloatingNetworkID,
+			SubnetID:          loadBalancerClass.SubnetID,
+		})
+	}
+	return out
 }

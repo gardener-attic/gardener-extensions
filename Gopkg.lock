@@ -240,10 +240,9 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:2c199c6050444a25ed19d6dfc3d771f74a970ef931e8a9b896fedbde3756b448"
+  digest = "1:ebca527d726c5cf88a14a1d1adf5af054ec8aa3069a2aaa94145af5b7e912110"
   name = "github.com/gardener/gardener"
   packages = [
-    "pkg/api/extensions",
     "pkg/apis/core",
     "pkg/apis/core/v1alpha1",
     "pkg/apis/core/v1alpha1/helper",
@@ -277,7 +276,8 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "d3ee78a23b2859105ec1be72a59219445a7984c5"
+  revision = "586fa00abaf916152aa1cc71a9380f3eedbc6862"
+  source = "https://github.com/mandelsoft/gardener.git"
 
 [[projects]]
   digest = "1:786c4c7a02ae4fe79962043b651dc0d187cc3935f7d2e33451b4cd7ca8c21f90"
@@ -1826,7 +1826,6 @@
     "github.com/coreos/go-systemd/unit",
     "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1",
     "github.com/gardener/gardener-resource-manager/pkg/manager",
-    "github.com/gardener/gardener/pkg/api/extensions",
     "github.com/gardener/gardener/pkg/apis/core",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper",
@@ -1853,6 +1852,7 @@
     "github.com/go-logr/logr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
+    "github.com/gobuffalo/packr/v2/file/resolver",
     "github.com/golang/mock/gomock",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
