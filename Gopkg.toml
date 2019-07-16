@@ -95,6 +95,14 @@ required = [
   version = "v0.6.0"
 
 [[constraint]]
+  name = "github.com/gophercloud/gophercloud"
+  version = "v0.2.0"
+
+[[constraint]]
+  name = "github.com/gophercloud/utils"
+  revision = "25f1b77b8c0367b43939dbb20f5dd12e3c9b0053"
+
+[[constraint]]
   name = "gopkg.in/yaml.v2"
   version = "2.2.2"
 

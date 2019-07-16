@@ -21,6 +21,8 @@ import (
 
 	openstackinstall "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
 	openstackcmd "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/cmd"
+	openstackbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/backupbucket"
+	openstackbackupentry "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/backupentry"
 	openstackcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/controlplane"
 	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 	openstackworker "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
@@ -48,6 +50,16 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			WebhookServerPort:       443,
 		}
 		configFileOpts = &openstackcmd.ConfigOptions{}
+
+		// options for the backupbucket controller
+		backupBucketCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the backupentry controller
+		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
 
 		// options for the infrastructure controller
 		infraCtrlOpts = &controllercmd.ControllerOptions{
@@ -84,6 +96,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
+			controllercmd.PrefixOption("backupbucket-", backupBucketCtrlOpts),
+			controllercmd.PrefixOption("backupentry-", backupEntryCtrlOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
@@ -126,6 +140,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&openstackworker.DefaultAddOptions.MachineImagesToCloudProfilesMapping)
 			configFileOpts.Completed().ApplyETCDStorage(&openstackcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&openstackcontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			backupBucketCtrlOpts.Completed().Apply(&openstackbackupbucket.DefaultAddOptions.Controller)
+			backupEntryCtrlOpts.Completed().Apply(&openstackbackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&openstackcontrolplane.DefaultAddOptions.Controller)
 			infraCtrlOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.Controller)
 			reconcileOpts.Completed().Apply(&openstackinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)

@@ -39,7 +39,8 @@ const (
 	UserName = "username"
 	// Password is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack password.
 	Password = "password"
-
+	// Region is a constant for the key in a backup secret that holds the Openstack region.
+	Region = "region"
 	// BucketName is a constant for the key in a backup secret that holds the bucket name.
 	// The bucket name is written to the backup secret by Gardener as a temporary solution.
 	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
