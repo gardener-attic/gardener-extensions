@@ -15,15 +15,20 @@
 package alicloud
 
 import (
+	"context"
 	"fmt"
 
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+
 	corev1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Credentials are the credentials to access the Alicloud API.
 type Credentials struct {
 	AccessKeyID     string
 	AccessKeySecret string
+	StorageEndpoint string
 }
 
 const (
@@ -51,8 +56,21 @@ func ReadSecretCredentials(secret *corev1.Secret) (*Credentials, error) {
 		return nil, fmt.Errorf("secret %s/%s has no access key secret at data.%s", secret.Namespace, secret.Name, AccessKeySecret)
 	}
 
+	storageEndpoint := secret.Data[StorageEndpoint]
+
 	return &Credentials{
 		AccessKeyID:     string(accessKeyID),
 		AccessKeySecret: string(accessKeySecret),
+		StorageEndpoint: string(storageEndpoint),
 	}, nil
+}
+
+// ReadCredentialsFromSecretRef reads the credentials from the secret referred by given <secretRef>.
+func ReadCredentialsFromSecretRef(ctx context.Context, client client.Client, secretRef *corev1.SecretReference) (*Credentials, error) {
+	secret, err := extensionscontroller.GetSecretByReference(ctx, client, secretRef)
+	if err != nil {
+		return nil, err
+	}
+
+	return ReadSecretCredentials(secret)
 }

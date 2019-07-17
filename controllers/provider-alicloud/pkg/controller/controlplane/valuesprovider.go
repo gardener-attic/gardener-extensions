@@ -229,9 +229,9 @@ func (vp *valuesProvider) GetConfigChartValues(
 	}
 
 	// Get credentials from the referenced secret
-	credentials, err := vp.getCredentials(ctx, cp)
+	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, vp.client, &cp.Spec.SecretRef)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not read credentials from secret referred by controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Get config chart values
@@ -263,9 +263,9 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	// Get credentials from the referenced secret
-	credentials, err := vp.getCredentials(ctx, cp)
+	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, vp.client, &cp.Spec.SecretRef)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "could not read credentials from secret referred by controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Get control plane shoot chart values
@@ -279,22 +279,6 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	return nil, nil
-}
-
-// getCredentials determines the credentials from the secret referenced in the ControlPlane resource.
-func (vp *valuesProvider) getCredentials(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-) (*alicloud.Credentials, error) {
-	secret, err := extensionscontroller.GetSecretByReference(ctx, vp.client, &cp.Spec.SecretRef)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not get secret by reference for controlplane '%s'", util.ObjectName(cp))
-	}
-	credentials, err := alicloud.ReadSecretCredentials(secret)
-	if err != nil {
-		return nil, errors.Wrapf(err, "could not read credentials from secret '%s'", util.ObjectName(secret))
-	}
-	return credentials, nil
 }
 
 // cloudConfig wraps the settings for the Alicloud provider.

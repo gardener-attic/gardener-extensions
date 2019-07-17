@@ -7,6 +7,10 @@ replicaCount: 1
 resources: {}
 
 controllers:
+  backupbucket:
+    concurrentSyncs: 5
+  backupentry:
+    concurrentSyncs:
   controlplane:
     concurrentSyncs: 5
   infrastructure:

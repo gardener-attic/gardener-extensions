@@ -22,6 +22,8 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudinstall "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/install"
 	alicloudcmd "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/cmd"
+	alicloudbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/backupbucket"
+	alicloudbackupentry "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/backupentry"
 	alicloudcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/controlplane"
 	alicloudinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	alicloudworker "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/worker"
@@ -48,6 +50,16 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			WebhookServerPort:       443,
 		}
 		configFileOpts = &alicloudcmd.ConfigOptions{}
+
+		// options for the backupbucket controller
+		backupBucketCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the backupentry controller
+		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
 
 		// options for the controlplane controller
 		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
@@ -84,6 +96,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
+			controllercmd.PrefixOption("backupbucket-", backupBucketCtrlOpts),
+			controllercmd.PrefixOption("backupentry-", backupEntryCtrlOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
@@ -126,6 +140,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&alicloudworker.DefaultAddOptions.MachineImages)
 			configFileOpts.Completed().ApplyETCDStorage(&alicloudcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&alicloudcontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			backupBucketCtrlOpts.Completed().Apply(&alicloudbackupbucket.DefaultAddOptions.Controller)
+			backupEntryCtrlOpts.Completed().Apply(&alicloudbackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&alicloudcontrolplane.DefaultAddOptions.Controller)
 			infraCtrlOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.Controller)
 			reconcileOpts.Completed().Apply(&alicloudinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)

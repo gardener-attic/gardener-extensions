@@ -83,6 +83,10 @@ required = [
   version = "~1.12.48"
 
 [[constraint]]
+  name = "github.com/aliyun/aliyun-oss-go-sdk"
+  version = "v2.0.1"
+
+[[constraint]]
   name = "github.com/packethost/packngo"
   revision = "b3b45f1b4979af3ace1cd5450768ab387b40ae5b"
 

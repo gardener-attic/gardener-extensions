@@ -23,7 +23,6 @@ import (
 	alicloudapi "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	alicloudapihelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
@@ -62,12 +61,7 @@ func (w *workerDelegate) GenerateMachineDeployments(ctx context.Context) (worker
 }
 
 func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (map[string][]byte, error) {
-	secret, err := extensionscontroller.GetSecretByReference(ctx, w.client, &w.worker.Spec.SecretRef)
-	if err != nil {
-		return nil, err
-	}
-
-	credentials, err := alicloud.ReadSecretCredentials(secret)
+	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, w.client, &w.worker.Spec.SecretRef)
 	if err != nil {
 		return nil, err
 	}
