@@ -21,6 +21,8 @@ import (
 
 	gcpinstall "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
 	gcpcmd "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/cmd"
+	gcpbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/backupbucket"
+	gcpbackupentry "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/backupentry"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	gcpworker "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/worker"
@@ -48,6 +50,16 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 		configFileOpts = &gcpcmd.ConfigOptions{}
+
+		// options for the backupbucket controller
+		backupBucketCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the backupentry controller
+		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
 
 		// options for the controlplane controller
 		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
@@ -88,6 +100,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
+			controllercmd.PrefixOption("backupbucket-", backupBucketCtrlOpts),
+			controllercmd.PrefixOption("backupentry-", backupEntryCtrlOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
@@ -129,6 +143,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&gcpworker.DefaultAddOptions.MachineImages)
 			configFileOpts.Completed().ApplyETCDStorage(&gcpcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&gcpcontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			backupBucketCtrlOpts.Completed().Apply(&gcpbackupbucket.DefaultAddOptions)
+			backupEntryCtrlOpts.Completed().Apply(&gcpbackupentry.DefaultAddOptions)
 			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&gcpinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
