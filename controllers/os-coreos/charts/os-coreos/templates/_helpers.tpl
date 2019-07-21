@@ -5,3 +5,7 @@
   {{- printf "%s:%s" .Values.image.repository .Values.image.tag }}
   {{- end }}
 {{- end }}
+
+{{- define "deploymentversion" -}}
+apps/v1
+{{- end -}}
