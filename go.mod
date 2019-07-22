@@ -34,6 +34,7 @@ require (
 	github.com/gophercloud/gophercloud v0.2.0
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/hashicorp/go-multierror v1.0.0 // indirect
+	github.com/huandu/xstrings v1.2.0
 	github.com/jetstack/cert-manager v0.6.2
 	github.com/karrick/godirwalk v1.10.12 // indirect
 	github.com/onsi/ginkgo v1.8.0
@@ -67,8 +68,9 @@ require (
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
 	k8s.io/component-base v0.0.0-20190314000054-4a91899592f4
+	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
 	k8s.io/helm v2.14.2+incompatible
-	k8s.io/klog v0.3.3 // indirect
+	k8s.io/klog v0.3.3
 	k8s.io/kube-aggregator v0.0.0-20190314000639-da8327669ac5
 	k8s.io/kube-openapi v0.0.0-20190722073852-5e22f3d471e6 // indirect
 	k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325

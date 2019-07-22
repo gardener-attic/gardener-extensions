@@ -21,4 +21,4 @@ source "$DIRNAME/common.sh"
 
 header_text "Generate"
 
-GO111MODULE=on go generate -mod=vendor "${SOURCE_TREES[@]}"
+GO111MODULE=on GOFLAGS="-mod=vendor" go generate "${SOURCE_TREES[@]}"
