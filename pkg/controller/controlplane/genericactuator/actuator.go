@@ -22,7 +22,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/chartrenderer"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -43,12 +42,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
-const (
-	// ShootNoCleanupLabel is a constant for a label on a resource indicating the the Gardener cleaner should not delete this
-	// resource when cleaning a shoot during the deletion flow.
-	ShootNoCleanupLabel = "shoot.gardener.cloud/no-cleanup"
-)
-
 // ValuesProvider provides values for the 2 charts applied by this actuator.
 type ValuesProvider interface {
 	// GetConfigChartValues returns the values for the config chart applied by this actuator.
@@ -59,20 +52,6 @@ type ValuesProvider interface {
 	GetControlPlaneShootChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
 }
 
-// ChartRendererFactory creates chartrenderer.Interface to be used by this actuator.
-type ChartRendererFactory interface {
-	// NewChartRendererForShoot creates a new chartrenderer.Interface for the shoot cluster.
-	NewChartRendererForShoot(string) (chartrenderer.Interface, error)
-}
-
-// ChartRendererFactoryFunc is a function that satisfies ChartRendererFactory.
-type ChartRendererFactoryFunc func(string) (chartrenderer.Interface, error)
-
-// NewChartRendererForShoot creates a new chartrenderer.Interface for the shoot cluster.
-func (f ChartRendererFactoryFunc) NewChartRendererForShoot(version string) (chartrenderer.Interface, error) {
-	return f(version)
-}
-
 // NewActuator creates a new Actuator that acts upon and updates the status of ControlPlane resources.
 // It creates / deletes the given secrets and applies / deletes the given charts, using the given image vector and
 // the values provided by the given values provider.
@@ -80,7 +59,7 @@ func NewActuator(
 	secrets util.Secrets,
 	configChart, controlPlaneChart, controlPlaneShootChart util.Chart,
 	vp ValuesProvider,
-	chartRendererFactory ChartRendererFactory,
+	chartRendererFactory extensionscontroller.ChartRendererFactory,
 	imageVector imagevector.ImageVector,
 	configName string,
 	logger logr.Logger,
@@ -105,7 +84,7 @@ type actuator struct {
 	controlPlaneChart      util.Chart
 	controlPlaneShootChart util.Chart
 	vp                     ValuesProvider
-	chartRendererFactory   ChartRendererFactory
+	chartRendererFactory   extensionscontroller.ChartRendererFactory
 	imageVector            imagevector.ImageVector
 	configName             string
 
@@ -151,7 +130,7 @@ func (a *actuator) InjectClient(client client.Client) error {
 	return nil
 }
 
-const resourceName = "controlplane-shoot"
+const resourceName = "extension-controlplane-shoot"
 
 // Reconcile reconciles the given controlplane and cluster, creating or updating the additional Shoot
 // control plane components as needed.
@@ -249,7 +228,7 @@ func (a *actuator) Reconcile(
 	a.logger.Info("Creating managed resource containing shoot chart", "controlplane", util.ObjectName(cp), "name", resourceName)
 	if err := manager.NewManagedResource(a.client).
 		WithNamespacedName(cp.Namespace, resourceName).
-		WithInjectedLabels(map[string]string{ShootNoCleanupLabel: "true"}).
+		WithInjectedLabels(map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"}).
 		WithSecretRef(resourceName).
 		Reconcile(ctx); err != nil {
 		return false, errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing shoot chart for controlplane '%s'", cp.Namespace, resourceName, util.ObjectName(cp))

@@ -6,8 +6,8 @@ metadata:
   namespace: shoot--foo--bar
 type: Opaque
 data:
-# accessKeyID: base64(access-key-id)
-# secretAccessKey: base64(secret-access-key)
+  accessKeyID: AAAA
+  secretAccessKey: AAAA
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -23,6 +23,9 @@ spec:
   shoot:
     apiVersion: garden.sapcloud.io/v1beta1
     kind: Shoot
+    spec:
+      kubernetes:
+        version: 1.13.4
     status:
       lastOperation:
         state: Succeeded

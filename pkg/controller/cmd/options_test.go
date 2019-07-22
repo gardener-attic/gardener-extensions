@@ -17,9 +17,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
+
 	mockcontroller "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller"
 	mockcmd "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/util/test"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

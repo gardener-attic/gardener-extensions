@@ -17,6 +17,7 @@ package controlplane
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -38,7 +39,7 @@ var (
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Actuator: genericactuator.NewActuator(controlPlaneSecrets, nil, controlPlaneChart, controlPlaneShootChart,
-			NewValuesProvider(logger), genericactuator.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
+			NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), "", logger),
 		Type:              packet.Type,
 		ControllerOptions: opts,

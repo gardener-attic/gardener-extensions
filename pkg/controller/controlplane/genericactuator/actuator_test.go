@@ -20,30 +20,26 @@ import (
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
+	mockextensionscontroller "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller"
 	mockgenericactuator "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/controlplane/genericactuator"
 	mockutil "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/util"
 	mockchartrenderer "github.com/gardener/gardener-extensions/pkg/mock/gardener/chartrenderer"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
+	resourcemanagerv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
-
-	resourcemanagerv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
-
 	"github.com/golang/mock/gomock"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -112,7 +108,7 @@ var _ = Describe("Actuator", func() {
 				SecretRefs: []corev1.LocalObjectReference{
 					{Name: resourceName},
 				},
-				InjectLabels: map[string]string{ShootNoCleanupLabel: "true"},
+				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
 			},
 		}
 		deletedSecret = &corev1.Secret{
@@ -183,7 +179,7 @@ var _ = Describe("Actuator", func() {
 
 			// Create mock chart renderer and factory
 			chartRenderer := mockchartrenderer.NewMockInterface(ctrl)
-			crf := mockgenericactuator.NewMockChartRendererFactory(ctrl)
+			crf := mockextensionscontroller.NewMockChartRendererFactory(ctrl)
 			crf.EXPECT().NewChartRendererForShoot(shootVersion).Return(chartRenderer, nil)
 
 			// Create mock secrets and charts

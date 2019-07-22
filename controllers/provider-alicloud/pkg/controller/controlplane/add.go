@@ -17,6 +17,7 @@ package controlplane
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -38,7 +39,7 @@ var (
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Actuator: genericactuator.NewActuator(controlPlaneSecrets, configChart, controlPlaneChart, controlPlaneShootChart,
-			NewValuesProvider(logger), genericactuator.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
+			NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), alicloud.CloudProviderConfigName, logger),
 		Type:              alicloud.Type,
 		ControllerOptions: opts,

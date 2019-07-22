@@ -31,7 +31,6 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -98,16 +97,8 @@ func (a *genericActuator) Delete(ctx context.Context, worker *extensionsv1alpha1
 	}
 
 	// Delete the machine-controller-manager.
-	a.logger.Info("Deleting the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
-	shootClients, err := util.NewClientsForShoot(ctx, a.client, worker.Namespace, client.Options{})
-	if err != nil {
-		return errors.Wrapf(err, "could not create shoot client for cleanup of machine-controller-manager resources")
-	}
-	if err := a.mcmShootChart.Delete(ctx, shootClients.Client(), metav1.NamespaceSystem); err != nil {
-		return errors.Wrapf(err, "cleaning up machine-controller-manager resources in shoot failed")
-	}
-	if err := a.mcmSeedChart.Delete(ctx, a.client, worker.Namespace); err != nil {
-		return errors.Wrapf(err, "cleaning up machine-controller-manager resources in seed failed")
+	if err := a.deleteMachineControllerManager(ctx, worker); err != nil {
+		return errors.Wrapf(err, "failed deleting machine-controller-manager")
 	}
 
 	return nil

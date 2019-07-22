@@ -22,6 +22,9 @@ spec:
   shoot:
     apiVersion: garden.sapcloud.io/v1beta1
     kind: Shoot
+    spec:
+      kubernetes:
+        version: 1.13.4
     status:
       lastOperation:
         state: Succeeded

@@ -15,12 +15,13 @@
 package infrastructure_test
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func TestInfrastructure(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Infrastructure")
+	RunSpecs(t, "Alicloud Infrastructure Suite")
 }

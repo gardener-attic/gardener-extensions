@@ -21,6 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	"github.com/gardener/gardener-resource-manager/pkg/manager"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -32,6 +33,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const mcmShootResourceName = "extension-worker-mcm-shoot"
 
 func (a *genericActuator) deployMachineControllerManager(ctx context.Context, workerObj *extensionsv1alpha1.Worker, cluster *controller.Cluster, workerDelegate WorkerDelegate) error {
 	mcmValues, err := workerDelegate.GetMachineControllerManagerChartValues(ctx)
@@ -72,20 +75,70 @@ func (a *genericActuator) deployMachineControllerManager(ctx context.Context, wo
 	return nil
 }
 
+func (a *genericActuator) deleteMachineControllerManager(ctx context.Context, workerObj *extensionsv1alpha1.Worker) error {
+	a.logger.Info("Deleting the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", workerObj.Namespace, workerObj.Name))
+
+	// Delete the managed resource
+	a.logger.Info("Deleting managed resource containing mcm chart", "worker", util.ObjectName(workerObj), "name", mcmShootResourceName)
+	if err := manager.NewManagedResource(a.client).
+		WithNamespacedName(workerObj.Namespace, mcmShootResourceName).
+		Delete(ctx); err != nil {
+		return errors.Wrapf(err, "could not delete managed resource '%s/%s' containing mcm chart for worker '%s'", workerObj.Namespace, mcmShootResourceName, util.ObjectName(workerObj))
+	}
+
+	// Delete the secret referenced by the managed resource
+	a.logger.Info("Deleting secret of managed resource containing mcm chart", "worker", util.ObjectName(workerObj), "name", mcmShootResourceName)
+	if err := manager.NewSecret(a.client).
+		WithNamespacedName(workerObj.Namespace, mcmShootResourceName).
+		Delete(ctx); err != nil {
+		return errors.Wrapf(err, "could not delete secret '%s/%s' of managed resource containing mcm chart for worker '%s'", workerObj.Namespace, mcmShootResourceName, util.ObjectName(workerObj))
+	}
+
+	if err := a.mcmSeedChart.Delete(ctx, a.client, workerObj.Namespace); err != nil {
+		return errors.Wrapf(err, "cleaning up machine-controller-manager resources in seed failed")
+	}
+
+	return nil
+}
+
 func (a *genericActuator) applyMachineControllerManagerShootChart(ctx context.Context, workerDelegate WorkerDelegate, workerObj *extensionsv1alpha1.Worker, cluster *controller.Cluster) error {
-	shootClients, err := util.NewClientsForShoot(ctx, a.client, workerObj.Namespace, client.Options{})
+	// Create shoot chart renderer
+	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
+	if err != nil {
+		return errors.Wrapf(err, "could not create chart renderer for shoot '%s'", workerObj.Namespace)
+	}
+
+	// Get machine-controller-manager shoot chart values
+	values, err := workerDelegate.GetMachineControllerManagerShootChartValues(ctx)
 	if err != nil {
 		return err
 	}
 
-	mcmShootValues, err := workerDelegate.GetMachineControllerManagerShootChartValues(ctx)
+	// Render machine-controller-manager shoot chart
+	a.logger.Info("Rendering machine-controller-manager shoot chart", "worker", util.ObjectName(workerObj), "values", values)
+	version := cluster.Shoot.Spec.Kubernetes.Version
+	name, data, err := a.mcmShootChart.Render(chartRenderer, metav1.NamespaceSystem, a.imageVector, version, version, values)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "could not render machine-controller-manager shoot chart for worker '%s'", util.ObjectName(workerObj))
 	}
 
-	if err := a.mcmShootChart.Apply(ctx, shootClients.ChartApplier(), metav1.NamespaceSystem,
-		a.imageVector, shootClients.GardenerClientset().Version(), cluster.Shoot.Spec.Kubernetes.Version, mcmShootValues); err != nil {
-		return errors.Wrapf(err, "could not apply MCM chart in shoot for worker '%s'", util.ObjectName(workerObj))
+	// Create or update secret containing the rendered machine-controller-manager shoot chart
+	a.logger.Info("Creating secret of managed resource containing mcm shoot chart", "worker", util.ObjectName(workerObj), "name", mcmShootResourceName)
+	if err := manager.NewSecret(a.client).
+		WithNamespacedName(workerObj.Namespace, mcmShootResourceName).
+		WithKeyValues(map[string][]byte{name: data}).
+		Reconcile(ctx); err != nil {
+		return errors.Wrapf(err, "could not create or update secret '%s/%s' of managed resource containing mcm shoot chart for worker '%s'", workerObj.Namespace, mcmShootResourceName, util.ObjectName(workerObj))
+	}
+
+	// Create or update managed resource referencing the previously created secret
+	a.logger.Info("Creating managed resource containing mcm shoot chart", "worker", util.ObjectName(workerObj), "name", mcmShootResourceName)
+	if err := manager.NewManagedResource(a.client).
+		WithNamespacedName(workerObj.Namespace, mcmShootResourceName).
+		WithInjectedLabels(map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"}).
+		WithSecretRef(mcmShootResourceName).
+		Reconcile(ctx); err != nil {
+		return errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing mcm shoot chart for worker '%s'", workerObj.Namespace, mcmShootResourceName, util.ObjectName(workerObj))
 	}
 
 	return nil

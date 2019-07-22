@@ -17,7 +17,28 @@ package controller
 import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+	"github.com/gardener/gardener/pkg/chartrenderer"
 )
+
+const (
+	// ShootNoCleanupLabel is a constant for a label on a resource indicating the the Gardener cleaner should not delete this
+	// resource when cleaning a shoot during the deletion flow.
+	ShootNoCleanupLabel = "shoot.gardener.cloud/no-cleanup"
+)
+
+// ChartRendererFactory creates chartrenderer.Interface to be used by this actuator.
+type ChartRendererFactory interface {
+	// NewChartRendererForShoot creates a new chartrenderer.Interface for the shoot cluster.
+	NewChartRendererForShoot(string) (chartrenderer.Interface, error)
+}
+
+// ChartRendererFactoryFunc is a function that satisfies ChartRendererFactory.
+type ChartRendererFactoryFunc func(string) (chartrenderer.Interface, error)
+
+// NewChartRendererForShoot creates a new chartrenderer.Interface for the shoot cluster.
+func (f ChartRendererFactoryFunc) NewChartRendererForShoot(version string) (chartrenderer.Interface, error) {
+	return f(version)
+}
 
 // GetPodNetwork returns the pod network CIDR of the given Shoot.
 func GetPodNetwork(shoot *gardenv1beta1.Shoot) gardencorev1alpha1.CIDR {

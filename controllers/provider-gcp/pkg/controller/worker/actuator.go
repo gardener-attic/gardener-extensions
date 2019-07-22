@@ -23,6 +23,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardener "github.com/gardener/gardener/pkg/client/kubernetes"
@@ -53,6 +54,7 @@ func NewActuator(machineImages []config.MachineImage) worker.Actuator {
 		logger:        log.Log.WithName("worker-actuator"),
 		machineImages: machineImages,
 	}
+
 	return genericactuator.NewActuator(
 		log.Log.WithName("gcp-worker-actuator"),
 		delegateFactory,
@@ -60,6 +62,7 @@ func NewActuator(machineImages []config.MachineImage) worker.Actuator {
 		mcmChart,
 		mcmShootChart,
 		imagevector.ImageVector(),
+		extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 	)
 }
 

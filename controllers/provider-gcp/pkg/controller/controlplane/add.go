@@ -18,6 +18,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/imagevector"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -39,7 +40,7 @@ var (
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Actuator: genericactuator.NewActuator(controlPlaneSecrets, configChart, ccmChart, ccmShootChart,
-			NewValuesProvider(logger), genericactuator.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
+			NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), internal.CloudProviderConfigName, logger),
 		Type:              gcp.Type,
 		ControllerOptions: opts,
