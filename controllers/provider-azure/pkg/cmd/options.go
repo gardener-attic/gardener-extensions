@@ -15,12 +15,16 @@
 package cmd
 
 import (
+	backupbucketcontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/backupbucket"
+	backupentrycontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/backupentry"
 	controlplanecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/controlplane"
 	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	workercontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
 	controlplanewebhook "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplane"
 	controlplanebackupwebhook "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplanebackup"
 	controlplaneexposurewebhook "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplaneexposure"
+	extensionsbackupbucketcontroller "github.com/gardener/gardener-extensions/pkg/controller/backupbucket"
+	extensionsbackupentrycontroller "github.com/gardener/gardener-extensions/pkg/controller/backupentry"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	extensionscontrolplanecontroller "github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -32,8 +36,10 @@ import (
 // ControllerSwitchOptions are the controllercmd.SwitchOptions for the provider controllers.
 func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 	return controllercmd.NewSwitchOptions(
-		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
+		controllercmd.Switch(extensionsbackupbucketcontroller.ControllerName, backupbucketcontroller.AddToManager),
+		controllercmd.Switch(extensionsbackupentrycontroller.ControllerName, backupentrycontroller.AddToManager),
 		controllercmd.Switch(extensionscontrolplanecontroller.ControllerName, controlplanecontroller.AddToManager),
+		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
 		controllercmd.Switch(extensionsworkercontroller.ControllerName, workercontroller.AddToManager),
 	)
 }

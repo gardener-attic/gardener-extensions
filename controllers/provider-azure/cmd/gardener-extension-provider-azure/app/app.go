@@ -22,6 +22,8 @@ import (
 	azureinstall "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/install"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	azurecmd "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/cmd"
+	azurebackupbucket "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/backupbucket"
+	azurebackupentry "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/backupentry"
 	azurecontrolplane "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/controlplane"
 	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	azureworker "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
@@ -48,6 +50,16 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 		}
 		configFileOpts = &azurecmd.ConfigOptions{}
+
+		// options for the backupbucket controller
+		backupBucketCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the backupentry controller
+		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
 
 		// options for the controlplane controller
 		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
@@ -88,6 +100,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
+			controllercmd.PrefixOption("backupbucket-", backupBucketCtrlOpts),
+			controllercmd.PrefixOption("backupentry-", backupEntryCtrlOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
@@ -129,6 +143,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyMachineImages(&azureworker.DefaultAddOptions.MachineImages)
 			configFileOpts.Completed().ApplyETCDStorage(&azurecontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&azurecontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			backupBucketCtrlOpts.Completed().Apply(&azurebackupbucket.DefaultAddOptions)
+			backupEntryCtrlOpts.Completed().Apply(&azurebackupentry.DefaultAddOptions)
 			controlPlaneCtrlOpts.Completed().Apply(&azurecontrolplane.Options)
 			infraCtrlOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.Controller)
 			infraReconcileOpts.Completed().Apply(&azureinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
