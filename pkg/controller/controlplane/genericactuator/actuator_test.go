@@ -96,13 +96,13 @@ var _ = Describe("Actuator", func() {
 			Data:       map[string]string{"abc": "xyz"},
 		}
 
-		resourceKey   = client.ObjectKey{Namespace: namespace, Name: controlPlaneShootChartResourceName}
-		createdSecret = &corev1.Secret{
+		resourceKeyCPShootChart        = client.ObjectKey{Namespace: namespace, Name: controlPlaneShootChartResourceName}
+		createdMRSecretForCPShootChart = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Data:       map[string][]byte{chartName: []byte(renderedContent)},
 			Type:       corev1.SecretTypeOpaque,
 		}
-		createdManagedResource = &resourcemanagerv1alpha1.ManagedResource{
+		createdMRForCPShootChart = &resourcemanagerv1alpha1.ManagedResource{
 			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs: []corev1.LocalObjectReference{
@@ -111,12 +111,39 @@ var _ = Describe("Actuator", func() {
 				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
 			},
 		}
-		deletedSecret = &corev1.Secret{
+		deletedMRSecretForCPShootChart = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Type:       corev1.SecretTypeOpaque,
 		}
-		deletedManagedResource = &resourcemanagerv1alpha1.ManagedResource{
+		deleteMRForCPShootChart = &resourcemanagerv1alpha1.ManagedResource{
 			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
+			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
+				SecretRefs:   []corev1.LocalObjectReference{},
+				InjectLabels: map[string]string{},
+			},
+		}
+
+		resourceKeyStorageClassesChart        = client.ObjectKey{Namespace: namespace, Name: storageClassesChartResourceName}
+		createdMRSecretForStorageClassesChart = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			Data:       map[string][]byte{chartName: []byte(renderedContent)},
+			Type:       corev1.SecretTypeOpaque,
+		}
+		createdMRForStorageClassesChart = &resourcemanagerv1alpha1.ManagedResource{
+			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
+				SecretRefs: []corev1.LocalObjectReference{
+					{Name: storageClassesChartResourceName},
+				},
+				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
+			},
+		}
+		deletedMRSecretForStorageClassesChart = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			Type:       corev1.SecretTypeOpaque,
+		}
+		deleteMRForStorageClassesChart = &resourcemanagerv1alpha1.ManagedResource{
+			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs:   []corev1.LocalObjectReference{},
 				InjectLabels: map[string]string{},
@@ -147,6 +174,10 @@ var _ = Describe("Actuator", func() {
 			"foo": "bar",
 		}
 
+		storageClassesChartValues = map[string]interface{}{
+			"foo": "bar",
+		}
+
 		errNotFound = &errors.StatusError{ErrStatus: metav1.Status{Reason: metav1.StatusReasonNotFound}}
 		logger      = log.Log.WithName("test")
 	)
@@ -163,14 +194,21 @@ var _ = Describe("Actuator", func() {
 		func(configName string, checksums map[string]string) {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
+
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 			if configName != "" {
 				client.EXPECT().Get(context.TODO(), cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
 			}
-			client.EXPECT().Get(context.TODO(), resourceKey, createdSecret).Return(errNotFound)
-			client.EXPECT().Create(context.TODO(), createdSecret).Return(nil)
-			client.EXPECT().Get(context.TODO(), resourceKey, createdManagedResource).Return(errNotFound)
-			client.EXPECT().Create(context.TODO(), createdManagedResource).Return(nil)
+
+			client.EXPECT().Get(context.TODO(), resourceKeyCPShootChart, createdMRSecretForCPShootChart).Return(errNotFound)
+			client.EXPECT().Create(context.TODO(), createdMRSecretForCPShootChart).Return(nil)
+			client.EXPECT().Get(context.TODO(), resourceKeyCPShootChart, createdMRForCPShootChart).Return(errNotFound)
+			client.EXPECT().Create(context.TODO(), createdMRForCPShootChart).Return(nil)
+
+			client.EXPECT().Get(context.TODO(), resourceKeyStorageClassesChart, createdMRSecretForStorageClassesChart).Return(errNotFound)
+			client.EXPECT().Create(context.TODO(), createdMRSecretForStorageClassesChart).Return(nil)
+			client.EXPECT().Get(context.TODO(), resourceKeyStorageClassesChart, createdMRForStorageClassesChart).Return(errNotFound)
+			client.EXPECT().Create(context.TODO(), createdMRForStorageClassesChart).Return(nil)
 
 			// Create mock Gardener clientset and chart applier
 			gardenerClientset := mockkubernetes.NewMockInterface(ctrl)
@@ -195,6 +233,8 @@ var _ = Describe("Actuator", func() {
 			ccmChart.EXPECT().Apply(context.TODO(), chartApplier, namespace, imageVector, seedVersion, shootVersion, controlPlaneChartValues).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
 			ccmShootChart.EXPECT().Render(chartRenderer, metav1.NamespaceSystem, imageVector, shootVersion, shootVersion, controlPlaneShootChartValues).Return(chartName, []byte(renderedContent), nil)
+			storageClassesChart := mockutil.NewMockChart(ctrl)
+			storageClassesChart.EXPECT().Render(chartRenderer, metav1.NamespaceSystem, imageVector, shootVersion, shootVersion, storageClassesChartValues).Return(chartName, []byte(renderedContent), nil)
 
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
@@ -203,9 +243,10 @@ var _ = Describe("Actuator", func() {
 			}
 			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums, false).Return(controlPlaneChartValues, nil)
 			vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
+			vp.EXPECT().GetStorageClassesChartValues(context.TODO(), cp, cluster).Return(storageClassesChartValues, nil)
 
 			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, nil, vp, crf, imageVector, configName, logger)
+			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, storageClassesChart, vp, crf, imageVector, configName, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 			a.(*actuator).gardenerClientset = gardenerClientset
@@ -224,8 +265,12 @@ var _ = Describe("Actuator", func() {
 		func(configName string) {
 			// Create mock clients
 			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Delete(context.TODO(), deletedSecret).Return(nil)
-			client.EXPECT().Delete(context.TODO(), deletedManagedResource).Return(nil)
+
+			client.EXPECT().Delete(context.TODO(), deletedMRSecretForStorageClassesChart).Return(nil)
+			client.EXPECT().Delete(context.TODO(), deleteMRForStorageClassesChart).Return(nil)
+
+			client.EXPECT().Delete(context.TODO(), deletedMRSecretForCPShootChart).Return(nil)
+			client.EXPECT().Delete(context.TODO(), deleteMRForCPShootChart).Return(nil)
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)

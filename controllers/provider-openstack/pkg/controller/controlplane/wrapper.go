@@ -20,11 +20,17 @@ import (
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+
 	"github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
 type wrapper struct {
 	controlplane.Actuator
+}
+
+func (w *wrapper) InjectFunc(f inject.Func) error {
+	return f(w.Actuator)
 }
 
 func (w *wrapper) Delete(ctx context.Context, cp *v1alpha1.ControlPlane, cluster *controller.Cluster) error {

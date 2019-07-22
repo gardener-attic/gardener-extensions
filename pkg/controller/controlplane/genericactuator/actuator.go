@@ -234,7 +234,11 @@ func (a *actuator) Delete(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) error {
-	// Delete the managed resource
+	// Delete the managed resources
+	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, storageClassesChartResourceName); err != nil {
+		return errors.Wrapf(err, "could not delete managed resource containing storage classes chart for controlplane '%s'", util.ObjectName(cp))
+	}
+
 	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, controlPlaneShootChartResourceName); err != nil {
 		return errors.Wrapf(err, "could not delete managed resource containing shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
