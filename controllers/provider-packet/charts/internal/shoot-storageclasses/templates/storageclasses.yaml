@@ -1,0 +1,18 @@
+---
+apiVersion: {{ include "storageclassversion" . }}
+kind: StorageClass
+metadata:
+  name: csi-packet-standard
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: net.packet.csi
+parameters:
+  type: standard
+---
+apiVersion: {{ include "storageclassversion" . }}
+kind: StorageClass
+metadata:
+  name: csi-packet-performance
+provisioner: net.packet.csi
+parameters:
+  type: performance

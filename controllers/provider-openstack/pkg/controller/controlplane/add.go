@@ -39,7 +39,7 @@ var (
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Actuator: &wrapper{genericactuator.NewActuator(controlPlaneSecrets, configChart, ccmChart, ccmShootChart,
-			NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
+			storageClassChart, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), openstack.CloudProviderConfigName, logger)},
 		Type:              openstack.Type,
 		ControllerOptions: opts,

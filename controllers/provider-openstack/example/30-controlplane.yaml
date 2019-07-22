@@ -63,7 +63,8 @@ spec:
   providerConfig:
     apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
     kind: ControlPlaneConfig
-    loadBalancerProvider: "provider"
+    loadBalancerProvider: provider
+    zone: eu-1a
     cloudControllerManager:
       featureGates:
         CustomResourceValidation: true

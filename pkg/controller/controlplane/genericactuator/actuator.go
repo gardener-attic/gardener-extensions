@@ -16,6 +16,7 @@ package genericactuator
 
 import (
 	"context"
+	"fmt"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
@@ -25,19 +26,13 @@ import (
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
-
-	"github.com/gardener/gardener-resource-manager/pkg/manager"
-
 	"github.com/go-logr/logr"
-
 	"github.com/pkg/errors"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
@@ -50,6 +45,8 @@ type ValuesProvider interface {
 	GetControlPlaneChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster, map[string]string, bool) (map[string]interface{}, error)
 	// GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by this actuator.
 	GetControlPlaneShootChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
+	// GetStorageClassesChartValues returns the values for the storage classes chart applied by this actuator.
+	GetStorageClassesChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
 }
 
 // NewActuator creates a new Actuator that acts upon and updates the status of ControlPlane resources.
@@ -57,7 +54,7 @@ type ValuesProvider interface {
 // the values provided by the given values provider.
 func NewActuator(
 	secrets util.Secrets,
-	configChart, controlPlaneChart, controlPlaneShootChart util.Chart,
+	configChart, controlPlaneChart, controlPlaneShootChart, storageClassesChart util.Chart,
 	vp ValuesProvider,
 	chartRendererFactory extensionscontroller.ChartRendererFactory,
 	imageVector imagevector.ImageVector,
@@ -69,6 +66,7 @@ func NewActuator(
 		configChart:            configChart,
 		controlPlaneChart:      controlPlaneChart,
 		controlPlaneShootChart: controlPlaneShootChart,
+		storageClassesChart:    storageClassesChart,
 		vp:                     vp,
 		chartRendererFactory:   chartRendererFactory,
 		imageVector:            imageVector,
@@ -83,6 +81,7 @@ type actuator struct {
 	configChart            util.Chart
 	controlPlaneChart      util.Chart
 	controlPlaneShootChart util.Chart
+	storageClassesChart    util.Chart
 	vp                     ValuesProvider
 	chartRendererFactory   extensionscontroller.ChartRendererFactory
 	imageVector            imagevector.ImageVector
@@ -130,7 +129,10 @@ func (a *actuator) InjectClient(client client.Client) error {
 	return nil
 }
 
-const resourceName = "extension-controlplane-shoot"
+const (
+	controlPlaneShootChartResourceName = "extension-controlplane-shoot"
+	storageClassesChartResourceName    = "extension-controlplane-storageclasses"
+)
 
 // Reconcile reconciles the given controlplane and cluster, creating or updating the additional Shoot
 // control plane components as needed.
@@ -141,6 +143,7 @@ func (a *actuator) Reconcile(
 ) (bool, error) {
 	// Deploy secrets
 	a.logger.Info("Deploying secrets", "controlplane", util.ObjectName(cp))
+	fmt.Printf("%#+v", a.clientset)
 	deployedSecrets, err := a.secrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
 	if err != nil {
 		return false, errors.Wrapf(err, "could not deploy secrets for controlplane '%s'", util.ObjectName(cp))
@@ -207,31 +210,18 @@ func (a *actuator) Reconcile(
 		return false, err
 	}
 
-	// Render control plane shoot chart
-	a.logger.Info("Rendering control plane shoot chart", "controlplane", util.ObjectName(cp), "values", values)
-	version := cluster.Shoot.Spec.Kubernetes.Version
-	name, data, err := a.controlPlaneShootChart.Render(chartRenderer, metav1.NamespaceSystem, a.imageVector, version, version, values)
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, controlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
+		return false, errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
+	}
+
+	// Get storage classes
+	values, err = a.vp.GetStorageClassesChartValues(ctx, cp, cluster)
 	if err != nil {
-		return false, errors.Wrapf(err, "could not render control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
+		return false, err
 	}
 
-	// Create or update secret containing the rendered control plane shoot chart
-	a.logger.Info("Creating secret of managed resource containing shoot chart", "controlplane", util.ObjectName(cp), "name", resourceName)
-	if err := manager.NewSecret(a.client).
-		WithNamespacedName(cp.Namespace, resourceName).
-		WithKeyValues(map[string][]byte{name: data}).
-		Reconcile(ctx); err != nil {
-		return false, errors.Wrapf(err, "could not create or update secret '%s/%s' of managed resource containing shoot chart for controlplane '%s'", cp.Namespace, resourceName, util.ObjectName(cp))
-	}
-
-	// Create or update managed resource referencing the previously created secret
-	a.logger.Info("Creating managed resource containing shoot chart", "controlplane", util.ObjectName(cp), "name", resourceName)
-	if err := manager.NewManagedResource(a.client).
-		WithNamespacedName(cp.Namespace, resourceName).
-		WithInjectedLabels(map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"}).
-		WithSecretRef(resourceName).
-		Reconcile(ctx); err != nil {
-		return false, errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing shoot chart for controlplane '%s'", cp.Namespace, resourceName, util.ObjectName(cp))
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
+		return false, errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
 	return requeue, nil
@@ -245,19 +235,8 @@ func (a *actuator) Delete(
 	cluster *extensionscontroller.Cluster,
 ) error {
 	// Delete the managed resource
-	a.logger.Info("Deleting managed resource containing shoot chart", "controlplane", util.ObjectName(cp), "name", resourceName)
-	if err := manager.NewManagedResource(a.client).
-		WithNamespacedName(cp.Namespace, resourceName).
-		Delete(ctx); err != nil {
-		return errors.Wrapf(err, "could not delete managed resource '%s/%s' containing shoot chart for controlplane '%s'", cp.Namespace, resourceName, util.ObjectName(cp))
-	}
-
-	// Delete the secret referenced by the managed resource
-	a.logger.Info("Deleting secret of managed resource containing shoot chart", "controlplane", util.ObjectName(cp), "name", resourceName)
-	if err := manager.NewSecret(a.client).
-		WithNamespacedName(cp.Namespace, resourceName).
-		Delete(ctx); err != nil {
-		return errors.Wrapf(err, "could not delete secret '%s/%s' of managed resource containing shoot chart for controlplane '%s'", cp.Namespace, resourceName, util.ObjectName(cp))
+	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, controlPlaneShootChartResourceName); err != nil {
+		return errors.Wrapf(err, "could not delete managed resource containing shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Delete control plane objects

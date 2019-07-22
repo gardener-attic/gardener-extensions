@@ -183,6 +183,11 @@ var controlPlaneShootChart = &chart.Chart{
 	},
 }
 
+var storageClassChart = &chart.Chart{
+	Name: "shoot-storageclasses",
+	Path: filepath.Join(alicloud.InternalChartsPath, "shoot-storageclasses"),
+}
+
 // NewValuesProvider creates a new ValuesProvider for the generic actuator.
 func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 	return &valuesProvider{
@@ -269,6 +274,15 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 
 	// Get control plane shoot chart values
 	return getControlPlaneShootChartValues(cluster, credentials)
+}
+
+// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
+func (vp *valuesProvider) GetStorageClassesChartValues(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) (map[string]interface{}, error) {
+	return nil, nil
 }
 
 // getCredentials determines the credentials from the secret referenced in the ControlPlane resource.

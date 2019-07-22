@@ -16,10 +16,11 @@ package controlplane
 
 import (
 	"context"
+	"time"
+
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"time"
 )
 
 type wrapper struct {

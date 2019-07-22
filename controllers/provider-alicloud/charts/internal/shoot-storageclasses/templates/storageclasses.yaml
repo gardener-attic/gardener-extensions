@@ -1,0 +1,13 @@
+---
+apiVersion: {{ include "storageclassversion" . }}
+kind: StorageClass
+metadata:
+  name: default
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: diskplugin.csi.alibabacloud.com
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  type: cloud_ssd
+  readOnly: "false"
+  encrypted: "true"

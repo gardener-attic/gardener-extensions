@@ -96,27 +96,27 @@ var _ = Describe("Actuator", func() {
 			Data:       map[string]string{"abc": "xyz"},
 		}
 
-		resourceKey   = client.ObjectKey{Namespace: namespace, Name: resourceName}
+		resourceKey   = client.ObjectKey{Namespace: namespace, Name: controlPlaneShootChartResourceName}
 		createdSecret = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Data:       map[string][]byte{chartName: []byte(renderedContent)},
 			Type:       corev1.SecretTypeOpaque,
 		}
 		createdManagedResource = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs: []corev1.LocalObjectReference{
-					{Name: resourceName},
+					{Name: controlPlaneShootChartResourceName},
 				},
 				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
 			},
 		}
 		deletedSecret = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Type:       corev1.SecretTypeOpaque,
 		}
 		deletedManagedResource = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: resourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs:   []corev1.LocalObjectReference{},
 				InjectLabels: map[string]string{},
@@ -205,7 +205,7 @@ var _ = Describe("Actuator", func() {
 			vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
 
 			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, vp, crf, imageVector, configName, logger)
+			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, nil, vp, crf, imageVector, configName, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 			a.(*actuator).gardenerClientset = gardenerClientset
@@ -240,7 +240,7 @@ var _ = Describe("Actuator", func() {
 			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
 
 			// Create actuator
-			a := NewActuator(secrets, configChart, ccmChart, nil, nil, nil, nil, configName, logger)
+			a := NewActuator(secrets, configChart, ccmChart, nil, nil, nil, nil, nil, configName, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 

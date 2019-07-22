@@ -33,18 +33,14 @@ import (
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
-
 	"github.com/go-logr/logr"
-
 	"github.com/pkg/errors"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -124,6 +120,11 @@ var ccmShootChart = &chart.Chart{
 	},
 }
 
+var storageClassChart = &chart.Chart{
+	Name: "shoot-storageclasses",
+	Path: filepath.Join(internal.InternalChartsPath, "shoot-storageclasses"),
+}
+
 // NewValuesProvider creates a new ValuesProvider for the generic actuator.
 func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 	return &valuesProvider{
@@ -198,6 +199,15 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 
 // GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by the generic actuator.
 func (vp *valuesProvider) GetControlPlaneShootChartValues(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) (map[string]interface{}, error) {
+	return nil, nil
+}
+
+// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
+func (vp *valuesProvider) GetStorageClassesChartValues(
 	ctx context.Context,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,

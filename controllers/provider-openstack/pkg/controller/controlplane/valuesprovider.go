@@ -18,6 +18,16 @@ import (
 	"context"
 	"path/filepath"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
+	openstacktypes "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
@@ -32,15 +42,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
-	openstacktypes "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
-	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
-	"github.com/gardener/gardener-extensions/pkg/util"
 )
 
 // Object names
@@ -113,6 +114,11 @@ var ccmShootChart = &chart.Chart{
 		{Type: &rbacv1.ClusterRole{}, Name: "system:controller:cloud-node-controller"},
 		{Type: &rbacv1.ClusterRoleBinding{}, Name: "system:controller:cloud-node-controller"},
 	},
+}
+
+var storageClassChart = &chart.Chart{
+	Name: "shoot-storageclasses",
+	Path: filepath.Join(openstacktypes.InternalChartsPath, "shoot-storageclasses"),
 }
 
 // NewValuesProvider creates a new ValuesProvider for the generic actuator.
@@ -194,6 +200,23 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 	*extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	return nil, nil
+}
+
+// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
+func (vp *valuesProvider) GetStorageClassesChartValues(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) (map[string]interface{}, error) {
+	// Decode providerConfig
+	cpConfig := &apisopenstack.ControlPlaneConfig{}
+	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
+		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
+	}
+
+	return map[string]interface{}{
+		"availability": cpConfig.Zone,
+	}, nil
 }
 
 // getConfigChartValues collects and returns the configuration chart values.
