@@ -23,7 +23,6 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
-	alicloudimagevector "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -32,7 +31,6 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
-	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -136,9 +134,8 @@ var controlPlaneChart = &chart.Chart{
 			},
 		},
 		{
-			Name: "csi-alicloud",
-			// TODO Uncomment again when image vector is enhanced to support specifying the shoot version
-			// Images: []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName},
+			Name:   "csi-alicloud",
+			Images: []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName},
 			Objects: []*chart.Object{
 				{Type: &appsv1.Deployment{}, Name: "csi-plugin-controller"},
 			},
@@ -359,18 +356,6 @@ func getControlPlaneChartValues(
 	checksums map[string]string,
 	scaledDown bool,
 ) (map[string]interface{}, error) {
-	// Inject CSI images explicitly to make sure that the correct images for the shoot version are injected
-	// TODO Remove when image vector is enhanced to support specifying the shoot version
-	var (
-		err       error
-		csiValues map[string]interface{}
-		csiImages = []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName}
-	)
-	if csiValues, err = chart.InjectImages(csiValues, alicloudimagevector.ImageVector(), csiImages,
-		imagevector.RuntimeVersion(cluster.Shoot.Spec.Kubernetes.Version), imagevector.TargetVersion(cluster.Shoot.Spec.Kubernetes.Version)); err != nil {
-		return nil, errors.Wrap(err, "could not inject CSI images")
-	}
-
 	values := map[string]interface{}{
 		"alicloud-cloud-controller-manager": map[string]interface{}{
 			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
@@ -395,7 +380,6 @@ func getControlPlaneChartValues(
 				"checksum/secret-csi-snapshotter": checksums["csi-snapshotter"],
 				"checksum/secret-cloudprovider":   checksums[common.CloudProviderSecretName],
 			},
-			"images": map[string]interface{}(csiValues["images"].(chart.Values)),
 		},
 	}
 
