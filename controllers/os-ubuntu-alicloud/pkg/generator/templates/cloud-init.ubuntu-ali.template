@@ -1,0 +1,67 @@
+#!/bin/bash
+
+{{- define "put-content" -}}
+cat << EOF | base64 -d > '{{ .Path }}'
+{{ .Content }}
+EOF
+{{- end -}}
+
+{{- if .Bootstrap }}
+#install needed packages
+apt update
+apt install -y docker.io socat nfs-common logrotate jq
+
+#disable swap
+swapoff -a
+sed -e '/swap/ s/^#*/#/g' -i /etc/fstab
+mount -a
+
+#Fix mis-configuration of dockerd
+mkdir -p /etc/docker
+echo '{ "storage-driver": "devicemapper" }' > /etc/docker/daemon.json
+sed -i '/Environment=DOCKER_SELINUX=--selinux-enabled=true/s/^/#/g' /run/systemd/system/docker.service
+{{- end }}
+
+{{ range $_, $file := .Files -}}
+mkdir -p '{{ $file.Dirname }}'
+{{ template "put-content" $file }}
+{{- if $file.Permissions }}
+chmod '{{ $file.Permissions }}' '{{ $file.Path }}'
+{{ end }}
+{{ end }}
+
+{{- if not .Bootstrap -}}
+#blacklist sctp kernel module
+mkdir -p '/etc/modprobe.d'
+cat << EOF | base64 -d > '/etc/modprobe.d/sctp.conf'
+aW5zdGFsbCBzY3RwIC9iaW4vdHJ1ZQ==
+EOF
+{{ end }}
+
+{{- range $_, $unit := .Units -}}
+{{ if $unit.Content -}}
+{{ template "put-content" $unit }}
+{{- end }}
+{{ if $unit.DropIns }}
+mkdir -p '{{ $unit.DropIns.Path }}'
+{{ range $_, $dropIn := $unit.DropIns.Items -}}
+{{ template "put-content" $dropIn }}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+{{ if .Bootstrap -}}
+META_EP=http://100.100.100.200/latest/meta-data
+PROVIDER_ID=`curl -s $META_EP/region-id`.`curl -s $META_EP/instance-id`
+echo PROVIDER_ID=$PROVIDER_ID > $DOWNLOAD_MAIN_PATH/provider-id
+echo PROVIDER_ID=$PROVIDER_ID >> /etc/environment
+
+ln -s /usr/bin/docker /bin/docker
+ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+
+systemctl daemon-reload
+systemctl enable docker && systemctl restart docker
+{{ range $_, $unit := .Units -}}
+systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
+{{- end -}}
+{{- end -}}

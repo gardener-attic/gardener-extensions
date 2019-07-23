@@ -107,6 +107,15 @@ start-os-coreos-alicloud:
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION)
 
+.PHONY: start-os-ubuntu-alicloud
+start-os-ubuntu-alicloud:
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
+		-ldflags $(LD_FLAGS) \
+		./controllers/os-ubuntu-alicloud/cmd/gardener-extension-os-ubuntu-alicloud \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--leader-election=$(LEADER_ELECTION)
+
 .PHONY: start-os-ubuntu
 start-os-ubuntu:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
