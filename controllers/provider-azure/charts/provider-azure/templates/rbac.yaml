@@ -9,8 +9,8 @@ rules:
 - apiGroups:
   - extensions.gardener.cloud
   resources:
-  - backupbucket
-  - backupbucket/status
+  - backupbuckets
+  - backupbuckets/status
   - backupentries
   - backupentries/status
   - clusters
