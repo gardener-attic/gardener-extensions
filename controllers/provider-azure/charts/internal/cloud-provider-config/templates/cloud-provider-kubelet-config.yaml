@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cloud-provider-worker-config
+  name: cloud-provider-kubelet-config
   namespace: {{ .Release.Namespace }}
 data:
   cloudprovider.conf: |
