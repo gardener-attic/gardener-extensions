@@ -22,6 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -94,10 +95,9 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 }
 
 func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
-	// TODO: These labels should be exposed as constants in Gardener
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-public-networks", "allowed")
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-private-networks", "allowed")
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-blocked-cidrs", "allowed")
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs, gardencorev1alpha1.LabelNetworkPolicyAllowed)
 }
 
 var (

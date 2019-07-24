@@ -64,7 +64,7 @@ func (m *clusterToObjectMapper) Map(obj handler.MapObject) []reconcile.Request {
 	}
 
 	objList := m.newObjListFunc()
-	if err := m.client.List(ctx, client.InNamespace(cluster.Name), objList); err != nil {
+	if err := m.client.List(ctx, objList, client.InNamespace(cluster.Name)); err != nil {
 		return nil
 	}
 

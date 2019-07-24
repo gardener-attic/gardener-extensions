@@ -24,7 +24,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// DeserializeCommandLine deserializes the given string to a slice of command line elements by splitting it
+// DeserializeCommandLine de-serializes the given string to a slice of command line elements by splitting it
 // on white space and the "\" character.
 func DeserializeCommandLine(s string) []string {
 	return regexp.MustCompile(`[\\\s]+`).Split(s, -1)

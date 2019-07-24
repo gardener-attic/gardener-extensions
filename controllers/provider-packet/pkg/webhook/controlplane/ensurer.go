@@ -16,12 +16,13 @@ package controlplane
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
-	"github.com/gardener/gardener/pkg/operation/common"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -55,7 +56,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1
 		ensureKubeAPIServerCommandLineArgs(c)
 		ensureEnvVars(c)
 	}
-	return controlplane.EnsureSecretChecksumAnnotation(ctx, &dep.Spec.Template, e.client, dep.Namespace, common.CloudProviderSecretName)
+	return controlplane.EnsureSecretChecksumAnnotation(ctx, &dep.Spec.Template, e.client, dep.Namespace, gardencorev1alpha1.SecretNameCloudProvider)
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
@@ -103,9 +104,8 @@ var (
 		ValueFrom: &corev1.EnvVarSource{
 			SecretKeyRef: &corev1.SecretKeySelector{
 				Key: packet.APIToken,
-				// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: packet.SecretNameCloudProvider,
+					Name: gardencorev1alpha1.SecretNameCloudProvider,
 				},
 			},
 		},

@@ -37,17 +37,22 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // Create mocks base method
-func (m *MockClient) Create(arg0 context.Context, arg1 runtime.Object) error {
+func (m *MockClient) Create(arg0 context.Context, arg1 runtime.Object, arg2 ...client.CreateOptionFunc) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Create", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Create indicates an expected call of Create
-func (mr *MockClientMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Create(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClient)(nil).Create), arg0, arg1)
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockClient)(nil).Create), varargs...)
 }
 
 // Delete mocks base method
@@ -84,17 +89,41 @@ func (mr *MockClientMockRecorder) Get(arg0, arg1, arg2 interface{}) *gomock.Call
 }
 
 // List mocks base method
-func (m *MockClient) List(arg0 context.Context, arg1 *client.ListOptions, arg2 runtime.Object) error {
+func (m *MockClient) List(arg0 context.Context, arg1 runtime.Object, arg2 ...client.ListOptionFunc) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2)
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // List indicates an expected call of List
-func (mr *MockClientMockRecorder) List(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) List(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClient)(nil).List), arg0, arg1, arg2)
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockClient)(nil).List), varargs...)
+}
+
+// Patch mocks base method
+func (m *MockClient) Patch(arg0 context.Context, arg1 runtime.Object, arg2 client.Patch, arg3 ...client.PatchOptionFunc) error {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Patch", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Patch indicates an expected call of Patch
+func (mr *MockClientMockRecorder) Patch(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Patch", reflect.TypeOf((*MockClient)(nil).Patch), varargs...)
 }
 
 // Status mocks base method
@@ -112,15 +141,20 @@ func (mr *MockClientMockRecorder) Status() *gomock.Call {
 }
 
 // Update mocks base method
-func (m *MockClient) Update(arg0 context.Context, arg1 runtime.Object) error {
+func (m *MockClient) Update(arg0 context.Context, arg1 runtime.Object, arg2 ...client.UpdateOptionFunc) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", arg0, arg1)
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Update", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Update indicates an expected call of Update
-func (mr *MockClientMockRecorder) Update(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockClientMockRecorder) Update(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClient)(nil).Update), arg0, arg1)
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClient)(nil).Update), varargs...)
 }

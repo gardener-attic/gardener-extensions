@@ -24,7 +24,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
-	"github.com/gardener/gardener/pkg/operation/common"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -97,9 +97,9 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 
 func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
 	// TODO: These labels should be exposed as constants in Gardener
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-public-networks", "allowed")
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-private-networks", "allowed")
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, "networking.gardener.cloud/to-blocked-cidrs", "allowed")
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs, gardencorev1alpha1.LabelNetworkPolicyAllowed)
 }
 
 var (
@@ -107,10 +107,8 @@ var (
 		Name: "AWS_ACCESS_KEY_ID",
 		ValueFrom: &corev1.EnvVarSource{
 			SecretKeyRef: &corev1.SecretKeySelector{
-				Key: aws.AccessKeyID,
-				// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-				// See https://github.com/gardener/gardener/pull/930
-				LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
+				Key:                  aws.AccessKeyID,
+				LocalObjectReference: corev1.LocalObjectReference{Name: gardencorev1alpha1.SecretNameCloudProvider},
 			},
 		},
 	}
@@ -119,7 +117,7 @@ var (
 		ValueFrom: &corev1.EnvVarSource{
 			SecretKeyRef: &corev1.SecretKeySelector{
 				Key:                  aws.SecretAccessKey,
-				LocalObjectReference: corev1.LocalObjectReference{Name: common.CloudProviderSecretName},
+				LocalObjectReference: corev1.LocalObjectReference{Name: gardencorev1alpha1.SecretNameCloudProvider},
 			},
 		},
 	}
@@ -154,7 +152,7 @@ func ensureVolumes(ps *corev1.PodSpec) {
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
-	if err := controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, common.CloudProviderSecretName); err != nil {
+	if err := controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, gardencorev1alpha1.SecretNameCloudProvider); err != nil {
 		return err
 	}
 	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, aws.CloudProviderConfigName)

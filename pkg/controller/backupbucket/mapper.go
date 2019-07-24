@@ -59,7 +59,7 @@ func (m *secretToBackupBucketMapper) Map(obj handler.MapObject) []reconcile.Requ
 	}
 
 	backupBucketList := &extensions1alpha1.BackupBucketList{}
-	if err := m.client.List(context.TODO(), client.MatchingField("spec.secretRef.name", secret.Name).MatchingField("spec.secretRef.namespace", secret.Namespace), backupBucketList); err != nil {
+	if err := m.client.List(context.TODO(), backupBucketList, client.MatchingField("spec.secretRef.name", secret.Name), client.MatchingField("spec.secretRef.namespace", secret.Namespace)); err != nil {
 		return nil
 	}
 

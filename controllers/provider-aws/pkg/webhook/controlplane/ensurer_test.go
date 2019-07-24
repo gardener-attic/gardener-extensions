@@ -25,7 +25,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
-	"github.com/gardener/gardener/pkg/operation/common"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -51,9 +51,9 @@ var _ = Describe("Ensurer", func() {
 	var (
 		ctrl *gomock.Controller
 
-		secretKey = client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}
+		secretKey = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
 		secret    = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.CloudProviderSecretName},
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider},
 			Data:       map[string][]byte{"foo": []byte("bar")},
 		}
 
@@ -64,14 +64,14 @@ var _ = Describe("Ensurer", func() {
 		}
 
 		annotations = map[string]string{
-			"checksum/secret-" + common.CloudProviderSecretName: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"checksum/configmap-" + aws.CloudProviderConfigName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"checksum/secret-" + gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"checksum/configmap-" + aws.CloudProviderConfigName:             "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
 		}
 
 		kubeControllerManagerLabels = map[string]string{
-			"networking.gardener.cloud/to-public-networks":  "allowed",
-			"networking.gardener.cloud/to-private-networks": "allowed",
-			"networking.gardener.cloud/to-blocked-cidrs":    "allowed",
+			gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks:  gardencorev1alpha1.LabelNetworkPolicyAllowed,
+			gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks: gardencorev1alpha1.LabelNetworkPolicyAllowed,
+			gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs:    gardencorev1alpha1.LabelNetworkPolicyAllowed,
 		}
 	)
 
@@ -87,7 +87,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -121,7 +121,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -173,7 +173,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -207,7 +207,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{

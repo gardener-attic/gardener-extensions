@@ -47,6 +47,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(azure.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
+			WebhookServerHost:       "localhost",
+			WebhookServerPort:       443,
 		}
 		configFileOpts = &azurecmd.ConfigOptions{}
 
@@ -82,18 +84,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
-		controllerSwitches   = azurecmd.ControllerSwitchOptions()
-		webhookSwitches      = azurecmd.WebhookSwitchOptions()
-		webhookServerOptions = &webhookcmd.ServerOptions{
-			Port:             443,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
-		}
-		webhookOptions = webhookcmd.NewAddToManagerOptions(azure.Name, webhookServerOptions, webhookSwitches)
+		controllerSwitches = azurecmd.ControllerSwitchOptions()
+		webhookSwitches    = azurecmd.WebhookSwitchOptions()
+		webhookOptions     = webhookcmd.NewAddToManagerOptions(azure.Name, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

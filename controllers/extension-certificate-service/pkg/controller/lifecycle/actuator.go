@@ -21,22 +21,19 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/lifecycle/internal"
-
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/imagevector"
+	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/utils"
 
-	corev1 "k8s.io/api/core/v1"
-
+	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-
-	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/utils"
-	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/go-logr/logr"
+	certmanagerv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 // Actuator acts upon Configuration.
@@ -91,7 +88,7 @@ func (a *actuator) DeployCertManager(ctx context.Context, config config.Configur
 			new.Object["status"] = old.Object["status"]
 		}
 	)
-	applierOptions.MergeFuncs["ClusterIssuer"] = clusterIssuerMerge
+	applierOptions.MergeFuncs[certmanagerv1alpha1.SchemeGroupVersion.WithKind("ClusterIssuer").GroupKind()] = clusterIssuerMerge
 
 	namespace := corev1.Namespace{}
 	if err := a.client.Get(ctx, kutil.Key(config.Spec.NamespaceRef), &namespace); err != nil {

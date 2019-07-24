@@ -55,6 +55,8 @@ type AddArgs struct {
 	Actuator Actuator
 	// Name is the name of the controller.
 	Name string
+	// FinalizerSuffix is the suffix for the finalizer name.
+	FinalizerSuffix string
 	// ControllerOptions are the controller options used for creating a controller.
 	// The options.Reconciler is always overridden with a reconciler created from the
 	// given actuator.
@@ -124,7 +126,7 @@ var _ reconcile.Reconciler = (*reconciler)(nil)
 // Extension resources of Gardener's `extensions.gardener.cloud` API group.
 func NewReconciler(args AddArgs) reconcile.Reconciler {
 	logger := log.Log.WithName(args.Name)
-	finalizer := fmt.Sprintf("%s/%s", FinalizerPrefix, args.Name)
+	finalizer := fmt.Sprintf("%s/%s", FinalizerPrefix, args.FinalizerSuffix)
 	return extensionscontroller.OperationAnnotationWrapper(
 		&extensionsv1alpha1.Extension{},
 		&reconciler{

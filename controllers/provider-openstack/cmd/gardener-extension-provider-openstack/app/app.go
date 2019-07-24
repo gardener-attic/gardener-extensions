@@ -45,6 +45,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(openstack.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
+			WebhookServerHost:       "localhost",
+			WebhookServerPort:       443,
 		}
 		configFileOpts = &openstackcmd.ConfigOptions{}
 
@@ -70,18 +72,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
-		controllerSwitches   = openstackcmd.ControllerSwitchOptions()
-		webhookSwitches      = openstackcmd.WebhookSwitchOptions()
-		webhookServerOptions = &webhookcmd.ServerOptions{
-			Port:             443,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
-		}
-		webhookOptions = webhookcmd.NewAddToManagerOptions(openstack.Name, webhookServerOptions, webhookSwitches)
+		controllerSwitches = openstackcmd.ControllerSwitchOptions()
+		webhookSwitches    = openstackcmd.WebhookSwitchOptions()
+		webhookOptions     = webhookcmd.NewAddToManagerOptions(openstack.Name, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

@@ -189,30 +189,6 @@ func GetSecretByReference(ctx context.Context, c client.Client, ref *corev1.Secr
 	return secret, nil
 }
 
-// CreateOrUpdate creates or updates the object. Optionally, it executes a transformation function before the
-// request is made.
-func CreateOrUpdate(ctx context.Context, c client.Client, obj runtime.Object, transform func() error) error {
-	key, err := client.ObjectKeyFromObject(obj)
-	if err != nil {
-		return err
-	}
-
-	if err := c.Get(ctx, key, obj); err != nil {
-		if apierrors.IsNotFound(err) {
-			if transform != nil && transform() != nil {
-				return err
-			}
-			return c.Create(ctx, obj)
-		}
-		return err
-	}
-
-	if transform != nil && transform() != nil {
-		return err
-	}
-	return c.Update(ctx, obj)
-}
-
 // TryUpdate tries to apply the given transformation function onto the given object, and to update it afterwards.
 // It retries the update with an exponential backoff.
 func TryUpdate(ctx context.Context, backoff wait.Backoff, c client.Client, obj runtime.Object, transform func() error) error {
@@ -225,7 +201,7 @@ func TryUpdateStatus(ctx context.Context, backoff wait.Backoff, c client.Client,
 	return tryUpdate(ctx, backoff, c, obj, c.Status().Update, transform)
 }
 
-func tryUpdate(ctx context.Context, backoff wait.Backoff, c client.Client, obj runtime.Object, updateFunc func(context.Context, runtime.Object) error, transform func() error) error {
+func tryUpdate(ctx context.Context, backoff wait.Backoff, c client.Client, obj runtime.Object, updateFunc func(context.Context, runtime.Object, ...client.UpdateOptionFunc) error, transform func() error) error {
 	key, err := client.ObjectKeyFromObject(obj)
 	if err != nil {
 		return err

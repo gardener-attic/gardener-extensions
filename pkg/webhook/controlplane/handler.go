@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/go-logr/logr"
@@ -29,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
 )
 
 // newHandler creates a new handler for the given types, using the given mutator, and logger.
@@ -51,12 +51,12 @@ func newHandler(mgr manager.Manager, types []runtime.Object, mutator Mutator, lo
 type handler struct {
 	typesMap map[metav1.GroupVersionKind]runtime.Object
 	mutator  Mutator
-	decoder  types.Decoder
+	decoder  *admission.Decoder
 	logger   logr.Logger
 }
 
 // InjectDecoder injects the given decoder into the handler.
-func (h *handler) InjectDecoder(d types.Decoder) error {
+func (h *handler) InjectDecoder(d *admission.Decoder) error {
 	h.decoder = d
 	return nil
 }
@@ -71,24 +71,24 @@ func (h *handler) InjectClient(client client.Client) error {
 }
 
 // Handle handles the given admission request.
-func (h *handler) Handle(ctx context.Context, req types.Request) types.Response {
+func (h *handler) Handle(ctx context.Context, req admission.Request) admission.Response {
 	ar := req.AdmissionRequest
 
 	// Decode object
 	t, ok := h.typesMap[ar.Kind]
 	if !ok {
-		return admission.ErrorResponse(http.StatusBadRequest, errors.Errorf("unexpected request kind %s", ar.Kind.String()))
+		return admission.Errored(http.StatusBadRequest, errors.Errorf("unexpected request kind %s", ar.Kind.String()))
 	}
 	obj := t.DeepCopyObject()
 	err := h.decoder.Decode(req, obj)
 	if err != nil {
-		return admission.ErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "could not decode request %v", ar))
+		return admission.Errored(http.StatusBadRequest, errors.Wrapf(err, "could not decode request %v", ar))
 	}
 
 	// Get object accessor
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
-		return admission.ErrorResponse(http.StatusBadRequest, errors.Wrapf(err, "could not get accessor for %v", obj))
+		return admission.Errored(http.StatusBadRequest, errors.Wrapf(err, "could not get accessor for %v", obj))
 	}
 
 	// Mutate the resource
@@ -97,13 +97,22 @@ func (h *handler) Handle(ctx context.Context, req types.Request) types.Response 
 	newObj := obj.DeepCopyObject()
 	err = h.mutator.Mutate(ctx, newObj)
 	if err != nil {
-		return admission.ErrorResponse(http.StatusInternalServerError,
+		return admission.Errored(http.StatusInternalServerError,
 			errors.Wrapf(err, "could not mutate %s %s/%s", ar.Kind.Kind, accessor.GetNamespace(), accessor.GetName()))
 	}
 
 	// Return a patch response if the resource should be changed
 	if !equality.Semantic.DeepEqual(obj, newObj) {
-		return admission.PatchResponse(obj, newObj)
+		oldObjMarshaled, err := json.Marshal(obj)
+		if err != nil {
+			return admission.Errored(http.StatusInternalServerError, err)
+		}
+		newObjMarshaled, err := json.Marshal(newObj)
+		if err != nil {
+			return admission.Errored(http.StatusInternalServerError, err)
+		}
+
+		return admission.PatchResponseFromRaw(oldObjMarshaled, newObjMarshaled)
 	}
 
 	// Return a validation response if the resource should not be changed

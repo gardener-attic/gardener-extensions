@@ -36,7 +36,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -86,7 +85,7 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 	}
 
 	dns := cluster.Shoot.Spec.DNS
-	if dns.Domain == nil && dns.Provider == gardenv1beta1.DNSUnmanaged {
+	if dns.Domain == nil && dns.Provider != nil && *dns.Provider == gardenv1beta1.DNSUnmanaged {
 		return nil
 	}
 
@@ -225,7 +224,7 @@ func (a *actuator) deleteCertBroker(ctx context.Context, namespace string) error
 
 	a.logger.Info("Component is being deleted", "component", "cert-broker", "namespace", namespace)
 	for _, obj := range objects {
-		if err := a.client.Delete(ctx, obj); err != nil && !apierrors.IsNotFound(err) {
+		if err := a.client.Delete(ctx, obj); client.IgnoreNotFound(err) != nil {
 			return err
 		}
 	}
@@ -267,7 +266,7 @@ func (a *actuator) deleteRBAC(ctx context.Context, config *rest.Config) error {
 	}
 
 	for _, obj := range objects {
-		if err := targetClient.Delete(ctx, obj); err != nil && !apierrors.IsNotFound(err) {
+		if err := targetClient.Delete(ctx, obj); client.IgnoreNotFound(err) != nil {
 			return err
 		}
 	}

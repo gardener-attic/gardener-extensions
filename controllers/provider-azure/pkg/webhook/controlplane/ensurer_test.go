@@ -25,7 +25,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
-	"github.com/gardener/gardener/pkg/operation/common"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -42,7 +42,7 @@ import (
 
 const (
 	namespace                  = "test"
-	cloudProviderConfigContent = "[Global]\nauth-url: https://cluster.eu-de-200.cloud.sap:5000/v3/\n"
+	cloudProviderConfigContent = "[Global]\nsome: content\n"
 )
 
 func TestController(t *testing.T) {
@@ -61,13 +61,13 @@ var _ = Describe("Ensurer", func() {
 		}
 
 		annotations = map[string]string{
-			"checksum/configmap-" + azure.CloudProviderConfigName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
+			"checksum/configmap-" + azure.CloudProviderConfigName: "31d2e116fbf854a590e84ab9176f299af6ff86aeea61bcee6bd705de78da9bf3",
 		}
 
 		kubeControllerManagerLabels = map[string]string{
-			"networking.gardener.cloud/to-public-networks":  "allowed",
-			"networking.gardener.cloud/to-private-networks": "allowed",
-			"networking.gardener.cloud/to-blocked-cidrs":    "allowed",
+			gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks:  gardencorev1alpha1.LabelNetworkPolicyAllowed,
+			gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks: gardencorev1alpha1.LabelNetworkPolicyAllowed,
+			gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs:    gardencorev1alpha1.LabelNetworkPolicyAllowed,
 		}
 	)
 
@@ -83,7 +83,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -116,7 +116,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -163,7 +163,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -196,7 +196,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{

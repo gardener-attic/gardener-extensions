@@ -22,7 +22,6 @@ LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pk
 VERIFY                      := true
 LEADER_ELECTION             := false
 IGNORE_OPERATION_ANNOTATION := false
-CERTIFICATE_SERVICE_CONFIG  := ./controllers/extension-certificate-service/example/config.yaml
 
 ### Build commands
 
@@ -108,8 +107,8 @@ start-os-ubuntu:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-ubuntu/cmd/gardener-extension-os-ubuntu \
-		--leader-election=--leader-election=$(LEADER_ELECTION)
-		
+		--leader-election=$(LEADER_ELECTION)
+
 .PHONY: start-provider-aws
 start-provider-aws:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
@@ -118,9 +117,8 @@ start-provider-aws:
 		--config-file=./controllers/provider-aws/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extension-provider-aws \
-		--webhook-config-host=$(HOSTNAME)
+		--webhook-server-host=0.0.0.0 \
+		--webhook-server-port=8443
 
 .PHONY: start-provider-azure
 start-provider-azure:
@@ -130,9 +128,8 @@ start-provider-azure:
 		--config-file=./controllers/provider-azure/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-mode=url \
-  		--webhook-config-name=gardener-extension-provider-azure \
-   		--webhook-config-host=$(HOSTNAME)
+		--webhook-server-host=0.0.0.0 \
+		--webhook-server-port=8443
 
 .PHONY: start-provider-gcp
 start-provider-gcp:
@@ -142,9 +139,8 @@ start-provider-gcp:
 		--config-file=./controllers/provider-gcp/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extension-provider-gcp \
-		--webhook-config-host=$(HOSTNAME)
+		--webhook-server-host=0.0.0.0 \
+		--webhook-server-port=8443
 
 .PHONY: start-provider-openstack
 start-provider-openstack:
@@ -154,9 +150,8 @@ start-provider-openstack:
 		--config-file=./controllers/provider-openstack/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extension-provider-openstack \
-		--webhook-config-host=$(HOSTNAME)
+		--webhook-server-host=0.0.0.0 \
+		--webhook-server-port=8443
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
@@ -166,9 +161,8 @@ start-provider-alicloud:
 		--config-file=./controllers/provider-alicloud/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extension-provider-alicloud \
-		--webhook-config-host=$(HOSTNAME)
+		--webhook-server-host=0.0.0.0 \
+		--webhook-server-port=8443
 
 .PHONY: start-provider-packet
 start-provider-packet:
@@ -178,9 +172,8 @@ start-provider-packet:
 		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-mode=url \
-		--webhook-config-name=gardener-extension-provider-packet \
-		--webhook-config-host=$(HOSTNAME)
+		--webhook-server-host=0.0.0.0 \
+		--webhook-server-port=8443
 
 .PHONY: start-certificate-service
 start-certificate-service:
@@ -189,4 +182,4 @@ start-certificate-service:
 		./controllers/extension-certificate-service/cmd \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--config=$(CERTIFICATE_SERVICE_CONFIG)
+		--config=./controllers/extension-certificate-service/example/00-config.yaml

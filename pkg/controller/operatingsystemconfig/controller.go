@@ -30,7 +30,7 @@ const (
 	FinalizerName = "extensions.gardener.cloud/operatingsystemconfigs"
 
 	// ControllerName is the name of the operating system configuration controller.
-	ControllerName = "operatingsystemconfig-controller"
+	ControllerName = "operatingsystemconfig_controller"
 
 	name = "operatingsystemconfig-controller"
 )

@@ -23,7 +23,7 @@ import (
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	logzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 // ConfigFunc sets configuration Options for `zapcore.EncoderConfig`.
@@ -64,7 +64,7 @@ func ZapLoggerTo(destWriter io.Writer, development bool, configFuncs ...ConfigFu
 			}))
 	}
 	opts = append(opts, zap.AddCallerSkip(1), zap.ErrorOutput(sink))
-	log := zap.New(zapcore.NewCore(&log.KubeAwareEncoder{Encoder: enc, Verbose: development}, sink, lvl))
+	log := zap.New(zapcore.NewCore(&logzap.KubeAwareEncoder{Encoder: enc, Verbose: development}, sink, lvl))
 	log = log.WithOptions(opts...)
 	return zapr.NewLogger(log)
 }

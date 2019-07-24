@@ -25,13 +25,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var logger = log.Log.WithName("packet-controlplane-webhook")
 
 // AddToManager creates a webhook and adds it to the manager.
-func AddToManager(mgr manager.Manager) (webhook.Webhook, error) {
+func AddToManager(mgr manager.Manager) (*admission.Webhook, error) {
 	logger.Info("Adding webhook to manager")
 	fciCodec := controlplane.NewFileContentInlineCodec()
 	return controlplane.Add(mgr, controlplane.AddArgs{

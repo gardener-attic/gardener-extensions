@@ -18,18 +18,15 @@ import (
 	"context"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	"github.com/golang/mock/gomock"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -73,10 +70,10 @@ var _ = Describe("Controller Mapper", func() {
 			c.EXPECT().
 				List(
 					gomock.AssignableToTypeOf(context.TODO()),
-					gomock.Eq(client.InNamespace(namespace)),
 					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
+					gomock.AssignableToTypeOf(client.InNamespace(namespace)),
 				).
-				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
+				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOptionFunc) error {
 					*actual = extensionsv1alpha1.InfrastructureList{
 						Items: []extensionsv1alpha1.Infrastructure{
 							{
@@ -122,10 +119,10 @@ var _ = Describe("Controller Mapper", func() {
 			c.EXPECT().
 				List(
 					gomock.AssignableToTypeOf(context.TODO()),
-					gomock.Eq(client.InNamespace(namespace)),
 					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
+					gomock.AssignableToTypeOf(client.InNamespace(namespace)),
 				).
-				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
+				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOptionFunc) error {
 					*actual = extensionsv1alpha1.InfrastructureList{
 						Items: []extensionsv1alpha1.Infrastructure{
 							{
@@ -158,10 +155,10 @@ var _ = Describe("Controller Mapper", func() {
 			c.EXPECT().
 				List(
 					gomock.AssignableToTypeOf(context.TODO()),
-					gomock.Eq(client.InNamespace(namespace)),
 					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
+					gomock.AssignableToTypeOf(client.InNamespace(namespace)),
 				).
-				DoAndReturn(func(_ context.Context, _ *client.ListOptions, actual *extensionsv1alpha1.InfrastructureList) error {
+				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOptionFunc) error {
 					*actual = extensionsv1alpha1.InfrastructureList{}
 					return nil
 				})

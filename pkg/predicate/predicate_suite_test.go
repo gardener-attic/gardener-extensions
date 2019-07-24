@@ -12,6 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=types -destination=mocks.go sigs.k8s.io/controller-runtime/pkg/webhook/admission/types Decoder
+package predicate_test
 
-package types
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+func TestPredicate(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Predicate Suite")
+}

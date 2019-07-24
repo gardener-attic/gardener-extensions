@@ -16,12 +16,13 @@ package controlplanebackup
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
-	"github.com/gardener/gardener/pkg/operation/common"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -70,7 +71,7 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	var (
 		volumeClaimTemplateName = name
 	)
-	if name == common.EtcdMainStatefulSetName {
+	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
 

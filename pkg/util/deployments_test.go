@@ -20,20 +20,13 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	. "github.com/gardener/gardener-extensions/pkg/util"
 
-	appsv1 "k8s.io/api/apps/v1"
-
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/golang/mock/gomock"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 var _ = Describe("Deployments", func() {
-	const (
-		namespace = "namespace"
-		name      = "name"
-	)
-
 	var (
 		ctrl *gomock.Controller
 		c    *mockclient.MockClient

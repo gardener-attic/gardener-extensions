@@ -18,9 +18,7 @@ import (
 	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	"k8s.io/apimachinery/pkg/runtime"
-
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )

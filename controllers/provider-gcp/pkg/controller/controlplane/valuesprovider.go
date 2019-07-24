@@ -29,7 +29,6 @@ import (
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
@@ -69,7 +68,7 @@ var controlPlaneSecrets = &secrets.Secrets{
 				},
 				KubeConfigRequest: &secrets.KubeConfigRequest{
 					ClusterName:  clusterName,
-					APIServerURL: common.KubeAPIServerDeploymentName,
+					APIServerURL: gardencorev1alpha1.DeploymentNameKubeAPIServer,
 				},
 			},
 			&secrets.ControlPlaneSecretConfig{
@@ -246,10 +245,8 @@ func getCCMChartValues(
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
-			// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-			// See https://github.com/gardener/gardener/pull/930
-			"checksum/secret-cloudprovider":            checksums[common.CloudProviderSecretName],
-			"checksum/configmap-cloud-provider-config": checksums[internal.CloudProviderConfigName],
+			"checksum/secret-cloudprovider":                   checksums[gardencorev1alpha1.SecretNameCloudProvider],
+			"checksum/configmap-cloud-provider-config":        checksums[internal.CloudProviderConfigName],
 		},
 	}
 

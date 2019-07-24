@@ -44,6 +44,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(packet.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
+			WebhookServerHost:       "localhost",
+			WebhookServerPort:       443,
 		}
 		configFileOpts = &packetcmd.ConfigOptions{}
 
@@ -69,18 +71,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
-		controllerSwitches   = packetcmd.ControllerSwitchOptions()
-		webhookSwitches      = packetcmd.WebhookSwitchOptions()
-		webhookServerOptions = &webhookcmd.ServerOptions{
-			Port:             443,
-			CertDir:          "/tmp/cert",
-			Mode:             webhookcmd.ServiceMode,
-			Name:             "webhooks",
-			Namespace:        os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
-			ServiceSelectors: "{}",
-			Host:             "localhost",
-		}
-		webhookOptions = webhookcmd.NewAddToManagerOptions(packet.Name, webhookServerOptions, webhookSwitches)
+		controllerSwitches = packetcmd.ControllerSwitchOptions()
+		webhookSwitches    = packetcmd.WebhookSwitchOptions()
+		webhookOptions     = webhookcmd.NewAddToManagerOptions(packet.Name, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
