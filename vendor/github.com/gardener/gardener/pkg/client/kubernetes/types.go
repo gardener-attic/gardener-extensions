@@ -17,6 +17,7 @@ package kubernetes
 import (
 	"context"
 
+	dnsscheme "github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme"
 	gardencoreclientset "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	gardencorescheme "github.com/gardener/gardener/pkg/client/core/clientset/versioned/scheme"
 	gardenextensionsscheme "github.com/gardener/gardener/pkg/client/extensions/clientset/versioned/scheme"
@@ -25,27 +26,22 @@ import (
 	machineclientset "github.com/gardener/gardener/pkg/client/machine/clientset/versioned"
 	machinescheme "github.com/gardener/gardener/pkg/client/machine/clientset/versioned/scheme"
 
-	"github.com/sirupsen/logrus"
+	resourcesscheme "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 
-	appsv1 "k8s.io/api/apps/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	apiextensionsscheme "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/discovery"
 	kubernetesclientset "k8s.io/client-go/kubernetes"
 	corescheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	apiregistrationv1beta1 "k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1"
 	apiregistrationclientset "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
-	apiserviceclientset "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
-
+	apiregistrationscheme "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -100,18 +96,18 @@ var (
 	SeedScheme = runtime.NewScheme()
 	// ShootScheme is the scheme used in the Shoot cluster.
 	ShootScheme = runtime.NewScheme()
+	// PlantScheme is the scheme used in the Plant cluster
+	PlantScheme = runtime.NewScheme()
 
-	propagationPolicy    = metav1.DeletePropagationForeground
-	gracePeriodSeconds   = int64(60)
-	defaultDeleteOptions = metav1.DeleteOptions{
-		PropagationPolicy:  &propagationPolicy,
-		GracePeriodSeconds: &gracePeriodSeconds,
+	// DefaultDeleteOptionFuncs use foreground propagation policy and grace period of 60 seconds.
+	DefaultDeleteOptionFuncs = []client.DeleteOptionFunc{
+		client.PropagationPolicy(metav1.DeletePropagationForeground),
+		client.GracePeriodSeconds(60),
 	}
-	zero               int64
-	backgroundDeletion = metav1.DeletePropagationBackground
-	forceDeleteOptions = metav1.DeleteOptions{
-		GracePeriodSeconds: &zero,
-		PropagationPolicy:  &backgroundDeletion,
+	// ForceDeleteOptionFuncs use background propagation policy and grace period of 0 seconds.
+	ForceDeleteOptionFuncs = []client.DeleteOptionFunc{
+		client.PropagationPolicy(metav1.DeletePropagationBackground),
+		client.GracePeriodSeconds(0),
 	}
 )
 
@@ -121,22 +117,30 @@ func init() {
 		gardenscheme.AddToScheme,
 		gardencorescheme.AddToScheme,
 	)
-
 	utilruntime.Must(gardenSchemeBuilder.AddToScheme(GardenScheme))
 
 	seedSchemeBuilder := runtime.NewSchemeBuilder(
 		corescheme.AddToScheme,
 		machinescheme.AddToScheme,
+		dnsscheme.AddToScheme,
 		gardenextensionsscheme.AddToScheme,
+		resourcesscheme.AddToScheme,
 	)
-
 	utilruntime.Must(seedSchemeBuilder.AddToScheme(SeedScheme))
 
 	shootSchemeBuilder := runtime.NewSchemeBuilder(
 		corescheme.AddToScheme,
+		apiextensionsscheme.AddToScheme,
+		apiregistrationscheme.AddToScheme,
 	)
-
 	utilruntime.Must(shootSchemeBuilder.AddToScheme(ShootScheme))
+
+	plantSchemeBuilder := runtime.NewSchemeBuilder(
+		corescheme.AddToScheme,
+		gardencorescheme.AddToScheme,
+	)
+	utilruntime.Must(plantSchemeBuilder.AddToScheme(PlantScheme))
+
 }
 
 // Clientset is a struct containing the configuration for the respective Kubernetes
@@ -160,12 +164,9 @@ type Clientset struct {
 	gardenCore      gardencoreclientset.Interface
 	machine         machineclientset.Interface
 	apiextension    apiextensionsclientset.Interface
-	apiregistration apiserviceclientset.Interface
+	apiregistration apiregistrationclientset.Interface
 
-	// Deprecated: Use `restMapper`, `kubernetes.Discovery()` or custom resource API group retriever
-	// via RESTMapper APIs instead.
-	resourceAPIGroups map[string][]string
-	version           string
+	version string
 }
 
 // Applier is a default implementation of the ApplyInterface. It applies objects with
@@ -176,21 +177,19 @@ type Applier struct {
 	discovery discovery.CachedDiscoveryInterface
 }
 
-// Kind is a type alias for a k8s Kind of ObjectKind.
-type Kind string
-
 // MergeFunc determines how oldOj is merged into new oldObj.
 type MergeFunc func(newObj, oldObj *unstructured.Unstructured)
 
 // ApplierOptions contains options used by the Applier.
 type ApplierOptions struct {
-	MergeFuncs map[Kind]MergeFunc
+	MergeFuncs map[schema.GroupKind]MergeFunc
 }
 
 // ApplierInterface is an interface which describes declarative operations to apply multiple
 // Kubernetes objects.
 type ApplierInterface interface {
 	ApplyManifest(ctx context.Context, unstructured UnstructuredReader, options ApplierOptions) error
+	DeleteManifest(ctx context.Context, unstructured UnstructuredReader) error
 }
 
 // Interface is used to wrap the interactions with a Kubernetes cluster
@@ -211,144 +210,9 @@ type Interface interface {
 	APIExtension() apiextensionsclientset.Interface
 	APIRegistration() apiregistrationclientset.Interface
 
-	// Cleanup
-	// Deprecated: Use `RESTMapper()` and utils instead.
-	GetResourceAPIGroups() map[string][]string
-	// Deprecated: Use `Client()` and utils instead.
-	CleanupResources(map[string]map[string]bool, map[string][]string) error
-	// Deprecated: Use `Client()` and utils instead.
-	CleanupAPIGroupResources(map[string]map[string]bool, string, []string) error
-	// Deprecated: Use `Client()` and utils instead.
-	CheckResourceCleanup(*logrus.Entry, map[string]map[string]bool, string, []string) (bool, error)
-
-	// Namespaces
-	// Deprecated: Use `Client()` and utils instead.
-	CreateNamespace(*corev1.Namespace, bool) (*corev1.Namespace, error)
-	// Deprecated: Use `Client()` and utils instead.
-	GetNamespace(string) (*corev1.Namespace, error)
-	// Deprecated: Use `Client()` and utils instead.
-	ListNamespaces(metav1.ListOptions) (*corev1.NamespaceList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	PatchNamespace(name string, body []byte) (*corev1.Namespace, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteNamespace(string) error
-
-	// Secrets
-	// Deprecated: Use `Client()` and utils instead.
-	CreateSecret(string, string, corev1.SecretType, map[string][]byte, bool) (*corev1.Secret, error)
-	// Deprecated: Use `Client()` and utils instead.
-	CreateSecretObject(*corev1.Secret, bool) (*corev1.Secret, error)
-	// Deprecated: Use `Client()` and utils instead.
-	UpdateSecretObject(*corev1.Secret) (*corev1.Secret, error)
-	// Deprecated: Use `Client()` and utils instead.
-	ListSecrets(string, metav1.ListOptions) (*corev1.SecretList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	GetSecret(string, string) (*corev1.Secret, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteSecret(string, string) error
-
-	// ConfigMaps
-	// Deprecated: Use `Client()` and utils instead.
-	CreateConfigMap(string, string, map[string]string, bool) (*corev1.ConfigMap, error)
-	// Deprecated: Use `Client()` and utils instead.
-	UpdateConfigMap(string, string, map[string]string) (*corev1.ConfigMap, error)
-	// Deprecated: Use `Client()` and utils instead.
-	GetConfigMap(string, string) (*corev1.ConfigMap, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteConfigMap(string, string) error
-
-	// Services
-	// Deprecated: Use `Client()` and utils instead.
-	GetService(string, string) (*corev1.Service, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteService(string, string) error
-
-	// Deployments
-	// Deprecated: Use `Client()` and utils instead.
-	GetDeployment(string, string) (*appsv1.Deployment, error)
-	// Deprecated: Use `Client()` and utils instead.
-	ListDeployments(string, metav1.ListOptions) (*appsv1.DeploymentList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	PatchDeployment(string, string, []byte) (*appsv1.Deployment, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteDeployment(string, string) error
-
-	// StatefulSets
-	// Deprecated: Use `Client()` and utils instead.
-	ListStatefulSets(string, metav1.ListOptions) (*appsv1.StatefulSetList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteStatefulSet(string, string) error
-
-	// DaemonSets
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteDaemonSet(string, string) error
-
-	// Jobs
-	// Deprecated: Use `Client()` and utils instead.
-	GetJob(string, string) (*batchv1.Job, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteJob(string, string) error
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteCronJob(string, string) error
-
-	// Pods
-	// Deprecated: Use `Client()` and utils instead.
-	GetPod(string, string) (*corev1.Pod, error)
-	// Deprecated: Use `Client()` and utils instead.
-	ListPods(string, metav1.ListOptions) (*corev1.PodList, error)
-
 	// Deprecated: Use `Client()` and utils instead.
 	ForwardPodPort(string, string, int, int) (chan struct{}, error)
-	CheckForwardPodPort(string, string, int, int) (bool, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeletePod(string, string) error
-	// Deprecated: Use `Client()` and utils instead.
-	DeletePodForcefully(string, string) error
-
-	// Nodes
-	// Deprecated: Use `Client()` and utils instead.
-	ListNodes(metav1.ListOptions) (*corev1.NodeList, error)
-
-	// RBAC
-	// Deprecated: Use `Client()` and utils instead.
-	ListRoleBindings(string, metav1.ListOptions) (*rbacv1.RoleBindingList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteClusterRole(name string) error
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteClusterRoleBinding(name string) error
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteRoleBinding(namespace, name string) error
-
-	// CustomResourceDefinitions
-	// Deprecated: Use `Client()` and utils instead.
-	ListCRDs(metav1.ListOptions) (*apiextensionsv1beta1.CustomResourceDefinitionList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteCRDForcefully(name string) error
-
-	// APIServices
-	// Deprecated: Use `Client()` and utils instead.
-	ListAPIServices(metav1.ListOptions) (*apiregistrationv1beta1.APIServiceList, error)
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteAPIService(name string) error
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteAPIServiceForcefully(name string) error
-	// Deprecated: Use `Client()` and utils instead.
-
-	// ServiceAccounts
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteServiceAccount(namespace, name string) error
-
-	// HorizontalPodAutoscalers
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteHorizontalPodAutoscaler(namespace, name string) error
-
-	// Ingresses
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteIngress(namespace, name string) error
-
-	// NetworkPolicies
-	// Deprecated: Use `Client()` and utils instead.
-	DeleteNetworkPolicy(namespace, name string) error
+	CheckForwardPodPort(string, string, int, int) error
 
 	Version() string
 }

@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	gardencore "github.com/gardener/gardener/pkg/apis/core"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -57,9 +56,6 @@ type ManagedResourceSpec struct {
 type ManagedResourceStatus struct {
 	// ObservedGeneration is the most recent generation observed for this resource.
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
-	// Conditions represents the latest available observations of a ControllerInstallations's current state.
-	// +optional
-	Conditions []gardencore.Condition `json:"conditions,omitempty"`
 	// Resources is a list of objects that have been created.
 	// +optional
 	Resources []corev1.ObjectReference `json:"resources,omitempty"`

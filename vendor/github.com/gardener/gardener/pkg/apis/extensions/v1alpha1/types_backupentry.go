@@ -63,8 +63,8 @@ type BackupEntrySpec struct {
 	DefaultSpec `json:",inline"`
 	// Region is the region of this Entry.
 	Region string `json:"region"`
-	// BucketName is the name of backup bucket for this backup Entry.
-	BucketName string `json:"bucket"`
+	// BucketName is the name of backup bucket for this Backup Entry.
+	BucketName string `json:"bucketName"`
 	// SecretRef is a reference to a secret that contains the credentials to access object store.
 	SecretRef corev1.SecretReference `json:"secretRef"`
 }

@@ -16,8 +16,17 @@ package flow
 
 import (
 	"context"
-	"github.com/gardener/gardener/pkg/utils"
+	"sync"
 	"time"
+
+	"github.com/gardener/gardener/pkg/utils/retry"
+
+	"github.com/hashicorp/go-multierror"
+)
+
+var (
+	// ContextWithTimeout is context.WithTimeout. Exposed for testing.
+	ContextWithTimeout = context.WithTimeout
 )
 
 // TaskFn is a payload function of a task.
@@ -53,29 +62,40 @@ func (t TaskFn) DoIf(condition bool) TaskFn {
 }
 
 // Retry returns a TaskFn that is retried until the timeout is reached.
+// Deprecated: Retry handling should be done in the function itself, if necessary.
 func (t TaskFn) Retry(interval time.Duration) TaskFn {
 	return func(ctx context.Context) error {
-		return utils.RetryUntil(ctx, interval, func() (ok, severe bool, err error) {
+		return retry.Until(ctx, interval, func(ctx context.Context) (done bool, err error) {
 			if err := t(ctx); err != nil {
-				return false, false, err
+				return retry.MinorError(err)
 			}
-			return true, false, nil
+			return retry.Ok()
 		})
+	}
+}
+
+// Timeout returns a TaskFn that is bound to a context which times out.
+func (t TaskFn) Timeout(timeout time.Duration) TaskFn {
+	return func(ctx context.Context) error {
+		var cancel func()
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+
+		return t(ctx)
 	}
 }
 
 // RetryUntilTimeout returns a TaskFn that is retried until the timeout is reached.
 func (t TaskFn) RetryUntilTimeout(interval, timeout time.Duration) TaskFn {
 	return func(ctx context.Context) error {
-		var cancel func()
-		ctx, cancel = context.WithTimeout(ctx, timeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		return utils.RetryUntil(ctx, interval, func() (ok, severe bool, err error) {
+		return retry.Until(ctx, interval, func(ctx context.Context) (done bool, err error) {
 			if err := t(ctx); err != nil {
-				return false, false, err
+				return retry.MinorError(err)
 			}
-			return true, false, nil
+			return retry.Ok()
 		})
 	}
 }
@@ -91,18 +111,92 @@ func (t TaskFn) ToRecoverFn() RecoverFn {
 func (t TaskFn) Recover(recoverFn RecoverFn) TaskFn {
 	return func(ctx context.Context) error {
 		if err := t(ctx); err != nil {
+			if ctx.Err() != nil {
+				return err
+			}
 			return recoverFn(ctx, err)
 		}
 		return nil
 	}
 }
 
-// RecoverTimeout creates a new TaskFn that recovers an error that satisfies `utils.IsTimedOut` with the given RecoverFn.
-func (t TaskFn) RecoverTimeout(recoverFn RecoverFn) TaskFn {
-	return t.Recover(func(ctx context.Context, err error) error {
-		if utils.IsTimedOut(err) {
-			return recoverFn(ctx, err)
+// Sequential runs the given TaskFns sequentially.
+func Sequential(fns ...TaskFn) TaskFn {
+	return func(ctx context.Context) error {
+		for _, fn := range fns {
+			if err := fn(ctx); err != nil {
+				return err
+			}
+
+			if err := ctx.Err(); err != nil {
+				return err
+			}
 		}
-		return err
-	})
+		return nil
+	}
+}
+
+// Parallel runs the given TaskFns in parallel, collecting their errors in a multierror.
+func Parallel(fns ...TaskFn) TaskFn {
+	return func(ctx context.Context) error {
+		var (
+			wg     sync.WaitGroup
+			errors = make(chan error)
+			result error
+		)
+
+		for _, fn := range fns {
+			t := fn
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				errors <- t(ctx)
+			}()
+		}
+
+		go func() {
+			defer close(errors)
+			wg.Wait()
+		}()
+
+		for err := range errors {
+			if err != nil {
+				result = multierror.Append(result, err)
+			}
+		}
+		return result
+	}
+}
+
+// ParallelExitOnError runs the given TaskFns in parallel and stops execution as soon as one TaskFn returns an error.
+func ParallelExitOnError(fns ...TaskFn) TaskFn {
+	return func(ctx context.Context) error {
+		var (
+			wg             sync.WaitGroup
+			errors         = make(chan error)
+			subCtx, cancel = context.WithCancel(ctx)
+		)
+		defer cancel()
+
+		for _, fn := range fns {
+			t := fn
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				errors <- t(subCtx)
+			}()
+		}
+
+		go func() {
+			defer close(errors)
+			wg.Wait()
+		}()
+
+		for err := range errors {
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }

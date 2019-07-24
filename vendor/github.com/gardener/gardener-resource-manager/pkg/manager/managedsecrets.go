@@ -19,7 +19,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -53,11 +52,11 @@ func (s *Secret) WithKeyValues(keyValues map[string][]byte) *Secret {
 }
 
 func (s *Secret) Reconcile(ctx context.Context) error {
-	data := s.secret.Data
+	secret := &corev1.Secret{ObjectMeta: s.secret.ObjectMeta}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, s.client, s.secret, func(obj runtime.Object) error {
-		secret := obj.(*corev1.Secret)
-		secret.Data = data
+	_, err := controllerutil.CreateOrUpdate(ctx, s.client, secret, func() error {
+		secret.Type = s.secret.Type
+		secret.Data = s.secret.Data
 		return nil
 	})
 	return err

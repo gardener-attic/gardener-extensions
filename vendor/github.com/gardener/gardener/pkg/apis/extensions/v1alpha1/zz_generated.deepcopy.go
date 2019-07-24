@@ -577,6 +577,11 @@ func (in *ExtensionSpec) DeepCopy() *ExtensionSpec {
 func (in *ExtensionStatus) DeepCopyInto(out *ExtensionStatus) {
 	*out = *in
 	in.DefaultStatus.DeepCopyInto(&out.DefaultStatus)
+	if in.ProviderStatus != nil {
+		in, out := &in.ProviderStatus, &out.ProviderStatus
+		*out = new(runtime.RawExtension)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 
@@ -1001,6 +1006,11 @@ func (in *OperatingSystemConfigSpec) DeepCopyInto(out *OperatingSystemConfigSpec
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.ProviderConfig != nil {
+		in, out := &in.ProviderConfig, &out.ProviderConfig
+		*out = new(runtime.RawExtension)
+		(*in).DeepCopyInto(*out)
 	}
 	return
 }

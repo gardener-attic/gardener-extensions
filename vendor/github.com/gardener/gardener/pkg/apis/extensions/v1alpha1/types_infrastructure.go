@@ -22,6 +22,9 @@ import (
 
 var _ Object = (*Infrastructure)(nil)
 
+// InfrastructureResource is a constant for the name of the Infrastructure resource.
+const InfrastructureResource = "Infrastructure"
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
