@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cloudprovider
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--alicloud
 type: Opaque
 data:
 # accessKeyID: base64(accessKeyID)
@@ -12,7 +12,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--alicloud
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -37,20 +37,20 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Worker
 metadata:
   name: worker
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--alicloud
 spec:
   type: alicloud
   region: cn-beijing
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--alicloud
   infrastructureProviderStatus:
     apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureStatus
     vpc:
       cidr: 10.250.0.0/16
       id: vpc-gw879zodzt6z1cupe3ps4
-    keyPairName: shoot--foo--bar-ssh-publickey
+    keyPairName: shoot--foobar--alicloud-ssh-publickey
     securityGroupId: sg-gw8efawapk7dhq6q5z24
   pools:
   - name: cpu-worker

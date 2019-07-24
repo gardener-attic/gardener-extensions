@@ -126,7 +126,7 @@ var _ = Describe("Machines", func() {
 			)
 
 			BeforeEach(func() {
-				namespace = "shoot--foo--bar"
+				namespace = "shoot--foobar--aws"
 
 				region = "eu-west-1"
 				awsAccessKeyID = "access-key-id"

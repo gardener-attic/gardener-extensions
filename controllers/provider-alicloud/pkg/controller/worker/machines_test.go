@@ -130,7 +130,7 @@ var _ = Describe("Machines", func() {
 			)
 
 			BeforeEach(func() {
-				namespace = "shoot--foo--bar"
+				namespace = "shoot--foobar--alicloud"
 
 				region = "china"
 				alicloudAccessKeyID = "access-key-id"

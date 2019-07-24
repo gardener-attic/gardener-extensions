@@ -124,7 +124,7 @@ var _ = Describe("Machines", func() {
 			)
 
 			BeforeEach(func() {
-				namespace = "shoot--foo--bar"
+				namespace = "shoot--foobar--azure"
 
 				region = "westeurope"
 				azureClientID = "client-id"

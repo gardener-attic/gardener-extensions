@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--packet
   labels:
 #    backup.gardener.cloud/provider: packet
 #    seed.gardener.cloud/provider: packet
@@ -12,7 +12,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cloudprovider
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--packet
 type: Opaque
 data:
   apiToken: YXBpVG9rZW4K # apiToken
@@ -21,7 +21,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--packet
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -49,13 +49,13 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: ControlPlane
 metadata:
   name: control-plane
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--packet
 spec:
   type: packet
   region: WER1
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--packet
   providerConfig:
     apiVersion: packet.provider.extensions.gardener.cloud/v1alpha1
     kind: ControlPlaneConfig

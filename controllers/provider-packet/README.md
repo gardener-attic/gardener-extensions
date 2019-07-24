@@ -19,7 +19,7 @@ spec:
   region: ewr1
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--packet
   providerConfig:
     apiVersion: packet.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig

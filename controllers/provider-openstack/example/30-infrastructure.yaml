@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--openstack
 
 ---
 apiVersion: v1
 kind: Secret
 metadata:
   name: core-openstack
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--openstack
 type: Opaque
 data:
 # domainName: base64(domain-name)
@@ -21,7 +21,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--openstack
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -51,7 +51,7 @@ spec:
   region: eu-de-1
   secretRef:
     name: core-openstack
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--openstack
   providerConfig:
     apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig

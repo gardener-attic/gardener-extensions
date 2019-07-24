@@ -42,7 +42,7 @@ var _ = Describe("Infrastructure", func() {
 				ctx                     = context.TODO()
 				projectID               = "foo"
 				network                 = "bar"
-				shootSeedNamespace      = "shoot--foo--bar"
+				shootSeedNamespace      = "shoot--foobar--gcp"
 				otherShootSeedNamespace = "shoot--foo--other"
 
 				k8sFirewallName   = fmt.Sprintf("%sbar-fw", KubernetesFirewallNamePrefix)
@@ -87,7 +87,7 @@ var _ = Describe("Infrastructure", func() {
 				ctx                     = context.TODO()
 				projectID               = "foo"
 				network                 = "bar"
-				shootSeedNamespace      = "shoot--foo--bar"
+				shootSeedNamespace      = "shoot--foobar--gcp"
 				otherShootSeedNamespace = "shoot--foo--other"
 
 				routeName      = fmt.Sprintf("%s-2690fa98-450f-11e9-8ebe-ce2a79d67b14", shootSeedNamespace)
@@ -162,7 +162,7 @@ var _ = Describe("Infrastructure", func() {
 				ctx       = context.TODO()
 				projectID = "foo"
 
-				routeName  = fmt.Sprintf("shoot--foo--bar-2690fa98-450f-11e9-8ebe-ce2a79d67b14")
+				routeName  = fmt.Sprintf("shoot--foobar--gcp-2690fa98-450f-11e9-8ebe-ce2a79d67b14")
 				routeNames = []string{routeName}
 
 				client           = mockgcpclient.NewMockInterface(ctrl)

@@ -19,7 +19,7 @@ spec:
   region: eu-west-1
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--aws
   providerConfig:
     apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig
