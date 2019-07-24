@@ -21,6 +21,7 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/api/equality"
 
+	"github.com/gardener/gardener/pkg/api/extensions"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -203,10 +204,12 @@ func OrPredicate(predicates ...predicate.Predicate) predicate.Predicate {
 // as the given type.
 func TypePredicate(typeName string) predicate.Predicate {
 	typeMatches := func(obj runtime.Object) bool {
-		if config, ok := obj.(extensionsv1alpha1.ExtensionType); ok {
-			return strings.ToLower(config.GetExtensionType()) == typeName
+		acc, err := extensions.Accessor(obj)
+		if err != nil {
+			return false
 		}
-		return false
+
+		return strings.ToLower(acc.GetExtensionSpec().GetExtensionType()) == typeName
 	}
 
 	return predicate.Funcs{

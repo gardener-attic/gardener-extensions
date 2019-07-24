@@ -264,7 +264,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:afd5968376dffe6c6020a0cd70278738b8c452cb3519183a23c33f0c8265c07b"
+  digest = "1:92add65e821b01c8afeda93e3c596711bdf71ea24743ad89edfda7030a8946de"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/apis/core",
@@ -300,7 +300,7 @@
     "pkg/utils/secrets",
   ]
   pruneopts = "NUT"
-  revision = "641367fd36d54086712027f337effcb6c9f950cf"
+  revision = "6138c5155cd19331947b375c9ae51b703e167dad"
 
 [[projects]]
   digest = "1:786c4c7a02ae4fe79962043b651dc0d187cc3935f7d2e33451b4cd7ca8c21f90"
@@ -615,17 +615,6 @@
   version = "0.2.2"
 
 [[projects]]
-  digest = "1:0c11e987235e8f37af4e9f24cca02754827d009e8b66cf24483b0006504f6045"
-  name = "github.com/jmoiron/sqlx"
-  packages = [
-    ".",
-    "reflectx",
-  ]
-  pruneopts = "NUT"
-  revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
-  version = "v1.2.0"
-
-[[projects]]
   digest = "1:da62aa6632d04e080b8a8b85a59ed9ed1550842a0099a55f3ae3a20d02a3745a"
   name = "github.com/joho/godotenv"
   packages = ["."]
@@ -656,18 +645,6 @@
   pruneopts = "NUT"
   revision = "f55edac94c9bbba5d6182a4be46d86a2c9b5b50e"
   version = "v1.0.2"
-
-[[projects]]
-  digest = "1:74fca97eba09e8d0f4ced8e1d80e0377c49b856e4d01fc9580d3605648ddaff9"
-  name = "github.com/lib/pq"
-  packages = [
-    ".",
-    "oid",
-    "scram",
-  ]
-  pruneopts = "NUT"
-  revision = "3427c32cb71afc948325f299f040e53c1dd78979"
-  version = "v1.2.0"
 
 [[projects]]
   branch = "master"
@@ -880,17 +857,6 @@
   pruneopts = "NUT"
   revision = "438578804ca6f31be148c27683afc419ce47c06e"
   version = "v1.3.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:6c9ffc8e817fe638d8169ceadc7bb32b12973ff953c2e686d4ac2a487024a6b2"
-  name = "github.com/rubenv/sql-migrate"
-  packages = [
-    ".",
-    "sqlparse",
-  ]
-  pruneopts = "NUT"
-  revision = "87ce952f7079c58e10a2a85835202943ebb9580c"
 
 [[projects]]
   digest = "1:118f00f400c10c1dd21a267fd04697c758dbe9a38cf5fa3fab3bb3625af9efe7"
@@ -1235,14 +1201,6 @@
   pruneopts = "NUT"
   revision = "1d89a3c832915b2314551c1d2a506874d62e53f7"
   version = "v1.22.0"
-
-[[projects]]
-  digest = "1:1bfe1fa433123b451bb1a2a1a5d094322821b9463f5bf8eade67e71d7532e3d0"
-  name = "gopkg.in/gorp.v1"
-  packages = ["."]
-  pruneopts = "NUT"
-  revision = "6a667da9c028871f98598d85413e3fc4c6daa52e"
-  version = "v1.7.2"
 
 [[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"

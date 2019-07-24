@@ -161,12 +161,6 @@ var _ = Describe("ValuesProvider", func() {
 					"checksum/secret-csi-snapshotter": "bf417dd97dc3e8c2092bb5b2ba7b0f1093ebc4bb5952091ee554cf5b7ea74508",
 					"checksum/secret-cloudprovider":   "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 				},
-				"images": map[string]interface{}{
-					"csi-provisioner":     "quay.io/k8scsi/csi-provisioner:v1.1.0",
-					"csi-snapshotter":     "quay.io/k8scsi/csi-snapshotter:v1.1.0",
-					"csi-plugin-alicloud": "registry.eu-central-1.aliyuncs.com/gardener-de/csi-plugin-alicloud:v1.13.2",
-					"csi-attacher":        "quay.io/k8scsi/csi-attacher:v1.1.0",
-				},
 			},
 		}
 

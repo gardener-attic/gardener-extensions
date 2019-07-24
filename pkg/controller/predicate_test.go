@@ -43,8 +43,12 @@ var _ = Describe("Predicate", func() {
 
 		BeforeEach(func() {
 			extensionType = "extension-type"
-			object = &extensionDummy{
-				extensionType: extensionType,
+			object = &v1alpha1.Extension{
+				Spec: v1alpha1.ExtensionSpec{
+					DefaultSpec: v1alpha1.DefaultSpec{
+						Type: extensionType,
+					},
+				},
 			}
 			createEvent = event.CreateEvent{
 				Object: object,
@@ -209,15 +213,6 @@ var _ = Describe("Predicate", func() {
 		Entry("generation update", int64(1), int64(2), BeTrue()),
 	)
 })
-
-type extensionDummy struct {
-	v1alpha1.Extension
-	extensionType string
-}
-
-func (e *extensionDummy) GetExtensionType() string {
-	return e.extensionType
-}
 
 func encode(obj runtime.Object) []byte {
 	data, _ := json.Marshal(obj)
