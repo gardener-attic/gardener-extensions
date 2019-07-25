@@ -59,11 +59,14 @@ type reconciler struct {
 // NewReconciler creates a new reconcile.Reconciler that reconciles
 // infrastructure resources of Gardener's `extensions.gardener.cloud` API group.
 func NewReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler {
-	return &reconciler{
-		logger:   log.Log.WithName(ControllerName),
-		actuator: actuator,
-		recorder: mgr.GetRecorder(ControllerName),
-	}
+	return extensionscontroller.OperationAnnotationWrapper(
+		&extensionsv1alpha1.Infrastructure{},
+		&reconciler{
+			logger:   log.Log.WithName(ControllerName),
+			actuator: actuator,
+			recorder: mgr.GetRecorder(ControllerName),
+		},
+	)
 }
 
 func (r *reconciler) InjectFunc(f inject.Func) error {

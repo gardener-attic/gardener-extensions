@@ -36,7 +36,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error
 	return backupentry.Add(mgr, backupentry.AddArgs{
 		Actuator:          genericactuator.NewActuator(newActuator(), logger),
 		ControllerOptions: opts,
-		Predicates:        backupentry.DefaultPredicates(mgr),
+		Predicates:        backupentry.DefaultPredicates(),
 	})
 }
 

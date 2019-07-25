@@ -15,66 +15,16 @@
 package controlplane
 
 import (
-	"context"
-
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-
+	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
-
-type secretToControlPlaneMapper struct {
-	client     client.Client
-	predicates []predicate.Predicate
-}
-
-func (m *secretToControlPlaneMapper) Map(obj handler.MapObject) []reconcile.Request {
-	if obj.Object == nil {
-		return nil
-	}
-
-	secret, ok := obj.Object.(*corev1.Secret)
-	if !ok {
-		return nil
-	}
-
-	cpList := &extensions1alpha1.ControlPlaneList{}
-	if err := m.client.List(context.TODO(), client.InNamespace(secret.Namespace), cpList); err != nil {
-		return nil
-	}
-
-	var requests []reconcile.Request
-	for _, cp := range cpList.Items {
-		if !extensionscontroller.EvalGenericPredicate(&cp, m.predicates...) {
-			continue
-		}
-
-		if cp.Spec.SecretRef.Name == secret.Name {
-			requests = append(requests, reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: cp.Namespace,
-					Name:      cp.Name,
-				},
-			})
-		}
-	}
-	return requests
-}
-
-// SecretToControlPlaneMapper returns a mapper that returns requests for ControlPlanes whose
-// referenced secrets have been modified.
-func SecretToControlPlaneMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return &secretToControlPlaneMapper{client, predicates}
-}
 
 // ClusterToControlPlaneMapper returns a mapper that returns requests for ControlPlanes whose
 // referenced clusters have been modified.
-func ClusterToControlPlaneMapper(client client.Client, predicates []predicate.Predicate) handler.Mapper {
-	return extensionscontroller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.ControlPlaneList{} }, predicates)
+func ClusterToControlPlaneMapper(predicates []predicate.Predicate) handler.Mapper {
+	return extensionshandler.ClusterToObjectMapper(func() runtime.Object { return &extensions1alpha1.ControlPlaneList{} }, predicates)
 }

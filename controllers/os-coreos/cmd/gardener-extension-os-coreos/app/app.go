@@ -43,12 +43,16 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 		ctrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
+		reconcileOpts = &controllercmd.ReconcilerOptions{
+			IgnoreOperationAnnotation: true,
+		}
 		controllerSwitches = coreos.ControllerSwitchOptions()
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
 			ctrlOpts,
+			reconcileOpts,
 			controllerSwitches,
 		)
 	)
@@ -77,6 +81,8 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			ctrlOpts.Completed().Apply(&coreos.DefaultAddOptions.Controller)
+
+			reconcileOpts.Completed().Apply(&coreos.DefaultAddOptions.IgnoreOperationAnnotation)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controller to manager")

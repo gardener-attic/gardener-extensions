@@ -15,23 +15,16 @@
 package extension
 
 import (
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 // ClusterToExtensionMapper returns a mapper that returns requests for Extensions whose
 // referenced clusters have been modified.
-func ClusterToExtensionMapper(client client.Client, predicates ...predicate.Predicate) handler.Mapper {
-	return controller.ClusterToObjectMapper(client, func() runtime.Object { return &extensions1alpha1.ExtensionList{} }, predicates)
-}
-
-// MapperWithinNamespace returns a mapper that returns requests for Extensions whose
-// mapper object has been modified in the same namespace.
-func MapperWithinNamespace(client client.Client, predicates ...predicate.Predicate) handler.Mapper {
-	return controller.MapperWithinNamespace(client, func() runtime.Object { return &extensions1alpha1.ExtensionList{} }, predicates)
+func ClusterToExtensionMapper(predicates ...predicate.Predicate) handler.Mapper {
+	return extensionshandler.ClusterToObjectMapper(func() runtime.Object { return &extensions1alpha1.ExtensionList{} }, predicates)
 }

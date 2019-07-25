@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package handler
 
 import (
 	"context"
+
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -26,45 +28,27 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
-
-// MapperWithinNamespace returns a `ToRequestsFunc` that maps objects within the same namespace as the given MapObject.
-func MapperWithinNamespace(cl client.Client, newObjListFunc func() runtime.Object, predicates []predicate.Predicate) handler.ToRequestsFunc {
-	return func(object handler.MapObject) []reconcile.Request {
-		objList := newObjListFunc()
-		if err := cl.List(context.TODO(), client.InNamespace(object.Meta.GetNamespace()), objList); err != nil {
-			return nil
-		}
-
-		var requests []reconcile.Request
-
-		utilruntime.HandleError(meta.EachListItem(objList, func(obj runtime.Object) error {
-			accessor, err := meta.Accessor(obj)
-			if err != nil {
-				return err
-			}
-
-			if !EvalGenericPredicate(obj, predicates...) {
-				return nil
-			}
-
-			requests = append(requests, reconcile.Request{
-				NamespacedName: types.NamespacedName{
-					Namespace: accessor.GetNamespace(),
-					Name:      accessor.GetName(),
-				},
-			})
-			return nil
-		}))
-
-		return requests
-	}
-}
 
 type clusterToObjectMapper struct {
 	client         client.Client
 	newObjListFunc func() runtime.Object
 	predicates     []predicate.Predicate
+}
+
+func (m *clusterToObjectMapper) InjectClient(c client.Client) error {
+	m.client = c
+	return nil
+}
+
+func (m *clusterToObjectMapper) InjectFunc(f inject.Func) error {
+	for _, p := range m.predicates {
+		if err := f(p); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *clusterToObjectMapper) Map(obj handler.MapObject) []reconcile.Request {
@@ -92,7 +76,7 @@ func (m *clusterToObjectMapper) Map(obj handler.MapObject) []reconcile.Request {
 			return err
 		}
 
-		if !EvalGenericPredicate(obj, m.predicates...) {
+		if !extensionspredicate.EvalGeneric(obj, m.predicates...) {
 			return nil
 		}
 
@@ -104,12 +88,11 @@ func (m *clusterToObjectMapper) Map(obj handler.MapObject) []reconcile.Request {
 		})
 		return nil
 	}))
-
 	return requests
 }
 
 // ClusterToObjectMapper returns a mapper that returns requests for objects whose
 // referenced clusters have been modified.
-func ClusterToObjectMapper(client client.Client, newObjListFunc func() runtime.Object, predicates []predicate.Predicate) handler.Mapper {
-	return &clusterToObjectMapper{client, newObjListFunc, predicates}
+func ClusterToObjectMapper(newObjListFunc func() runtime.Object, predicates []predicate.Predicate) handler.Mapper {
+	return &clusterToObjectMapper{newObjListFunc: newObjListFunc, predicates: predicates}
 }

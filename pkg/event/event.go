@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controller
+package event
 
 import (
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -21,21 +21,21 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/event"
 )
 
-// NewGenericEventFromObject creates a new GenericEvent from the given runtime.Object.
+// NewFromObject creates a new GenericEvent from the given runtime.Object.
 //
 // It tries to extract a metav1.Object from the given Object. If it fails, the Meta
 // of the resulting GenericEvent will be `nil`.
-func NewGenericEventFromObject(obj runtime.Object) event.GenericEvent {
+func NewFromObject(obj runtime.Object) event.GenericEvent {
 	accessor, err := meta.Accessor(obj)
 	if err != nil {
-		return NewGenericEvent(nil, obj)
+		return NewGeneric(nil, obj)
 	}
 
-	return NewGenericEvent(accessor, obj)
+	return NewGeneric(accessor, obj)
 }
 
-// NewGenericEvent creates a new GenericEvent from the given metav1.Object and runtime.Object.
-func NewGenericEvent(meta metav1.Object, obj runtime.Object) event.GenericEvent {
+// NewGeneric creates a new GenericEvent from the given metav1.Object and runtime.Object.
+func NewGeneric(meta metav1.Object, obj runtime.Object) event.GenericEvent {
 	return event.GenericEvent{
 		Meta:   meta,
 		Object: obj,

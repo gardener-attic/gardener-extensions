@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"time"
 
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
+
 	"k8s.io/client-go/util/retry"
 
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -30,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -50,8 +53,6 @@ const (
 type AddArgs struct {
 	// Actuator is an Extension resource actuator.
 	Actuator Actuator
-	// Type is the Extension type the actuator supports.
-	Type string
 	// Name is the name of the controller.
 	Name string
 	// ControllerOptions are the controller options used for creating a controller.
@@ -59,10 +60,7 @@ type AddArgs struct {
 	// given actuator.
 	ControllerOptions controller.Options
 	// Predicates are the predicates to use.
-	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
-	// WatchBuilder defines additional watches on controllers that should be set up.
-	WatchBuilder extensionscontroller.WatchBuilder
 	// Resync determines the requeue interval.
 	Resync time.Duration
 }
@@ -74,10 +72,21 @@ func Add(mgr manager.Manager, args AddArgs) error {
 }
 
 // DefaultPredicates returns the default predicates for an extension reconciler.
-func DefaultPredicates(client client.Client, extensionType string) []predicate.Predicate {
+func DefaultPredicates(extensionType string, ignoreOperationAnnotation bool) []predicate.Predicate {
+	if ignoreOperationAnnotation {
+		return []predicate.Predicate{
+			extensionspredicate.HasType(extensionType),
+			extensionspredicate.GenerationChanged(),
+		}
+	}
 	return []predicate.Predicate{
-		extensionscontroller.ShootFailedPredicate(client),
-		extensionscontroller.TypePredicate(extensionType),
+		extensionspredicate.HasType(extensionType),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.LastOperationNotSuccessful(),
+			extensionspredicate.IsDeleting(),
+		),
+		extensionspredicate.ShootNotFailed(),
 	}
 }
 
@@ -87,18 +96,13 @@ func add(mgr manager.Manager, args AddArgs) error {
 		return err
 	}
 
-	if args.Predicates == nil {
-		args.Predicates = DefaultPredicates(mgr.GetClient(), args.Type)
-	}
-	args.Predicates = append(args.Predicates, extensionscontroller.GenerationChangedPredicate())
-
-	// Add standard watch.
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Extension{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
 		return err
 	}
 
-	// Add additional watches to the controller besides the standard one.
-	return args.WatchBuilder.AddToController(ctrl)
+	return ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
+		ToRequests: extensionshandler.SimpleMapper(ClusterToExtensionMapper(args.Predicates...), extensionshandler.UpdateWithNew),
+	})
 }
 
 // reconciler reconciles Extension resources of Gardener's
@@ -121,12 +125,14 @@ var _ reconcile.Reconciler = (*reconciler)(nil)
 func NewReconciler(args AddArgs) reconcile.Reconciler {
 	logger := log.Log.WithName(args.Name)
 	finalizer := fmt.Sprintf("%s/%s", FinalizerPrefix, args.Name)
-	return &reconciler{
-		logger:        logger,
-		actuator:      args.Actuator,
-		finalizerName: finalizer,
-		resync:        args.Resync,
-	}
+	return extensionscontroller.OperationAnnotationWrapper(
+		&extensionsv1alpha1.Extension{},
+		&reconciler{
+			logger:        logger,
+			actuator:      args.Actuator,
+			finalizerName: finalizer,
+			resync:        args.Resync,
+		})
 }
 
 // InjectFunc enables dependency injection into the actuator.

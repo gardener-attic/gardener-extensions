@@ -23,20 +23,28 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Default options
-var options = controller.Options{}
+// DefaultAddOptions are the default AddOptions for AddToManager.
+var DefaultAddOptions = AddOptions{}
+
+// AddOptions are options to apply when adding the OSC controller to the manager.
+type AddOptions struct {
+	// Controller are the controller.Options.
+	Controller controller.Options
+	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
+	IgnoreOperationAnnotation bool
+}
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddToManagerWithOptions(mgr manager.Manager, os string, generator generator.Generator, opts controller.Options) error {
+func AddToManagerWithOptions(mgr manager.Manager, os string, generator generator.Generator, opts AddOptions) error {
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
 		Actuator:          actuator.NewActuator(os, generator),
-		Predicates:        operatingsystemconfig.DefaultPredicates(os),
-		ControllerOptions: opts,
+		Predicates:        operatingsystemconfig.DefaultPredicates(os, opts.IgnoreOperationAnnotation),
+		ControllerOptions: opts.Controller,
 	})
 }
 
 // AddToManager adds a controller with the default Options.
 func AddToManager(mgr manager.Manager, os string, generator generator.Generator) error {
-	return AddToManagerWithOptions(mgr, os, generator, options)
+	return AddToManagerWithOptions(mgr, os, generator, DefaultAddOptions)
 }

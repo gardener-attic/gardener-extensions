@@ -31,7 +31,6 @@ import (
 	awscontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
-	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
@@ -70,10 +69,9 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		infraReconcileOpts = &infrastructure.ReconcilerOptions{
+		reconcileOpts = &controllercmd.ReconcilerOptions{
 			IgnoreOperationAnnotation: true,
 		}
-		infraCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(infraCtrlOpts, infraReconcileOpts)
 
 		// options for the worker controller
 		workerCtrlOpts = &controllercmd.ControllerOptions{
@@ -103,10 +101,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("backupbucket-", backupBucketCtrlOpts),
 			controllercmd.PrefixOption("backupentry-", backupEntryCtrlOpts),
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
-			controllercmd.PrefixOption("infrastructure-", &infraCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
 			configFileOpts,
 			controllerSwitches,
+			reconcileOpts,
 			webhookOptions,
 		)
 	)
@@ -145,9 +144,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyETCDBackup(&awscontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			backupBucketCtrlOpts.Completed().Apply(&awsbackupbucket.DefaultAddOptions)
 			backupEntryCtrlOpts.Completed().Apply(&awsbackupentry.DefaultAddOptions)
-			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.Options)
+			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.DefaultAddOptions.Controller)
 			infraCtrlOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.Controller)
-			infraReconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			reconcileOpts.Completed().Apply(&awsinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
+			reconcileOpts.Completed().Apply(&awscontrolplane.DefaultAddOptions.IgnoreOperationAnnotation)
+			reconcileOpts.Completed().Apply(&awsworker.DefaultAddOptions.IgnoreOperationAnnotation)
 			workerCtrlOpts.Completed().Apply(&awsworker.DefaultAddOptions.Controller)
 
 			if err := controllerSwitches.Completed().AddToManager(mgr); err != nil {

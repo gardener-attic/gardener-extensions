@@ -531,11 +531,9 @@ var _ = Describe("Options", func() {
 
 				opts := cfg.Options()
 
-				Expect(opts).To(Equal(manager.Options{
-					LeaderElection:          true,
-					LeaderElectionID:        leaderElectionID,
-					LeaderElectionNamespace: leaderElectionNamespace,
-				}))
+				Expect(opts.LeaderElection).To(BeTrue())
+				Expect(opts.LeaderElectionID).To(Equal(leaderElectionID))
+				Expect(opts.LeaderElectionNamespace).To(Equal(leaderElectionNamespace))
 			})
 		})
 	})

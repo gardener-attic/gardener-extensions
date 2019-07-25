@@ -5,6 +5,9 @@ image:
 
 resources: {}
 
-concurrentSyncs: 5
+controllers:
+  concurrentSyncs: 5
+  ignoreOperationAnnotation: false
 
 disableControllers: []
+

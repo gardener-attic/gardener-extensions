@@ -267,6 +267,7 @@
   digest = "1:92add65e821b01c8afeda93e3c596711bdf71ea24743ad89edfda7030a8946de"
   name = "github.com/gardener/gardener"
   packages = [
+    "pkg/api/extensions",
     "pkg/apis/core",
     "pkg/apis/core/v1alpha1",
     "pkg/apis/core/v1alpha1/helper",
@@ -1815,6 +1816,7 @@
     "github.com/coreos/go-systemd/unit",
     "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1",
     "github.com/gardener/gardener-resource-manager/pkg/manager",
+    "github.com/gardener/gardener/pkg/api/extensions",
     "github.com/gardener/gardener/pkg/apis/core",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1",
     "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper",
@@ -1895,6 +1897,7 @@
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",
+    "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/retry",

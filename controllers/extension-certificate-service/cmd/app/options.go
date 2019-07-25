@@ -31,6 +31,7 @@ type Options struct {
 	managerOptions     *controllercmd.ManagerOptions
 	controllerOptions  *controllercmd.ControllerOptions
 	controllerSwitches *controllercmd.SwitchOptions
+	reconcileOptions   *controllercmd.ReconcilerOptions
 	optionAggregator   controllercmd.OptionAggregator
 }
 
@@ -50,6 +51,9 @@ func NewOptions() *Options {
 			MaxConcurrentReconciles: 5,
 		},
 		controllerSwitches: certificateservicecmd.ControllerSwitches(),
+		reconcileOptions: &controllercmd.ReconcilerOptions{
+			IgnoreOperationAnnotation: true,
+		},
 	}
 
 	options.optionAggregator = controllercmd.NewOptionAggregator(
@@ -58,6 +62,7 @@ func NewOptions() *Options {
 		options.controllerOptions,
 		options.certOptions,
 		options.controllerSwitches,
+		options.reconcileOptions,
 	)
 
 	return options

@@ -18,15 +18,8 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/extension"
 
 	controllerconfig "github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/config"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	controllerextension "github.com/gardener/gardener-extensions/pkg/controller/extension"
-	"github.com/gardener/gardener-extensions/pkg/handler"
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -37,51 +30,33 @@ const (
 )
 
 var (
+	// DefaultAddOptions are the default AddOptions for AddToManager.
+	DefaultAddOptions = AddOptions{}
+)
+
+// AddOptions are options to apply when adding the certificate service controller to the manager.
+type AddOptions struct {
 	// ControllerOptions contains options for the controller.
 	ControllerOptions controller.Options
 	// ServiceConfig contains configuration for the certificate service.
 	ServiceConfig controllerconfig.Config
-)
+	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
+	IgnoreOperationAnnotation bool
+}
 
 // AddToManager adds a controller with the default Options to the given Controller Manager.
 func AddToManager(mgr manager.Manager) error {
-	return AddToManagerWithOptions(mgr, ControllerOptions, ServiceConfig)
+	return AddToManagerWithOptions(mgr, DefaultAddOptions.ControllerOptions, DefaultAddOptions.ServiceConfig)
 }
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, config controllerconfig.Config) error {
-	var (
-		cl         = mgr.GetClient()
-		predicates = controllerextension.DefaultPredicates(cl, Type)
-
-		// watchBuilder determines which resources should be watched and the reconciler to be used.
-		watchBuilder = extensionscontroller.NewWatchBuilder(
-			// Register Watch on Cluster resources.
-			func(ctrl controller.Controller) error {
-				return ctrl.Watch(
-					&source.Kind{Type: &extensionsv1alpha1.Cluster{}},
-					&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.SimpleMapper(controllerextension.ClusterToExtensionMapper(cl, predicates...), handler.UpdateWithNew)},
-					extensionscontroller.ShootGenerationUpdatedPredicate(),
-				)
-			},
-
-			// Register Watch on CA Secret resource.
-			func(ctrl controller.Controller) error {
-				return ctrl.Watch(
-					&source.Kind{Type: &corev1.Secret{}},
-					&handler.EnqueueRequestsFromMapFunc{ToRequests: handler.SimpleMapper(controllerextension.MapperWithinNamespace(cl, predicates...), handler.UpdateWithNew)},
-					extensionscontroller.NamePredicate(corev1alpha1.SecretNameCACluster),
-				)
-			})
-	)
-
 	return extension.Add(mgr, extension.AddArgs{
 		Actuator:          NewActuator(config.Configuration),
-		Name:              ControllerName,
-		Type:              Type,
 		ControllerOptions: opts,
-		WatchBuilder:      watchBuilder,
+		Name:              ControllerName,
 		Resync:            config.Spec.ServiceSync.Duration,
+		Predicates:        extension.DefaultPredicates(Type, DefaultAddOptions.IgnoreOperationAnnotation),
 	})
 }

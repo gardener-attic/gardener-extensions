@@ -84,6 +84,7 @@ start-os-coreos:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos/cmd/gardener-extension-os-coreos \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-os-jeos
@@ -91,6 +92,7 @@ start-os-jeos:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=false
 
 .PHONY: start-os-coreos-alicloud
@@ -98,6 +100,7 @@ start-os-coreos-alicloud:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-os-ubuntu
@@ -113,7 +116,7 @@ start-provider-aws:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
 		--config-file=./controllers/provider-aws/example/00-componentconfig.yaml \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=gardener-extension-provider-aws \
@@ -125,7 +128,7 @@ start-provider-azure:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
 		--config-file=./controllers/provider-azure/example/00-componentconfig.yaml \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
   		--webhook-config-name=gardener-extension-provider-azure \
@@ -137,7 +140,7 @@ start-provider-gcp:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-gcp/cmd/gardener-extension-provider-gcp \
 		--config-file=./controllers/provider-gcp/example/00-componentconfig.yaml \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=gardener-extension-provider-gcp \
@@ -149,7 +152,7 @@ start-provider-openstack:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-openstack/cmd/gardener-extension-provider-openstack \
 		--config-file=./controllers/provider-openstack/example/00-componentconfig.yaml \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=gardener-extension-provider-openstack \
@@ -161,7 +164,7 @@ start-provider-alicloud:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
 		--config-file=./controllers/provider-alicloud/example/00-componentconfig.yaml \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=gardener-extension-provider-alicloud \
@@ -173,7 +176,7 @@ start-provider-packet:
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-packet/cmd/gardener-extension-provider-packet \
 		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
-		--infrastructure-ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-mode=url \
 		--webhook-config-name=gardener-extension-provider-packet \
@@ -184,5 +187,6 @@ start-certificate-service:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/extension-certificate-service/cmd \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--config=$(CERTIFICATE_SERVICE_CONFIG)
