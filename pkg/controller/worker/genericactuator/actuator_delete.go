@@ -22,14 +22,11 @@ import (
 	"time"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
-	"github.com/gardener/gardener-extensions/pkg/util"
 
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/pkg/errors"
-	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -47,18 +44,14 @@ func (a *genericActuator) Delete(ctx context.Context, worker *extensionsv1alpha1
 	}
 
 	// Make sure machine-controller-manager is awake before deleting the machines.
-	deployment := &appsv1.Deployment{}
-	if err := a.client.Get(ctx, kutil.Key(worker.Namespace, a.mcmName), deployment); err != nil {
-		return err
-	}
-	if err := util.ScaleDeployment(ctx, a.client, deployment, 1); err != nil {
-		return err
+	var replicaFunc = func() (int32, error) {
+		return 1, nil
 	}
 
-	// Make sure that all RBAC roles required by the machine-controller-manager exist in the shoot cluster.
-	// This code can be removed as soon as the RBAC roles are managed by the gardener-resource-manager.
-	if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, worker, cluster); err != nil {
-		return errors.Wrapf(err, "could not apply machine-controller-manager shoot chart")
+	// Deploy the machine-controller-manager into the cluster to make sure worker nodes can be removed.
+	a.logger.Info("Deploying the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate, replicaFunc); err != nil {
+		return err
 	}
 
 	// Mark all existing machines to become forcefully deleted.

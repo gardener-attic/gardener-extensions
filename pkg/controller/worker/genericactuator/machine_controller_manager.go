@@ -23,19 +23,19 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/pkg/errors"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const mcmShootResourceName = "extension-worker-mcm-shoot"
 
-func (a *genericActuator) deployMachineControllerManager(ctx context.Context, workerObj *extensionsv1alpha1.Worker, cluster *controller.Cluster, workerDelegate WorkerDelegate) error {
+// ReplicaCount determines the number of replicas.
+type ReplicaCount func() (int32, error)
+
+func (a *genericActuator) deployMachineControllerManager(ctx context.Context, workerObj *extensionsv1alpha1.Worker, cluster *controller.Cluster, workerDelegate WorkerDelegate, replicas ReplicaCount) error {
 	mcmValues, err := workerDelegate.GetMachineControllerManagerChartValues(ctx)
 	if err != nil {
 		return err
@@ -48,27 +48,19 @@ func (a *genericActuator) deployMachineControllerManager(ctx context.Context, wo
 	}
 	injectPodAnnotation(mcmValues, "checksum/secret-machine-controller-manager", util.ComputeChecksum(mcmKubeconfigSecret.Data))
 
-	// If the shoot is hibernated then we want to scale down the machine-controller-manager. However, we want to first allow it to delete
-	// all remaining worker nodes. Hence, we cannot set the replicas=0 here (otherwise it would be offline and not able to delete the nodes).
-	if extensionscontroller.IsHibernated(cluster.Shoot) {
-		deployment := &appsv1.Deployment{}
-		if err := a.client.Get(ctx, kutil.Key(workerObj.Namespace, a.mcmName), deployment); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-		if replicas := deployment.Spec.Replicas; replicas != nil {
-			mcmValues["replicas"] = *replicas
-		}
+	replicaCount, err := replicas()
+	if err != nil {
+		return err
 	}
+	mcmValues["replicas"] = replicaCount
 
 	if err := a.mcmSeedChart.Apply(ctx, a.chartApplier, workerObj.Namespace,
 		a.imageVector, a.gardenerClientset.Version(), cluster.Shoot.Spec.Kubernetes.Version, mcmValues); err != nil {
 		return errors.Wrapf(err, "could not apply MCM chart in seed for worker '%s'", util.ObjectName(workerObj))
 	}
 
-	if !controller.IsHibernated(cluster.Shoot) {
-		if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, workerObj, cluster); err != nil {
-			return err
-		}
+	if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, workerObj, cluster); err != nil {
+		return errors.Wrapf(err, "could not apply machine-controller-manager shoot chart")
 	}
 
 	return nil
