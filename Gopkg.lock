@@ -223,7 +223,7 @@
   version = "0.6.1"
 
 [[projects]]
-  digest = "1:26bf554ab826a25bd486243652a5b0ea5d8f78a51c06eebfb23612d0b2f07b73"
+  digest = "1:440a82748925efa39bf0ba9cbabc9e50049d098bc9d4a44c5c4a1c0b084ddd3e"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/api/extensions",

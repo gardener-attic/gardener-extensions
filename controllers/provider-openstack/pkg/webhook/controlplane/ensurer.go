@@ -16,19 +16,18 @@ package controlplane
 
 import (
 	"context"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-
-	"github.com/coreos/go-systemd/unit"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+
+	"github.com/coreos/go-systemd/unit"
+	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -102,29 +101,41 @@ func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
 
 var (
 	cloudProviderConfigVolumeMount = corev1.VolumeMount{
-		Name:      openstack.CloudProviderConfigName,
+		Name:      openstack.CloudProviderConfigCloudControtrollerManagerName,
 		MountPath: "/etc/kubernetes/cloudprovider",
 	}
 	cloudProviderConfigVolume = corev1.Volume{
-		Name: openstack.CloudProviderConfigName,
+		Name: openstack.CloudProviderConfigCloudControtrollerManagerName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: openstack.CloudProviderConfigName},
+				LocalObjectReference: corev1.LocalObjectReference{Name: openstack.CloudProviderConfigCloudControtrollerManagerName},
+			},
+		},
+	}
+	cloudProviderConfigKubeControllerManagerVolumeMount = corev1.VolumeMount{
+		Name:      openstack.CloudProviderConfigKubeControllerManagerName,
+		MountPath: "/etc/kubernetes/cloudprovider",
+	}
+	cloudProviderConfigKubeControllerManagerVolume = corev1.Volume{
+		Name: openstack.CloudProviderConfigKubeControllerManagerName,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{Name: openstack.CloudProviderConfigKubeControllerManagerName},
 			},
 		},
 	}
 )
 
 func ensureVolumeMounts(c *corev1.Container) {
-	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
+	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigKubeControllerManagerVolumeMount)
 }
 
 func ensureVolumes(ps *corev1.PodSpec) {
-	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
+	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigKubeControllerManagerVolume)
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
-	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigName)
+	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigCloudControtrollerManagerName)
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
@@ -168,13 +179,13 @@ func (e *ensurer) ShouldProvisionKubeletCloudProviderConfig() bool {
 func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, data *string, namespace string) error {
 	// Get `cloud-provider-config` ConfigMap
 	var cm corev1.ConfigMap
-	err := e.client.Get(ctx, kutil.Key(namespace, openstack.CloudProviderConfigName), &cm)
+	err := e.client.Get(ctx, kutil.Key(namespace, openstack.CloudProviderConfigKubeControllerManagerName), &cm)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
-			e.logger.Info("configmap not found", "name", openstack.CloudProviderConfigName, "namespace", namespace)
+			e.logger.Info("configmap not found", "name", openstack.CloudProviderConfigKubeControllerManagerName, "namespace", namespace)
 			return nil
 		}
-		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, openstack.CloudProviderConfigName)
+		return errors.Wrapf(err, "could not get configmap '%s/%s'", namespace, openstack.CloudProviderConfigKubeControllerManagerName)
 	}
 
 	// Check if the data has "cloudprovider.conf" key

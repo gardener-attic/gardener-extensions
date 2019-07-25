@@ -37,6 +37,6 @@ func (w *wrapper) Delete(ctx context.Context, cp *v1alpha1.ControlPlane, cluster
 	// TODO: Dirty fix. Nothing to see here. This needs to be refactored!!!!
 	// 		 In the future use gophercloud to check whether there are LoadBalancers which belong to any
 	// 		 Shoot worker subnet work (have ports in the worker subnetwork).
-	time.Sleep(4 * time.Minute)
+	time.Sleep(2 * time.Minute)
 	return w.Actuator.Delete(ctx, cp, cluster)
 }

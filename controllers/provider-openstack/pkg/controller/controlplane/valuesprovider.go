@@ -30,6 +30,7 @@ import (
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
@@ -41,6 +42,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/utils"
 )
 
 // Object names
@@ -91,7 +94,7 @@ var configChart = &chart.Chart{
 	Objects: []*chart.Object{
 		{
 			Type: &corev1.ConfigMap{},
-			Name: openstacktypes.CloudProviderConfigName,
+			Name: openstacktypes.CloudProviderConfigCloudControtrollerManagerName,
 		},
 	},
 }
@@ -99,7 +102,7 @@ var configChart = &chart.Chart{
 var ccmChart = &chart.Chart{
 	Name:   "cloud-controller-manager",
 	Path:   filepath.Join(openstacktypes.InternalChartsPath, "cloud-controller-manager"),
-	Images: []string{openstacktypes.HyperkubeImageName},
+	Images: []string{openstacktypes.CloudControllerImageName},
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
@@ -233,7 +236,7 @@ func getConfigChartValues(
 	}
 
 	// Collect config chart values
-	return map[string]interface{}{
+	values := map[string]interface{}{
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"domainName":        c.DomainName,
 		"tenantName":        c.TenantName,
@@ -245,7 +248,51 @@ func getConfigChartValues(
 		"authUrl":           cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 		"dhcpDomain":        cluster.CloudProfile.Spec.OpenStack.DHCPDomain,
 		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,
-	}, nil
+	}
+
+	if cpConfig.LoadBalancerClasses == nil {
+		for _, pool := range cluster.CloudProfile.Spec.OpenStack.Constraints.FloatingPools {
+			if pool.Name == cluster.Shoot.Spec.Cloud.OpenStack.FloatingPoolName {
+				cpConfig.LoadBalancerClasses = gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(pool.LoadBalancerClasses)
+				break
+			}
+		}
+	}
+
+	for _, class := range cpConfig.LoadBalancerClasses {
+		if class.Name == openstack.DefaultLoadBalancerClass {
+			utils.SetStringValue(values, "floatingNetworkID", class.FloatingNetworkID)
+			utils.SetStringValue(values, "floatingSubnetID", class.FloatingSubnetID)
+			utils.SetStringValue(values, "subnetID", class.SubnetID)
+			break
+		}
+	}
+	for _, class := range cpConfig.LoadBalancerClasses {
+		if class.Name == openstack.PrivateLoadBalancerClass {
+			utils.SetStringValue(values, "subnetID", class.SubnetID)
+			break
+		}
+	}
+
+	var floatingClasses []map[string]interface{}
+
+	for _, class := range cpConfig.LoadBalancerClasses {
+		floatingClass := map[string]interface{}{"name": class.Name}
+		if !utils.IsEmptyString(class.FloatingSubnetID) && utils.IsEmptyString(class.FloatingNetworkID) {
+			floatingClass["floatingNetworkID"] = infraStatus.Networks.FloatingPool.ID
+		} else {
+			utils.SetStringValue(floatingClass, "floatingNetworkID", class.FloatingNetworkID)
+		}
+		utils.SetStringValue(floatingClass, "floatingSubnetID", class.FloatingSubnetID)
+		utils.SetStringValue(floatingClass, "subnetID", class.SubnetID)
+		floatingClasses = append(floatingClasses, floatingClass)
+	}
+
+	if floatingClasses != nil {
+		values["floatingClasses"] = floatingClasses
+	}
+
+	return values, nil
 }
 
 // getCCMChartValues collects and returns the CCM chart values.
@@ -262,10 +309,10 @@ func getCCMChartValues(
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
 		"podAnnotations": map[string]interface{}{
-			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
-			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
-			"checksum/secret-cloudprovider":                   checksums[gardencorev1alpha1.SecretNameCloudProvider],
-			"checksum/configmap-cloud-provider-config":        checksums[openstacktypes.CloudProviderConfigName],
+			"checksum/secret-cloud-controller-manager":                          checksums[cloudControllerManagerDeploymentName],
+			"checksum/secret-cloud-controller-manager-server":                   checksums[cloudControllerManagerServerName],
+			"checksum/secret-cloudprovider":                                     checksums[gardencorev1alpha1.SecretNameCloudProvider],
+			"checksum/configmap-cloud-provider-config-cloud-controller-manager": checksums[openstacktypes.CloudProviderConfigCloudControtrollerManagerName],
 		},
 	}
 
@@ -274,4 +321,17 @@ func getCCMChartValues(
 	}
 
 	return values, nil
+}
+
+func gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(loadBalancerClasses []gardenv1beta1.OpenStackLoadBalancerClass) []openstack.LoadBalancerClass {
+	out := make([]openstack.LoadBalancerClass, 0, len(loadBalancerClasses))
+	for _, loadBalancerClass := range loadBalancerClasses {
+		out = append(out, openstack.LoadBalancerClass{
+			Name:              loadBalancerClass.Name,
+			FloatingSubnetID:  loadBalancerClass.FloatingSubnetID,
+			FloatingNetworkID: loadBalancerClass.FloatingNetworkID,
+			SubnetID:          loadBalancerClass.SubnetID,
+		})
+	}
+	return out
 }
