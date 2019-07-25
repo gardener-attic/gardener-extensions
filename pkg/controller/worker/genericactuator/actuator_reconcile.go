@@ -47,10 +47,31 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return errors.Wrapf(err, "could not instantiate actuator context")
 	}
 
+	// If the shoot is hibernated then we want to scale down the machine-controller-manager. However, we want to first allow it to delete
+	// all remaining worker nodes. Hence, we cannot set the replicas=0 here (otherwise it would be offline and not able to delete the nodes).
+	var replicaFunc = func() (int32, error) {
+		if extensionscontroller.IsHibernated(cluster.Shoot) {
+			deployment := &appsv1.Deployment{}
+			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, a.mcmName), deployment); err != nil && !apierrors.IsNotFound(err) {
+				return 0, err
+			}
+			if replicas := deployment.Spec.Replicas; replicas != nil {
+				return *replicas, nil
+			}
+		}
+		return 1, nil
+	}
+
 	// Deploy the machine-controller-manager into the cluster.
 	a.logger.Info("Deploying the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
-	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate); err != nil {
+	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate, replicaFunc); err != nil {
 		return err
+	}
+
+	if !controller.IsHibernated(cluster.Shoot) {
+		if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, worker, cluster); err != nil {
+			return err
+		}
 	}
 
 	// Generate the desired machine deployments.
