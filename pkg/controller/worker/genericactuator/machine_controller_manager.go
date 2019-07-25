@@ -59,6 +59,10 @@ func (a *genericActuator) deployMachineControllerManager(ctx context.Context, wo
 		return errors.Wrapf(err, "could not apply MCM chart in seed for worker '%s'", util.ObjectName(workerObj))
 	}
 
+	if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, workerObj, cluster); err != nil {
+		return errors.Wrapf(err, "could not apply machine-controller-manager shoot chart")
+	}
+
 	return nil
 }
 

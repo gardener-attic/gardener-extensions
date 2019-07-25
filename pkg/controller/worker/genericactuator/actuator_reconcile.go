@@ -68,12 +68,6 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return err
 	}
 
-	if !controller.IsHibernated(cluster.Shoot) {
-		if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, worker, cluster); err != nil {
-			return err
-		}
-	}
-
 	// Generate the desired machine deployments.
 	wantedMachineDeployments, err := workerDelegate.GenerateMachineDeployments(ctx)
 	if err != nil {

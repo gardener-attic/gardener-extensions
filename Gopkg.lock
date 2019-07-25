@@ -264,7 +264,7 @@
   revision = "d6023ce2651d8eafb5c75bb0c7167536102ec9f5"
 
 [[projects]]
-  digest = "1:92add65e821b01c8afeda93e3c596711bdf71ea24743ad89edfda7030a8946de"
+  digest = "1:6eceb113b7b20911587e774e0604de686384694e7ddfdf548743a4785aee2eac"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/api/extensions",
@@ -1841,9 +1841,9 @@
     "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1",
     "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/scheme",
     "github.com/go-logr/logr",
+    "github.com/go-logr/zapr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
-    "github.com/gobuffalo/packr/v2/file/resolver",
     "github.com/golang/mock/gomock",
     "github.com/onsi/ginkgo",
     "github.com/onsi/ginkgo/extensions/table",
@@ -1855,6 +1855,8 @@
     "github.com/sirupsen/logrus",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
+    "go.uber.org/zap",
+    "go.uber.org/zap/zapcore",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
     "google.golang.org/api/compute/v1",
@@ -1897,7 +1899,6 @@
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/kubernetes/typed/core/v1",
     "k8s.io/client-go/rest",
-    "k8s.io/client-go/tools/cache",
     "k8s.io/client-go/tools/clientcmd",
     "k8s.io/client-go/tools/record",
     "k8s.io/client-go/util/retry",

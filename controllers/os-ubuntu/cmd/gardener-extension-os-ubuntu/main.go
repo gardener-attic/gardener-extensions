@@ -20,11 +20,12 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/os-ubuntu/cmd/gardener-extension-os-ubuntu/app"
 	extcontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"github.com/gardener/gardener-extensions/pkg/log"
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 func main() {
-	log.SetLogger(log.ZapLogger(false))
+	runtimelog.SetLogger(log.ZapLogger(false))
 
 	cmd := app.NewControllerCommand(extcontroller.SetupSignalHandlerContext())
 

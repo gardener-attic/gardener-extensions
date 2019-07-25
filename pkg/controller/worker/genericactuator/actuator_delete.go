@@ -48,16 +48,10 @@ func (a *genericActuator) Delete(ctx context.Context, worker *extensionsv1alpha1
 		return 1, nil
 	}
 
-	// Deploy the machine-controller-manager into the cluster to make sure
+	// Deploy the machine-controller-manager into the cluster to make sure worker nodes can be removed.
 	a.logger.Info("Deploying the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
 	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate, replicaFunc); err != nil {
 		return err
-	}
-
-	// Make sure that all RBAC roles required by the machine-controller-manager exist in the shoot cluster.
-	// This code can be removed as soon as the RBAC roles are managed by the gardener-resource-manager.
-	if err := a.applyMachineControllerManagerShootChart(ctx, workerDelegate, worker, cluster); err != nil {
-		return errors.Wrapf(err, "could not apply machine-controller-manager shoot chart")
 	}
 
 	// Mark all existing machines to become forcefully deleted.
