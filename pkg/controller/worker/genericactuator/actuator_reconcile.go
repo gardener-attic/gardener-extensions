@@ -23,7 +23,6 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	"github.com/pkg/errors"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
@@ -32,6 +31,7 @@ import (
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/kubernetes/health"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
+	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -67,9 +67,12 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 
 	// During the time a rolling update happens we do not want the cluster autoscaler to interfer, hence it
 	// is removed for now.
-	clusterAutoscalerRequired := extensionsv1alpha1helper.ClusterAutoscalerRequired(worker.Spec.Pools)
-	if clusterAutoscalerRequired {
-		rollingUpdate := false
+	var (
+		clusterAutoscalerUsed = extensionsv1alpha1helper.ClusterAutoscalerRequired(worker.Spec.Pools)
+		rollingUpdate         = false
+	)
+
+	if clusterAutoscalerUsed {
 		// Check whether new machine classes have been computed (resulting in a rolling update of the nodes).
 		for _, machineDeployment := range wantedMachineDeployments {
 			if !existingMachineClassNames.Has(machineDeployment.ClassName) {
@@ -81,12 +84,15 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		// When the Shoot gets hibernated we want to remove the cluster auto scaler so that it does not interfer
 		// with Gardeners modifications on the machine deployment's replicas fields.
 		if controller.IsHibernated(cluster.Shoot) || rollingUpdate {
-			deployment := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: worker.Namespace, Name: gardencorev1alpha1.DeploymentNameClusterAutoscaler}}
-			if err := a.client.Delete(ctx, deployment); err != nil && !apierrors.IsNotFound(err) {
-				return err
-			}
-			if err := util.WaitUntilResourceDeleted(ctx, a.client, deployment, 5*time.Second); err != nil {
-				return err
+			deployment := &appsv1.Deployment{}
+			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, gardencorev1alpha1.DeploymentNameClusterAutoscaler), deployment); err != nil {
+				if !apierrors.IsNotFound(err) {
+					return err
+				}
+			} else {
+				if err := util.ScaleDeployment(ctx, a.client, deployment, 0); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -105,7 +111,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 
 	// Generate machine deployment configuration based on previously computed list of deployments and deploy them.
 	a.logger.Info("Deploying the machine deployments", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
-	if err := a.deployMachineDeployments(ctx, cluster, worker, existingMachineDeployments, wantedMachineDeployments, workerDelegate.MachineClassKind(), clusterAutoscalerRequired); err != nil {
+	if err := a.deployMachineDeployments(ctx, cluster, worker, existingMachineDeployments, wantedMachineDeployments, workerDelegate.MachineClassKind(), clusterAutoscalerUsed); err != nil {
 		return errors.Wrapf(err, "failed to generate the machine deployment config")
 	}
 
@@ -143,6 +149,19 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		}
 	}
 
+	if rollingUpdate {
+		deployment := &appsv1.Deployment{}
+		if err := a.client.Get(ctx, kutil.Key(worker.Namespace, gardencorev1alpha1.DeploymentNameClusterAutoscaler), deployment); err != nil {
+			if !apierrors.IsNotFound(err) {
+				return err
+			}
+		} else {
+			if err := util.ScaleDeployment(ctx, a.client, deployment, 1); err != nil {
+				return err
+			}
+		}
+	}
+
 	if err := a.updateWorkerStatus(ctx, worker, wantedMachineDeployments); err != nil {
 		return errors.Wrapf(err, "failed to update the status in the Worker resource")
 	}
@@ -150,7 +169,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	return nil
 }
 
-func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments worker.MachineDeployments, classKind string, clusterAutoscalerRequired bool) error {
+func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments worker.MachineDeployments, classKind string, clusterAutoscalerUsed bool) error {
 	for _, deployment := range wantedMachineDeployments {
 		var (
 			labels                    = map[string]string{"name": deployment.Name}
@@ -164,7 +183,7 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 			replicas = 0
 		// If the cluster autoscaler is not enabled then min=max (as per API validation), hence
 		// we can use either min or max.
-		case !clusterAutoscalerRequired:
+		case !clusterAutoscalerUsed:
 			replicas = deployment.Minimum
 		// If the machine deployment does not yet exist we set replicas to min so that the cluster
 		// autoscaler can scale them as required.
