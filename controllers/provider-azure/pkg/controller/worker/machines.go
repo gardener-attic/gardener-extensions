@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"path/filepath"
 
+	apisazure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	azureapi "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	azureapihelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
@@ -79,6 +79,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
+		machineImages      []apisazure.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -106,10 +107,17 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	for _, pool := range w.worker.Spec.Pools {
-		machineImage, err := confighelper.FindImage(w.machineImages, pool.MachineImage.Name, pool.MachineImage.Version)
+		publisher, sku, offer, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
+		machineImages = appendMachineImage(machineImages, apisazure.MachineImage{
+			Name:      pool.MachineImage.Name,
+			Version:   pool.MachineImage.Version,
+			Publisher: publisher,
+			SKU:       sku,
+			Offer:     offer,
+		})
 
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
 		if err != nil {
@@ -132,10 +140,10 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			},
 			"machineType": pool.MachineType,
 			"image": map[string]interface{}{
-				"publisher": machineImage.Publisher,
-				"offer":     machineImage.Offer,
-				"sku":       machineImage.SKU,
-				"version":   machineImage.Version,
+				"publisher": publisher,
+				"offer":     offer,
+				"sku":       sku,
+				"version":   pool.MachineImage.Version,
 			},
 			"volumeSize":   volumeSize,
 			"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
@@ -171,6 +179,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 	w.machineDeployments = machineDeployments
 	w.machineClasses = machineClasses
+	w.machineImages = machineImages
 
 	return nil
 }
