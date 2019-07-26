@@ -22,6 +22,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -63,7 +64,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil)
+		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -273,9 +274,10 @@ var _ = Describe("Machines", func() {
 
 				scheme = runtime.NewScheme()
 				_ = apisopenstack.AddToScheme(scheme)
+				_ = openstackv1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 			})
 
 			It("should return the expected machine deployments", func() {
@@ -346,6 +348,24 @@ var _ = Describe("Machines", func() {
 				err := workerDelegate.DeployMachineClasses(context.TODO())
 				Expect(err).NotTo(HaveOccurred())
 
+				// Test workerDelegate.GetMachineImages()
+				machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+				Expect(machineImages).To(Equal(&openstackv1alpha1.WorkerStatus{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+						Kind:       "WorkerStatus",
+					},
+					MachineImages: []openstackv1alpha1.MachineImage{
+						{
+							Name:         machineImageName,
+							Version:      machineImageVersion,
+							CloudProfile: cloudProfileName,
+							Image:        machineImage,
+						},
+					},
+				}))
+				Expect(err).NotTo(HaveOccurred())
+
 				// Test workerDelegate.GenerateMachineDeployments()
 				machineDeployments := worker.MachineDeployments{
 					{
@@ -405,7 +425,7 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
 				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -417,7 +437,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -431,7 +451,7 @@ var _ = Describe("Machines", func() {
 					Raw: encode(&apisopenstack.InfrastructureStatus{}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -443,7 +463,7 @@ var _ = Describe("Machines", func() {
 
 				cluster.CloudProfile.Name = "another-cloud-profile"
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

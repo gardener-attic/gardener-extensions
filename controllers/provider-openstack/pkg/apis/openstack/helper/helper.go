@@ -43,3 +43,15 @@ func FindSecurityGroupByPurpose(securityGroups []openstack.SecurityGroup, purpos
 	}
 	return nil, fmt.Errorf("cannot find security group with purpose %q", purpose)
 }
+
+// FindMachineImage takes a list of machine images and tries to find the first entry
+// whose name, version, and zone matches with the given name, version, and cloud profile. If no such
+// entry is found then an error will be returned.
+func FindMachineImage(machineImages []openstack.MachineImage, name, version, cloudProfile string) (*openstack.MachineImage, error) {
+	for _, machineImage := range machineImages {
+		if machineImage.Name == name && machineImage.Version == version && machineImage.CloudProfile == cloudProfile {
+			return &machineImage, nil
+		}
+	}
+	return nil, fmt.Errorf("no machine image with name %q, version %q, cloudProfile %q found", name, version, cloudProfile)
+}

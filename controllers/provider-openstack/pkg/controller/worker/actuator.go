@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
+	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -100,6 +101,7 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 	return NewWorkerDelegate(
 		d.client,
+		d.scheme,
 		d.decoder,
 
 		d.machineImageToCloudProfilesMapping,
@@ -113,6 +115,7 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 type workerDelegate struct {
 	client  client.Client
+	scheme  *runtime.Scheme
 	decoder runtime.Decoder
 
 	machineImageToCloudProfilesMapping []config.MachineImage
@@ -124,11 +127,13 @@ type workerDelegate struct {
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
+	machineImages      []apisopenstack.MachineImage
 }
 
 // NewWorkerDelegate creates a new context for a worker reconciliation.
 func NewWorkerDelegate(
 	client client.Client,
+	scheme *runtime.Scheme,
 	decoder runtime.Decoder,
 
 	machineImageToCloudProfilesMapping []config.MachineImage,
@@ -140,6 +145,7 @@ func NewWorkerDelegate(
 ) genericactuator.WorkerDelegate {
 	return &workerDelegate{
 		client:  client,
+		scheme:  scheme,
 		decoder: decoder,
 
 		machineImageToCloudProfilesMapping: machineImageToCloudProfilesMapping,

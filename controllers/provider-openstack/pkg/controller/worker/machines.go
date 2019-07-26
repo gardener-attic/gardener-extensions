@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config/helper"
+	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	openstackapi "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	openstackapihelper "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
@@ -82,6 +82,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
+		machineImages      []apisopenstack.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -107,10 +108,16 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		machineImage, err := confighelper.FindImageForCloudProfile(w.machineImageToCloudProfilesMapping, pool.MachineImage.Name, pool.MachineImage.Version, w.cluster.CloudProfile.Name)
+		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, w.cluster.CloudProfile.Name)
 		if err != nil {
 			return err
 		}
+		machineImages = appendMachineImage(machineImages, apisopenstack.MachineImage{
+			Name:         pool.MachineImage.Name,
+			Version:      pool.MachineImage.Version,
+			CloudProfile: w.cluster.CloudProfile.Name,
+			Image:        machineImage,
+		})
 
 		for zoneIndex, zone := range pool.Zones {
 			machineClassSpec := map[string]interface{}{
@@ -163,6 +170,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 	w.machineDeployments = machineDeployments
 	w.machineClasses = machineClasses
+	w.machineImages = machineImages
 
 	return nil
 }
