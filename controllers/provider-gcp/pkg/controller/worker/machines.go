@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config/helper"
+	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	gcpapi "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	gcpapihelper "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
@@ -76,6 +76,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
+		machineImages      []apisgcp.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -101,10 +102,15 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		machineImage, err := confighelper.FindImage(w.machineImages, pool.MachineImage.Name, pool.MachineImage.Version)
+		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
+		machineImages = appendMachineImage(machineImages, apisgcp.MachineImage{
+			Name:    pool.MachineImage.Name,
+			Version: pool.MachineImage.Version,
+			Image:   machineImage,
+		})
 
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
 		if err != nil {
@@ -190,6 +196,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 	w.machineDeployments = machineDeployments
 	w.machineClasses = machineClasses
+	w.machineImages = machineImages
 
 	return nil
 }
