@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -43,6 +42,11 @@ type WorkerDelegate interface {
 
 	// GenerateMachineDeployments generates the configuration for the desired machine deployments.
 	GenerateMachineDeployments(context.Context) (worker.MachineDeployments, error)
+
+	// GetMachineImages returns the list of used machine images for this `Worker` resource. It will be stored in the
+	// `.status.providerStatus` field of the `Worker` resource such that the controller can look up its provider-specific
+	// machine image information in case the required version has been removed from its componentconfig.
+	GetMachineImages(context.Context) (runtime.Object, error)
 }
 
 // DelegateFactory acts upon Worker resources.
