@@ -19,14 +19,14 @@ import (
 	"fmt"
 	"path/filepath"
 
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config/helper"
+	apispacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
 	packetapi "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -81,6 +81,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
+		machineImages      []apispacket.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -99,13 +100,18 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	for _, pool := range w.worker.Spec.Pools {
-		machineImage, err := confighelper.FindImage(w.machineImages, pool.MachineImage.Name, pool.MachineImage.Version)
+		machineImageID, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
+		machineImages = appendMachineImage(machineImages, apispacket.MachineImage{
+			Name:    pool.MachineImage.Name,
+			Version: pool.MachineImage.Version,
+			ID:      machineImageID,
+		})
 
 		machineClassSpec := map[string]interface{}{
-			"OS":           machineImage,
+			"OS":           machineImageID,
 			"projectID":    string(machineClassSecretData[packet.ProjectID]),
 			"billingCycle": "hourly",
 			"machineType":  pool.MachineType,
@@ -147,6 +153,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 	w.machineDeployments = machineDeployments
 	w.machineClasses = machineClasses
+	w.machineImages = machineImages
 
 	return nil
 }
