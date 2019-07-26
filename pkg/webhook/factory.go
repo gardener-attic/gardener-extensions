@@ -15,51 +15,51 @@
 package webhook
 
 import (
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// Webhook kinds.
-const (
-	// A seed webhook is applied only to those shoot namespaces that have the correct Seed provider label.
-	SeedKind = "seed"
-	// A shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
-	ShootKind = "shoot"
-	// A backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
-	BackupKind = "backup"
-)
+type Webhook struct {
+	Name     string
+	Kind     string
+	Provider string
+	Path     string
+	Types    []runtime.Object
+	Webhook  *admission.Webhook
+}
 
 // FactoryAggregator aggregates various Factory functions.
-type FactoryAggregator map[string]func(manager.Manager) (*admission.Webhook, error)
+type FactoryAggregator []func(manager.Manager) (*Webhook, error)
 
 // NewFactoryAggregator creates a new FactoryAggregator and registers the given functions.
-func NewFactoryAggregator(m map[string]func(manager.Manager) (*admission.Webhook, error)) FactoryAggregator {
+func NewFactoryAggregator(m []func(manager.Manager) (*Webhook, error)) FactoryAggregator {
 	builder := FactoryAggregator{}
 
-	for name, f := range m {
-		builder.Register(name, f)
+	for _, f := range m {
+		builder.Register(f)
 	}
 
 	return builder
 }
 
 // Register registers the given functions in this builder.
-func (a *FactoryAggregator) Register(name string, f func(manager.Manager) (*admission.Webhook, error)) {
-	(*a)[name] = f
+func (a *FactoryAggregator) Register(f func(manager.Manager) (*Webhook, error)) {
+	*a = append(*a, f)
 }
 
 // Webhooks calls all factories with the given managers and returns all created webhooks.
 // As soon as there is an error creating a webhook, the error is returned immediately.
-func (a *FactoryAggregator) Webhooks(mgr manager.Manager) (map[string]*admission.Webhook, error) {
-	webhooks := make(map[string]*admission.Webhook, len(*a))
+func (a *FactoryAggregator) Webhooks(mgr manager.Manager) ([]*Webhook, error) {
+	webhooks := make([]*Webhook, 0, len(*a))
 
-	for name, f := range *a {
+	for _, f := range *a {
 		wh, err := f(mgr)
 		if err != nil {
 			return nil, err
 		}
 
-		webhooks[name] = wh
+		webhooks = append(webhooks, wh)
 	}
 
 	return webhooks, nil

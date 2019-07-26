@@ -45,7 +45,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(alicloud.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
-			WebhookServerHost:       "localhost",
 			WebhookServerPort:       443,
 		}
 		configFileOpts = &alicloudcmd.ConfigOptions{}
@@ -72,9 +71,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
+		// options for the webhook server
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			CertDir:   "/tmp/gardener-extensions-cert",
+			Namespace: os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+		}
+
 		controllerSwitches = alicloudcmd.ControllerSwitchOptions()
 		webhookSwitches    = alicloudcmd.WebhookSwitchOptions()
-		webhookOptions     = webhookcmd.NewAddToManagerOptions(alicloud.Name, webhookSwitches)
+		webhookOptions     = webhookcmd.NewAddToManagerOptions(alicloud.Name, webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

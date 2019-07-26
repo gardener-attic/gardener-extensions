@@ -47,7 +47,7 @@ type AddArgs struct {
 }
 
 // Add creates a new controlplane webhook and adds it to the given Manager.
-func Add(mgr manager.Manager, args AddArgs) (*admission.Webhook, error) {
+func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) {
 	logger := logger.WithValues("kind", args.Kind, "provider", args.Provider)
 
 	// Create handler
@@ -59,7 +59,14 @@ func Add(mgr manager.Manager, args AddArgs) (*admission.Webhook, error) {
 	// Create webhook
 	logger.Info("Creating webhook", "name", getName(args.Kind))
 
-	return &admission.Webhook{Handler: handler}, nil
+	return &extensionswebhook.Webhook{
+		Name:     getName(args.Kind),
+		Kind:     args.Kind,
+		Provider: args.Provider,
+		Types:    args.Types,
+		Path:     getName(args.Kind),
+		Webhook:  &admission.Webhook{Handler: handler},
+	}, nil
 }
 
 func getName(kind string) string {

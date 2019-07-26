@@ -47,7 +47,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElection:          true,
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(azure.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
-			WebhookServerHost:       "localhost",
 			WebhookServerPort:       443,
 		}
 		configFileOpts = &azurecmd.ConfigOptions{}
@@ -84,9 +83,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
+		// options for the webhook server
+		webhookServerOptions = &webhookcmd.ServerOptions{
+			CertDir:   "/tmp/gardener-extensions-cert",
+			Namespace: os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
+		}
+
 		controllerSwitches = azurecmd.ControllerSwitchOptions()
 		webhookSwitches    = azurecmd.WebhookSwitchOptions()
-		webhookOptions     = webhookcmd.NewAddToManagerOptions(azure.Name, webhookSwitches)
+		webhookOptions     = webhookcmd.NewAddToManagerOptions(azure.Name, webhookServerOptions, webhookSwitches)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

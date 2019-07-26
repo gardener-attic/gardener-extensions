@@ -35,9 +35,9 @@ const (
 	// LeaderElectionNamespaceFlag is the name of the command line flag to specify the leader election namespace.
 	LeaderElectionNamespaceFlag = "leader-election-namespace"
 	// WebhookServerHostFlag is the name of the command line flag to specify the webhook config host for 'url' mode.
-	WebhookServerHostFlag = "webhook-server-host"
+	WebhookServerHostFlag = "webhook-config-server-host"
 	// WebhookServerPortFlag is the name of the command line flag to specify the webhook server port.
-	WebhookServerPortFlag = "webhook-server-port"
+	WebhookServerPortFlag = "webhook-config-server-port"
 
 	// MaxConcurrentReconcilesFlag is the name of the command line flag to specify the maximum number of
 	// concurrent reconciliations a controller can do.

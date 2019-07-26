@@ -22,6 +22,7 @@ LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pk
 VERIFY                      := true
 LEADER_ELECTION             := false
 IGNORE_OPERATION_ANNOTATION := false
+WEBHOOK_CONFIG_URL          := docker.for.mac.localhost
 
 ### Build commands
 
@@ -96,7 +97,7 @@ start-os-jeos:
 
 .PHONY: start-os-coreos-alicloud
 start-os-coreos-alicloud:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+		@LEADER_ELECTION_NAMESPACE=garden go run \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
@@ -117,8 +118,10 @@ start-provider-aws:
 		--config-file=./controllers/provider-aws/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-server-host=0.0.0.0 \
-		--webhook-server-port=8443
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=8443 \
+		--webhook-config-mode=url \
+		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
 .PHONY: start-provider-azure
 start-provider-azure:
@@ -128,8 +131,10 @@ start-provider-azure:
 		--config-file=./controllers/provider-azure/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-server-host=0.0.0.0 \
-		--webhook-server-port=8443
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=8443 \
+		--webhook-config-mode=url \
+		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
 .PHONY: start-provider-gcp
 start-provider-gcp:
@@ -139,8 +144,10 @@ start-provider-gcp:
 		--config-file=./controllers/provider-gcp/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-server-host=0.0.0.0 \
-		--webhook-server-port=8443
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=8443 \
+		--webhook-config-mode=url \
+		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
 .PHONY: start-provider-openstack
 start-provider-openstack:
@@ -150,8 +157,10 @@ start-provider-openstack:
 		--config-file=./controllers/provider-openstack/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-server-host=0.0.0.0 \
-		--webhook-server-port=8443
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=8443 \
+		--webhook-config-mode=url \
+		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
@@ -161,8 +170,10 @@ start-provider-alicloud:
 		--config-file=./controllers/provider-alicloud/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-server-host=0.0.0.0 \
-		--webhook-server-port=8443
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=8443 \
+		--webhook-config-mode=url \
+		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
 .PHONY: start-provider-packet
 start-provider-packet:
@@ -172,8 +183,10 @@ start-provider-packet:
 		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
-		--webhook-server-host=0.0.0.0 \
-		--webhook-server-port=8443
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=8443 \
+		--webhook-config-mode=url \
+		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
 .PHONY: start-certificate-service
 start-certificate-service:
