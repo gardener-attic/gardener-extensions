@@ -33,19 +33,25 @@ import (
 
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cloudinit"
 	commonosgenerator "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
-
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
+	yaml "gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
-
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // CloudConfigFromOperatingSystemConfig generates a CloudConfig from an OperatingSystemConfig
 // using a Generator
 func CloudConfigFromOperatingSystemConfig(ctx context.Context, cli runtimeclient.Client, config *extensionsv1alpha1.OperatingSystemConfig, generator commonosgenerator.Generator) ([]byte, *string, error) {
+	var customization = OperatingSystemCustomization{}
+	if config.Spec.ProviderConfig != nil {
+		err := yaml.Unmarshal(config.Spec.ProviderConfig.Raw, &customization)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	files := make([]*commonosgenerator.File, 0, len(config.Spec.Files))
-	for _, file := range config.Spec.Files {
+	for _, file := range append(config.Spec.Files, customization.Files...) {
 		data, err := DataForFileContent(ctx, cli, config.Namespace, &file.Content)
 		if err != nil {
 			return nil, nil, err
@@ -55,7 +61,7 @@ func CloudConfigFromOperatingSystemConfig(ctx context.Context, cli runtimeclient
 	}
 
 	units := make([]*commonosgenerator.Unit, 0, len(config.Spec.Units))
-	for _, unit := range config.Spec.Units {
+	for _, unit := range append(config.Spec.Units, customization.Units...) {
 		var content []byte
 		if unit.Content != nil {
 			content = []byte(*unit.Content)
