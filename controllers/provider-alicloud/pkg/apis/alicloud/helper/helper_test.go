@@ -53,6 +53,19 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found", []alicloud.SecurityGroup{{ID: "bar", Purpose: purposeWrong}}, purpose, nil, true),
 		Entry("entry exists", []alicloud.SecurityGroup{{ID: "bar", Purpose: purpose}}, purpose, &alicloud.SecurityGroup{ID: "bar", Purpose: purpose}, false),
 	)
+
+	DescribeTable("#FindMachineImage",
+		func(machineImages []alicloud.MachineImage, name, version string, expectedMachineImage *alicloud.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(machineImages, name, version)
+			expectResults(machineImage, expectedMachineImage, err, expectErr)
+		},
+
+		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
+		Entry("empty list", []alicloud.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []alicloud.MachineImage{{Name: "bar", Version: "1.2.3", ID: "id123"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []alicloud.MachineImage{{Name: "bar", Version: "1.2.3", ID: "id123"}}, "foo", "1.2.4", nil, true),
+		Entry("entry exists", []alicloud.MachineImage{{Name: "bar", Version: "1.2.3", ID: "id123"}}, "bar", "1.2.3", &alicloud.MachineImage{Name: "bar", Version: "1.2.3", ID: "id123"}, false),
+	)
 })
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {
