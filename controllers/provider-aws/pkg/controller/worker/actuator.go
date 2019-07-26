@@ -17,6 +17,7 @@ package worker
 import (
 	"context"
 
+	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
@@ -27,14 +28,11 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardener "github.com/gardener/gardener/pkg/client/kubernetes"
-
 	"github.com/go-logr/logr"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
@@ -103,6 +101,7 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 	return NewWorkerDelegate(
 		d.client,
+		d.scheme,
 		d.decoder,
 
 		d.machineImageToAMIMapping,
@@ -116,6 +115,7 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 type workerDelegate struct {
 	client  client.Client
+	scheme  *runtime.Scheme
 	decoder runtime.Decoder
 
 	machineImageToAMIMapping []config.MachineImage
@@ -127,11 +127,13 @@ type workerDelegate struct {
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
+	machineImages      []apisaws.MachineImage
 }
 
 // NewWorkerDelegate creates a new context for a worker reconciliation.
 func NewWorkerDelegate(
 	client client.Client,
+	scheme *runtime.Scheme,
 	decoder runtime.Decoder,
 
 	machineImageToAMIMapping []config.MachineImage,
@@ -143,6 +145,7 @@ func NewWorkerDelegate(
 ) genericactuator.WorkerDelegate {
 	return &workerDelegate{
 		client:  client,
+		scheme:  scheme,
 		decoder: decoder,
 
 		machineImageToAMIMapping: machineImageToAMIMapping,

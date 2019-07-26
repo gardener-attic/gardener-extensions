@@ -79,3 +79,15 @@ func FindSubnetForPurposeAndZone(subnets []aws.Subnet, purpose, zone string) (*a
 	}
 	return nil, fmt.Errorf("no subnet with purpose %q in zone %q found", purpose, zone)
 }
+
+// FindMachineImage takes a list of machine images and tries to find the first entry
+// whose name, version, and zone matches with the given name, version, and region. If no such entry is
+// found then an error will be returned.
+func FindMachineImage(machineImages []aws.MachineImage, name, version, region string) (*aws.MachineImage, error) {
+	for _, machineImage := range machineImages {
+		if machineImage.Name == name && machineImage.Version == version && machineImage.Region == region {
+			return &machineImage, nil
+		}
+	}
+	return nil, fmt.Errorf("no machine image with name %q, version %q, region %q found", name, version, region)
+}
