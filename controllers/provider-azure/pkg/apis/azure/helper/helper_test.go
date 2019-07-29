@@ -76,6 +76,19 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found", []azure.AvailabilitySet{{ID: "bar", Purpose: purposeWrong}}, purpose, nil, true),
 		Entry("entry exists", []azure.AvailabilitySet{{ID: "bar", Purpose: purpose}}, purpose, &azure.AvailabilitySet{ID: "bar", Purpose: purpose}, false),
 	)
+
+	DescribeTable("#FindMachineImage",
+		func(machineImages []azure.MachineImage, name, version string, expectedMachineImage *azure.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(machineImages, name, version)
+			expectResults(machineImage, expectedMachineImage, err, expectErr)
+		},
+
+		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
+		Entry("empty list", []azure.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde"}}, "foo", "1.2.4", nil, true),
+		Entry("entry exists", []azure.MachineImage{{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde"}}, "bar", "1.2.3", &azure.MachineImage{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde"}, false),
+	)
 })
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {

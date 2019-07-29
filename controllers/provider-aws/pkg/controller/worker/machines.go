@@ -19,15 +19,15 @@ import (
 	"fmt"
 	"path/filepath"
 
+	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	awsapi "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	awsapihelper "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -82,6 +82,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
+		machineImages      []apisaws.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -111,10 +112,16 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		ami, err := confighelper.FindAMIForRegion(w.machineImageToAMIMapping, pool.MachineImage.Name, pool.MachineImage.Version, w.worker.Spec.Region)
+		ami, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, w.worker.Spec.Region)
 		if err != nil {
 			return err
 		}
+		machineImages = appendMachineImage(machineImages, apisaws.MachineImage{
+			Name:    pool.MachineImage.Name,
+			Version: pool.MachineImage.Version,
+			Region:  w.worker.Spec.Region,
+			AMI:     ami,
+		})
 
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
 		if err != nil {
@@ -185,6 +192,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 	w.machineDeployments = machineDeployments
 	w.machineClasses = machineClasses
+	w.machineImages = machineImages
 
 	return nil
 }

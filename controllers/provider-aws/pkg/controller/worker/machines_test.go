@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	awsv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
@@ -62,7 +63,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil)
+		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -283,9 +284,10 @@ var _ = Describe("Machines", func() {
 
 				scheme = runtime.NewScheme()
 				_ = apisaws.AddToScheme(scheme)
+				_ = awsv1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 			})
 
 			It("should return the expected machine deployments", func() {
@@ -382,6 +384,24 @@ var _ = Describe("Machines", func() {
 				err := workerDelegate.DeployMachineClasses(context.TODO())
 				Expect(err).NotTo(HaveOccurred())
 
+				// Test workerDelegate.GetMachineImages()
+				machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+				Expect(machineImages).To(Equal(&awsv1alpha1.WorkerStatus{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: awsv1alpha1.SchemeGroupVersion.String(),
+						Kind:       "WorkerStatus",
+					},
+					MachineImages: []awsv1alpha1.MachineImage{
+						{
+							Name:    machineImageName,
+							Version: machineImageVersion,
+							Region:  region,
+							AMI:     machineImageAMI,
+						},
+					},
+				}))
+				Expect(err).NotTo(HaveOccurred())
+
 				// Test workerDelegate.GenerateMachineDeployments()
 				machineDeployments := worker.MachineDeployments{
 					{
@@ -441,7 +461,7 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
 				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -453,7 +473,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -467,7 +487,7 @@ var _ = Describe("Machines", func() {
 					Raw: encode(&apisaws.InfrastructureStatus{}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -490,7 +510,7 @@ var _ = Describe("Machines", func() {
 					}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -502,7 +522,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.Region = "another-region"
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -534,7 +554,7 @@ var _ = Describe("Machines", func() {
 					}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -546,7 +566,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.Pools[0].Volume.Size = "not-decodeable"
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

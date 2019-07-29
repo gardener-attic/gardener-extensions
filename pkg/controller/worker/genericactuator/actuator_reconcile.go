@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -118,6 +119,15 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return errors.Wrapf(err, "failed to deploy the machine classes")
 	}
 
+	// Store machine image information in worker provider status.
+	machineImages, err := workerDelegate.GetMachineImages(ctx)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get the machine images")
+	}
+	if err := a.updateWorkerStatusMachineImages(ctx, worker, machineImages); err != nil {
+		return errors.Wrapf(err, "failed to update the machine images in worker status")
+	}
+
 	// Get the list of all existing machine deployments.
 	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
 	if err := a.client.List(ctx, &client.ListOptions{Namespace: worker.Namespace}, existingMachineDeployments); err != nil {
@@ -177,8 +187,8 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		}
 	}
 
-	if err := a.updateWorkerStatus(ctx, worker, wantedMachineDeployments); err != nil {
-		return errors.Wrapf(err, "failed to update the status in the Worker resource")
+	if err := a.updateWorkerStatusMachineDeployments(ctx, worker, wantedMachineDeployments); err != nil {
+		return errors.Wrapf(err, "failed to update the machine deployments in worker status")
 	}
 
 	return nil
@@ -335,7 +345,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 	}, ctx.Done())
 }
 
-func (a *genericActuator) updateWorkerStatus(ctx context.Context, worker *extensionsv1alpha1.Worker, machineDeployments worker.MachineDeployments) error {
+func (a *genericActuator) updateWorkerStatusMachineDeployments(ctx context.Context, worker *extensionsv1alpha1.Worker, machineDeployments worker.MachineDeployments) error {
 	var statusMachineDeployments []extensionsv1alpha1.MachineDeployment
 
 	for _, machineDeployment := range machineDeployments {
@@ -348,6 +358,17 @@ func (a *genericActuator) updateWorkerStatus(ctx context.Context, worker *extens
 
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, worker, func() error {
 		worker.Status.MachineDeployments = statusMachineDeployments
+		return nil
+	})
+}
+
+func (a *genericActuator) updateWorkerStatusMachineImages(ctx context.Context, worker *extensionsv1alpha1.Worker, machineImages runtime.Object) error {
+	if machineImages == nil {
+		return nil
+	}
+
+	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, worker, func() error {
+		worker.Status.ProviderStatus = &runtime.RawExtension{Object: machineImages}
 		return nil
 	})
 }

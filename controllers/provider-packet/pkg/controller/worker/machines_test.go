@@ -22,6 +22,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
 	apispacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
+	packetv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -62,7 +63,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, "", nil, nil)
+		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -223,9 +224,10 @@ var _ = Describe("Machines", func() {
 
 				scheme = runtime.NewScheme()
 				_ = apispacket.AddToScheme(scheme)
+				_ = packetv1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", w, cluster)
 			})
 
 			It("should return the expected machine deployments", func() {
@@ -286,6 +288,23 @@ var _ = Describe("Machines", func() {
 				err := workerDelegate.DeployMachineClasses(context.TODO())
 				Expect(err).NotTo(HaveOccurred())
 
+				// Test workerDelegate.GetMachineImages()
+				machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+				Expect(machineImages).To(Equal(&packetv1alpha1.WorkerStatus{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: packetv1alpha1.SchemeGroupVersion.String(),
+						Kind:       "WorkerStatus",
+					},
+					MachineImages: []packetv1alpha1.MachineImage{
+						{
+							Name:    machineImageName,
+							Version: machineImageVersion,
+							ID:      machineImage,
+						},
+					},
+				}))
+				Expect(err).NotTo(HaveOccurred())
+
 				// Test workerDelegate.GenerateMachineDeployments()
 				machineDeployments := worker.MachineDeployments{
 					{
@@ -327,7 +346,7 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, packetAPIToken, packetProjectID)
 
 				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -339,7 +358,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{Raw: []byte(`invalid`)}
 
-				workerDelegate = NewWorkerDelegate(c, decoder, machineImages, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -349,7 +368,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image cannot be found", func() {
 				expectGetSecretCallToWork(c, packetAPIToken, packetProjectID)
 
-				workerDelegate = NewWorkerDelegate(c, decoder, nil, chartApplier, "", w, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, nil, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

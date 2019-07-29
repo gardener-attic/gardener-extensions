@@ -72,6 +72,20 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found (no zone)", []aws.Subnet{{ID: "bar", Purpose: "baz", Zone: "europe"}}, "foo", "asia", nil, true),
 		Entry("entry exists", []aws.Subnet{{ID: "bar", Purpose: "baz", Zone: "europe"}}, "baz", "europe", &aws.Subnet{ID: "bar", Purpose: "baz", Zone: "europe"}, false),
 	)
+
+	DescribeTable("#FindMachineImage",
+		func(machineImages []aws.MachineImage, name, version, region string, expectedMachineImage *aws.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(machineImages, name, version, region)
+			expectResults(machineImage, expectedMachineImage, err, expectErr)
+		},
+
+		Entry("list is nil", nil, "foo", "1.2.3", "europe", nil, true),
+		Entry("empty list", []aws.MachineImage{}, "foo", "1.2.3", "europe", nil, true),
+		Entry("entry not found (no name)", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "foo", "1.2.3", "europe", nil, true),
+		Entry("entry not found (no version)", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "foo", "1.2.3", "asia", nil, true),
+		Entry("entry not found (no region)", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "bar", "1.2.3", "asia", nil, true),
+		Entry("entry exists", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "bar", "1.2.3", "europe", &aws.MachineImage{Name: "bar", Version: "1.2.3", Region: "europe"}, false),
+	)
 })
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {

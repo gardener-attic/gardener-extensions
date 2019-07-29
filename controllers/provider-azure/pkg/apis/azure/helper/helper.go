@@ -67,3 +67,15 @@ func FindAvailabilitySetByPurpose(availabilitySets []azure.AvailabilitySet, purp
 	}
 	return nil, fmt.Errorf("cannot find availability set with purpose %q", purpose)
 }
+
+// FindMachineImage takes a list of machine images and tries to find the first entry
+// whose name, version, and zone matches with the given name, version, and zone. If no such entry is
+// found then an error will be returned.
+func FindMachineImage(machineImages []azure.MachineImage, name, version string) (*azure.MachineImage, error) {
+	for _, machineImage := range machineImages {
+		if machineImage.Name == name && machineImage.Version == version {
+			return &machineImage, nil
+		}
+	}
+	return nil, fmt.Errorf("no machine image with name %q, version %q found", name, version)
+}

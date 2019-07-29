@@ -40,6 +40,19 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found", []gcp.Subnet{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
 		Entry("entry exists", []gcp.Subnet{{Name: "bar", Purpose: purpose}}, purpose, &gcp.Subnet{Name: "bar", Purpose: purpose}, false),
 	)
+
+	DescribeTable("#FindMachineImage",
+		func(machineImages []gcp.MachineImage, name, version string, expectedMachineImage *gcp.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(machineImages, name, version)
+			expectResults(machineImage, expectedMachineImage, err, expectErr)
+		},
+
+		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
+		Entry("empty list", []gcp.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []gcp.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []gcp.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.4", nil, true),
+		Entry("entry exists", []gcp.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "bar", "1.2.3", &gcp.MachineImage{Name: "bar", Version: "1.2.3", Image: "image123"}, false),
+	)
 })
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {

@@ -21,13 +21,13 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudapi "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
+	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	alicloudapihelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/helper"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -82,6 +82,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
+		machineImages      []apisalicloud.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -107,10 +108,15 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		machineImage, err := confighelper.FindImage(w.machineImages, pool.MachineImage.Name, pool.MachineImage.Version)
+		machineImageID, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
+		machineImages = appendMachineImage(machineImages, apisalicloud.MachineImage{
+			Name:    pool.MachineImage.Name,
+			Version: pool.MachineImage.Version,
+			ID:      machineImageID,
+		})
 
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
 		if err != nil {
@@ -124,7 +130,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			}
 
 			machineClassSpec := map[string]interface{}{
-				"imageID":         machineImage,
+				"imageID":         machineImageID,
 				"instanceType":    pool.MachineType,
 				"region":          w.worker.Spec.Region,
 				"zoneID":          zone,
@@ -178,6 +184,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 
 	w.machineDeployments = machineDeployments
 	w.machineClasses = machineClasses
+	w.machineImages = machineImages
 
 	return nil
 }

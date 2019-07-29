@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
+	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -45,14 +46,14 @@ type delegateFactory struct {
 	scheme  *runtime.Scheme
 	decoder runtime.Decoder
 
-	machineImages []config.MachineImage
+	machineImageMapping []config.MachineImage
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled WorkerPoolConfigs.
-func NewActuator(machineImages []config.MachineImage) worker.Actuator {
+func NewActuator(machineImageMapping []config.MachineImage) worker.Actuator {
 	delegateFactory := &delegateFactory{
-		logger:        log.Log.WithName("worker-actuator"),
-		machineImages: machineImages,
+		logger:              log.Log.WithName("worker-actuator"),
+		machineImageMapping: machineImageMapping,
 	}
 
 	return genericactuator.NewActuator(
@@ -100,9 +101,10 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 	return NewWorkerDelegate(
 		d.client,
+		d.scheme,
 		d.decoder,
 
-		d.machineImages,
+		d.machineImageMapping,
 		seedChartApplier,
 		serverVersion.GitVersion,
 
@@ -113,25 +115,28 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 type workerDelegate struct {
 	client  client.Client
+	scheme  *runtime.Scheme
 	decoder runtime.Decoder
 
-	machineImages    []config.MachineImage
-	seedChartApplier gardener.ChartApplier
-	serverVersion    string
+	machineImageMapping []config.MachineImage
+	seedChartApplier    gardener.ChartApplier
+	serverVersion       string
 
 	cluster *extensionscontroller.Cluster
 	worker  *extensionsv1alpha1.Worker
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
+	machineImages      []apisalicloud.MachineImage
 }
 
 // NewWorkerDelegate creates a new context for a worker reconciliation.
 func NewWorkerDelegate(
 	client client.Client,
+	scheme *runtime.Scheme,
 	decoder runtime.Decoder,
 
-	machineImages []config.MachineImage,
+	machineImageMapping []config.MachineImage,
 	seedChartApplier gardener.ChartApplier,
 	serverVersion string,
 
@@ -140,11 +145,12 @@ func NewWorkerDelegate(
 ) genericactuator.WorkerDelegate {
 	return &workerDelegate{
 		client:  client,
+		scheme:  scheme,
 		decoder: decoder,
 
-		machineImages:    machineImages,
-		seedChartApplier: seedChartApplier,
-		serverVersion:    serverVersion,
+		machineImageMapping: machineImageMapping,
+		seedChartApplier:    seedChartApplier,
+		serverVersion:       serverVersion,
 
 		cluster: cluster,
 		worker:  worker,
