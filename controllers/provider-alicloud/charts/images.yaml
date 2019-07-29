@@ -58,4 +58,4 @@ images:
 - name: csi-plugin-alicloud
   sourceRepository: https://github.com/AliyunContainerService/csi-plugin
   repository: registry.eu-central-1.aliyuncs.com/gardener-de/csi-plugin-alicloud
-  tag: v1.13.2
+  tag: v1.13.2-1
