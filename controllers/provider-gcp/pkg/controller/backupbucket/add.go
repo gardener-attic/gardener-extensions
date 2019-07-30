@@ -15,6 +15,7 @@
 package backupbucket
 
 import (
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	"github.com/gardener/gardener-extensions/pkg/controller/backupbucket"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -22,17 +23,25 @@ import (
 )
 
 var (
-	// DefaultAddOptions are the default options for AddToManager.
-	DefaultAddOptions = controller.Options{}
+	// DefaultAddOptions are the default AddOptions for AddToManager.
+	DefaultAddOptions = AddOptions{}
 )
+
+// AddOptions are options to apply when adding the GCP backupbucket controller to the manager.
+type AddOptions struct {
+	// Controller are the controller.Options.
+	Controller controller.Options
+	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
+	IgnoreOperationAnnotation bool
+}
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
+func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return backupbucket.Add(mgr, backupbucket.AddArgs{
 		Actuator:          newActuator(),
-		ControllerOptions: opts,
-		Predicates:        backupbucket.DefaultPredicates(),
+		ControllerOptions: opts.Controller,
+		Predicates:        backupbucket.DefaultPredicates(gcp.Type, opts.IgnoreOperationAnnotation),
 	})
 }
 
