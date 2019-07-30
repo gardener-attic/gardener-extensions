@@ -73,7 +73,7 @@ func (w *ServerOptions) Complete() error {
 	}
 
 	if len(w.Mode) == 0 {
-		w.config.Mode = extensionswebhook.WebhookModeService
+		w.config.Mode = extensionswebhook.ModeService
 	}
 
 	return nil

@@ -17,6 +17,8 @@ package controlplane
 import (
 	"fmt"
 
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -94,17 +96,17 @@ func GetBackupRestoreContainer(
 
 	// Ensure additional command line args
 	for k, v := range args {
-		c.Command = EnsureStringWithPrefix(c.Command, fmt.Sprintf("--%s=", k), v)
+		c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, fmt.Sprintf("--%s=", k), v)
 	}
 
 	// Ensure additional env variables
 	for _, envVar := range env {
-		c.Env = EnsureEnvVarWithName(c.Env, envVar)
+		c.Env = extensionswebhook.EnsureEnvVarWithName(c.Env, envVar)
 	}
 
 	// Ensure additional volume mounts
 	for _, volumeMount := range volumeMounts {
-		c.VolumeMounts = EnsureVolumeMountWithName(c.VolumeMounts, volumeMount)
+		c.VolumeMounts = extensionswebhook.EnsureVolumeMountWithName(c.VolumeMounts, volumeMount)
 	}
 
 	return c

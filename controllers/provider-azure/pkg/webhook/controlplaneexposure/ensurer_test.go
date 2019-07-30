@@ -21,6 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
@@ -243,20 +244,20 @@ var _ = Describe("Ensurer", func() {
 
 func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 	// Check that the kube-apiserver container still exists and contains all needed command line args
-	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
+	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(ContainElement("--advertise-address=1.2.3.4"))
 	Expect(c.Command).To(ContainElement("--external-hostname=1.2.3.4"))
 }
 
 func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
-	pvc := controlplane.PVCWithName(ss.Spec.VolumeClaimTemplates, controlplane.EtcdMainVolumeClaimTemplateName)
+	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, controlplane.EtcdMainVolumeClaimTemplateName)
 	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(controlplane.EtcdMainVolumeClaimTemplateName, util.StringPtr("gardener.cloud-fast"),
 		util.QuantityPtr(resource.MustParse("25Gi")))))
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
-	pvc := controlplane.PVCWithName(ss.Spec.VolumeClaimTemplates, gardencorev1alpha1.StatefulSetNameETCDEvents)
+	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, gardencorev1alpha1.StatefulSetNameETCDEvents)
 	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(gardencorev1alpha1.StatefulSetNameETCDEvents, nil, nil)))
 }
 

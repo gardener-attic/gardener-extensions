@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package webhook
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"net/http"
 
 	mockmanager "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/manager"
-	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane"
+	mockwebhook "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook"
 
 	"github.com/appscode/jsonpatch"
 	"github.com/golang/mock/gomock"
@@ -32,8 +32,11 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
+
+var logger = log.Log.WithName("controlplane-webhook-test")
 
 var _ = Describe("Handler", func() {
 	const (
@@ -85,11 +88,11 @@ var _ = Describe("Handler", func() {
 	Describe("#Handle", func() {
 		It("should return an allowing response if the resource wasn't changed by mutator", func() {
 			// Create mock mutator
-			mutator := mockcontrolplane.NewMockMutator(ctrl)
+			mutator := mockwebhook.NewMockMutator(ctrl)
 			mutator.EXPECT().Mutate(context.TODO(), svc).Return(nil)
 
 			// Create handler
-			h, err := newHandler(mgr, objTypes, mutator, logger)
+			h, err := NewHandler(mgr, objTypes, mutator, logger)
 			Expect(err).NotTo(HaveOccurred())
 			err = h.InjectDecoder(decoder)
 			Expect(err).NotTo(HaveOccurred())
@@ -108,7 +111,7 @@ var _ = Describe("Handler", func() {
 
 		It("should return a patch response if the resource was changed by mutator", func() {
 			// Create mock mutator
-			mutator := mockcontrolplane.NewMockMutator(ctrl)
+			mutator := mockwebhook.NewMockMutator(ctrl)
 			mutator.EXPECT().Mutate(context.TODO(), svc).DoAndReturn(func(ctx context.Context, obj runtime.Object) error {
 				accessor, _ := meta.Accessor(obj)
 				accessor.SetAnnotations(map[string]string{"foo": "bar"})
@@ -116,7 +119,7 @@ var _ = Describe("Handler", func() {
 			})
 
 			// Create handler
-			h, err := newHandler(mgr, objTypes, mutator, logger)
+			h, err := NewHandler(mgr, objTypes, mutator, logger)
 			Expect(err).NotTo(HaveOccurred())
 			err = h.InjectDecoder(decoder)
 			Expect(err).NotTo(HaveOccurred())
@@ -141,11 +144,11 @@ var _ = Describe("Handler", func() {
 
 		It("should return an error response if the mutator returned an error", func() {
 			// Create mock mutator
-			mutator := mockcontrolplane.NewMockMutator(ctrl)
+			mutator := mockwebhook.NewMockMutator(ctrl)
 			mutator.EXPECT().Mutate(context.TODO(), svc).Return(errors.New("test error"))
 
 			// Create handler
-			h, err := newHandler(mgr, objTypes, mutator, logger)
+			h, err := NewHandler(mgr, objTypes, mutator, logger)
 			Expect(err).NotTo(HaveOccurred())
 			err = h.InjectDecoder(decoder)
 			Expect(err).NotTo(HaveOccurred())

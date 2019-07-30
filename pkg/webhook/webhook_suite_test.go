@@ -12,6 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=controlplane -destination=mocks.go github.com/gardener/gardener-extensions/pkg/webhook/controlplane KubeletConfigCodec,UnitSerializer,FileContentInlineCodec
+package webhook_test
 
-package controlplane
+import (
+	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+)
+
+func TestWebhook(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Webhook Suite")
+}

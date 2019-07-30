@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
@@ -401,7 +401,7 @@ var _ = Describe("Ensurer", func() {
 func checkKubeAPIServerDeployment(dep *appsv1.Deployment, annotations map[string]string) {
 	// Check that the kube-apiserver container still exists and contains all needed command line args,
 	// env vars, and volume mounts
-	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
+	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(ContainElement("--cloud-provider=aws"))
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))
@@ -421,7 +421,7 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment, annotations map[string
 func checkKubeControllerManagerDeployment(dep *appsv1.Deployment, annotations, labels map[string]string) {
 	// Check that the kube-controller-manager container still exists and contains all needed command line args,
 	// env vars, and volume mounts
-	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-controller-manager")
+	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-controller-manager")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(ContainElement("--cloud-provider=external"))
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))

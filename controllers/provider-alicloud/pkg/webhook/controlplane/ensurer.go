@@ -17,7 +17,7 @@ package controlplane
 import (
 	"context"
 
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
@@ -42,7 +42,7 @@ type ensurer struct {
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
 	ps := &dep.Spec.Template.Spec
-	if c := controlplane.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
+	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
 	}
 	return nil
@@ -51,7 +51,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
 	ps := &dep.Spec.Template.Spec
-	if c := controlplane.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
+	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
 		ensureKubeControllerManagerCommandLineArgs(c)
 	}
 	return nil
@@ -59,48 +59,48 @@ func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep
 
 func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
 	// Ensure CSI-related admission plugins
-	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
-	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--disable-admission-plugins=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--disable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
 
 	// Ensure CSI-related feature gates
-	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
 		"VolumeSnapshotDataSource=false", ",")
-	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSINodeInfo=false", ",")
-	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSIDriverRegistry=false", ",")
-	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
 		"KubeletPluginsWatcher=false", ",")
-	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
 		"VolumeSnapshotDataSource=true", ",")
-	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSINodeInfo=true", ",")
-	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSIDriverRegistry=true", ",")
-	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
 		"KubeletPluginsWatcher=true", ",")
 }
 
 func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "external")
+	c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "external")
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
 func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
-	if opt := controlplane.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
-		command := controlplane.DeserializeCommandLine(opt.Value)
+	if opt := extensionswebhook.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
+		command := extensionswebhook.DeserializeCommandLine(opt.Value)
 		command = ensureKubeletCommandLineArgs(command)
-		opt.Value = controlplane.SerializeCommandLine(command, 1, " \\\n    ")
+		opt.Value = extensionswebhook.SerializeCommandLine(command, 1, " \\\n    ")
 	}
 	return opts, nil
 }
 
 func ensureKubeletCommandLineArgs(command []string) []string {
-	command = controlplane.EnsureStringWithPrefix(command, "--provider-id=", "${PROVIDER_ID}")
-	command = controlplane.EnsureStringWithPrefix(command, "--cloud-provider=", "external")
-	command = controlplane.EnsureStringWithPrefix(command, "--enable-controller-attach-detach=", "true")
+	command = extensionswebhook.EnsureStringWithPrefix(command, "--provider-id=", "${PROVIDER_ID}")
+	command = extensionswebhook.EnsureStringWithPrefix(command, "--cloud-provider=", "external")
+	command = extensionswebhook.EnsureStringWithPrefix(command, "--enable-controller-attach-detach=", "true")
 	return command
 }
 

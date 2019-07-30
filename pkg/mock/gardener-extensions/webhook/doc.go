@@ -12,16 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:generate mockgen -package=controlplane -destination=mocks.go github.com/gardener/gardener-extensions/pkg/webhook Mutator
+
 package controlplane
-
-import (
-	"context"
-
-	"k8s.io/apimachinery/pkg/runtime"
-)
-
-// Mutator validates and if needed mutates objects.
-type Mutator interface {
-	// Mutate validates and if needed mutates the given object.
-	Mutate(ctx context.Context, obj runtime.Object) error
-}

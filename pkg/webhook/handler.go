@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package webhook
 
 import (
 	"context"
@@ -32,8 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// newHandler creates a new handler for the given types, using the given mutator, and logger.
-func newHandler(mgr manager.Manager, types []runtime.Object, mutator Mutator, logger logr.Logger) (*handler, error) {
+// NewHandler creates a new handler for the given types, using the given mutator, and logger.
+func NewHandler(mgr manager.Manager, types []runtime.Object, mutator Mutator, logger logr.Logger) (*handler, error) {
 	// Build a map of the given types keyed by their GVKs
 	typesMap, err := buildTypesMap(mgr, types)
 	if err != nil {
@@ -94,9 +94,9 @@ func (h *handler) Handle(ctx context.Context, req admission.Request) admission.R
 	// Mutate the resource
 	h.logger.Info("Mutating resource", "kind", ar.Kind.String(), "namespace", accessor.GetNamespace(),
 		"name", accessor.GetName(), "operation", ar.Operation)
+
 	newObj := obj.DeepCopyObject()
-	err = h.mutator.Mutate(ctx, newObj)
-	if err != nil {
+	if err = h.mutator.Mutate(ctx, newObj); err != nil {
 		return admission.Errored(http.StatusInternalServerError,
 			errors.Wrapf(err, "could not mutate %s %s/%s", ar.Kind.Kind, accessor.GetNamespace(), accessor.GetName()))
 	}

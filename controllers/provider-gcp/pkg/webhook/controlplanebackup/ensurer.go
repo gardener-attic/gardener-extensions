@@ -21,6 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -70,7 +71,7 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 	if err != nil {
 		return err
 	}
-	ps.Containers = controlplane.EnsureContainerWithName(ps.Containers, *c)
+	ps.Containers = extensionswebhook.EnsureContainerWithName(ps.Containers, *c)
 	return nil
 }
 
@@ -149,6 +150,6 @@ func (e *ensurer) ensureVolumes(ps *corev1.PodSpec, name string) {
 				},
 			},
 		}
-		ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, etcdBackupSecretVolume)
+		ps.Volumes = extensionswebhook.EnsureVolumeWithName(ps.Volumes, etcdBackupSecretVolume)
 	}
 }

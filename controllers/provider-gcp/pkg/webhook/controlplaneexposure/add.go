@@ -44,7 +44,7 @@ var logger = log.Log.WithName("gcp-controlplaneexposure-webhook")
 func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (*extensionswebhook.Webhook, error) {
 	logger.Info("Adding webhook to manager")
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Kind:     extensionswebhook.SeedKind,
+		Kind:     controlplane.KindSeed,
 		Provider: gcp.Type,
 		Types:    []runtime.Object{&appsv1.Deployment{}, &appsv1.StatefulSet{}},
 		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, nil, logger),

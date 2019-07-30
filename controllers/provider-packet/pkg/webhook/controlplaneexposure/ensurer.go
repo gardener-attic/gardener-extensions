@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -50,7 +51,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 
 func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name string) {
 	t := e.getVolumeClaimTemplate(name)
-	spec.VolumeClaimTemplates = controlplane.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
+	spec.VolumeClaimTemplates = extensionswebhook.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
 }
 
 func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {

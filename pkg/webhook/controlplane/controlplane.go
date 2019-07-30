@@ -30,6 +30,13 @@ const (
 	ExposureWebhookName = "controlplaneexposure"
 	// BackupWebhookName is the backup webhook name.
 	BackupWebhookName = "controlplanebackup"
+
+	// A controlplane seed webhook is applied only to those shoot namespaces that have the correct Seed provider label.
+	KindSeed = "seed"
+	// A controlplane shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
+	KindShoot = "shoot"
+	// A controlplane backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
+	KindBackup = "backup"
 )
 
 var logger = log.Log.WithName("controlplane-webhook")
@@ -43,7 +50,7 @@ type AddArgs struct {
 	// Types is a list of resource types.
 	Types []runtime.Object
 	// Mutator is a mutator to be used by the admission handler.
-	Mutator Mutator
+	Mutator extensionswebhook.Mutator
 }
 
 // Add creates a new controlplane webhook and adds it to the given Manager.
@@ -51,7 +58,7 @@ func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) 
 	logger := logger.WithValues("kind", args.Kind, "provider", args.Provider)
 
 	// Create handler
-	handler, err := newHandler(mgr, args.Types, args.Mutator, logger)
+	handler, err := extensionswebhook.NewHandler(mgr, args.Types, args.Mutator, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +78,9 @@ func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) 
 
 func getName(kind string) string {
 	switch kind {
-	case extensionswebhook.SeedKind:
+	case KindSeed:
 		return ExposureWebhookName
-	case extensionswebhook.BackupKind:
+	case KindBackup:
 		return BackupWebhookName
 	default:
 		return WebhookName

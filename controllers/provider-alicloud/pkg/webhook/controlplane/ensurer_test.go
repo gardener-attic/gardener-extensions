@@ -18,7 +18,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
@@ -238,7 +238,7 @@ var _ = Describe("Ensurer", func() {
 func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 	// Check that the kube-apiserver container still exists and contains all needed command line args,
 	// env vars, and volume mounts
-	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
+	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ",")))
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ","))
@@ -251,7 +251,7 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {
 	// Check that the kube-controller-manager container still exists and contains all needed command line args,
 	// env vars, and volume mounts
-	c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-controller-manager")
+	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-controller-manager")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(ContainElement("--cloud-provider=external"))
 }

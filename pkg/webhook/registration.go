@@ -22,6 +22,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/pkg/errors"
@@ -36,19 +38,12 @@ import (
 )
 
 const (
-	// A seed webhook is applied only to those shoot namespaces that have the correct Seed provider label.
-	SeedKind = "seed"
-	// A shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
-	ShootKind = "shoot"
-	// A backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
-	BackupKind = "backup"
-
-	// WebhookModeService is a constant for the webhook mode indicating that the controller is running inside of the Kubernetes cluster it
+	// ModeService is a constant for the webhook mode indicating that the controller is running inside of the Kubernetes cluster it
 	// is serving.
-	WebhookModeService = "service"
-	// WebhookModeURL is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
+	ModeService = "service"
+	// ModeURL is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
 	// is serving. If this is set then a URL is required for configuration.
-	WebhookModeURL = "url"
+	ModeURL = "url"
 )
 
 // GenerateCertificates generates the certificates that are required for a webhook. It returns the ca bundle, and it
@@ -71,11 +66,11 @@ func GenerateCertificates(certDir, namespace, name, mode, url string) ([]byte, e
 
 	var dnsNames []string
 	switch mode {
-	case WebhookModeURL:
+	case ModeURL:
 		dnsNames = []string{
 			url,
 		}
-	case WebhookModeService:
+	case ModeService:
 		dnsNames = []string{
 			fmt.Sprintf("gardener-extension-%s", name),
 			fmt.Sprintf("gardener-extension-%s.%s", name, namespace),
@@ -168,11 +163,11 @@ func buildSelector(kind, provider string) (*metav1.LabelSelector, error) {
 	// Determine label selector key from the kind
 	var key string
 	switch kind {
-	case SeedKind:
+	case controlplane.KindSeed:
 		key = gardencorev1alpha1.SeedProvider
-	case ShootKind:
+	case controlplane.KindShoot:
 		key = gardencorev1alpha1.ShootProvider
-	case BackupKind:
+	case controlplane.KindBackup:
 		key = gardencorev1alpha1.BackupProvider
 	default:
 		return nil, fmt.Errorf("invalid webhook kind '%s'", kind)
@@ -222,10 +217,10 @@ func buildClientConfigFor(webhook *Webhook, namespace, providerName string, port
 	}
 
 	switch mode {
-	case WebhookModeURL:
+	case ModeURL:
 		url := fmt.Sprintf("https://%s:%d%s", url, port, path)
 		clientConfig.URL = &url
-	case WebhookModeService:
+	case ModeService:
 		clientConfig.Service = &admissionregistrationv1beta1.ServiceReference{
 			Namespace: namespace,
 			Name:      "gardener-extension-" + providerName,
