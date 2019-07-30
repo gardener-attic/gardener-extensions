@@ -15,11 +15,14 @@
 package genericactuator
 
 import (
+	"bytes"
 	"context"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionswebhookshoot "github.com/gardener/gardener-extensions/pkg/webhook/shoot"
+	"github.com/gardener/gardener-resource-manager/pkg/manager"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -27,9 +30,11 @@ import (
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -52,15 +57,19 @@ type ValuesProvider interface {
 // It creates / deletes the given secrets and applies / deletes the given charts, using the given image vector and
 // the values provided by the given values provider.
 func NewActuator(
+	providerName string,
 	secrets util.Secrets,
 	configChart, controlPlaneChart, controlPlaneShootChart, storageClassesChart util.Chart,
 	vp ValuesProvider,
 	chartRendererFactory extensionscontroller.ChartRendererFactory,
 	imageVector imagevector.ImageVector,
 	configName string,
+	shootWebhooks []admissionregistrationv1beta1.Webhook,
+	webhookServerPort int,
 	logger logr.Logger,
 ) controlplane.Actuator {
 	return &actuator{
+		providerName:           providerName,
 		secrets:                secrets,
 		configChart:            configChart,
 		controlPlaneChart:      controlPlaneChart,
@@ -70,12 +79,15 @@ func NewActuator(
 		chartRendererFactory:   chartRendererFactory,
 		imageVector:            imageVector,
 		configName:             configName,
+		shootWebhooks:          shootWebhooks,
+		webhookServerPort:      webhookServerPort,
 		logger:                 logger.WithName("controlplane-actuator"),
 	}
 }
 
 // actuator is an Actuator that acts upon and updates the status of ControlPlane resources.
 type actuator struct {
+	providerName           string
 	secrets                util.Secrets
 	configChart            util.Chart
 	controlPlaneChart      util.Chart
@@ -85,6 +97,8 @@ type actuator struct {
 	chartRendererFactory   extensionscontroller.ChartRendererFactory
 	imageVector            imagevector.ImageVector
 	configName             string
+	shootWebhooks          []admissionregistrationv1beta1.Webhook
+	webhookServerPort      int
 
 	clientset         kubernetes.Interface
 	gardenerClientset gardenerkubernetes.Interface
@@ -131,6 +145,7 @@ func (a *actuator) InjectClient(client client.Client) error {
 const (
 	controlPlaneShootChartResourceName = "extension-controlplane-shoot"
 	storageClassesChartResourceName    = "extension-controlplane-storageclasses"
+	shootWebhooksResourceName          = "extension-controlplane-shoot-webhooks"
 )
 
 // Reconcile reconciles the given controlplane and cluster, creating or updating the additional Shoot
@@ -140,6 +155,34 @@ func (a *actuator) Reconcile(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (bool, error) {
+	if len(a.shootWebhooks) > 0 {
+		// Deploy shoot webhook configurations
+		if err := extensionswebhookshoot.EnsureNetworkPolicy(ctx, a.client, cp.Namespace, a.providerName, a.webhookServerPort); err != nil {
+			return false, errors.Wrapf(err, "could not create or update network policy for shoot webhooks in namespace '%s'", cp.Namespace)
+		}
+
+		webhookConfiguration, err := marshalWebhooks(a.shootWebhooks, a.providerName)
+		if err != nil {
+			return false, err
+		}
+
+		if err := manager.
+			NewSecret(a.client).
+			WithNamespacedName(cp.Namespace, shootWebhooksResourceName).
+			WithKeyValues(map[string][]byte{"mutatingwebhookconfiguration.yaml": webhookConfiguration}).
+			Reconcile(ctx); err != nil {
+			return false, errors.Wrapf(err, "could not create or update secret '%s/%s' of managed resource containing shoot webhooks", cp.Namespace, shootWebhooksResourceName)
+		}
+
+		if err := manager.
+			NewManagedResource(a.client).
+			WithNamespacedName(cp.Namespace, shootWebhooksResourceName).
+			WithSecretRef(shootWebhooksResourceName).
+			Reconcile(ctx); err != nil {
+			return false, errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing shoot webhooks", cp.Namespace, shootWebhooksResourceName)
+		}
+	}
+
 	// Deploy secrets
 	a.logger.Info("Deploying secrets", "controlplane", util.ObjectName(cp))
 	deployedSecrets, err := a.secrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
@@ -261,6 +304,17 @@ func (a *actuator) Delete(
 		return errors.Wrapf(err, "could not delete secrets for controlplane '%s'", util.ObjectName(cp))
 	}
 
+	if len(a.shootWebhooks) > 0 {
+		networkPolicy := extensionswebhookshoot.GetNetworkPolicyMeta(cp.Namespace, a.providerName)
+		if err := a.client.Delete(ctx, networkPolicy); client.IgnoreNotFound(err) != nil {
+			return errors.Wrapf(err, "could not delete network policy for shoot webhooks in namespace '%s'", cp.Namespace)
+		}
+
+		if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, shootWebhooksResourceName); err != nil {
+			return errors.Wrapf(err, "could not delete managed resource containing shoot webhooks for controlplane '%s'", util.ObjectName(cp))
+		}
+	}
+
 	return nil
 }
 
@@ -294,4 +348,29 @@ func (a *actuator) computeChecksums(
 	}
 
 	return controlplane.ComputeChecksums(csSecrets, csConfigMaps), nil
+}
+
+func marshalWebhooks(webhooks []admissionregistrationv1beta1.Webhook, name string) ([]byte, error) {
+	var (
+		buf     = new(bytes.Buffer)
+		encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)
+
+		apiVersion, kind             = admissionregistrationv1beta1.SchemeGroupVersion.WithKind("MutatingWebhookConfiguration").ToAPIVersionAndKind()
+		mutatingWebhookConfiguration = admissionregistrationv1beta1.MutatingWebhookConfiguration{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: apiVersion,
+				Kind:       kind,
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "gardener-extension-" + name,
+			},
+			Webhooks: webhooks,
+		}
+	)
+
+	if err := encoder.Encode(&mutatingWebhookConfiguration, buf); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
 }
