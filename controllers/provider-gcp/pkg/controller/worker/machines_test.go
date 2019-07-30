@@ -123,7 +123,7 @@ var _ = Describe("Machines", func() {
 
 			BeforeEach(func() {
 				name = "my-shoot"
-				namespace = "shoot--foo--bar"
+				namespace = "shoot--foobar--gcp"
 
 				region = "eu-west-1"
 				serviceAccountJSON = "some-json-doc"

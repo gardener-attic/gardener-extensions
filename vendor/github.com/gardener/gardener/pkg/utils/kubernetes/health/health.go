@@ -16,12 +16,23 @@ package health
 
 import (
 	"fmt"
+	"net/http"
+	"time"
+
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
+	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+
+	"k8s.io/client-go/rest"
+
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 )
 
 func requiredConditionMissing(conditionType string) error {
@@ -275,4 +286,101 @@ func CheckMachineDeployment(deployment *machinev1alpha1.MachineDeployment) error
 	}
 
 	return nil
+}
+
+var (
+	trueSeedConditionTypes = []gardencorev1alpha1.ConditionType{
+		gardenv1beta1.SeedAvailable,
+	}
+)
+
+// CheckSeed checks if the Seed is up-to-date and if its extensions have been successfully bootstrapped.
+func CheckSeed(seed *gardenv1beta1.Seed, identity *gardenv1beta1.Gardener) error {
+	if seed.Status.ObservedGeneration < seed.Generation {
+		return fmt.Errorf("observed generation outdated (%d/%d)", seed.Status.ObservedGeneration, seed.Generation)
+	}
+	if seed.Status.Gardener != *identity {
+		return fmt.Errorf("observing Gardener version not up to date (%v/%v)", seed.Status.Gardener, identity)
+	}
+
+	for _, trueConditionType := range trueSeedConditionTypes {
+		conditionType := string(trueConditionType)
+		condition := helper.GetCondition(seed.Status.Conditions, trueConditionType)
+		if condition == nil {
+			return requiredConditionMissing(conditionType)
+		}
+		if err := checkConditionState(conditionType, string(gardencorev1alpha1.ConditionTrue), string(condition.Status), condition.Reason, condition.Message); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// CheckExtensionObject checks if an extension Object is healthy or not.
+// An extension object is healthy if
+// * Its observed generation is up-to-date
+// * No gardener.cloud/operation is set
+// * No lastError is in the status
+// * A last operation is state succeeded is present
+func CheckExtensionObject(obj extensionsv1alpha1.Object) error {
+	status := obj.GetExtensionStatus()
+	if status.GetObservedGeneration() != obj.GetGeneration() {
+		return fmt.Errorf("observed generation outdated (%d/%d)", status.GetObservedGeneration(), obj.GetGeneration())
+	}
+
+	op, ok := obj.GetAnnotations()[gardencorev1alpha1.GardenerOperation]
+	if ok {
+		return fmt.Errorf("gardener operation %q is not yet picked up by extension controller", op)
+	}
+
+	if lastErr := status.GetLastError(); lastErr != nil {
+		return fmt.Errorf("extension encountered error during reconciliation: %s", lastErr.GetDescription())
+	}
+
+	lastOp := status.GetLastOperation()
+	if lastOp == nil {
+		return fmt.Errorf("extension did not record a last operation yet")
+	}
+
+	if lastOp.GetState() != gardencorev1alpha1.LastOperationStateSucceeded {
+		return fmt.Errorf("extension state is not succeeded but %v", lastOp.GetState())
+	}
+	return nil
+}
+
+// Now determines the current time.
+var Now = time.Now
+
+// ConditionerFunc to update a condition with type and message
+type conditionerFunc func(conditionType string, message string) gardencorev1alpha1.Condition
+
+// CheckAPIServerAvailability checks if the API server of a cluster is reachable and measure the response time.
+func CheckAPIServerAvailability(condition gardencorev1alpha1.Condition, restClient rest.Interface, conditioner conditionerFunc) gardencorev1alpha1.Condition {
+	now := Now()
+	response := restClient.Get().AbsPath("/healthz").Do()
+	responseDurationText := fmt.Sprintf("[response_time:%dms]", Now().Sub(now).Nanoseconds()/time.Millisecond.Nanoseconds())
+	if response.Error() != nil {
+		message := fmt.Sprintf("Request to API server /healthz endpoint failed. %s (%s)", responseDurationText, response.Error().Error())
+		return conditioner("HealthzRequestFailed", message)
+	}
+
+	// Determine the status code of the response.
+	var statusCode int
+	response.StatusCode(&statusCode)
+
+	if statusCode != http.StatusOK {
+		var body string
+		bodyRaw, err := response.Raw()
+		if err != nil {
+			body = fmt.Sprintf("Could not parse response body: %s", err.Error())
+		} else {
+			body = string(bodyRaw)
+		}
+		message := fmt.Sprintf("API server /healthz endpoint endpoint check returned a non ok status code %d. %s (%s)", statusCode, responseDurationText, body)
+		return conditioner("HealthzRequestError", message)
+	}
+
+	message := fmt.Sprintf("API server /healthz endpoint responded with success status code. %s", responseDurationText)
+	return helper.UpdatedCondition(condition, gardencorev1alpha1.ConditionTrue, "HealthzRequestFailed", message)
 }

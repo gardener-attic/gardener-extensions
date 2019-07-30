@@ -45,7 +45,7 @@ func SetDefaults_Shoot(obj *Shoot) {
 		if cloud.AWS.Networks.Nodes == nil {
 			if cloud.AWS.Networks.VPC.CIDR != nil {
 				obj.Spec.Cloud.AWS.Networks.Nodes = cloud.AWS.Networks.VPC.CIDR
-			} else if len(cloud.AWS.Networks.Workers) > 0 {
+			} else if len(cloud.AWS.Networks.Workers) == 1 {
 				obj.Spec.Cloud.AWS.Networks.Nodes = &cloud.AWS.Networks.Workers[0]
 			}
 		}
@@ -70,7 +70,7 @@ func SetDefaults_Shoot(obj *Shoot) {
 		if cloud.GCP.Networks.Services == nil {
 			obj.Spec.Cloud.GCP.Networks.Services = &defaultServiceCIDR
 		}
-		if cloud.GCP.Networks.Nodes == nil && len(cloud.GCP.Networks.Workers) > 0 {
+		if cloud.GCP.Networks.Nodes == nil && len(cloud.GCP.Networks.Workers) == 1 {
 			obj.Spec.Cloud.GCP.Networks.Nodes = &cloud.GCP.Networks.Workers[0]
 		}
 	}
@@ -87,7 +87,7 @@ func SetDefaults_Shoot(obj *Shoot) {
 		if cloud.Alicloud.Networks.Nodes == nil {
 			if cloud.Alicloud.Networks.VPC.CIDR != nil {
 				obj.Spec.Cloud.Alicloud.Networks.Nodes = cloud.Alicloud.Networks.VPC.CIDR
-			} else if len(cloud.Alicloud.Networks.Workers) > 0 {
+			} else if len(cloud.Alicloud.Networks.Workers) == 1 {
 				obj.Spec.Cloud.Alicloud.Networks.Nodes = &cloud.Alicloud.Networks.Workers[0]
 			}
 		}
@@ -100,7 +100,7 @@ func SetDefaults_Shoot(obj *Shoot) {
 		if cloud.OpenStack.Networks.Services == nil {
 			obj.Spec.Cloud.OpenStack.Networks.Services = &defaultServiceCIDR
 		}
-		if cloud.OpenStack.Networks.Nodes == nil && len(cloud.OpenStack.Networks.Workers) > 0 {
+		if cloud.OpenStack.Networks.Nodes == nil && len(cloud.OpenStack.Networks.Workers) == 1 {
 			obj.Spec.Cloud.OpenStack.Networks.Nodes = &cloud.OpenStack.Networks.Workers[0]
 		}
 	}
@@ -111,18 +111,6 @@ func SetDefaults_Shoot(obj *Shoot) {
 		}
 		if cloud.Packet.Networks.Services == nil {
 			obj.Spec.Cloud.Packet.Networks.Services = &defaultServiceCIDR
-		}
-	}
-
-	if cloud.Local != nil {
-		if cloud.Local.Networks.Pods == nil {
-			obj.Spec.Cloud.Local.Networks.Pods = &defaultPodCIDR
-		}
-		if cloud.Local.Networks.Services == nil {
-			obj.Spec.Cloud.Local.Networks.Services = &defaultServiceCIDR
-		}
-		if cloud.Local.Networks.Nodes == nil && len(cloud.Local.Networks.Workers) > 0 {
-			obj.Spec.Cloud.Local.Networks.Nodes = &cloud.Local.Networks.Workers[0]
 		}
 	}
 
@@ -165,11 +153,6 @@ func SetDefaults_Shoot(obj *Shoot) {
 			}
 		}
 	}
-
-	if obj.Spec.DNS.Provider == DNSUnmanaged && obj.Spec.DNS.Domain == nil {
-		defaultDomain := DefaultDomain
-		obj.Spec.DNS.Domain = &defaultDomain
-	}
 }
 
 // SetDefaults_Seed sets default values for Seed objects.
@@ -198,6 +181,15 @@ func SetDefaults_Project(obj *Project) {
 	}
 }
 
+// SetDefaults_KubernetesDashboard sets default values for KubernetesDashboard objects.
+func SetDefaults_KubernetesDashboard(obj *KubernetesDashboard) {
+	defaultAuthMode := "basic"
+	if obj.AuthenticationMode == nil {
+		obj.AuthenticationMode = &defaultAuthMode
+	}
+}
+
+// SetDefaults_Worker sets default values for Worker objects.
 func SetDefaults_Worker(obj *Worker) {
 	if obj.MaxSurge == nil {
 		obj.MaxSurge = &DefaultWorkerMaxSurge

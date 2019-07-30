@@ -15,7 +15,6 @@
 package util
 
 import (
-	apimachineryconfig "k8s.io/apimachinery/pkg/apis/config"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	componentbaseconfig "k8s.io/component-base/config"
@@ -47,7 +46,7 @@ func ApplyClientConnectionConfigurationToRESTConfig(clientConnection *componentb
 
 // createRESTConfig creates a Config object for a rest client. If a clientConnection configuration object is passed
 // as well then the specified fields will be taken over as well.
-func createRESTConfig(clientConfig clientcmd.ClientConfig, clientConnection *apimachineryconfig.ClientConnectionConfiguration) (*rest.Config, error) {
+func createRESTConfig(clientConfig clientcmd.ClientConfig, clientConnection *componentbaseconfig.ClientConnectionConfiguration) (*rest.Config, error) {
 	config, err := clientConfig.ClientConfig()
 	if err != nil {
 		return nil, err

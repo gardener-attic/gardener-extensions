@@ -30,6 +30,7 @@ import (
 	"github.com/gardener/gardener/pkg/utils"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -55,6 +56,13 @@ const (
 	DataKeyPrivateKeyCA = "ca.key"
 )
 
+const (
+	// PKCS1 certificate format
+	PKCS1 = iota
+	// PKCS8 certificate format
+	PKCS8
+)
+
 // CertificateSecretConfig contains the specification a to-be-generated CA, server, or client certificate.
 // It always contains a 2048-bit RSA private key.
 type CertificateSecretConfig struct {
@@ -67,6 +75,7 @@ type CertificateSecretConfig struct {
 
 	CertType  certType
 	SigningCA *Certificate
+	PKCS      int
 }
 
 // Certificate contains the private key, and the certificate. It does also contain the CA certificate
@@ -117,13 +126,24 @@ func (s *CertificateSecretConfig) GenerateCertificate() (*Certificate, error) {
 		return nil, err
 	}
 
+	var pk []byte
+	if s.PKCS == PKCS1 {
+		pk = utils.EncodePrivateKey(privateKey)
+	} else if s.PKCS == PKCS8 {
+		pk, err = utils.EncodePrivateKeyInPKCS8(privateKey)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Certificate{
 		Name: s.Name,
 
 		CA: s.SigningCA,
 
 		PrivateKey:    privateKey,
-		PrivateKeyPEM: utils.EncodePrivateKey(privateKey),
+		PrivateKeyPEM: pk,
 
 		Certificate:    certificate,
 		CertificatePEM: certificatePEM,
@@ -246,8 +266,16 @@ func generateCA(k8sClusterClient kubernetes.Interface, config *CertificateSecret
 		return nil, nil, err
 	}
 
-	secret, err := k8sClusterClient.CreateSecret(namespace, config.GetName(), corev1.SecretTypeOpaque, certificate.SecretData(), false)
-	if err != nil {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      config.GetName(),
+			Namespace: namespace,
+		},
+		Type: corev1.SecretTypeOpaque,
+		Data: certificate.SecretData(),
+	}
+
+	if err := k8sClusterClient.Client().Create(context.TODO(), secret); err != nil {
 		return nil, nil, err
 	}
 	return secret, certificate, nil

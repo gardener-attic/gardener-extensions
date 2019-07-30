@@ -324,9 +324,8 @@ func ApplyMachineResources(ctx context.Context, c client.Client) error {
 			},
 		}
 
-		if _, err := controllerutil.CreateOrUpdate(ctx, c, obj, func(existing runtime.Object) error {
-			existingCRD := existing.(*apiextensionsv1beta1.CustomResourceDefinition)
-			existingCRD.Spec = crd.Spec
+		if _, err := controllerutil.CreateOrUpdate(ctx, c, obj, func() error {
+			obj.Spec = crd.Spec
 			return nil
 		}); err != nil {
 			return err

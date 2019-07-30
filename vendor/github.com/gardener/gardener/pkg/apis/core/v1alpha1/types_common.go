@@ -37,6 +37,24 @@ type LastError struct {
 	// Well-defined error codes of the last error(s).
 	// +optional
 	Codes []ErrorCode `json:"codes,omitempty"`
+	// Last time the error was reported
+	// +optional
+	LastUpdateTime *metav1.Time `json:"lastUpdateTime,omitempty"`
+}
+
+// GetDescription implements LastError.
+func (l *LastError) GetDescription() string {
+	return l.Description
+}
+
+// GetCodes implements LastError.
+func (l *LastError) GetCodes() []ErrorCode {
+	return l.Codes
+}
+
+// GetLastUpdateTime implements LastError.
+func (l *LastError) GetLastUpdateTime() *metav1.Time {
+	return l.LastUpdateTime
 }
 
 // LastOperationType is a string alias.

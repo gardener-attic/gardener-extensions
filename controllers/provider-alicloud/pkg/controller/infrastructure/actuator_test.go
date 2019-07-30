@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/install"
@@ -36,6 +35,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/mock/go-logr/logr"
 	"github.com/gardener/gardener-extensions/pkg/util/chart"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"

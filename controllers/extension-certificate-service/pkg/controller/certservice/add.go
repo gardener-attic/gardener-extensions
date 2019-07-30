@@ -26,7 +26,9 @@ const (
 	// Type is the type of Extension resource.
 	Type = "certificate-service"
 	// ControllerName is the name of the Certificate Service controller.
-	ControllerName = "certificate-service-controller"
+	ControllerName = "certificate_service_controller"
+	// FinalizerSuffix is the finalizer suffix for the Certificate Service controller.
+	FinalizerSuffix = "certificate-service-controller"
 )
 
 var (
@@ -56,6 +58,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, confi
 		Actuator:          NewActuator(config.Configuration),
 		ControllerOptions: opts,
 		Name:              ControllerName,
+		FinalizerSuffix:   FinalizerSuffix,
 		Resync:            config.Spec.ServiceSync.Duration,
 		Predicates:        extension.DefaultPredicates(Type, DefaultAddOptions.IgnoreOperationAnnotation),
 	})

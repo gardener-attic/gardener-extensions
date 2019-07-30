@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cloudprovider
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--aws
 type: Opaque
 data:
   accessKeyID: AAAA
@@ -12,7 +12,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--aws
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -37,13 +37,13 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Worker
 metadata:
   name: worker
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--aws
 spec:
   type: aws
   region: eu-west-1
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--aws
   infrastructureProviderStatus:
     apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureStatus

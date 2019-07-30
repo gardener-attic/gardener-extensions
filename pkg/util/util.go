@@ -18,14 +18,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/gardener/gardener/pkg/utils"
 
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/wait"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -71,25 +68,4 @@ func ObjectName(obj runtime.Object) string {
 		return "/"
 	}
 	return k.String()
-}
-
-// WaitUntilResourceDeleted deletes the given resource and then waits until it has been deleted. It respects the
-// given interval and timeout.
-// TODO: Remove and use https://github.com/gardener/gardener/blob/master/pkg/utils/kubernetes/kubernetes.go#L105 once
-// new version of github.com/gardener/gardener can be vendored.
-func WaitUntilResourceDeleted(ctx context.Context, c client.Client, obj runtime.Object, interval time.Duration) error {
-	key, err := client.ObjectKeyFromObject(obj)
-	if err != nil {
-		return err
-	}
-
-	return wait.PollImmediateUntil(interval, func() (bool, error) {
-		if err := c.Get(ctx, key, obj); err != nil {
-			if apierrors.IsNotFound(err) {
-				return true, nil
-			}
-			return false, err
-		}
-		return false, nil
-	}, ctx.Done())
 }

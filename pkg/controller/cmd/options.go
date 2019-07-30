@@ -34,6 +34,10 @@ const (
 	LeaderElectionIDFlag = "leader-election-id"
 	// LeaderElectionNamespaceFlag is the name of the command line flag to specify the leader election namespace.
 	LeaderElectionNamespaceFlag = "leader-election-namespace"
+	// WebhookServerHostFlag is the name of the command line flag to specify the webhook config host for 'url' mode.
+	WebhookServerHostFlag = "webhook-config-server-host"
+	// WebhookServerPortFlag is the name of the command line flag to specify the webhook server port.
+	WebhookServerPortFlag = "webhook-config-server-port"
 
 	// MaxConcurrentReconcilesFlag is the name of the command line flag to specify the maximum number of
 	// concurrent reconciliations a controller can do.
@@ -143,6 +147,10 @@ type ManagerOptions struct {
 	LeaderElectionID string
 	// LeaderElectionNamespace is the namespace to do leader election in.
 	LeaderElectionNamespace string
+	// WebhookServerHost is the host for the webhook server.
+	WebhookServerHost string
+	// WebhookServerPort is the port for the webhook server.
+	WebhookServerPort int
 
 	config *ManagerConfig
 }
@@ -152,11 +160,13 @@ func (m *ManagerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&m.LeaderElection, LeaderElectionFlag, m.LeaderElection, "Whether to use leader election or not when running this controller manager.")
 	fs.StringVar(&m.LeaderElectionID, LeaderElectionIDFlag, m.LeaderElectionID, "The leader election id to use.")
 	fs.StringVar(&m.LeaderElectionNamespace, LeaderElectionNamespaceFlag, m.LeaderElectionNamespace, "The namespace to do leader election in.")
+	fs.StringVar(&m.WebhookServerHost, WebhookServerHostFlag, m.WebhookServerHost, "The webhook server host.")
+	fs.IntVar(&m.WebhookServerPort, WebhookServerPortFlag, m.WebhookServerPort, "The webhook server port.")
 }
 
 // Complete implements Completer.Complete.
 func (m *ManagerOptions) Complete() error {
-	m.config = &ManagerConfig{m.LeaderElection, m.LeaderElectionID, m.LeaderElectionNamespace}
+	m.config = &ManagerConfig{m.LeaderElection, m.LeaderElectionID, m.LeaderElectionNamespace, m.WebhookServerHost, m.WebhookServerPort}
 	return nil
 }
 
@@ -173,6 +183,10 @@ type ManagerConfig struct {
 	LeaderElectionID string
 	// LeaderElectionNamespace is the namespace to do leader election in.
 	LeaderElectionNamespace string
+	// WebhookServerHost is the host for the webhook server.
+	WebhookServerHost string
+	// WebhookServerPort is the port for the webhook server.
+	WebhookServerPort int
 }
 
 // Apply sets the values of this ManagerConfig in the given manager.Options.
@@ -180,6 +194,8 @@ func (c *ManagerConfig) Apply(opts *manager.Options) {
 	opts.LeaderElection = c.LeaderElection
 	opts.LeaderElectionID = c.LeaderElectionID
 	opts.LeaderElectionNamespace = c.LeaderElectionNamespace
+	opts.Host = c.WebhookServerHost
+	opts.Port = c.WebhookServerPort
 }
 
 // Options initializes empty manager.Options, applies the set values and returns it.
@@ -293,11 +309,8 @@ func (r *RESTOptions) Completed() *RESTConfig {
 
 // AddFlags implements Flagger.AddFlags.
 func (r *RESTOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&r.Kubeconfig, KubeconfigFlag, "",
-		"Paths to a kubeconfig. Only required if out-of-cluster.")
-	fs.StringVar(&r.MasterURL, MasterURLFlag, "",
-		"The address of the Kubernetes API server. Overrides any value in kubeconfig. "+
-			"Only required if out-of-cluster.")
+	fs.StringVar(&r.Kubeconfig, KubeconfigFlag, "", "Paths to a kubeconfig. Only required if out-of-cluster.")
+	fs.StringVar(&r.MasterURL, MasterURLFlag, "", "The address of the Kubernetes API server. Overrides any value in kubeconfig. Only required if out-of-cluster.")
 }
 
 // SwitchOptions are options to build an AddToManager function that filters the disabled controllers.

@@ -160,12 +160,9 @@ func objectKey(namespace, name string) client.ObjectKey {
 	return client.ObjectKey{Namespace: namespace, Name: name}
 }
 
-// Values are values used in Helm charts.
-type Values map[string]interface{}
-
 // CopyValues creates a shallow copy of the given Values.
-func CopyValues(values Values) Values {
-	copiedValues := make(Values, len(values))
+func CopyValues(values map[string]interface{}) map[string]interface{} {
+	copiedValues := make(map[string]interface{}, len(values))
 	for k, v := range values {
 		copiedValues[k] = v
 	}
@@ -173,8 +170,8 @@ func CopyValues(values Values) Values {
 }
 
 // ImageMapToValues transforms the given image name to image mapping into chart Values.
-func ImageMapToValues(m map[string]*imagevector.Image) Values {
-	out := make(Values, len(m))
+func ImageMapToValues(m map[string]*imagevector.Image) map[string]interface{} {
+	out := make(map[string]interface{}, len(m))
 	for k, v := range m {
 		out[k] = v.String()
 	}
@@ -183,7 +180,7 @@ func ImageMapToValues(m map[string]*imagevector.Image) Values {
 
 // InjectImages finds the images with the given names and opts, makes a shallow copy of the given
 // Values and injects a name to image string mapping at the `images` key of that map and returns it.
-func InjectImages(values Values, v imagevector.ImageVector, names []string, opts ...imagevector.FindOptionFunc) (Values, error) {
+func InjectImages(values map[string]interface{}, v imagevector.ImageVector, names []string, opts ...imagevector.FindOptionFunc) (map[string]interface{}, error) {
 	images, err := imagevector.FindImages(v, names, opts...)
 	if err != nil {
 		return nil, err

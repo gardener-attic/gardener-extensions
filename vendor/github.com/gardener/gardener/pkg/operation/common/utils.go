@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"net"
 	"regexp"
 	"strconv"
@@ -30,16 +29,24 @@ import (
 	gardenlisters "github.com/gardener/gardener/pkg/client/garden/listers/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+	"github.com/gardener/gardener/pkg/version"
 
 	jsoniter "github.com/json-iterator/go"
-
+	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2beta1 "k8s.io/api/autoscaling/v2beta1"
+	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var json = jsoniter.ConfigFastest
@@ -55,75 +62,6 @@ func GetSecretKeysWithPrefix(kind string, m map[string]*corev1.Secret) []string 
 	return result
 }
 
-// DistributeOverZones is a function which is used to determine how many nodes should be used
-// for each availability zone. It takes the number of availability zones (<zoneSize>), the
-// index of the current zone (<zoneIndex>) and the number of nodes which must be distributed
-// over the zones (<size>) and returns the number of nodes which should be placed in the zone
-// of index <zoneIndex>.
-// The distribution happens equally. In case of an uneven number <size>, the last zone will have
-// one more node than the others.
-func DistributeOverZones(zoneIndex, size, zoneSize int) int {
-	first := size / zoneSize
-	second := 0
-	if zoneIndex < (size % zoneSize) {
-		second = 1
-	}
-	return first + second
-}
-
-// DistributePercentOverZones distributes a given percentage value over zones in relation to
-// the given total value. In case the total value is evenly divisible over the zones, this
-// always just returns the initial percentage. Otherwise, the total value is used to determine
-// the weight of a specific zone in relation to the other zones and adapt the given percentage
-// accordingly.
-func DistributePercentOverZones(zoneIndex int, percent string, zoneSize int, total int) string {
-	percents, err := strconv.Atoi(percent[:len(percent)-1])
-	if err != nil {
-		panic(fmt.Sprintf("given value %q is not a percent value", percent))
-	}
-
-	var weightedPercents int
-	if total%zoneSize == 0 {
-		// Zones are evenly sized, we don't need to adapt the percentage per zone
-		weightedPercents = percents
-	} else {
-		// Zones are not evenly sized, we need to calculate the ratio of each zone
-		// and modify the percentage depending on that ratio.
-		zoneTotal := DistributeOverZones(zoneIndex, total, zoneSize)
-		absoluteTotalRatio := float64(total) / float64(zoneSize)
-		ratio := 100.0 / absoluteTotalRatio * float64(zoneTotal)
-		// Optimistic rounding up, this will cause an actual max surge / max unavailable percentage to be a bit higher.
-		weightedPercents = int(math.Ceil(ratio * float64(percents) / 100.0))
-	}
-
-	return fmt.Sprintf("%d%%", weightedPercents)
-}
-
-// DistributePositiveIntOrPercent distributes a given int or percentage value over zones in relation to
-// the given total value. In case the total value is evenly divisible over the zones, this
-// always just returns the initial percentage. Otherwise, the total value is used to determine
-// the weight of a specific zone in relation to the other zones and adapt the given percentage
-// accordingly.
-func DistributePositiveIntOrPercent(zoneIndex int, intOrPercent intstr.IntOrString, zoneSize int, total int) intstr.IntOrString {
-	if intOrPercent.Type == intstr.String {
-		return intstr.FromString(DistributePercentOverZones(zoneIndex, intOrPercent.StrVal, zoneSize, total))
-	}
-	return intstr.FromInt(DistributeOverZones(zoneIndex, int(intOrPercent.IntVal), zoneSize))
-}
-
-// IdentifyAddressType takes a string containing an address (hostname or IP) and tries to parse it
-// to an IP address in order to identify whether it is a DNS name or not.
-// It returns a tuple whereby the first element is either "ip" or "hostname", and the second the
-// parsed IP address of type net.IP (in case the loadBalancer is an IP address, otherwise it is nil).
-func IdentifyAddressType(address string) (string, net.IP) {
-	addr := net.ParseIP(address)
-	addrType := "hostname"
-	if addr != nil {
-		addrType = "ip"
-	}
-	return addrType, addr
-}
-
 // ComputeClusterIP parses the provided <cidr> and sets the last byte to the value of <lastByte>.
 // For example, <cidr> = 100.64.0.0/11 and <lastByte> = 10 the result would be 100.64.0.10
 func ComputeClusterIP(cidr gardencorev1alpha1.CIDR, lastByte byte) string {
@@ -131,24 +69,6 @@ func ComputeClusterIP(cidr gardencorev1alpha1.CIDR, lastByte byte) string {
 	ip = ip.To4()
 	ip[3] = lastByte
 	return ip.String()
-}
-
-// DiskSize extracts the numerical component of DiskSize strings, i.e. strings like "10Gi" and
-// returns it as string, i.e. "10" will be returned. If the conversion to integer fails or if
-// the pattern does not match, it will return 0.
-func DiskSize(size string) int {
-	regex, _ := regexp.Compile("^(\\d+)")
-	i, err := strconv.Atoi(regex.FindString(size))
-	if err != nil {
-		return 0
-	}
-	return i
-}
-
-// MachineClassHash returns the SHA256-hash value of the <val> struct's representation concatenated with the
-// provided <version>.
-func MachineClassHash(machineClassSpec map[string]interface{}, version string) string {
-	return utils.ComputeSHA256Hex([]byte(fmt.Sprintf("%s-%s", utils.HashForMap(machineClassSpec), version)))[:5]
 }
 
 // GenerateAddonConfig returns the provided <values> in case <enabled> is true. Otherwise, nil is
@@ -165,34 +85,15 @@ func GenerateAddonConfig(values map[string]interface{}, enabled bool) map[string
 	return v
 }
 
-// GetLoadBalancerIngress takes a K8SClient, a namespace and a service name. It queries for a load balancer's technical name
-// (ip address or hostname). It returns the value of the technical name whereby it always prefers the IP address (if given)
-// over the hostname. It also returns the list of all load balancer ingresses.
-func GetLoadBalancerIngress(client kubernetes.Interface, namespace, name string) (string, error) {
-	var (
-		loadBalancerIngress  string
-		serviceStatusIngress []corev1.LoadBalancerIngress
-	)
-
-	service, err := client.GetService(namespace, name)
-	if err != nil {
-		return "", err
+// GenerateTerraformVariablesEnvironment takes a <secret> and a <keyValueMap> and builds an environment which
+// can be injected into the Terraformer job/pod manifest. The keys of the <keyValueMap> will be prefixed with
+// 'TF_VAR_' and the value will be used to extract the respective data from the <secret>.
+func GenerateTerraformVariablesEnvironment(secret *corev1.Secret, keyValueMap map[string]string) map[string]string {
+	out := make(map[string]string)
+	for key, value := range keyValueMap {
+		out[fmt.Sprintf("TF_VAR_%s", key)] = strings.TrimSpace(string(secret.Data[value]))
 	}
-
-	serviceStatusIngress = service.Status.LoadBalancer.Ingress
-	length := len(serviceStatusIngress)
-	if length == 0 {
-		return "", errors.New("`.status.loadBalancer.ingress[]` has no elements yet, i.e. external load balancer has not been created (is your quota limit exceeded/reached?)")
-	}
-
-	if serviceStatusIngress[length-1].IP != "" {
-		loadBalancerIngress = serviceStatusIngress[length-1].IP
-	} else if serviceStatusIngress[length-1].Hostname != "" {
-		loadBalancerIngress = serviceStatusIngress[length-1].Hostname
-	} else {
-		return "", errors.New("`.status.loadBalancer.ingress[]` has an element which does neither contain `.ip` nor `.hostname`")
-	}
-	return loadBalancerIngress, nil
+	return out
 }
 
 // ExtractShootName returns Shoot resource name extracted from provided <backupInfrastructureName>.
@@ -335,23 +236,114 @@ func ShouldObjectBeRemoved(obj metav1.Object, gracePeriod time.Duration) bool {
 	return deletionTimestamp.Time.Before(time.Now().Add(-gracePeriod))
 }
 
-// DeleteVpa delete all resources required for the vertical pod autoscaler in the given namespace.
-func DeleteVpa(k8sClient kubernetes.Interface, namespace string) error {
+// DeleteLoggingStack deletes all resource of the EFK logging stack in the given namespace.
+func DeleteLoggingStack(ctx context.Context, k8sClient client.Client, namespace string) error {
+	if k8sClient == nil {
+		return errors.New("must provide non-nil kubernetes client to common.DeleteLoggingStack")
+	}
+
+	// Delete the resources below that match "garden.sapcloud.io/role=logging"
+	lists := []runtime.Object{
+		&corev1.ConfigMapList{},
+		&batchv1beta1.CronJobList{},
+		&rbacv1.ClusterRoleList{},
+		&rbacv1.ClusterRoleBindingList{},
+		&appsv1.DaemonSetList{},
+		&appsv1.DeploymentList{},
+		&autoscalingv2beta1.HorizontalPodAutoscalerList{},
+		&extensionsv1beta1.IngressList{},
+		&corev1.SecretList{},
+		&corev1.ServiceAccountList{},
+		&corev1.ServiceList{},
+		&appsv1.StatefulSetList{},
+	}
+
+	// TODO: Use `DeleteCollection` as soon it is in the controller-runtime:
+	// https://github.com/kubernetes-sigs/controller-runtime/pull/324
+
+	for _, list := range lists {
+		if err := k8sClient.List(ctx, list,
+			client.InNamespace(namespace),
+			client.MatchingLabels(map[string]string{GardenRole: GardenRoleLogging})); err != nil {
+			return err
+		}
+
+		if err := meta.EachListItem(list, func(obj runtime.Object) error {
+			return client.IgnoreNotFound(k8sClient.Delete(ctx, obj, kubernetes.DefaultDeleteOptionFuncs...))
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DeleteAlertmanager deletes all resources of the Alertmanager in a given namespace.
+func DeleteAlertmanager(ctx context.Context, k8sClient client.Client, namespace string) error {
+	objs := []runtime.Object{
+		&appsv1.StatefulSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      AlertManagerStatefulSetName,
+				Namespace: namespace,
+			},
+		},
+		&extensionsv1beta1.Ingress{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertmanager",
+				Namespace: namespace,
+			},
+		},
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertmanager-client",
+				Namespace: namespace,
+			},
+		},
+		&corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertmanager",
+				Namespace: namespace,
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertmanager-basic-auth",
+				Namespace: namespace,
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertmanager-tls",
+				Namespace: namespace,
+			},
+		},
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "alertmanager-config",
+				Namespace: namespace,
+			},
+		},
+	}
+
+	for _, obj := range objs {
+		if err := k8sClient.Delete(ctx, obj, kubernetes.DefaultDeleteOptionFuncs...); client.IgnoreNotFound(err) != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// DeleteGrafanaByRole deletes the monitoring stack for the shoot owner.
+func DeleteGrafanaByRole(k8sClient kubernetes.Interface, namespace, role string) error {
 	if k8sClient == nil {
 		return fmt.Errorf("require kubernetes client")
 	}
 
 	listOptions := metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s", GardenRole, GardenRoleVpa),
+		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", "component", "grafana", "role", role),
 	}
 
-	// Delete all Crds with label "garden.sapcloud.io/role=vpa"
-	if err := k8sClient.APIExtension().ApiextensionsV1beta1().CustomResourceDefinitions().DeleteCollection(
-		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-
-	// Delete all Deployments with label "garden.sapcloud.io/role=vpa"
 	deletePropagation := metav1.DeletePropagationForeground
 	if err := k8sClient.Kubernetes().AppsV1().Deployments(namespace).DeleteCollection(
 		&metav1.DeleteOptions{
@@ -360,149 +352,171 @@ func DeleteVpa(k8sClient kubernetes.Interface, namespace string) error {
 		return err
 	}
 
-	// Delete all ClusterRoles with label "garden.sapcloud.io/role=vpa"
-	if err := k8sClient.Kubernetes().RbacV1().ClusterRoles().DeleteCollection(
+	if err := k8sClient.Kubernetes().CoreV1().ConfigMaps(namespace).DeleteCollection(
 		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 
-	// Delete all ClusterRoleBindings with label "garden.sapcloud.io/role=vpa"
-	if err := k8sClient.Kubernetes().Rbac().ClusterRoleBindings().DeleteCollection(
+	if err := k8sClient.Kubernetes().ExtensionsV1beta1().Ingresses(namespace).DeleteCollection(
 		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 
-	// Delete all ServiceAccounts with label "garden.sapcloud.io/role=vpa"
-	if err := k8sClient.Kubernetes().CoreV1().ServiceAccounts(namespace).DeleteCollection(
+	if err := k8sClient.Kubernetes().CoreV1().Secrets(namespace).DeleteCollection(
 		&metav1.DeleteOptions{}, listOptions); err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
 
-	// Delete Service
-	if err := k8sClient.Client().Delete(context.TODO(), &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "vpa-webhook"}}); err != nil && !apierrors.IsNotFound(err) {
+	if err := k8sClient.Kubernetes().CoreV1().Services(namespace).Delete(fmt.Sprintf("grafana-%s", role),
+		&metav1.DeleteOptions{}); err != nil && !apierrors.IsNotFound(err) {
 		return err
 	}
-
-	// Delete Secret
-	if err := k8sClient.Client().Delete(context.TODO(), &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: "vpa-tls-certs"}}); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-
 	return nil
 }
 
-// InjectCSIFeatureGates adds required feature gates for csi when starting Kubelet/Kube-APIServer based on kubernetes version
-func InjectCSIFeatureGates(kubeVersion string, featureGates map[string]interface{}) (map[string]interface{}, error) {
-	lessV1_13, err := utils.CompareVersions(kubeVersion, "<", "v1.13.0")
+// GetDomainInfoFromAnnotations returns the provider and the domain that is specified in the give annotations.
+func GetDomainInfoFromAnnotations(annotations map[string]string) (provider string, domain string, err error) {
+	if annotations == nil {
+		return "", "", fmt.Errorf("domain secret has no annotations")
+	}
+
+	if providerAnnotation, ok := annotations[DNSProviderDeprecated]; ok {
+		provider = providerAnnotation
+	}
+	if providerAnnotation, ok := annotations[DNSProvider]; ok {
+		provider = providerAnnotation
+	}
+
+	if domainAnnotation, ok := annotations[DNSDomainDeprecated]; ok {
+		domain = domainAnnotation
+	}
+	if domainAnnotation, ok := annotations[DNSDomain]; ok {
+		domain = domainAnnotation
+	}
+
+	if len(domain) == 0 {
+		return "", "", fmt.Errorf("missing dns domain annotation on domain secret")
+	}
+	if len(provider) == 0 {
+		return "", "", fmt.Errorf("missing dns provider annotation on domain secret")
+	}
+
+	return
+}
+
+// CurrentReplicaCount returns the current replicaCount for the given deployment.
+func CurrentReplicaCount(client client.Client, namespace, deploymentName string) (int32, error) {
+	deployment := &appsv1.Deployment{}
+	if err := client.Get(context.TODO(), kutil.Key(namespace, deploymentName), deployment); err != nil && !apierrors.IsNotFound(err) {
+		return 0, err
+	}
+	if deployment.Spec.Replicas == nil {
+		return 0, nil
+	}
+	return *deployment.Spec.Replicas, nil
+}
+
+// RespectShootSyncPeriodOverwrite checks whether to respect the sync period overwrite of a Shoot or not.
+func RespectShootSyncPeriodOverwrite(respectSyncPeriodOverwrite bool, shoot *gardenv1beta1.Shoot) bool {
+	return respectSyncPeriodOverwrite || shoot.Namespace == GardenNamespace
+}
+
+// ShouldIgnoreShoot determines whether a Shoot should be ignored or not.
+func ShouldIgnoreShoot(respectSyncPeriodOverwrite bool, shoot *gardenv1beta1.Shoot) bool {
+	if !RespectShootSyncPeriodOverwrite(respectSyncPeriodOverwrite, shoot) {
+		return false
+	}
+
+	value, ok := shoot.Annotations[ShootIgnore]
+	if !ok {
+		return false
+	}
+
+	ignore, _ := strconv.ParseBool(value)
+	return ignore
+}
+
+// IsShootFailed checks if a Shoot is failed.
+func IsShootFailed(shoot *gardenv1beta1.Shoot) bool {
+	lastOperation := shoot.Status.LastOperation
+
+	return lastOperation != nil && lastOperation.State == gardencorev1alpha1.LastOperationStateFailed &&
+		shoot.Generation == shoot.Status.ObservedGeneration &&
+		shoot.Status.Gardener.Version == version.Get().GitVersion
+}
+
+// IsNowInEffectiveShootMaintenanceTimeWindow checks if the current time is in the effective
+// maintenance time window of the Shoot.
+func IsNowInEffectiveShootMaintenanceTimeWindow(shoot *gardenv1beta1.Shoot) bool {
+	return EffectiveShootMaintenanceTimeWindow(shoot).Contains(time.Now())
+}
+
+// IsUpToDate checks whether the Shoot's generation has changed or if the LastOperation status
+// is not Succeeded.
+func IsUpToDate(shoot *gardenv1beta1.Shoot) bool {
+	lastOperation := shoot.Status.LastOperation
+	return shoot.Generation != shoot.Status.ObservedGeneration ||
+		(lastOperation != nil && lastOperation.State != gardencorev1alpha1.LastOperationStateSucceeded)
+}
+
+// SyncPeriodOfShoot determines the sync period of the given shoot.
+//
+// If no overwrite is allowed, the defaultMinSyncPeriod is returned.
+// Otherwise, the overwrite is parsed. If an error occurs or it is smaller than the defaultMinSyncPeriod,
+// the defaultMinSyncPeriod is returned. Otherwise, the overwrite is returned.
+func SyncPeriodOfShoot(respectSyncPeriodOverwrite bool, defaultMinSyncPeriod time.Duration, shoot *gardenv1beta1.Shoot) time.Duration {
+	if !RespectShootSyncPeriodOverwrite(respectSyncPeriodOverwrite, shoot) {
+		return defaultMinSyncPeriod
+	}
+
+	syncPeriodOverwrite, ok := shoot.Annotations[ShootSyncPeriod]
+	if !ok {
+		return defaultMinSyncPeriod
+	}
+
+	syncPeriod, err := time.ParseDuration(syncPeriodOverwrite)
 	if err != nil {
-		return featureGates, err
-	}
-	if lessV1_13 {
-		return featureGates, nil
+		return defaultMinSyncPeriod
 	}
 
-	//https://kubernetes-csi.github.io/docs/Setup.html
-	csiFG := map[string]interface{}{
-		"VolumeSnapshotDataSource": true,
-		"KubeletPluginsWatcher":    true,
-		"CSINodeInfo":              true,
-		"CSIDriverRegistry":        true,
+	if syncPeriod < defaultMinSyncPeriod {
+		return defaultMinSyncPeriod
 	}
-
-	if featureGates == nil {
-		return csiFG, nil
-	}
-
-	for k, v := range csiFG {
-		featureGates[k] = v
-	}
-
-	return featureGates, nil
+	return syncPeriod
 }
 
-// DeleteLoggingStack deletes all resource of the EFK logging stack in the given namespace.
-func DeleteLoggingStack(k8sClient kubernetes.Interface, namespace string) error {
-	if k8sClient == nil {
-		return fmt.Errorf("require kubernetes client")
-	}
-
-	var (
-		services     = []string{"kibana-logging", "elasticsearch-logging", "fluentd-es"}
-		configmaps   = []string{"kibana-object-registration", "kibana-saved-objects", "curator-hourly-config", "curator-daily-config", "fluent-bit-config", "fluentd-es-config", "es-configmap"}
-		statefulsets = []string{"elasticsearch-logging", "fluentd-es"}
-		cronjobs     = []string{"hourly-curator", "daily-curator"}
-	)
-
-	if err := k8sClient.DeleteDeployment(namespace, "kibana-logging"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err := k8sClient.DeleteDaemonSet(namespace, "fluent-bit"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	for _, name := range statefulsets {
-		if err := k8sClient.DeleteStatefulSet(namespace, name); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-	for _, name := range cronjobs {
-		if err := k8sClient.DeleteCronJob(namespace, name); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-
-	if err := k8sClient.DeleteIngress(namespace, "kibana"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err := k8sClient.DeleteSecret(namespace, "kibana-basic-auth"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err := k8sClient.DeleteClusterRoleBinding("fluent-bit-read"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err := k8sClient.DeleteClusterRole("fluent-bit-read"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err := k8sClient.DeleteServiceAccount(namespace, "fluent-bit"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	if err := k8sClient.DeleteHorizontalPodAutoscaler(namespace, "fluentd-es"); err != nil && !apierrors.IsNotFound(err) {
-		return err
-	}
-	for _, name := range services {
-		if err := k8sClient.DeleteService(namespace, name); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-	for _, name := range configmaps {
-		if err := k8sClient.DeleteConfigMap(namespace, name); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-	return nil
+// EffectiveMaintenanceTimeWindow cuts a maintenance time window at the end with a guess of 15 minutes. It is subtracted from the end
+// of a maintenance time window to use a best-effort kind of finishing the operation before the end.
+// Generally, we can't make sure that the maintenance operation is done by the end of the time window anyway (considering large
+// clusters with hundreds of nodes, a rolling update will take several hours).
+func EffectiveMaintenanceTimeWindow(timeWindow *utils.MaintenanceTimeWindow) *utils.MaintenanceTimeWindow {
+	return timeWindow.WithEnd(timeWindow.End().Add(0, -15, 0))
 }
 
-// DeleteAlertmanager deletes all resources of the Alertmanager in a given namespace.
-func DeleteAlertmanager(k8sClient kubernetes.Interface, namespace string) error {
-	var (
-		services = []string{"alertmanager-client", "alertmanager"}
-		secrets  = []string{"alertmanager-basic-auth", "alertmanager-tls", "alertmanager-config"}
-	)
+// EffectiveShootMaintenanceTimeWindow returns the effective MaintenanceTimeWindow of the given Shoot.
+func EffectiveShootMaintenanceTimeWindow(shoot *gardenv1beta1.Shoot) *utils.MaintenanceTimeWindow {
+	maintenance := shoot.Spec.Maintenance
+	if maintenance == nil || maintenance.TimeWindow == nil {
+		return utils.AlwaysTimeWindow
+	}
 
-	if err := k8sClient.DeleteStatefulSet(namespace, AlertManagerStatefulSetName); err != nil && !apierrors.IsNotFound(err) {
-		return err
+	timeWindow, err := utils.ParseMaintenanceTimeWindow(maintenance.TimeWindow.Begin, maintenance.TimeWindow.End)
+	if err != nil {
+		return utils.AlwaysTimeWindow
 	}
-	if err := k8sClient.DeleteIngress(namespace, "alertmanager"); err != nil && !apierrors.IsNotFound(err) {
-		return err
+
+	return EffectiveMaintenanceTimeWindow(timeWindow)
+}
+
+// GetPersistentVolumeProvider gets the Persistent Volume Provider of seed cluster. If it is not specified, return ""
+func GetPersistentVolumeProvider(seed *gardenv1beta1.Seed) string {
+	if seed.Annotations == nil {
+		return ""
 	}
-	for _, svc := range services {
-		if err := k8sClient.DeleteService(namespace, svc); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-	for _, secret := range secrets {
-		if err := k8sClient.DeleteSecret(namespace, secret); err != nil && !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-	return nil
+	return seed.Annotations[AnnotatePersistentVolumeProvider]
+}
+
+// GardenEtcdEncryptionSecretKey is the key to the 'backup' of the etcd encryption secret in the Garden cluster.
+func GardenEtcdEncryptionSecretKey(shootNamespace, shootName string) client.ObjectKey {
+	return kutil.Key(shootNamespace, fmt.Sprintf("%s.%s", shootName, EtcdEncryptionSecretName))
 }

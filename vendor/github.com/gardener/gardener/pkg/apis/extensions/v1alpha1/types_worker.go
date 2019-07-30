@@ -23,6 +23,9 @@ import (
 
 var _ Object = (*Worker)(nil)
 
+// WorkerResource is a constant for the name of the Worker resource.
+const WorkerResource = "Worker"
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -150,7 +153,7 @@ type WorkerStatus struct {
 	ProviderStatus *runtime.RawExtension `json:"providerStatus,omitempty"`
 }
 
-// MachineDeployment is a created machine deployments.
+// MachineDeployment is a created machine deployment.
 type MachineDeployment struct {
 	// Name is the name of the `MachineDeployment` resource.
 	Name string `json:"name"`

@@ -20,7 +20,7 @@ import (
 )
 
 // ControllerName is the name of the lifecycle controller.
-const ControllerName = "certificate-service-lifecycle-controller"
+const ControllerName = "certificate_service_lifecycle_controller"
 
 var (
 	// ServiceConfig contains configuration for the certificate service.

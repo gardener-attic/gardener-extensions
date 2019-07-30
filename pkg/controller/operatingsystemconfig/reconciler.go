@@ -20,7 +20,6 @@ import (
 
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 
-	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
@@ -123,7 +122,7 @@ func (r *reconciler) reconcile(ctx context.Context, osc *extensionsv1alpha1.Oper
 	}
 
 	secret := &corev1.Secret{ObjectMeta: SecretObjectMetaForConfig(osc)}
-	if err := controller.CreateOrUpdate(ctx, r.client, secret, func() error {
+	if _, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func() error {
 		if secret.Data == nil {
 			secret.Data = make(map[string][]byte)
 		}

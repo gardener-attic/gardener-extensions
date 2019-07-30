@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: cloudprovider
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--openstack
 type: Opaque
 data:
 # domainName: base64(domain-name)
@@ -14,7 +14,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--openstack
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -46,13 +46,13 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Worker
 metadata:
   name: worker
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--openstack
 spec:
   type: openstack
   region: eu-de-1
   secretRef:
     name: cloudprovider
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--openstack
   infrastructureProviderStatus:
     apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureStatus

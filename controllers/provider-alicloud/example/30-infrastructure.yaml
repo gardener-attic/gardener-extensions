@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--alicloud
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--alicloud
   name: cloudprovider
 type: Opaque
 data:
@@ -17,7 +17,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--alicloud
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -43,13 +43,13 @@ spec:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Infrastructure
 metadata:
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--alicloud
   name: alicloud-infra
 spec:
   type: alicloud
   region: eu-central-1
   secretRef:
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--alicloud
     name: cloudprovider
 # sshPublicKey: base64(sshPublicKey)
   providerConfig:

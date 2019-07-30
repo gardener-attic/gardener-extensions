@@ -16,15 +16,14 @@ package genericactuator
 
 import (
 	"context"
-	"fmt"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -143,7 +142,6 @@ func (a *actuator) Reconcile(
 ) (bool, error) {
 	// Deploy secrets
 	a.logger.Info("Deploying secrets", "controlplane", util.ObjectName(cp))
-	fmt.Printf("%#+v", a.clientset)
 	deployedSecrets, err := a.secrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
 	if err != nil {
 		return false, errors.Wrapf(err, "could not deploy secrets for controlplane '%s'", util.ObjectName(cp))
@@ -174,8 +172,8 @@ func (a *actuator) Reconcile(
 	scaledDown := false
 	if extensionscontroller.IsHibernated(cluster.Shoot) {
 		dep := &appsv1.Deployment{}
-		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: common.KubeAPIServerDeploymentName}, dep); err != nil {
-			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, common.KubeAPIServerDeploymentName)
+		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer}, dep); err != nil {
+			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, gardencorev1alpha1.DeploymentNameKubeAPIServer)
 		}
 
 		// If kube-apiserver has not been already scaled down, requeue. Otherwise, set the scaledDown flag so the value provider could scale CCM down.
@@ -221,7 +219,7 @@ func (a *actuator) Reconcile(
 	}
 
 	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
-		return false, errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
+		return false, errors.Wrapf(err, "could not apply storage classes chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
 	return requeue, nil
@@ -275,12 +273,12 @@ func (a *actuator) computeChecksums(
 ) (map[string]string, error) {
 	// Get cloud provider secret and config from cluster
 	cpSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}, cpSecret); err != nil {
-		return nil, errors.Wrapf(err, "could not get secret '%s/%s'", namespace, common.CloudProviderSecretName)
+	if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}, cpSecret); err != nil {
+		return nil, errors.Wrapf(err, "could not get secret '%s/%s'", namespace, gardencorev1alpha1.SecretNameCloudProvider)
 	}
 
 	csSecrets := controlplane.MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
-		common.CloudProviderSecretName: cpSecret,
+		gardencorev1alpha1.SecretNameCloudProvider: cpSecret,
 	})
 
 	var csConfigMaps map[string]*corev1.ConfigMap

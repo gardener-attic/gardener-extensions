@@ -63,7 +63,7 @@ func NewReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler 
 		&reconciler{
 			logger:   log.Log.WithName(ControllerName),
 			actuator: actuator,
-			recorder: mgr.GetRecorder(ControllerName),
+			recorder: mgr.GetEventRecorderFor(ControllerName),
 		})
 }
 

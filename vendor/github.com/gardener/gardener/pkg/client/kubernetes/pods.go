@@ -21,19 +21,16 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"net/http"
-	"sort"
 	"strings"
 	"time"
 
-	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
-
-	"k8s.io/client-go/rest"
-
 	"github.com/gardener/gardener/pkg/utils"
+
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/transport/spdy"
@@ -48,7 +45,7 @@ func NewPodExecutor(config *rest.Config) PodExecutor {
 
 // PodExecutor is the pod executor interface
 type PodExecutor interface {
-	Execute(ctx context.Context, name, namespace, containerName, command string) (io.Reader, error)
+	Execute(ctx context.Context, namespace, name, containerName, command string) (io.Reader, error)
 }
 
 type podExecutor struct {
@@ -89,7 +86,7 @@ func (p *podExecutor) Execute(ctx context.Context, namespace, name, containerNam
 		Tty:    false,
 	})
 	if err != nil {
-		return nil, err
+		return &stderr, err
 	}
 
 	return &stdout, nil
@@ -108,23 +105,6 @@ func GetPodLogs(podInterface corev1client.PodInterface, name string, options *co
 	return ioutil.ReadAll(stream)
 }
 
-// GetPod will return the Pod object for the given <name> in the given <namespace>.
-func (c *Clientset) GetPod(namespace, name string) (*corev1.Pod, error) {
-	return c.kubernetes.CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
-}
-
-// ListPods will list all the Pods in the given <namespace> for the given <listOptions>.
-func (c *Clientset) ListPods(namespace string, listOptions metav1.ListOptions) (*corev1.PodList, error) {
-	pods, err := c.kubernetes.CoreV1().Pods(namespace).List(listOptions)
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(pods.Items, func(i, j int) bool {
-		return pods.Items[i].ObjectMeta.CreationTimestamp.Before(&pods.Items[j].ObjectMeta.CreationTimestamp)
-	})
-	return pods, nil
-}
-
 // ForwardPodPort tries to forward the <remote> port of the pod with name <name> in namespace <namespace> to
 // the <local> port. If <local> equals zero, a free port will be chosen randomly.
 // It returns the stop channel which must be closed when the port forward connection should be terminated.
@@ -139,10 +119,10 @@ func (c *Clientset) ForwardPodPort(namespace, name string, local, remote int) (c
 // CheckForwardPodPort tries to forward the <remote> port of the pod with name <name> in namespace <namespace> to
 // the <local> port. If <local> equals zero, a free port will be chosen randomly.
 // It returns true if the port forward connection has been established successfully or false otherwise.
-func (c *Clientset) CheckForwardPodPort(namespace, name string, local, remote int) (bool, error) {
+func (c *Clientset) CheckForwardPodPort(namespace, name string, local, remote int) error {
 	fw, stopChan, err := c.setupForwardPodPort(namespace, name, local, remote)
 	if err != nil {
-		return false, err
+		return fmt.Errorf("could not setup pod port forwarding: %v", err)
 	}
 
 	errChan := make(chan error)
@@ -153,22 +133,12 @@ func (c *Clientset) CheckForwardPodPort(namespace, name string, local, remote in
 
 	select {
 	case err = <-errChan:
-		return false, fmt.Errorf("forwarding ports: %v", err)
+		return fmt.Errorf("error forwarding ports: %v", err)
 	case <-fw.Ready:
-		return true, nil
+		return nil
 	case <-time.After(time.Second * 5):
-		return false, errors.New("port forward connection could not be established within five seconds")
+		return errors.New("port forward connection could not be established within five seconds")
 	}
-}
-
-// DeletePod will delete a Pod with the given <name> in the given <namespace>.
-func (c *Clientset) DeletePod(namespace, name string) error {
-	return c.kubernetes.CoreV1().Pods(namespace).Delete(name, &defaultDeleteOptions)
-}
-
-// DeletePodForcefully will forcefully delete a Pod with the given <name> in the given <namespace>.
-func (c *Clientset) DeletePodForcefully(namespace, name string) error {
-	return c.kubernetes.CoreV1().Pods(namespace).Delete(name, &forceDeleteOptions)
 }
 
 func (c *Clientset) setupForwardPodPort(namespace, name string, local, remote int) (*portforward.PortForwarder, chan struct{}, error) {
@@ -179,7 +149,7 @@ func (c *Clientset) setupForwardPodPort(namespace, name string, local, remote in
 		localPort int
 	)
 
-	u := c.kubernetes.Core().RESTClient().Post().Resource("pods").Namespace(namespace).Name(name).SubResource("portforward").URL()
+	u := c.kubernetes.CoreV1().RESTClient().Post().Resource("pods").Namespace(namespace).Name(name).SubResource("portforward").URL()
 
 	transport, upgrader, err := spdy.RoundTripperFor(c.config)
 	if err != nil {

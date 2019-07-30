@@ -21,6 +21,9 @@ import (
 
 var _ Object = (*Extension)(nil)
 
+// ExtensionResource is a constant for the name of the Extension resource.
+const ExtensionResource = "Extension"
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -68,4 +71,8 @@ type ExtensionSpec struct {
 type ExtensionStatus struct {
 	// DefaultStatus is a structure containing common fields used by all extension resources.
 	DefaultStatus `json:",inline"`
+
+	// ProviderStatus contains provider-specific output for this extension.
+	// +optional
+	ProviderStatus *runtime.RawExtension `json:"providerStatus,omitempty"`
 }

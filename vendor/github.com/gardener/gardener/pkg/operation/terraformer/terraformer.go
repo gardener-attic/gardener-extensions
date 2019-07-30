@@ -21,6 +21,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gardener/gardener/pkg/utils/retry"
+
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/operation/common"
@@ -35,8 +38,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 
@@ -116,7 +117,7 @@ func (t *Terraformer) Destroy() error {
 	if err := t.execute(context.TODO(), "destroy"); err != nil {
 		return err
 	}
-	return t.cleanupConfiguration(context.TODO())
+	return t.CleanupConfiguration(context.TODO())
 }
 
 // execute creates a Terraform Job which runs the provided scriptName (apply or destroy), waits for the Job to be completed
@@ -131,21 +132,21 @@ func (t *Terraformer) execute(ctx context.Context, scriptName string) error {
 	)
 
 	// We should retry the preparation check in order to allow the kube-apiserver to actually create the ConfigMaps.
-	if err := wait.PollImmediate(5*time.Second, 30*time.Second, func() (bool, error) {
+	if err := retry.UntilTimeout(ctx, 5*time.Second, 30*time.Second, func(ctx context.Context) (done bool, err error) {
 		numberOfExistingResources, err := t.prepare(ctx)
 		if err != nil {
-			return false, err
+			return retry.SevereError(err)
 		}
 		if numberOfExistingResources == 0 {
 			t.logger.Debug("All ConfigMaps/Secrets do not exist, can not execute the Terraform Job.")
-			return true, nil
+			return retry.Ok()
 		} else if numberOfExistingResources == numberOfConfigResources {
 			t.logger.Debug("All ConfigMaps/Secrets exist, will execute the Terraform Job.")
 			execute = true
-			return true, nil
+			return retry.Ok()
 		} else {
 			t.logger.Error("Can not execute Terraform Job as ConfigMaps/Secrets are missing!")
-			return false, nil
+			return retry.MinorError(fmt.Errorf("%d/%d terraform resources are missing", numberOfConfigResources-numberOfExistingResources, numberOfConfigResources))
 		}
 	}); err != nil {
 		return err
@@ -347,10 +348,10 @@ func (t *Terraformer) addNetworkPolicyLabels(labels map[string]string) map[strin
 	if labels == nil {
 		labels = make(map[string]string)
 	}
-	labels["networking.gardener.cloud/to-dns"] = "allowed"
-	labels["networking.gardener.cloud/to-private-networks"] = "allowed"
-	labels["networking.gardener.cloud/to-public-networks"] = "allowed"
-	labels["networking.gardener.cloud/to-seed-apiserver"] = "allowed"
+	labels[gardencorev1alpha1.LabelNetworkPolicyToDNS] = gardencorev1alpha1.LabelNetworkPolicyAllowed
+	labels[gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks] = gardencorev1alpha1.LabelNetworkPolicyAllowed
+	labels[gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks] = gardencorev1alpha1.LabelNetworkPolicyAllowed
+	labels[gardencorev1alpha1.LabelNetworkPolicyToSeedAPIServer] = gardencorev1alpha1.LabelNetworkPolicyAllowed
 
 	return labels
 }
@@ -438,7 +439,7 @@ func (t *Terraformer) podSpec(scriptName string) *corev1.PodSpec {
 // listJobPods lists all pods which have a label 'job-name' whose value is equal to the Terraformer job name.
 func (t *Terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
-	if err := t.client.List(ctx, &client.ListOptions{LabelSelector: labels.SelectorFromSet(map[string]string{jobNameLabel: t.jobName})}, podList); err != nil {
+	if err := t.client.List(ctx, podList, client.MatchingLabels(map[string]string{jobNameLabel: t.jobName})); err != nil {
 		return nil, err
 	}
 	return podList, nil

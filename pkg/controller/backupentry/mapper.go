@@ -16,11 +16,11 @@ package backupentry
 
 import (
 	"context"
+
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
 	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -45,7 +45,7 @@ func (m *secretToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Reque
 	}
 
 	backupEntryList := &extensions1alpha1.BackupEntryList{}
-	if err := m.client.List(context.TODO(), client.MatchingField("spec.secretRef.name", secret.Name).MatchingField("spec.secretRef.namespace", secret.Namespace), backupEntryList); err != nil {
+	if err := m.client.List(context.TODO(), backupEntryList, client.MatchingField("spec.secretRef.name", secret.Name), client.MatchingField("spec.secretRef.namespace", secret.Namespace)); err != nil {
 		return nil
 	}
 
@@ -85,7 +85,7 @@ func (m *namespaceToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Re
 	}
 
 	backupEntryList := &extensions1alpha1.BackupEntryList{}
-	if err := m.client.List(context.TODO(), nil, backupEntryList); err != nil {
+	if err := m.client.List(context.TODO(), backupEntryList); err != nil {
 		return nil
 	}
 

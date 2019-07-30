@@ -40,6 +40,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alpha1.Worker, cluster *controller.Cluster) error {
@@ -130,7 +131,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 
 	// Get the list of all existing machine deployments.
 	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
-	if err := a.client.List(ctx, &client.ListOptions{Namespace: worker.Namespace}, existingMachineDeployments); err != nil {
+	if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
 		return err
 	}
 
@@ -243,7 +244,7 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 			},
 		}
 
-		if err := controller.CreateOrUpdate(ctx, a.client, machineDeployment, func() error {
+		if _, err := controllerutil.CreateOrUpdate(ctx, a.client, machineDeployment, func() error {
 			machineDeployment.Spec = machinev1alpha1.MachineDeploymentSpec{
 				Replicas:        int32(replicas),
 				MinReadySeconds: 500,
@@ -296,7 +297,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 
 		// Get the list of all existing machine deployments
 		existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
-		if err := a.client.List(ctx, &client.ListOptions{Namespace: worker.Namespace}, existingMachineDeployments); err != nil {
+		if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
 			return false, err
 		}
 

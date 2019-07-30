@@ -111,7 +111,7 @@ func (a *genericActuator) cleanupMachineDeployments(ctx context.Context, existin
 }
 
 func (a *genericActuator) listMachineClassNames(ctx context.Context, namespace string, machineClassList runtime.Object) (sets.String, error) {
-	if err := a.client.List(ctx, &client.ListOptions{Namespace: namespace}, machineClassList); err != nil {
+	if err := a.client.List(ctx, machineClassList, client.InNamespace(namespace)); err != nil {
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (a *genericActuator) listMachineClassNames(ctx context.Context, namespace s
 }
 
 func (a *genericActuator) cleanupMachineClasses(ctx context.Context, namespace string, machineClassList runtime.Object, wantedMachineDeployments worker.MachineDeployments) error {
-	if err := a.client.List(ctx, &client.ListOptions{Namespace: namespace}, machineClassList); err != nil {
+	if err := a.client.List(ctx, machineClassList, client.InNamespace(namespace)); err != nil {
 		return err
 	}
 
@@ -155,13 +155,13 @@ func (a *genericActuator) cleanupMachineClasses(ctx context.Context, namespace s
 
 func (a *genericActuator) listMachineClassSecrets(ctx context.Context, namespace string) (*corev1.SecretList, error) {
 	var (
-		secretList  = &corev1.SecretList{}
-		listOptions = client.InNamespace(namespace).MatchingLabels(map[string]string{
+		secretList = &corev1.SecretList{}
+		labels     = map[string]string{
 			gardencorev1alpha1.GardenPurpose: gardencorev1alpha1.GardenPurposeMachineClass,
-		})
+		}
 	)
 
-	if err := a.client.List(ctx, listOptions, secretList); err != nil {
+	if err := a.client.List(ctx, secretList, client.InNamespace(namespace), client.MatchingLabels(labels)); err != nil {
 		return nil, err
 	}
 	return secretList, nil

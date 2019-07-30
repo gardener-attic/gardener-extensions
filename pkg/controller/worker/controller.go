@@ -30,7 +30,7 @@ const (
 	// FinalizerName is the worker controller finalizer.
 	FinalizerName = "extensions.gardener.cloud/worker"
 	// ControllerName is the name of the controller.
-	ControllerName = "worker-controller"
+	ControllerName = "worker_controller"
 )
 
 // AddArgs are arguments for adding an worker controller to a manager.

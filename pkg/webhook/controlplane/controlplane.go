@@ -17,11 +17,10 @@ package controlplane
 import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 const (
@@ -38,7 +37,7 @@ var logger = log.Log.WithName("controlplane-webhook")
 // AddArgs are arguments for adding a controlplane webhook to a manager.
 type AddArgs struct {
 	// Kind is the kind of this webhook
-	Kind extensionswebhook.Kind
+	Kind string
 	// Provider is the provider of this webhook.
 	Provider string
 	// Types is a list of resource types.
@@ -48,7 +47,7 @@ type AddArgs struct {
 }
 
 // Add creates a new controlplane webhook and adds it to the given Manager.
-func Add(mgr manager.Manager, args AddArgs) (webhook.Webhook, error) {
+func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) {
 	logger := logger.WithValues("kind", args.Kind, "provider", args.Provider)
 
 	// Create handler
@@ -58,17 +57,19 @@ func Add(mgr manager.Manager, args AddArgs) (webhook.Webhook, error) {
 	}
 
 	// Create webhook
-	name := getName(args.Kind)
-	logger.Info("Creating controlplane webhook", "name", name)
-	wh, err := extensionswebhook.NewWebhook(mgr, args.Kind, args.Provider, name, args.Types, handler)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not create controlplane webhook")
-	}
+	logger.Info("Creating webhook", "name", getName(args.Kind))
 
-	return wh, nil
+	return &extensionswebhook.Webhook{
+		Name:     getName(args.Kind),
+		Kind:     args.Kind,
+		Provider: args.Provider,
+		Types:    args.Types,
+		Path:     getName(args.Kind),
+		Webhook:  &admission.Webhook{Handler: handler},
+	}, nil
 }
 
-func getName(kind extensionswebhook.Kind) string {
+func getName(kind string) string {
 	switch kind {
 	case extensionswebhook.SeedKind:
 		return ExposureWebhookName

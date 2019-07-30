@@ -118,7 +118,7 @@ var _ = Describe("Machines", func() {
 			)
 
 			BeforeEach(func() {
-				namespace = "shoot--foo--bar"
+				namespace = "shoot--foobar--packet"
 
 				region = "eu-west-1"
 				packetAPIToken = "api-token"

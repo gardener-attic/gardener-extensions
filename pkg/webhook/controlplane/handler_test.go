@@ -16,11 +16,11 @@ package controlplane
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 
 	mockmanager "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/manager"
-	mocktypes "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/webhook/admission/types"
 	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane"
 
 	"github.com/appscode/jsonpatch"
@@ -32,7 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook/admission/types"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 var _ = Describe("Handler", func() {
@@ -44,19 +44,21 @@ var _ = Describe("Handler", func() {
 	var (
 		ctrl    *gomock.Controller
 		mgr     *mockmanager.MockManager
-		decoder *mocktypes.MockDecoder
+		decoder *admission.Decoder
+		err     error
 
 		objTypes = []runtime.Object{&corev1.Service{}}
 		svc      = &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		}
 
-		req = types.Request{
-			AdmissionRequest: &admissionv1beta1.AdmissionRequest{
+		req = admission.Request{
+			AdmissionRequest: admissionv1beta1.AdmissionRequest{
 				Kind:      metav1.GroupVersionKind{Group: "", Version: "v1", Kind: "Service"},
 				Name:      name,
 				Namespace: namespace,
 				Operation: admissionv1beta1.Create,
+				Object:    runtime.RawExtension{Raw: encode(svc)},
 			},
 		}
 	)
@@ -72,9 +74,8 @@ var _ = Describe("Handler", func() {
 		mgr = mockmanager.NewMockManager(ctrl)
 		mgr.EXPECT().GetScheme().Return(scheme)
 
-		// Create mock decoder
-		decoder = mocktypes.NewMockDecoder(ctrl)
-		decoder.EXPECT().Decode(req, &corev1.Service{}).DoAndReturn(decoderDecode(svc))
+		decoder, err = admission.NewDecoder(scheme)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -90,13 +91,17 @@ var _ = Describe("Handler", func() {
 			// Create handler
 			h, err := newHandler(mgr, objTypes, mutator, logger)
 			Expect(err).NotTo(HaveOccurred())
-			h.decoder = decoder
+			err = h.InjectDecoder(decoder)
+			Expect(err).NotTo(HaveOccurred())
 
 			// Call Handle and check response
 			resp := h.Handle(context.TODO(), req)
-			Expect(resp).To(Equal(types.Response{
-				Response: &admissionv1beta1.AdmissionResponse{
+			Expect(resp).To(Equal(admission.Response{
+				AdmissionResponse: admissionv1beta1.AdmissionResponse{
 					Allowed: true,
+					Result: &metav1.Status{
+						Code: 200,
+					},
 				},
 			}))
 		})
@@ -113,12 +118,13 @@ var _ = Describe("Handler", func() {
 			// Create handler
 			h, err := newHandler(mgr, objTypes, mutator, logger)
 			Expect(err).NotTo(HaveOccurred())
-			h.decoder = decoder
+			err = h.InjectDecoder(decoder)
+			Expect(err).NotTo(HaveOccurred())
 
 			// Call Handle and check response
 			resp := h.Handle(context.TODO(), req)
 			pt := admissionv1beta1.PatchTypeJSONPatch
-			Expect(resp).To(Equal(types.Response{
+			Expect(resp).To(Equal(admission.Response{
 				Patches: []jsonpatch.JsonPatchOperation{
 					{
 						Operation: "add",
@@ -126,7 +132,7 @@ var _ = Describe("Handler", func() {
 						Value:     map[string]interface{}{"foo": "bar"},
 					},
 				},
-				Response: &admissionv1beta1.AdmissionResponse{
+				AdmissionResponse: admissionv1beta1.AdmissionResponse{
 					Allowed:   true,
 					PatchType: &pt,
 				},
@@ -141,12 +147,13 @@ var _ = Describe("Handler", func() {
 			// Create handler
 			h, err := newHandler(mgr, objTypes, mutator, logger)
 			Expect(err).NotTo(HaveOccurred())
-			h.decoder = decoder
+			err = h.InjectDecoder(decoder)
+			Expect(err).NotTo(HaveOccurred())
 
 			// Call Handle and check response
 			resp := h.Handle(context.TODO(), req)
-			Expect(resp).To(Equal(types.Response{
-				Response: &admissionv1beta1.AdmissionResponse{
+			Expect(resp).To(Equal(admission.Response{
+				AdmissionResponse: admissionv1beta1.AdmissionResponse{
 					Allowed: false,
 					Result: &metav1.Status{
 						Code:    http.StatusInternalServerError,
@@ -158,12 +165,7 @@ var _ = Describe("Handler", func() {
 	})
 })
 
-func decoderDecode(result runtime.Object) interface{} {
-	return func(ar types.Request, obj runtime.Object) error {
-		switch obj.(type) {
-		case *corev1.Service:
-			*obj.(*corev1.Service) = *result.(*corev1.Service)
-		}
-		return nil
-	}
+func encode(obj runtime.Object) []byte {
+	data, _ := json.Marshal(obj)
+	return data
 }

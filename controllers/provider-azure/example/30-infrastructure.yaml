@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--azure
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--azure
   name: core-azure
 type: Opaque
 data:
@@ -19,7 +19,7 @@ data:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
 metadata:
-  name: shoot--foo--bar
+  name: shoot--foobar--azure
 spec:
   cloudProfile:
     apiVersion: garden.sapcloud.io/v1beta1
@@ -51,13 +51,13 @@ spec:
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Infrastructure
 metadata:
-  namespace: shoot--foo--bar
+  namespace: shoot--foobar--azure
   name: azure-infra
 spec:
   type: azure
   region: westeurope
   secretRef:
-    namespace: shoot--foo--bar
+    namespace: shoot--foobar--azure
     name: core-azure
   providerConfig:
     apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1

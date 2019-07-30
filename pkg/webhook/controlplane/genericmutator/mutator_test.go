@@ -27,9 +27,9 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/coreos/go-systemd/unit"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -98,7 +98,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeAPIServerService with a kube-apiserver service", func() {
 			var (
 				svc = &corev1.Service{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
 				}
 			)
 
@@ -132,7 +132,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeAPIServerDeployment with a kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeAPIServerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
 				}
 			)
 
@@ -151,7 +151,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeControllerManagerDeployment with a kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeControllerManagerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
 				}
 			)
 
@@ -170,7 +170,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeSchedulerDeployment with a kube-scheduler deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: common.KubeSchedulerDeploymentName},
+					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeScheduler},
 				}
 			)
 
@@ -204,7 +204,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-main stateful set", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdMainStatefulSetName, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDMain, Namespace: namespace},
 				}
 			)
 
@@ -229,7 +229,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-events stateful set", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: common.EtcdEventsStatefulSetName, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDEvents, Namespace: namespace},
 				}
 			)
 

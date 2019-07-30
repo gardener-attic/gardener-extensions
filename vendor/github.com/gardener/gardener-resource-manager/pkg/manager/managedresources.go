@@ -21,7 +21,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -65,13 +64,11 @@ func (m *ManagedResource) WithInjectedLabels(labelsToInject map[string]string) *
 }
 
 func (m *ManagedResource) Reconcile(ctx context.Context) error {
-	secretRefs := m.resource.Spec.SecretRefs
-	injectLabels := m.resource.Spec.InjectLabels
+	resource := &resourcesv1alpha1.ManagedResource{ObjectMeta: m.resource.ObjectMeta}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, m.client, m.resource, func(obj runtime.Object) error {
-		resource := obj.(*resourcesv1alpha1.ManagedResource)
-		resource.Spec.SecretRefs = secretRefs
-		resource.Spec.InjectLabels = injectLabels
+	_, err := controllerutil.CreateOrUpdate(ctx, m.client, resource, func() error {
+		resource.Spec.SecretRefs = m.resource.Spec.SecretRefs
+		resource.Spec.InjectLabels = m.resource.Spec.InjectLabels
 		return nil
 	})
 	return err

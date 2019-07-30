@@ -20,21 +20,17 @@ import (
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-	"github.com/gardener/gardener/pkg/operation/common"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 
-	"github.com/pkg/errors"
-
 	"github.com/Masterminds/semver"
-
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/version"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 // CAChecksumAnnotation is a resource annotation used to store the checksum of a certificate authority.
@@ -53,8 +49,8 @@ func GetGardenerSecret(ctx context.Context, client client.Client, namespace stri
 // GetOrCreateShootKubeconfig gets or creates a Kubeconfig for a Shoot cluster which has a running control plane in the given `namespace`.
 // If the CA of an existing Kubeconfig has changed, it creates a new Kubeconfig.
 // Newly generated Kubeconfigs are applied with the given `client` to the given `namespace`.
-func GetOrCreateShootKubeconfig(ctx context.Context, client client.Client, certificateConfig secrets.CertificateSecretConfig, namespace string) (*corev1.Secret, error) {
-	caSecret, ca, err := secrets.LoadCAFromSecret(client, namespace, gardencorev1alpha1.SecretNameCACluster)
+func GetOrCreateShootKubeconfig(ctx context.Context, c client.Client, certificateConfig secrets.CertificateSecretConfig, namespace string) (*corev1.Secret, error) {
+	caSecret, ca, err := secrets.LoadCAFromSecret(c, namespace, gardencorev1alpha1.SecretNameCACluster)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching CA secret %s/%s: %v", namespace, gardencorev1alpha1.SecretNameCACluster, err)
 	}
@@ -72,7 +68,7 @@ func GetOrCreateShootKubeconfig(ctx context.Context, client client.Client, certi
 			Namespace: namespace,
 		}
 	)
-	if err := client.Get(ctx, key, &secret); err != nil && !apierrors.IsNotFound(err) {
+	if err := c.Get(ctx, key, &secret); client.IgnoreNotFound(err) != nil {
 		return nil, fmt.Errorf("error preparing kubeconfig: %v", err)
 	}
 
@@ -101,7 +97,7 @@ func GetOrCreateShootKubeconfig(ctx context.Context, client client.Client, certi
 		return nil, fmt.Errorf("error creating kubeconfig: %v", err)
 	}
 
-	return &secret, kutil.CreateOrUpdate(ctx, client, &secret, func() error {
+	_, err = controllerutil.CreateOrUpdate(ctx, c, &secret, func() error {
 		secret.Data = controlPlane.SecretData()
 		if secret.Annotations == nil {
 			secret.Annotations = make(map[string]string)
@@ -109,13 +105,15 @@ func GetOrCreateShootKubeconfig(ctx context.Context, client client.Client, certi
 		secret.Annotations[CAChecksumAnnotation] = computedChecksum
 		return nil
 	})
+
+	return &secret, err
 }
 
 // KubeAPIServerServiceDNS returns a domain name which can be used to contact
 // the Kube-Apiserver deployment of a Shoot within the Seed cluster.
 // e.g. kube-apiserver.shoot--project--prod.svc.cluster.local.
 func kubeAPIServerServiceDNS(namespace string) string {
-	return fmt.Sprintf("%s.%s", common.KubeAPIServerDeploymentName, namespace)
+	return fmt.Sprintf("%s.%s", gardencorev1alpha1.DeploymentNameKubeAPIServer, namespace)
 }
 
 // GetReplicaCount returns the given replica count base on the hibernation status of the shoot.

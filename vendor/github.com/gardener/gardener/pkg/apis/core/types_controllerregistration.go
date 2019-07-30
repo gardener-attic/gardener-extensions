@@ -44,20 +44,24 @@ type ControllerRegistrationList struct {
 
 // ControllerRegistrationSpec is the specification of a ControllerRegistration.
 type ControllerRegistrationSpec struct {
-	// Resources is a list of combinations of kinds (DNS, Infrastructure, Generic, ...) and their actual types
+	// Resources is a list of combinations of kinds (DNSProvider, Infrastructure, Generic, ...) and their actual types
 	// (aws-route53, gcp, auditlog, ...).
 	Resources []ControllerResource
 	// Deployment contains information for how this controller is deployed.
 	Deployment *ControllerDeployment
 }
 
-// ControllerResource is a combination of a kind (DNS, Infrastructure, Generic, ...) and the actual type for this
+// ControllerResource is a combination of a kind (DNSProvider, Infrastructure, Generic, ...) and the actual type for this
 // kind (aws-route53, gcp, auditlog, ...).
 type ControllerResource struct {
 	// Kind is the resource kind.
 	Kind string
 	// Type is the resource type.
 	Type string
+	// GloballyEnabled determines if this resource is required by all Shoot clusters.
+	GloballyEnabled *bool
+	// ReconcileTimeout defines how long Gardener should wait for the resource reconciliation.
+	ReconcileTimeout *metav1.Duration
 }
 
 // ControllerDeployment contains information for how this controller is deployed.

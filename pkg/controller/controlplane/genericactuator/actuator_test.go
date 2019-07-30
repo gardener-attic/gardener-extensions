@@ -28,9 +28,10 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	resourcemanagerv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
+	resourcesv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -85,10 +86,10 @@ var _ = Describe("Actuator", func() {
 			},
 		}
 
-		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: common.CloudProviderSecretName}
+		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
 		cpConfigMapKey = client.ObjectKey{Namespace: namespace, Name: cloudProviderConfigName}
 		cpSecret       = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: common.CloudProviderSecretName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.SecretNameCloudProvider, Namespace: namespace},
 			Data:       map[string][]byte{"foo": []byte("bar")},
 		}
 		cpConfigMap = &corev1.ConfigMap{
@@ -153,13 +154,13 @@ var _ = Describe("Actuator", func() {
 		imageVector = imagevector.ImageVector([]*imagevector.ImageSource{})
 
 		checksums = map[string]string{
-			common.CloudProviderSecretName: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			cloudProviderConfigName:        "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			"cloud-controller-manager":     "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			cloudProviderConfigName:                    "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
 		checksumsNoConfig = map[string]string{
-			common.CloudProviderSecretName: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"cloud-controller-manager":     "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
 
 		configChartValues = map[string]interface{}{
@@ -192,23 +193,25 @@ var _ = Describe("Actuator", func() {
 
 	DescribeTable("#Reconcile",
 		func(configName string, checksums map[string]string) {
+			ctx := context.TODO()
+
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 
-			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+			client.EXPECT().Get(ctx, cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 			if configName != "" {
-				client.EXPECT().Get(context.TODO(), cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
+				client.EXPECT().Get(ctx, cpConfigMapKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cpConfigMap))
 			}
 
-			client.EXPECT().Get(context.TODO(), resourceKeyCPShootChart, createdMRSecretForCPShootChart).Return(errNotFound)
-			client.EXPECT().Create(context.TODO(), createdMRSecretForCPShootChart).Return(nil)
-			client.EXPECT().Get(context.TODO(), resourceKeyCPShootChart, createdMRForCPShootChart).Return(errNotFound)
-			client.EXPECT().Create(context.TODO(), createdMRForCPShootChart).Return(nil)
+			client.EXPECT().Get(ctx, resourceKeyCPShootChart, gomock.AssignableToTypeOf(&corev1.Secret{})).Return(errNotFound)
+			client.EXPECT().Create(ctx, createdMRSecretForCPShootChart.DeepCopy()).Return(nil)
+			client.EXPECT().Get(ctx, resourceKeyCPShootChart, gomock.AssignableToTypeOf(&resourcesv1alpha1.ManagedResource{})).Return(errNotFound)
+			client.EXPECT().Create(ctx, createdMRForCPShootChart.DeepCopy()).Return(nil)
 
-			client.EXPECT().Get(context.TODO(), resourceKeyStorageClassesChart, createdMRSecretForStorageClassesChart).Return(errNotFound)
-			client.EXPECT().Create(context.TODO(), createdMRSecretForStorageClassesChart).Return(nil)
-			client.EXPECT().Get(context.TODO(), resourceKeyStorageClassesChart, createdMRForStorageClassesChart).Return(errNotFound)
-			client.EXPECT().Create(context.TODO(), createdMRForStorageClassesChart).Return(nil)
+			client.EXPECT().Get(ctx, resourceKeyStorageClassesChart, gomock.AssignableToTypeOf(&corev1.Secret{})).Return(errNotFound)
+			client.EXPECT().Create(ctx, createdMRSecretForStorageClassesChart.DeepCopy()).Return(nil)
+			client.EXPECT().Get(ctx, resourceKeyStorageClassesChart, gomock.AssignableToTypeOf(&resourcesv1alpha1.ManagedResource{})).Return(errNotFound)
+			client.EXPECT().Create(ctx, createdMRForStorageClassesChart.DeepCopy()).Return(nil)
 
 			// Create mock Gardener clientset and chart applier
 			gardenerClientset := mockkubernetes.NewMockInterface(ctrl)
@@ -226,11 +229,11 @@ var _ = Describe("Actuator", func() {
 			var configChart util.Chart
 			if configName != "" {
 				cc := mockutil.NewMockChart(ctrl)
-				cc.EXPECT().Apply(context.TODO(), chartApplier, namespace, nil, "", "", configChartValues).Return(nil)
+				cc.EXPECT().Apply(ctx, chartApplier, namespace, nil, "", "", configChartValues).Return(nil)
 				configChart = cc
 			}
 			ccmChart := mockutil.NewMockChart(ctrl)
-			ccmChart.EXPECT().Apply(context.TODO(), chartApplier, namespace, imageVector, seedVersion, shootVersion, controlPlaneChartValues).Return(nil)
+			ccmChart.EXPECT().Apply(ctx, chartApplier, namespace, imageVector, seedVersion, shootVersion, controlPlaneChartValues).Return(nil)
 			ccmShootChart := mockutil.NewMockChart(ctrl)
 			ccmShootChart.EXPECT().Render(chartRenderer, metav1.NamespaceSystem, imageVector, shootVersion, shootVersion, controlPlaneShootChartValues).Return(chartName, []byte(renderedContent), nil)
 			storageClassesChart := mockutil.NewMockChart(ctrl)
@@ -239,11 +242,11 @@ var _ = Describe("Actuator", func() {
 			// Create mock values provider
 			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
 			if configName != "" {
-				vp.EXPECT().GetConfigChartValues(context.TODO(), cp, cluster).Return(configChartValues, nil)
+				vp.EXPECT().GetConfigChartValues(ctx, cp, cluster).Return(configChartValues, nil)
 			}
-			vp.EXPECT().GetControlPlaneChartValues(context.TODO(), cp, cluster, checksums, false).Return(controlPlaneChartValues, nil)
-			vp.EXPECT().GetControlPlaneShootChartValues(context.TODO(), cp, cluster).Return(controlPlaneShootChartValues, nil)
-			vp.EXPECT().GetStorageClassesChartValues(context.TODO(), cp, cluster).Return(storageClassesChartValues, nil)
+			vp.EXPECT().GetControlPlaneChartValues(ctx, cp, cluster, checksums, false).Return(controlPlaneChartValues, nil)
+			vp.EXPECT().GetControlPlaneShootChartValues(ctx, cp, cluster).Return(controlPlaneShootChartValues, nil)
+			vp.EXPECT().GetStorageClassesChartValues(ctx, cp, cluster).Return(storageClassesChartValues, nil)
 
 			// Create actuator
 			a := NewActuator(secrets, configChart, ccmChart, ccmShootChart, storageClassesChart, vp, crf, imageVector, configName, logger)
@@ -253,7 +256,7 @@ var _ = Describe("Actuator", func() {
 			a.(*actuator).chartApplier = chartApplier
 
 			// Call Reconcile method and check the result
-			requeue, err := a.Reconcile(context.TODO(), cp, cluster)
+			requeue, err := a.Reconcile(ctx, cp, cluster)
 			Expect(requeue).To(Equal(false))
 			Expect(err).NotTo(HaveOccurred())
 		},
@@ -263,14 +266,16 @@ var _ = Describe("Actuator", func() {
 
 	DescribeTable("#Delete",
 		func(configName string) {
+			ctx := context.TODO()
+
 			// Create mock clients
 			client := mockclient.NewMockClient(ctrl)
 
-			client.EXPECT().Delete(context.TODO(), deletedMRSecretForStorageClassesChart).Return(nil)
-			client.EXPECT().Delete(context.TODO(), deleteMRForStorageClassesChart).Return(nil)
+			client.EXPECT().Delete(ctx, deletedMRSecretForStorageClassesChart).Return(nil)
+			client.EXPECT().Delete(ctx, deleteMRForStorageClassesChart).Return(nil)
 
-			client.EXPECT().Delete(context.TODO(), deletedMRSecretForCPShootChart).Return(nil)
-			client.EXPECT().Delete(context.TODO(), deleteMRForCPShootChart).Return(nil)
+			client.EXPECT().Delete(ctx, deletedMRSecretForCPShootChart).Return(nil)
+			client.EXPECT().Delete(ctx, deleteMRForCPShootChart).Return(nil)
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
@@ -278,11 +283,11 @@ var _ = Describe("Actuator", func() {
 			var configChart util.Chart
 			if configName != "" {
 				cc := mockutil.NewMockChart(ctrl)
-				cc.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
+				cc.EXPECT().Delete(ctx, client, namespace).Return(nil)
 				configChart = cc
 			}
 			ccmChart := mockutil.NewMockChart(ctrl)
-			ccmChart.EXPECT().Delete(context.TODO(), client, namespace).Return(nil)
+			ccmChart.EXPECT().Delete(ctx, client, namespace).Return(nil)
 
 			// Create actuator
 			a := NewActuator(secrets, configChart, ccmChart, nil, nil, nil, nil, nil, configName, logger)
@@ -290,7 +295,7 @@ var _ = Describe("Actuator", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call Delete method and check the result
-			err = a.Delete(context.TODO(), cp, cluster)
+			err = a.Delete(ctx, cp, cluster)
 			Expect(err).NotTo(HaveOccurred())
 		},
 		Entry("should delete secrets and charts", cloudProviderConfigName),

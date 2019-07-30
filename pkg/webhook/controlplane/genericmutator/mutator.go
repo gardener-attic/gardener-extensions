@@ -23,8 +23,8 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/coreos/go-systemd/unit"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -101,21 +101,21 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	switch x := obj.(type) {
 	case *corev1.Service:
 		switch x.Name {
-		case common.KubeAPIServerDeploymentName:
+		case gardencorev1alpha1.DeploymentNameKubeAPIServer:
 			return m.ensurer.EnsureKubeAPIServerService(ctx, x)
 		}
 	case *appsv1.Deployment:
 		switch x.Name {
-		case common.KubeAPIServerDeploymentName:
+		case gardencorev1alpha1.DeploymentNameKubeAPIServer:
 			return m.ensurer.EnsureKubeAPIServerDeployment(ctx, x)
-		case common.KubeControllerManagerDeploymentName:
+		case gardencorev1alpha1.DeploymentNameKubeControllerManager:
 			return m.ensurer.EnsureKubeControllerManagerDeployment(ctx, x)
-		case common.KubeSchedulerDeploymentName:
+		case gardencorev1alpha1.DeploymentNameKubeScheduler:
 			return m.ensurer.EnsureKubeSchedulerDeployment(ctx, x)
 		}
 	case *appsv1.StatefulSet:
 		switch x.Name {
-		case common.EtcdMainStatefulSetName, common.EtcdEventsStatefulSetName:
+		case gardencorev1alpha1.StatefulSetNameETCDMain, gardencorev1alpha1.StatefulSetNameETCDEvents:
 			// Get cluster info
 			cluster, err := extensionscontroller.GetCluster(ctx, m.client, x.Namespace)
 			if err != nil {

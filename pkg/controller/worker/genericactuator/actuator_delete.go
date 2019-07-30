@@ -62,7 +62,7 @@ func (a *genericActuator) Delete(ctx context.Context, worker *extensionsv1alpha1
 
 	// Get the list of all existing machine deployments.
 	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
-	if err := a.client.List(ctx, client.InNamespace(worker.Namespace), existingMachineDeployments); err != nil {
+	if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
 		return err
 	}
 
@@ -101,7 +101,7 @@ func (a *genericActuator) Delete(ctx context.Context, worker *extensionsv1alpha1
 func (a *genericActuator) markAllMachinesForcefulDeletion(ctx context.Context, namespace string) error {
 	// Mark all existing machines to become forcefully deleted.
 	existingMachines := &machinev1alpha1.MachineList{}
-	if err := a.client.List(ctx, &client.ListOptions{Namespace: namespace}, existingMachines); err != nil {
+	if err := a.client.List(ctx, existingMachines, client.InNamespace(namespace)); err != nil {
 		return err
 	}
 
@@ -161,7 +161,7 @@ func (a *genericActuator) waitUntilMachineResourcesDeleted(ctx context.Context, 
 		// Check whether all machines have been deleted.
 		if countMachines != 0 {
 			existingMachines := &machinev1alpha1.MachineList{}
-			if err := a.client.List(ctx, client.InNamespace(worker.Namespace), existingMachines); err != nil {
+			if err := a.client.List(ctx, existingMachines, client.InNamespace(worker.Namespace)); err != nil {
 				return false, err
 			}
 			countMachines = len(existingMachines.Items)
@@ -171,7 +171,7 @@ func (a *genericActuator) waitUntilMachineResourcesDeleted(ctx context.Context, 
 		// Check whether all machine sets have been deleted.
 		if countMachineSets != 0 {
 			existingMachineSets := &machinev1alpha1.MachineSetList{}
-			if err := a.client.List(ctx, client.InNamespace(worker.Namespace), existingMachineSets); err != nil {
+			if err := a.client.List(ctx, existingMachineSets, client.InNamespace(worker.Namespace)); err != nil {
 				return false, err
 			}
 			countMachineSets = len(existingMachineSets.Items)
@@ -181,7 +181,7 @@ func (a *genericActuator) waitUntilMachineResourcesDeleted(ctx context.Context, 
 		// Check whether all machine deployments have been deleted.
 		if countMachineDeployments != 0 {
 			existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
-			if err := a.client.List(ctx, client.InNamespace(worker.Namespace), existingMachineDeployments); err != nil {
+			if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
 				return false, err
 			}
 			countMachineDeployments = len(existingMachineDeployments.Items)
@@ -198,7 +198,7 @@ func (a *genericActuator) waitUntilMachineResourcesDeleted(ctx context.Context, 
 		// Check whether all machine classes have been deleted.
 		if countMachineClasses != 0 {
 			machineClassList := workerDelegate.MachineClassList()
-			if err := a.client.List(ctx, client.InNamespace(worker.Namespace), machineClassList); err != nil {
+			if err := a.client.List(ctx, machineClassList, client.InNamespace(worker.Namespace)); err != nil {
 				return false, err
 			}
 			machineClasses, err := meta.ExtractList(machineClassList)

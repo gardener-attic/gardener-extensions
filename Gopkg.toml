@@ -9,7 +9,7 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "130a96a2b463d9e5e1047122330f81e5b36501e2"
+  revision = "ef63d93ab5e0f54a3e96bbfb84c8b99a7ca7dcc7"
 
 [[override]]
   name = "github.com/gardener/machine-controller-manager"
@@ -17,35 +17,35 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener-resource-manager"
-  revision = "e0f770704e8c97f8a4a5003f14d88a1ae55253a1"
+  revision = "b1e07bafe74643292ceb13d73ab8f3baeb48d701"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"
-  version = "0.1.10"
+  version = "0.2.0-beta.2"
 
 [[override]]
   name = "k8s.io/api"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apimachinery"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apiserver"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/apiextensions-apiserver"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/client-go"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/code-generator"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/component-base"
@@ -53,11 +53,11 @@ required = [
 
 [[override]]
   name = "k8s.io/kube-aggregator"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 [[override]]
   name = "k8s.io/kubelet"
-  version = "kubernetes-1.13.4"
+  version = "kubernetes-1.14.0"
 
 # use the same version that is referenced by k8s.io/apiserver
 [[override]]
@@ -69,6 +69,10 @@ required = [
 [[override]]
   name = "github.com/russross/blackfriday"
   revision = "300106c228d52c8941d4b3de6054a6062a86dda3"
+
+[[override]]
+  name = "gopkg.in/fsnotify.v1"
+  source = "https://github.com/fsnotify/fsnotify.git"
 
 [[override]]
   name = "github.com/jmespath/go-jmespath"
@@ -85,6 +89,10 @@ required = [
 [[constraint]]
   name = "github.com/Azure/azure-storage-blob-go"
   version = "v0.7.0"
+
+[[constraint]]
+  name = "github.com/jetstack/cert-manager"
+  version = "v0.6.0"
 
 [[constraint]]
   name = "gopkg.in/yaml.v2"

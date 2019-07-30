@@ -26,9 +26,6 @@ const (
 	CloudControllerManagerImageName = "cloud-controller-manager"
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
-	// SecretNameCloudProvider is a constant for the name of a Kubernetes secret object that contains the provider
-	// specific credentials that shall be used to create/delete the shoot.
-	SecretNameCloudProvider = "cloudprovider"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
 	ETCDBackupRestoreImageName = "etcd-backup-restore"
 
