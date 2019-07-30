@@ -15,6 +15,7 @@
 package backupentry
 
 import (
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry"
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
 
@@ -24,19 +25,27 @@ import (
 )
 
 var (
-	// DefaultAddOptions are the default DefaultAddOptions for AddToManager.
-	DefaultAddOptions = controller.Options{}
+	// DefaultAddOptions are the default AddOptions for AddToManager.
+	DefaultAddOptions = AddOptions{}
 
 	logger = log.Log.WithName("azure-backupentry-actuator")
 )
 
+// AddOptions are options to apply when adding the Azure backupentry controller to the manager.
+type AddOptions struct {
+	// Controller are the controller.Options.
+	Controller controller.Options
+	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
+	IgnoreOperationAnnotation bool
+}
+
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options) error {
+func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return backupentry.Add(mgr, backupentry.AddArgs{
 		Actuator:          genericactuator.NewActuator(newActuator(), logger),
-		ControllerOptions: opts,
-		Predicates:        backupentry.DefaultPredicates(),
+		ControllerOptions: opts.Controller,
+		Predicates:        backupentry.DefaultPredicates(azure.Type, opts.IgnoreOperationAnnotation),
 	})
 }
 

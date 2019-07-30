@@ -19,8 +19,6 @@ import (
 
 	"github.com/gardener/gardener-extensions/pkg/util"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -66,7 +64,7 @@ func (o *operationAnnotationWrapper) InjectStopChannel(stopCh <-chan struct{}) e
 // Reconcile removes the Gardener operation annotation if available and calls the inner `Reconcile`.
 func (o *operationAnnotationWrapper) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	obj := o.objectType.DeepCopyObject()
-	if err := o.client.Get(o.ctx, kutil.Key(request.Namespace, request.Name), obj); err != nil && !errors.IsNotFound(err) {
+	if err := o.client.Get(o.ctx, request.NamespacedName, obj); client.IgnoreNotFound(err) != nil {
 		return reconcile.Result{}, err
 	}
 
@@ -77,9 +75,10 @@ func (o *operationAnnotationWrapper) Reconcile(request reconcile.Request) (recon
 
 	annotations := acc.GetAnnotations()
 	if annotations[gardencorev1alpha1.GardenerOperation] == gardencorev1alpha1.GardenerOperationReconcile {
+		withOpAnnotation := obj.DeepCopyObject()
 		delete(annotations, gardencorev1alpha1.GardenerOperation)
 		acc.SetAnnotations(annotations)
-		if err := o.client.Update(o.ctx, obj); err != nil {
+		if err := o.client.Patch(o.ctx, obj, client.MergeFrom(withOpAnnotation)); err != nil {
 			return reconcile.Result{}, err
 		}
 	}

@@ -48,9 +48,21 @@ type AddArgs struct {
 }
 
 // DefaultPredicates returns the default predicates for a controlplane reconciler.
-func DefaultPredicates() []predicate.Predicate {
+func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+	if ignoreOperationAnnotation {
+		return []predicate.Predicate{
+			extensionspredicate.HasType(typeName),
+			extensionspredicate.GenerationChanged(),
+		}
+	}
+
 	return []predicate.Predicate{
-		extensionspredicate.GenerationChanged(),
+		extensionspredicate.HasType(typeName),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.LastOperationNotSuccessful(),
+			extensionspredicate.IsDeleting(),
+		),
 	}
 }
 
