@@ -21,7 +21,7 @@ VERSION                     := $(shell bash -c 'source $(HACK_DIR)/common.sh && 
 LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(IMAGE_TAG)"
 VERIFY                      := true
 LEADER_ELECTION             := false
-IGNORE_OPERATION_ANNOTATION := false
+IGNORE_OPERATION_ANNOTATION := true
 WEBHOOK_CONFIG_URL          := docker.for.mac.localhost
 
 ### Build commands

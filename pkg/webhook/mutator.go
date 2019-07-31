@@ -18,10 +18,17 @@ import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Mutator validates and if needed mutates objects.
 type Mutator interface {
 	// Mutate validates and if needed mutates the given object.
 	Mutate(ctx context.Context, obj runtime.Object) error
+}
+
+// MutatorWithShootClient validates and if needed mutates objects. It needs the shoot client.
+type MutatorWithShootClient interface {
+	// Mutate validates and if needed mutates the given object.
+	Mutate(ctx context.Context, obj runtime.Object, shootClient client.Client) error
 }

@@ -15,18 +15,34 @@
 package webhook
 
 import (
+	"net/http"
+
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
+const (
+	// TargetSeed defines that the webhook is to be installed in the seed.
+	TargetSeed = "seed"
+	// TargetShoot defines that the webhook is to be installed in the shoot.
+	TargetShoot = "shoot"
+)
+
+// Webhook is the specification of a webhook.
 type Webhook struct {
-	Name     string
-	Kind     string
-	Provider string
-	Path     string
-	Types    []runtime.Object
-	Webhook  *admission.Webhook
+	Name                  string
+	Kind                  string
+	Provider              string
+	Path                  string
+	Target                string
+	Types                 []runtime.Object
+	Webhook               *admission.Webhook
+	Handler               http.Handler
+	NamespaceSelectorFunc func(webhook *Webhook) (*metav1.LabelSelector, error)
 }
 
 // FactoryAggregator aggregates various Factory functions.
@@ -63,4 +79,20 @@ func (a *FactoryAggregator) Webhooks(mgr manager.Manager) ([]*Webhook, error) {
 	}
 
 	return webhooks, nil
+}
+
+// buildTypesMap builds a map of the given types keyed by their GroupVersionKind, using the scheme from the given Manager.
+func buildTypesMap(mgr manager.Manager, types []runtime.Object) (map[metav1.GroupVersionKind]runtime.Object, error) {
+	typesMap := make(map[metav1.GroupVersionKind]runtime.Object)
+	for _, t := range types {
+		// Get GVK from the type
+		gvk, err := apiutil.GVKForObject(t, mgr.GetScheme())
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not get GroupVersionKind from object %v", t)
+		}
+
+		// Add the type to the types map
+		typesMap[metav1.GroupVersionKind(gvk)] = t
+	}
+	return typesMap, nil
 }

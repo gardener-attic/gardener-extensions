@@ -15,8 +15,12 @@
 package controlplane
 
 import (
+	"fmt"
+
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -67,12 +71,14 @@ func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) 
 	logger.Info("Creating webhook", "name", getName(args.Kind))
 
 	return &extensionswebhook.Webhook{
-		Name:     getName(args.Kind),
-		Kind:     args.Kind,
-		Provider: args.Provider,
-		Types:    args.Types,
-		Path:     getName(args.Kind),
-		Webhook:  &admission.Webhook{Handler: handler},
+		Name:                  getName(args.Kind),
+		Kind:                  args.Kind,
+		Provider:              args.Provider,
+		Types:                 args.Types,
+		Target:                extensionswebhook.TargetSeed,
+		Path:                  getName(args.Kind),
+		Webhook:               &admission.Webhook{Handler: handler},
+		NamespaceSelectorFunc: BuildSelector,
 	}, nil
 }
 
@@ -85,4 +91,27 @@ func getName(kind string) string {
 	default:
 		return WebhookName
 	}
+}
+
+// BuildSelector creates and returns a LabelSelector for the given webhook kind and provider.
+func BuildSelector(webhook *extensionswebhook.Webhook) (*metav1.LabelSelector, error) {
+	// Determine label selector key from the kind
+	var key string
+	switch webhook.Kind {
+	case KindSeed:
+		key = gardencorev1alpha1.SeedProvider
+	case KindShoot:
+		key = gardencorev1alpha1.ShootProvider
+	case KindBackup:
+		key = gardencorev1alpha1.BackupProvider
+	default:
+		return nil, fmt.Errorf("invalid webhook kind '%s'", webhook.Kind)
+	}
+
+	// Create and return LabelSelector
+	return &metav1.LabelSelector{
+		MatchExpressions: []metav1.LabelSelectorRequirement{
+			{Key: key, Operator: metav1.LabelSelectorOpIn, Values: []string{webhook.Provider}},
+		},
+	}, nil
 }
