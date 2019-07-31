@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/pkg/errors"
+
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/controller/certservice/internal"
 	"github.com/gardener/gardener-extensions/controllers/extension-certificate-service/pkg/imagevector"
@@ -27,6 +29,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/extension"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
+	"github.com/gardener/gardener-resource-manager/pkg/manager"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
@@ -39,13 +42,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
-// ActuatorName is the name of the Certificate Service actuator.
-const ActuatorName = "certificate-service-actuator"
+const (
+	// ActuatorName is the name of the Certificate Service actuator.
+	ActuatorName = "certificate-service-actuator"
+	// ShootResourcesName is the name for resources applied to the shoot cluster.
+	ShootResourcesName = "cert-broker-shoot"
+)
 
 // NewActuator returns an actuator responsible for Extension resources.
 func NewActuator(config config.Configuration) extension.Actuator {
@@ -69,16 +75,6 @@ type actuator struct {
 func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extension) error {
 	namespace := ex.GetNamespace()
 
-	secret, err := util.GetGardenerSecret(ctx, a.client, namespace)
-	if err != nil {
-		return fmt.Errorf("Error getting Gardener secret from namespace %s: %v", namespace, err)
-	}
-
-	kubecfg, err := util.GetKubeconfigFromSecret(secret)
-	if err != nil {
-		return fmt.Errorf("Error creating Kubeconfig to deploy RBAC manifests: %v", err)
-	}
-
 	cluster, err := controller.GetCluster(ctx, a.client, namespace)
 	if err != nil {
 		return err
@@ -90,7 +86,7 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 	}
 
 	if !controller.IsHibernated(cluster.Shoot) {
-		if err := a.createRBAC(ctx, kubecfg); err != nil {
+		if err := a.createRBAC(ctx, cluster, ex.Namespace); err != nil {
 			return err
 		}
 	}
@@ -105,21 +101,7 @@ func (a *actuator) Delete(ctx context.Context, ex *extensionsv1alpha1.Extension)
 		return err
 	}
 
-	secret, err := util.GetGardenerSecret(ctx, a.client, namespace)
-	if err != nil {
-		return fmt.Errorf("Error getting Gardener secret from namespace %s: %v", namespace, err)
-	}
-
-	kubecfg, err := clientcmd.RESTConfigFromKubeConfig(secret.Data["kubeconfig"])
-	if err != nil {
-		return fmt.Errorf("Error creating Kubeconfig to delete RBAC manifests: %v", err)
-	}
-
-	if err := a.deleteRBAC(ctx, kubecfg); err != nil {
-		return err
-	}
-
-	return nil
+	return a.deleteRBAC(ctx, namespace)
 }
 
 // InjectConfig injects the rest config to this actuator.
@@ -232,46 +214,45 @@ func (a *actuator) deleteCertBroker(ctx context.Context, namespace string) error
 	return nil
 }
 
-func (a *actuator) createRBAC(ctx context.Context, config *rest.Config) error {
-	applier, err := kubernetes.NewChartApplierForConfig(config)
+func (a *actuator) createRBAC(ctx context.Context, cluster *controller.Cluster, namespace string) error {
+	chartName := "cert-broker-rbac"
+
+	renderer, err := util.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
-		return fmt.Errorf("failed to create chart applier: %v", err)
+		return errors.Wrap(err, "could not create chart renderer")
 	}
 
-	a.logger.Info("Manifests are being applied")
-	if err := applier.ApplyChart(ctx, filepath.Join(utils.ChartsPath, "cert-broker-rbac"), "", "", nil, nil); err != nil {
-		return fmt.Errorf("error applying manifests: %v", err)
+	rbacChart, err := renderer.Render(filepath.Join(filepath.Join(utils.ChartsPath, chartName)), "", metav1.NamespaceSystem, nil)
+	if err != nil {
+		return errors.Wrapf(err, "could not render chart '%s'", chartName)
+	}
+
+	// Create or update secret containing the rendered rbac manifests
+	if err := manager.
+		NewSecret(a.client).
+		WithNamespacedName(namespace, ShootResourcesName).
+		WithKeyValues(map[string][]byte{ShootResourcesName: rbacChart.Manifest()}).
+		Reconcile(ctx); err != nil {
+		return errors.Wrapf(err, "could not create or update secret '%s/%s' of managed resource containing storage classes chart", namespace, ShootResourcesName)
+	}
+
+	// Create or update managed resource referencing the previously created secret
+	injectedLabels := map[string]string{controller.ShootNoCleanupLabel: "true"}
+
+	if err := manager.
+		NewManagedResource(a.client).
+		WithNamespacedName(namespace, ShootResourcesName).
+		WithInjectedLabels(injectedLabels).
+		WithSecretRef(ShootResourcesName).
+		Reconcile(ctx); err != nil {
+		return errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing storage classes chart", namespace, ShootResourcesName)
 	}
 
 	return nil
 }
 
-func (a *actuator) deleteRBAC(ctx context.Context, config *rest.Config) error {
-	meta := metav1.ObjectMeta{
-		Name: utils.RBACResourceName,
-	}
-
-	objects := []runtime.Object{
-		&rbacv1.ClusterRole{
-			ObjectMeta: meta,
-		},
-		&rbacv1.ClusterRoleBinding{
-			ObjectMeta: meta,
-		},
-	}
-
-	targetClient, err := client.New(config, client.Options{})
-	if err != nil {
-		return fmt.Errorf("Cannot create client for target cluster to delete RBAC manifests: %v", err)
-	}
-
-	for _, obj := range objects {
-		if err := targetClient.Delete(ctx, obj); client.IgnoreNotFound(err) != nil {
-			return err
-		}
-	}
-
-	return nil
+func (a *actuator) deleteRBAC(ctx context.Context, namespace string) error {
+	return controller.DeleteManagedResource(ctx, a.client, namespace, ShootResourcesName)
 }
 
 func (a *actuator) createKubeconfigForCertManager(ctx context.Context, namespace string) (*corev1.Secret, error) {

@@ -28,6 +28,16 @@ rules:
   - patch
   - update
 - apiGroups:
+  - resources.gardener.cloud
+  resources:
+  - managedresources
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+- apiGroups:
   - ""
   resources:
   - namespaces
