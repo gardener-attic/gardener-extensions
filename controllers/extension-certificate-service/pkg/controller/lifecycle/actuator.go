@@ -16,6 +16,7 @@ package lifecycle
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -29,7 +30,10 @@ import (
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
 	certmanagerv1alpha1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -46,8 +50,9 @@ type Actuator interface {
 const ActuatorName = "certificate-service-lifecycle-actuator"
 
 type actuator struct {
-	client client.Client
-	config *rest.Config
+	client  client.Client
+	config  *rest.Config
+	applier kubernetes.ChartApplier
 
 	logger logr.Logger
 }
@@ -67,6 +72,11 @@ func (a *actuator) Reconcile(ctx context.Context, config config.Configuration) e
 // InjectConfig injects the rest config to this actuator.
 func (a *actuator) InjectConfig(config *rest.Config) error {
 	a.config = config
+	applier, err := kubernetes.NewChartApplierForConfig(a.config)
+	if err != nil {
+		return fmt.Errorf("failed to create chart applier: %v", err)
+	}
+	a.applier = applier
 	return nil
 }
 
@@ -105,17 +115,8 @@ func (a *actuator) DeployCertManager(ctx context.Context, config config.Configur
 		return fmt.Errorf("failed to find image version for %s: %v", certManagerName, err)
 	}
 
-	// `applier` must be instantiated newly in every control loop because there might be new API groups.
-	// TODO: (timuthy) Make `applier` an Actuator field and instantiate it once in `InjectConfig`.
-	// Can be done as soon as we reference a Kubernetes `memCacheClient` version >= 1.14.0
-	// https://github.com/kubernetes/kubernetes/commit/c94bee0b8b88851e5f5fd6538b99adff8b3a13f0#diff-498e117e58cba7576e99cf7fd3cb023eR129
-	applier, err := kubernetes.NewChartApplierForConfig(a.config)
-	if err != nil {
-		return fmt.Errorf("failed to create chart applier: %v", err)
-	}
-
 	a.logger.Info("Component is being applied", "component", "cert-manager")
-	return applier.ApplyChartInNamespaceWithOptions(
+	if err := a.applier.ApplyChartInNamespaceWithOptions(
 		ctx,
 		certManagerChartPath,
 		config.Spec.ResourceNamespace,
@@ -123,5 +124,29 @@ func (a *actuator) DeployCertManager(ctx context.Context, config config.Configur
 		configValues,
 		nil,
 		applierOptions,
-	)
+	); err != nil {
+		// TODO: (timuthy) This is an upgrade scenario from Gardener's in-tree deployment to the extension controller. Can be removed in the future.
+		if apierrors.IsInvalid(err) {
+			deployment := &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      certManagerName,
+					Namespace: config.Spec.ResourceNamespace,
+				},
+			}
+			sa := &corev1.ServiceAccount{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "seed-bootstrap-cert-manager",
+					Namespace: config.Spec.ResourceNamespace,
+				},
+			}
+			if err2 := a.client.Delete(ctx, deployment, kubernetes.ForceDeleteOptionFuncs...); err2 != nil {
+				return fmt.Errorf("could not resolve deployment error '%s' by deleting cert-manager deployment '%s'", err, err2)
+			}
+			if err := a.client.Delete(ctx, sa); client.IgnoreNotFound(err) != nil {
+				return err
+			}
+			return errors.New("old Cert-Manager deployment was found and deleted, Cert-Manager will be reinstalled in the next reconciliation loop")
+		}
+	}
+	return nil
 }
