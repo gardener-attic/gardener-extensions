@@ -48,6 +48,8 @@ const (
 	CSIProvisionerImageName = "csi-provisioner"
 	// CSIPluginImageName is the name of the CSI plugin image.
 	CSIPluginImageName = "packet-storage-interface"
+	// MetabotImageName is the name of the metabot image.
+	MetabotImageName = "metabot"
 
 	// TerraformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
 	TerraformerPurposeInfra = "infra"

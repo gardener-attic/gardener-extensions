@@ -49,4 +49,7 @@ images:
   sourceRepository: github.com/gardener/etcd-backup-restore
   repository: eu.gcr.io/gardener-project/gardener/etcdbrctl
   tag: "0.6.4"
-
+- name: metabot
+  sourceRepository: https://github.com/packethost/metabot
+  repository: packethost/metabot
+  tag: latest
