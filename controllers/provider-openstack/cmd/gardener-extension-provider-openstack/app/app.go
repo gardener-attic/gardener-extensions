@@ -65,9 +65,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		infraCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		reconcileOpts = &controllercmd.ReconcilerOptions{
-			IgnoreOperationAnnotation: true,
-		}
+		reconcileOpts = &controllercmd.ReconcilerOptions{}
 
 		// options for the control plane controller
 		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{

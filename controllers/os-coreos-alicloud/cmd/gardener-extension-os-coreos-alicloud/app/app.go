@@ -43,9 +43,7 @@ func NewControllerCommand(ctx context.Context) *cobra.Command {
 		ctrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
-		reconcileOpts = &controllercmd.ReconcilerOptions{
-			IgnoreOperationAnnotation: true,
-		}
+		reconcileOpts = &controllercmd.ReconcilerOptions{}
 
 		controllerSwitches = coreos.ControllerSwitchOptions()
 

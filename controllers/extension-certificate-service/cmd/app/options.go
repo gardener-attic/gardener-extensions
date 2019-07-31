@@ -51,9 +51,7 @@ func NewOptions() *Options {
 			MaxConcurrentReconciles: 5,
 		},
 		controllerSwitches: certificateservicecmd.ControllerSwitches(),
-		reconcileOptions: &controllercmd.ReconcilerOptions{
-			IgnoreOperationAnnotation: true,
-		},
+		reconcileOptions:   &controllercmd.ReconcilerOptions{},
 	}
 
 	options.optionAggregator = controllercmd.NewOptionAggregator(
