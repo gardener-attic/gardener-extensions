@@ -63,7 +63,7 @@ func GetPodNetwork(shoot *gardenv1beta1.Shoot) gardencorev1alpha1.CIDR {
 
 // IsHibernated returns true if the shoot is hibernated, or false otherwise.
 func IsHibernated(shoot *gardenv1beta1.Shoot) bool {
-	return shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled
+	return shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled != nil && *shoot.Spec.Hibernation.Enabled
 }
 
 // GetReplicas returns the woken up replicas of the given Shoot.
