@@ -15,13 +15,21 @@
 package operatingsystemconfig
 
 import (
+	"context"
+
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/sets"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -33,6 +41,8 @@ const (
 	ControllerName = "operatingsystemconfig_controller"
 
 	name = "operatingsystemconfig-controller"
+
+	specFilesSecretFieldKey = "secretRef.name"
 )
 
 // AddArgs are arguments for adding an operatingsystemconfig controller to a manager.
@@ -74,12 +84,63 @@ func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predic
 }
 
 func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate) error {
+	logger := log.Log.WithName(name)
 	ctrl, err := controller.New(ControllerName, mgr, options)
 	if err != nil {
 		return err
 	}
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.OperatingSystemConfig{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
+		return err
+	}
+
+	if err := ctrl.Watch(
+		&source.Kind{Type: &corev1.Secret{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: handler.ToRequestsFunc(func(a handler.MapObject) []reconcile.Request {
+
+				cl := mgr.GetClient()
+				oscLists := &extensionsv1alpha1.OperatingSystemConfigList{}
+				if err := cl.List(
+					context.Background(),
+					oscLists,
+					client.InNamespace(a.Meta.GetNamespace()),
+					client.MatchingField(specFilesSecretFieldKey, a.Meta.GetName())); err != nil {
+					logger.Error(err, "cannot list OperatingSystemConfig with fieldselector", "name", a.Meta.GetName(), "namespace", a.Meta.GetNamespace())
+					return []reconcile.Request{}
+				}
+
+				result := make([]reconcile.Request, 0, len(oscLists.Items))
+				for _, osc := range oscLists.Items {
+					result = append(result, reconcile.Request{
+						NamespacedName: types.NamespacedName{
+							Name:      osc.GetName(),
+							Namespace: osc.GetNamespace(),
+						},
+					})
+				}
+				return result
+			}),
+		}); err != nil {
+		return err
+	}
+
+	if err := mgr.GetFieldIndexer().IndexField(&extensionsv1alpha1.OperatingSystemConfig{}, specFilesSecretFieldKey, func(rawObj runtime.Object) []string {
+		osc, ok := rawObj.(*extensionsv1alpha1.OperatingSystemConfig)
+		if !ok || osc == nil {
+			return nil
+		}
+		secrets := sets.String{}
+		for _, f := range osc.Spec.Files {
+			if sr := f.Content.SecretRef; sr != nil {
+				secrets.Insert(sr.Name)
+			}
+		}
+		if cc := osc.Status.CloudConfig; cc != nil {
+			secrets.Insert(cc.SecretRef.Name)
+		}
+		return secrets.List()
+	}); err != nil {
 		return err
 	}
 
