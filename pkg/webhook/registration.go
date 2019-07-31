@@ -17,15 +17,11 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/pkg/errors"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,72 +32,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
-
-const (
-	// ModeService is a constant for the webhook mode indicating that the controller is running inside of the Kubernetes cluster it
-	// is serving.
-	ModeService = "service"
-	// ModeURL is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
-	// is serving. If this is set then a URL is required for configuration.
-	ModeURL = "url"
-)
-
-// GenerateCertificates generates the certificates that are required for a webhook. It returns the ca bundle, and it
-// stores the server certificate and key locally on the file system.
-func GenerateCertificates(certDir, namespace, name, mode, url string) ([]byte, error) {
-	var (
-		serverKeyPath  = filepath.Join(certDir, "tls.key")
-		serverCertPath = filepath.Join(certDir, "tls.crt")
-	)
-
-	caConfig := &secrets.CertificateSecretConfig{
-		CommonName: "webhook-ca",
-		CertType:   secrets.CACert,
-	}
-
-	caCert, err := caConfig.GenerateCertificate()
-	if err != nil {
-		return nil, err
-	}
-
-	var dnsNames []string
-	switch mode {
-	case ModeURL:
-		dnsNames = []string{
-			url,
-		}
-	case ModeService:
-		dnsNames = []string{
-			fmt.Sprintf("gardener-extension-%s", name),
-			fmt.Sprintf("gardener-extension-%s.%s", name, namespace),
-			fmt.Sprintf("gardener-extension-%s.%s.svc", name, namespace),
-		}
-	}
-
-	serverConfig := &secrets.CertificateSecretConfig{
-		CommonName: name,
-		DNSNames:   dnsNames,
-		CertType:   secrets.ServerCert,
-		SigningCA:  caCert,
-	}
-
-	serverCert, err := serverConfig.GenerateCertificate()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := os.MkdirAll(certDir, 0755); err != nil {
-		return nil, err
-	}
-	if err := ioutil.WriteFile(serverKeyPath, serverCert.PrivateKeyPEM, 0666); err != nil {
-		return nil, err
-	}
-	if err := ioutil.WriteFile(serverCertPath, serverCert.CertificatePEM, 0666); err != nil {
-		return nil, err
-	}
-
-	return caCert.CertificatePEM, nil
-}
 
 // Registers the given webhooks in the Kubernetes cluster targeted by the provided manager.
 func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, providerName string, port int, mode, url string, caBundle []byte, webhooks []*Webhook) error {

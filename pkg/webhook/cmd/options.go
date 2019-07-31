@@ -214,6 +214,8 @@ type AddToManagerConfig struct {
 // AddToManager instantiates all webhooks of this configuration. If there are any webhooks, it creates a
 // webhook server, registers the webhooks and adds the server to the manager. Otherwise, it is a no-op.
 func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) error {
+	ctx := context.Background()
+
 	webhooks, err := c.Switch.WebhooksFactory(mgr)
 	if err != nil {
 		return errors.Wrapf(err, "could not create webhooks")
@@ -226,12 +228,12 @@ func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) error {
 		webhookServer.Register("/"+wh.Name, wh.Webhook)
 	}
 
-	caBundle, err := extensionswebhook.GenerateCertificates(c.Server.CertDir, c.Server.Namespace, c.serverName, c.Server.Mode, c.Server.URL)
+	caBundle, err := extensionswebhook.GenerateCertificates(ctx, mgr, c.Server.CertDir, c.Server.Namespace, c.serverName, c.Server.Mode, c.Server.URL)
 	if err != nil {
 		return errors.Wrap(err, "could not generate certificates")
 	}
 
-	if err := extensionswebhook.RegisterWebhooks(context.Background(), mgr, c.Server.Namespace, c.serverName, webhookServer.Port, c.Server.Mode, c.Server.URL, caBundle, webhooks); err != nil {
+	if err := extensionswebhook.RegisterWebhooks(ctx, mgr, c.Server.Namespace, c.serverName, webhookServer.Port, c.Server.Mode, c.Server.URL, caBundle, webhooks); err != nil {
 		return errors.Wrap(err, "could not create controlplane webhook")
 	}
 
