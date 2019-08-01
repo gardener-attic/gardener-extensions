@@ -15,11 +15,16 @@ spec:
     plural: controlplanes
     singular: controlplane
     kind: ControlPlane
+    shortNames:
+    - cp
   additionalPrinterColumns:
   - name: Type
     type: string
     description: The control plane type.
     JSONPath: .spec.type
+  - name: State
+    type: string
+    JSONPath: .status.lastOperation.state
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp

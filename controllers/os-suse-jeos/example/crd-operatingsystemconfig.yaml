@@ -22,5 +22,11 @@ spec:
     type: string
     description: The type of the operating system configuration.
     JSONPath: .spec.type
+  - name: State
+    type: string
+    JSONPath: .status.lastOperation.state
+  - name: Age
+    type: date
+    JSONPath: .metadata.creationTimestamp
   subresources:
     status: {}

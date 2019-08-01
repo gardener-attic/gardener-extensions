@@ -26,6 +26,9 @@ spec:
     type: string
     description: The region into which the infrastructure should be deployed.
     JSONPath: .spec.region
+  - name: State
+    type: string
+    JSONPath: .status.lastOperation.state
   - name: Age
     type: date
     JSONPath: .metadata.creationTimestamp
