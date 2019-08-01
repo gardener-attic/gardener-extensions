@@ -31,3 +31,52 @@ Please find further resources about out project here:
 * [Our landing page gardener.cloud](https://gardener.cloud/)
 * ["Gardener, the Kubernetes Botanist" blog on kubernetes.io](https://kubernetes.io/blog/2018/05/17/gardener/)
 * [GEP-1 (Gardener Enhancement Proposal) on extensibility](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md)
+
+
+## The Controllers for Openstack
+
+### Control Plane
+
+The control plane controller uses the following provider config for the control plane extension object:
+
+```yaml
+apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
+kind: ControlPlaneConfig
+metadata:
+  name:
+  namespace:
+  
+# the name of the load balancer provider, e.g. haproxy
+loadBalancerProvider: <string>
+# list of load balancer classes
+loadBalancerClasses:
+- name: <string>
+  
+  # ID of subnet in the floating pool network (optional)
+  floatingSubnetID: <string>
+  # ID of the tenant local subnet to be used for (private) load balancer deployment (optional)
+  subnetID: <string>
+  
+
+#  a map of enabled/disabled feature gates for the controller manager
+cloudControllerManager:
+  <feature>: <bool>
+```
+
+The network id of the provider network is taken from the infrastructure status.
+In the shoot it is configured by its name (the floating pool name). By the infrastructure
+part it is mapped to a its id which is configured for the router as provider network.
+The id of the configured provider network is then finally exported in the status.
+
+If the profile configures load balancer classes with dedicated floating subnet ids, these
+subnets must be on the selected floating network. Those classes, or manually maintained
+classes are then put into the soot manifest and finnaly arrive here using the 
+structure shown above.
+
+If the router supports access to multiple provider networks, therevmay be multiple classes
+configured with different provider networks. If not present a required provider network
+in a class will be default from the network used for the chosen flpoating pool.
+
+### Infrastructure
+
+### Worker

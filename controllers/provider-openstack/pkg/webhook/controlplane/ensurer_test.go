@@ -54,14 +54,14 @@ var _ = Describe("Ensurer", func() {
 	var (
 		ctrl *gomock.Controller
 
-		cmKey = client.ObjectKey{Namespace: namespace, Name: openstack.CloudProviderConfigName}
+		cmKey = client.ObjectKey{Namespace: namespace, Name: openstack.CloudProviderConfigCloudControtrollerManagerName}
 		cm    = &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: openstack.CloudProviderConfigName},
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: openstack.CloudProviderConfigCloudControtrollerManagerName},
 			Data:       map[string]string{"abc": "xyz", openstack.CloudProviderConfigMapKey: cloudProviderConfigContent},
 		}
 
 		annotations = map[string]string{
-			"checksum/configmap-" + openstack.CloudProviderConfigName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
+			"checksum/configmap-" + openstack.CloudProviderConfigCloudControtrollerManagerName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
 		}
 
 		kubeControllerManagerLabels = map[string]string{
@@ -129,13 +129,7 @@ var _ = Describe("Ensurer", func() {
 											"--enable-admission-plugins=Priority,NamespaceLifecycle",
 											"--disable-admission-plugins=PersistentVolumeLabel",
 										},
-										VolumeMounts: []corev1.VolumeMount{
-											{Name: openstack.CloudProviderConfigName, MountPath: "?"},
-										},
 									},
-								},
-								Volumes: []corev1.Volume{
-									{Name: openstack.CloudProviderConfigName},
 								},
 							},
 						},
@@ -209,12 +203,12 @@ var _ = Describe("Ensurer", func() {
 											"--external-cloud-volume-plugin=?",
 										},
 										VolumeMounts: []corev1.VolumeMount{
-											{Name: openstack.CloudProviderConfigName, MountPath: "?"},
+											{Name: openstack.CloudProviderConfigKubeControllerManagerName, MountPath: "?"},
 										},
 									},
 								},
 								Volumes: []corev1.Volume{
-									{Name: openstack.CloudProviderConfigName},
+									{Name: openstack.CloudProviderConfigKubeControllerManagerName},
 								},
 							},
 						},

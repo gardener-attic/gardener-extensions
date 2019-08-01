@@ -24,8 +24,8 @@ const (
 
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
-	// HyperkubeImageName is the name of the hyperkube image.
-	HyperkubeImageName = "hyperkube"
+	// CloudControllerImageName is the name of the external OpenStackCloudProvider image.
+	CloudControllerImageName = "openstack-cloud-controller-manager"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
 	ETCDBackupRestoreImageName = "etcd-backup-restore"
 
@@ -47,7 +47,9 @@ const (
 	BucketName = "bucketName"
 
 	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
-	CloudProviderConfigName = "cloud-provider-config"
+	CloudProviderConfigCloudControtrollerManagerName = "cloud-provider-config-cloud-controller-manager"
+	// CloudProviderConfigNameInTree is the name of the original configmap containing the cloud provider config (for compatibility reasons).
+	CloudProviderConfigKubeControllerManagerName = "cloud-provider-config-kube-controller-manager"
 	// CloudProviderConfigMapKey is the key storing the cloud provider config as value in the cloud provider configmap.
 	CloudProviderConfigMapKey = "cloudprovider.conf"
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.

@@ -54,11 +54,15 @@ spec:
         operator: Exists
       containers:
       - name: cloud-controller-manager
-        image: {{ index .Values.images "hyperkube" }}
+        image: {{ index .Values.images "openstack-cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:
+        {{- if semverCompare ">= 1.15" .Values.kubernetesVersion }}
+        - /bin/openstack-cloud-controller-manager
+        {{- else }}
         - /hyperkube
         - cloud-controller-manager
+        {{- end}}
         - --allocate-node-cidrs=true
         - --cloud-provider=openstack
         - --cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf
@@ -126,4 +130,8 @@ spec:
           secretName: cloud-controller-manager-server
       - name: cloud-provider-config
         configMap:
-          name: cloud-provider-config
+          {{- if semverCompare ">= 1.15" .Values.kubernetesVersion }}
+          name: cloud-provider-config-cloud-controller-manager
+          {{- else }}
+          name: cloud-provider-config-kube-controller-manager
+          {{- end }}

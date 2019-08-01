@@ -12,7 +12,7 @@ for images_yaml_path in "$dir/../controllers/"*"/charts/images.yaml"; do
   controller_dir="$(basename "$(dirname "$(dirname "${images_yaml_path}")")")"
 
   eval "$(jq -r ".images |
-    map(if (.name == \"hyperkube\") then
+    map(if (.name == \"hyperkube\" or .repository == \"k8s.gcr.io/hyperkube\") then
       \"--generic-dependencies '{\\\"name\\\": \\\"\" + .name + \"\\\", \\\"version\\\": \\\"\" + .tag + \"\\\"}'\"
     elif (.repository | startswith(\"eu.gcr.io/gardener-project/gardener\")) then
       \"--component-dependencies '{\\\"name\\\": \\\"\" + .sourceRepository + \"\\\", \\\"version\\\": \\\"\" + .tag + \"\\\"}'\"
