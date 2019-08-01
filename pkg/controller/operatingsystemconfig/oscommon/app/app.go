@@ -43,9 +43,7 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 			MaxConcurrentReconciles: 5,
 		}
 
-		reconcileOpts = &controllercmd.ReconcilerOptions{
-			IgnoreOperationAnnotation: true,
-		}
+		reconcileOpts = &controllercmd.ReconcilerOptions{}
 
 		controllerSwitches = oscommoncmd.SwitchOptions(osName, generator)
 

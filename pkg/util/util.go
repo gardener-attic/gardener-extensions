@@ -17,14 +17,10 @@ package util
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/gardener/gardener/pkg/utils"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -47,18 +43,6 @@ func ComputeChecksum(data interface{}) string {
 		return ""
 	}
 	return utils.ComputeSHA256Hex(jsonString)
-}
-
-// GetKubeconfigFromSecret gets the Kubeconfig from the passed secret.
-func GetKubeconfigFromSecret(secret *corev1.Secret) (*restclient.Config, error) {
-	var (
-		key            = "kubeconfig"
-		kubeconfig, ok = secret.Data[key]
-	)
-	if !ok {
-		return nil, fmt.Errorf("Key %s not available in map", key)
-	}
-	return clientcmd.RESTConfigFromKubeConfig(kubeconfig)
 }
 
 // ObjectName returns the name of the given object in the format <namespace>/<name>

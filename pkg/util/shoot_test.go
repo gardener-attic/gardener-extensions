@@ -53,45 +53,6 @@ var _ = Describe("Shoot", func() {
 		ctrl.Finish()
 	})
 
-	Describe("#GetGardenerSecret", func() {
-		var (
-			c         *mockclient.MockClient
-			ctx       context.Context
-			namespace string
-		)
-
-		BeforeEach(func() {
-			c = mockclient.NewMockClient(ctrl)
-			ctx = context.TODO()
-			namespace = "shoot--foo--bar"
-		})
-
-		It("should return the Gardener secret", func() {
-			c.EXPECT().Get(ctx, kutil.Key(namespace, gardencorev1alpha1.SecretNameGardener), gomock.AssignableToTypeOf(&corev1.Secret{})).
-				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
-					*actual = corev1.Secret{}
-					return nil
-				})
-
-			secret, err := util.GetGardenerSecret(ctx, c, namespace)
-
-			Expect(secret).ToNot(BeNil())
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("should fail to return the Gardener secret", func() {
-			c.EXPECT().Get(ctx, kutil.Key(namespace, gardencorev1alpha1.SecretNameGardener), gomock.AssignableToTypeOf(&corev1.Secret{})).
-				DoAndReturn(func(_ context.Context, _ client.ObjectKey, actual *corev1.Secret) error {
-					return apierrors.NewNotFound(schema.GroupResource{}, gardencorev1alpha1.SecretNameGardener)
-				})
-
-			secret, err := util.GetGardenerSecret(ctx, c, namespace)
-
-			Expect(secret).To(BeNil())
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
 	Describe("#GetOrCreateShootKubeconfig", func() {
 		var (
 			c         *mockclient.MockClient

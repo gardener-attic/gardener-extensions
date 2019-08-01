@@ -20,7 +20,6 @@ import (
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 
 	"github.com/Masterminds/semver"
@@ -35,16 +34,6 @@ import (
 
 // CAChecksumAnnotation is a resource annotation used to store the checksum of a certificate authority.
 const CAChecksumAnnotation = "checksum/ca"
-
-// GetGardenerSecret gets the secret from the given namespace which contains certificate information
-// as well as the Kubeconfig for a Shoot cluster.
-func GetGardenerSecret(ctx context.Context, client client.Client, namespace string) (*corev1.Secret, error) {
-	secret := &corev1.Secret{}
-	if err := client.Get(ctx, kutil.Key(namespace, gardencorev1alpha1.SecretNameGardener), secret); err != nil {
-		return nil, err
-	}
-	return secret, nil
-}
 
 // GetOrCreateShootKubeconfig gets or creates a Kubeconfig for a Shoot cluster which has a running control plane in the given `namespace`.
 // If the CA of an existing Kubeconfig has changed, it creates a new Kubeconfig.
