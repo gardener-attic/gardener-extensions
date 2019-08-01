@@ -305,6 +305,11 @@ var _ = Describe("Ensurer", func() {
     --config=/var/lib/kubelet/config/kubelet \
     --cloud-provider=aws`,
 					},
+					{
+						Section: "Service",
+						Name:    "ExecStartPre",
+						Value:   `/bin/sh -c 'hostnamectl set-hostname $(hostname -f)'`,
+					},
 				}
 			)
 
