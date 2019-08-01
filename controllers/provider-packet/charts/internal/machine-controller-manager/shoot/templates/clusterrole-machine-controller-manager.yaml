@@ -11,6 +11,8 @@ rules:
   - endpoints
   - replicationcontrollers
   - pods
+  - persistentvolumes
+  - persistentvolumeclaims
   verbs:
   - create
   - delete
