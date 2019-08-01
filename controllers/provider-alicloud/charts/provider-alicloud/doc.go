@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate ../../../../hack/generate-controller-registration.sh provider-alicloud . ../../example/controller-registration.yaml Infrastructure:alicloud ControlPlane:alicloud Worker:alicloud
+//go:generate ../../../../hack/generate-controller-registration.sh provider-alicloud . ../../example/controller-registration.yaml BackupBucket:alicloud BackupEntry:alicloud ControlPlane:alicloud Infrastructure:alicloud Worker:alicloud
 
 // Package chart enables go:generate support for generating the correct controller registration.
 package chart

@@ -86,6 +86,14 @@
   version = "1.60.71"
 
 [[projects]]
+  digest = "1:a25823491c2f7a1ca118425e7370464bfa0559852ba40a5dfb3fe19cd1ad1216"
+  name = "github.com/aliyun/aliyun-oss-go-sdk"
+  packages = ["oss"]
+  pruneopts = "NUT"
+  revision = "a545cb0a44c7142a037e800b1424b875787b94e7"
+  version = "v2.0.1"
+
+[[projects]]
   digest = "1:680b63a131506e668818d630d3ca36123ff290afa0afc9f4be21940adca3f27d"
   name = "github.com/appscode/jsonpatch"
   packages = ["."]
@@ -1493,6 +1501,7 @@
     "github.com/Azure/azure-storage-blob-go/azblob",
     "github.com/Masterminds/semver",
     "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc",
+    "github.com/aliyun/aliyun-oss-go-sdk/oss",
     "github.com/appscode/jsonpatch",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",

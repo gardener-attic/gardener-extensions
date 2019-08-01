@@ -127,12 +127,7 @@ func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *e
 		return nil, nil, err
 	}
 
-	secret, err := extensioncontroller.GetSecretByReference(ctx, a.client, &infra.Spec.SecretRef)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	credentials, err := alicloud.ReadSecretCredentials(secret)
+	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, a.client, &infra.Spec.SecretRef)
 	if err != nil {
 		return nil, nil, err
 	}

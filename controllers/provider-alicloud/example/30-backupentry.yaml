@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backupprovider
+  namespace: garden
+type: Opaque
+data:
+# accessKeyID: base64(access-key-id)
+# accessKeySecret: base64(access-key-secret)
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: BackupEntry
+metadata:
+  name: shoot--foo--bar--sd34f
+spec:
+  type: alicloud
+  region: eu-west-1
+  bucketName: cloud--ali--fg2d6
+  secretRef:
+    name: backupprovider
+    namespace: garden

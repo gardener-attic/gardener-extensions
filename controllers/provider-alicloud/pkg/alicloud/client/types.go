@@ -15,6 +15,8 @@
 package client
 
 import (
+	"context"
+
 	alicloudvpc "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 )
 
@@ -35,4 +37,11 @@ type VPC interface {
 type Factory interface {
 	// NewVPC creates a new VPC client from the given credentials and region.
 	NewVPC(region, accessKeyID, accessKeySecret string) (VPC, error)
+}
+
+// Storage is an interface which must be implemented by alicloud oss storage clients.
+type Storage interface {
+	DeleteObjectsWithPrefix(ctx context.Context, bucketName, prefix string) error
+	CreateBucketIfNotExists(ctx context.Context, bucketName string) error
+	DeleteBucketIfExists(ctx context.Context, bucketName string) error
 }
