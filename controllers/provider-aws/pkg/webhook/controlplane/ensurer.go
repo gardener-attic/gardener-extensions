@@ -165,6 +165,11 @@ func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, opts []*u
 		command = ensureKubeletCommandLineArgs(command)
 		opt.Value = controlplane.SerializeCommandLine(command, 1, " \\\n    ")
 	}
+	opts = controlplane.EnsureUnitOption(opts, &unit.UnitOption{
+		Section: "Service",
+		Name:    "ExecStartPre",
+		Value:   `/bin/sh -c 'hostnamectl set-hostname $(hostname -f)'`,
+	})
 	return opts, nil
 }
 
