@@ -10,7 +10,7 @@ controllers:
   backupbucket:
     concurrentSyncs: 5
   backupentry:
-    concurrentSyncs:
+    concurrentSyncs: 5
   controlplane:
     concurrentSyncs: 5
   infrastructure:
