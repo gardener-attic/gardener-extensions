@@ -42,6 +42,7 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	case *corev1.ConfigMap:
 		switch x.Name {
 		case "addons-nginx-ingress-controller":
+			extensionswebhook.LogMutation(logger, x.Kind, x.Namespace, x.Name)
 			return m.mutateNginxIngressControllerConfigMap(ctx, x)
 		}
 	}

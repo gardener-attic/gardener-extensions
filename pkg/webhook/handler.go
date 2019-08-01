@@ -100,9 +100,6 @@ func handle(ctx context.Context, req admission.Request, r *http.Request, f mutat
 	}
 
 	// Mutate the resource
-	logger.Info("Mutating resource", "kind", ar.Kind.String(), "namespace", accessor.GetNamespace(),
-		"name", accessor.GetName(), "operation", ar.Operation)
-
 	newObj := obj.DeepCopyObject()
 	if err = f(ctx, newObj, r); err != nil {
 		return admission.Errored(http.StatusInternalServerError,
