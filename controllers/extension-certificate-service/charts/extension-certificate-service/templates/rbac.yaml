@@ -32,11 +32,7 @@ rules:
   resources:
   - managedresources
   verbs:
-  - get
-  - list
-  - watch
-  - patch
-  - update
+  - "*"
 - apiGroups:
   - ""
   resources:
