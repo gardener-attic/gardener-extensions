@@ -58,6 +58,10 @@ type Ensurer interface {
 	ShouldProvisionKubeletCloudProviderConfig() bool
 	// EnsureKubeletCloudProviderConfig ensures that the cloud provider config file content conforms to the provider requirements.
 	EnsureKubeletCloudProviderConfig(context.Context, *string, string) error
+	// EnsureAdditionalUnits ensures additional systemd units
+	EnsureAdditionalUnits(context.Context, *[]extensionsv1alpha1.Unit) error
+	// EnsureAdditionalFile ensures additional systemd files
+	EnsureAdditionalFiles(context.Context, *[]extensionsv1alpha1.File) error
 }
 
 // NewMutator creates a new controlplane mutator.
@@ -128,6 +132,7 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 		if x.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {
 			return m.mutateOperatingSystemConfig(ctx, x)
 		}
+		return nil
 	}
 	return nil
 }
@@ -159,6 +164,14 @@ func (m *mutator) mutateOperatingSystemConfig(ctx context.Context, osc *extensio
 		if err := m.ensureKubeletCloudProviderConfig(ctx, osc); err != nil {
 			return err
 		}
+	}
+
+	if err := m.ensurer.EnsureAdditionalFiles(ctx, &osc.Spec.Files); err != nil {
+		return err
+	}
+
+	if err := m.ensurer.EnsureAdditionalUnits(ctx, &osc.Spec.Units); err != nil {
+		return err
 	}
 
 	return nil

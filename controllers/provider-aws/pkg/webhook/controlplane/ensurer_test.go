@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/coreos/go-systemd/unit"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
@@ -251,6 +252,37 @@ var _ = Describe("Ensurer", func() {
 			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep, annotations, kubeControllerManagerLabels)
+		})
+	})
+
+	Describe("#EnsureAdditionalUnits", func() {
+		It("should add additional units to the current ones", func() {
+			var (
+				customMTUUnitContent = `[Unit]
+    Description=Apply a custom MTU to eth0
+    Requires=eth0.network
+
+[Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/usr/bin/ip link set dev eth0 mtu 1460`
+
+				command = "start"
+				trueVar = true
+
+				oldUnit        = extensionsv1alpha1.Unit{Name: "oldunit"}
+				additionalUnit = extensionsv1alpha1.Unit{Name: "custom-mtu.service", Enable: &trueVar, Command: &command, Content: &customMTUUnitContent}
+
+				units = []extensionsv1alpha1.Unit{oldUnit}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+
+			// Call EnsureAdditionalUnits method and check the result
+			err := ensurer.EnsureAdditionalUnits(context.TODO(), &units)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(units).To(ConsistOf(oldUnit, additionalUnit))
 		})
 	})
 

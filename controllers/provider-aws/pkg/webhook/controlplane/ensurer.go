@@ -19,12 +19,13 @@ import (
 	"context"
 	"regexp"
 
+	"github.com/coreos/go-systemd/unit"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	controlplaneutils "github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-
-	"github.com/coreos/go-systemd/unit"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -96,7 +97,6 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 }
 
 func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
-	// TODO: These labels should be exposed as constants in Gardener
 	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
 	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
 	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs, gardencorev1alpha1.LabelNetworkPolicyAllowed)
@@ -203,5 +203,30 @@ func (e *ensurer) EnsureKubernetesGeneralConfiguration(ctx context.Context, data
 	buf.WriteString("net.ipv4.neigh.default.gc_thresh1 = 0")
 
 	*data = buf.String()
+	return nil
+}
+
+// EnsureAdditionalUnits ensures that additional required system units are added.
+func (e *ensurer) EnsureAdditionalUnits(ctx context.Context, units *[]extensionsv1alpha1.Unit) error {
+	var (
+		command              = "start"
+		trueVar              = true
+		customMTUUnitContent = `[Unit]
+    Description=Apply a custom MTU to eth0
+    Requires=eth0.network
+
+[Service]
+    Type=oneshot
+    RemainAfterExit=yes
+    ExecStart=/usr/bin/ip link set dev eth0 mtu 1460`
+	)
+
+	controlplaneutils.AppendUniqueUnit(units, extensionsv1alpha1.Unit{
+		Name:    "custom-mtu.service",
+		Enable:  &trueVar,
+		Command: &command,
+		Content: &customMTUUnitContent,
+	})
+
 	return nil
 }
