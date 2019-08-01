@@ -18,6 +18,7 @@ import (
 	"context"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/coreos/go-systemd/unit"
 	appsv1 "k8s.io/api/apps/v1"
@@ -75,5 +76,15 @@ func (e *NoopEnsurer) ShouldProvisionKubeletCloudProviderConfig() bool {
 
 // EnsureKubeletCloudProviderConfig ensures that the cloud provider config file conforms to the provider requirements.
 func (e *NoopEnsurer) EnsureKubeletCloudProviderConfig(context.Context, *string, string) error {
+	return nil
+}
+
+// EnsureAdditionalUnits ensures that additional required system units are added.
+func (e *NoopEnsurer) EnsureAdditionalUnits(ctx context.Context, units *[]extensionsv1alpha1.Unit) error {
+	return nil
+}
+
+// EnsureAdditionalFiles ensures that additional required system files are added.
+func (e *NoopEnsurer) EnsureAdditionalFiles(ctx context.Context, files *[]extensionsv1alpha1.File) error {
 	return nil
 }

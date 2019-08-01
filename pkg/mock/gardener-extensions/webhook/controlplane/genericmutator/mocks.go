@@ -8,6 +8,7 @@ import (
 	context "context"
 	unit "github.com/coreos/go-systemd/unit"
 	controller "github.com/gardener/gardener-extensions/pkg/controller"
+	v1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
@@ -36,6 +37,34 @@ func NewMockEnsurer(ctrl *gomock.Controller) *MockEnsurer {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockEnsurer) EXPECT() *MockEnsurerMockRecorder {
 	return m.recorder
+}
+
+// EnsureAdditionalFiles mocks base method
+func (m *MockEnsurer) EnsureAdditionalFiles(arg0 context.Context, arg1 *[]v1alpha1.File) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureAdditionalFiles", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureAdditionalFiles indicates an expected call of EnsureAdditionalFiles
+func (mr *MockEnsurerMockRecorder) EnsureAdditionalFiles(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureAdditionalFiles", reflect.TypeOf((*MockEnsurer)(nil).EnsureAdditionalFiles), arg0, arg1)
+}
+
+// EnsureAdditionalUnits mocks base method
+func (m *MockEnsurer) EnsureAdditionalUnits(arg0 context.Context, arg1 *[]v1alpha1.Unit) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureAdditionalUnits", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnsureAdditionalUnits indicates an expected call of EnsureAdditionalUnits
+func (mr *MockEnsurerMockRecorder) EnsureAdditionalUnits(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureAdditionalUnits", reflect.TypeOf((*MockEnsurer)(nil).EnsureAdditionalUnits), arg0, arg1)
 }
 
 // EnsureETCDStatefulSet mocks base method

@@ -24,6 +24,16 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// AppendUniqueUnit appens a unit only if it does not exist.
+func AppendUniqueUnit(units *[]extensionsv1alpha1.Unit, unit extensionsv1alpha1.Unit) {
+	for _, un := range *units {
+		if un.Name == unit.Name {
+			return
+		}
+	}
+	*units = append(*units, unit)
+}
+
 // DeserializeCommandLine de-serializes the given string to a slice of command line elements by splitting it
 // on white space and the "\" character.
 func DeserializeCommandLine(s string) []string {

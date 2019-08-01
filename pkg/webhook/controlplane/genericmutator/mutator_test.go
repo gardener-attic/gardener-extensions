@@ -325,6 +325,8 @@ var _ = Describe("Mutator", func() {
 						"Foo": true,
 					},
 				}
+				additionalUnit = extensionsv1alpha1.Unit{Name: "custom-mtu.service"}
+				additionalFile = extensionsv1alpha1.File{Path: "/test/path"}
 			)
 
 			// Create mock ensurer
@@ -342,6 +344,17 @@ var _ = Describe("Mutator", func() {
 					return nil
 				},
 			)
+			ensurer.EXPECT().EnsureAdditionalUnits(context.TODO(), &osc.Spec.Units).DoAndReturn(
+				func(ctx context.Context, oscUnits *[]extensionsv1alpha1.Unit) error {
+					*oscUnits = append(*oscUnits, additionalUnit)
+					return nil
+				})
+			ensurer.EXPECT().EnsureAdditionalFiles(context.TODO(), &osc.Spec.Files).DoAndReturn(
+				func(ctx context.Context, oscFiles *[]extensionsv1alpha1.File) error {
+					*oscFiles = append(*oscFiles, additionalFile)
+					return nil
+				})
+
 			ensurer.EXPECT().ShouldProvisionKubeletCloudProviderConfig().Return(true)
 			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), util.StringPtr(""), osc.Namespace).DoAndReturn(
 				func(ctx context.Context, data *string, _ string) error {
@@ -378,20 +391,29 @@ var _ = Describe("Mutator", func() {
 })
 
 func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
-	u := controlplane.UnitWithName(osc.Spec.Units, "kubelet.service")
-	Expect(u).To(Not(BeNil()))
-	Expect(u.Content).To(Equal(util.StringPtr(newServiceContent)))
-	f := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/config/kubelet")
-	Expect(f).To(Not(BeNil()))
-	Expect(f.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
-	g := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf")
-	Expect(g).To(Not(BeNil()))
-	Expect(g.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
-	c := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/cloudprovider.conf")
-	Expect(c).To(Not(BeNil()))
-	Expect(c.Path).To(Equal(cloudProviderConfigPath))
-	Expect(c.Permissions).To(Equal(util.Int32Ptr(0644)))
-	Expect(c.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconfEncoded, Encoding: encoding}))
+	kubeletUnit := controlplane.UnitWithName(osc.Spec.Units, "kubelet.service")
+	Expect(kubeletUnit).To(Not(BeNil()))
+	Expect(kubeletUnit.Content).To(Equal(util.StringPtr(newServiceContent)))
+
+	customMTU := controlplane.UnitWithName(osc.Spec.Units, "custom-mtu.service")
+	Expect(customMTU).To(Not(BeNil()))
+
+	customFile := controlplane.FileWithPath(osc.Spec.Files, "/test/path")
+	Expect(customFile).To(Not(BeNil()))
+
+	kubeletFile := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/config/kubelet")
+	Expect(kubeletFile).To(Not(BeNil()))
+	Expect(kubeletFile.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
+
+	general := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf")
+	Expect(general).To(Not(BeNil()))
+	Expect(general.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
+
+	cloudProvider := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/cloudprovider.conf")
+	Expect(cloudProvider).To(Not(BeNil()))
+	Expect(cloudProvider.Path).To(Equal(cloudProviderConfigPath))
+	Expect(cloudProvider.Permissions).To(Equal(util.Int32Ptr(0644)))
+	Expect(cloudProvider.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconfEncoded, Encoding: encoding}))
 }
 
 func clientGet(result runtime.Object) interface{} {

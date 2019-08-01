@@ -23,4 +23,29 @@ for images_yaml_path in "$dir/../controllers/"*"/charts/images.yaml"; do
     join(\" \\\\\n\")" <<< "$images")"
 done
 
+for image_tpl_path in "$dir/../controllers/"*"/charts/"*"/templates/_images.tpl"; do
+  outputFile=$(sed 's/{{-//' $image_tpl_path | sed 's/}}//' | sed 's/define//' | sed 's/-//' | sed 's/end//' | sed 's/"//' | sed 's/"//' |sed 's/image.//' |  sed -e 's/^[ \t]*//' | awk -v RS= '{for (i=1; i<=NF; i++) printf "%s%s", $i, (i==NF?"\n":" ")}')
+  echo "enriching creating component descriptor from ${image_tpl_path}"
+  controller_dir="$(basename "$(dirname "$(dirname "${image_tpl_path}")")")"
+
+  while read p; do
+    line="$(echo -e "$p")"
+    IFS=' ' read -r -a array <<< "$line"
+    IFS=': ' read -r -a imageAndTag <<< ${array[1]}
+
+    NAME=${array[0]}
+    REPOSITORY=${imageAndTag[0]}
+    TAG=${imageAndTag[1]}
+
+    gardener="eu.gcr.io/gardener-project/gardener"
+    if [[ "$NAME" == "hyperkube" ]]; then
+      ${ADD_DEPENDENCIES_CMD} --generic-dependencies "{\"name\": \"$NAME\", \"version\": \"$TAG\"}"
+    elif [[ $REPOSITORY =~ "eu.gcr.io/gardener-project/gardener*" ]]; then
+      ${ADD_DEPENDENCIES_CMD} --generic-dependencies "{\"name\": \"$NAME\", \"version\": \"$TAG\"}"
+    else
+      ${ADD_DEPENDENCIES_CMD} --container-image-dependencies "{\"name\": \"${controller_dir}-${NAME}\", \"image_reference\": \"${REPOSITORY}:${TAG}\", \"version\": \"$TAG\"}"
+    fi
+  done < <(echo "$outputFile")
+done
+
 cp "${BASE_DEFINITION_PATH}" "${descriptor_out_file}"
