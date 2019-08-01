@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	openstacktypes "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/utils"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
@@ -42,8 +43,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/utils"
 )
 
 // Object names
@@ -94,7 +93,7 @@ var configChart = &chart.Chart{
 	Objects: []*chart.Object{
 		{
 			Type: &corev1.ConfigMap{},
-			Name: openstacktypes.CloudProviderConfigCloudControtrollerManagerName,
+			Name: openstacktypes.CloudProviderConfigCloudControllerManagerName,
 		},
 	},
 }
@@ -312,7 +311,7 @@ func getCCMChartValues(
 			"checksum/secret-cloud-controller-manager":                          checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server":                   checksums[cloudControllerManagerServerName],
 			"checksum/secret-cloudprovider":                                     checksums[gardencorev1alpha1.SecretNameCloudProvider],
-			"checksum/configmap-cloud-provider-config-cloud-controller-manager": checksums[openstacktypes.CloudProviderConfigCloudControtrollerManagerName],
+			"checksum/configmap-cloud-provider-config-cloud-controller-manager": checksums[openstacktypes.CloudProviderConfigCloudControllerManagerName],
 		},
 	}
 

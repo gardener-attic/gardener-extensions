@@ -54,14 +54,15 @@ var _ = Describe("Ensurer", func() {
 	var (
 		ctrl *gomock.Controller
 
-		cmKey = client.ObjectKey{Namespace: namespace, Name: openstack.CloudProviderConfigCloudControtrollerManagerName}
-		cm    = &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: openstack.CloudProviderConfigCloudControtrollerManagerName},
+		cmKey    = client.ObjectKey{Namespace: namespace, Name: openstack.CloudProviderConfigCloudControllerManagerName}
+		cmKCMKey = client.ObjectKey{Namespace: namespace, Name: openstack.CloudProviderConfigKubeControllerManagerName}
+		cm       = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: openstack.CloudProviderConfigCloudControllerManagerName},
 			Data:       map[string]string{"abc": "xyz", openstack.CloudProviderConfigMapKey: cloudProviderConfigContent},
 		}
 
 		annotations = map[string]string{
-			"checksum/configmap-" + openstack.CloudProviderConfigCloudControtrollerManagerName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
+			"checksum/configmap-" + openstack.CloudProviderConfigCloudControllerManagerName: "2ac8b96caad089f7b0217f0b2916ff4e8d4346655746de55178207e180cf0bbe",
 		}
 
 		kubeControllerManagerLabels = map[string]string{
@@ -303,10 +304,10 @@ var _ = Describe("Ensurer", func() {
 			existingData = util.StringPtr("[LoadBalancer]\nlb-version=v2\nlb-provider:\n")
 			emptydata    = util.StringPtr("")
 		)
-		It("cloud provider configmap do not exist", func() {
+		It("cloud provider configmap does not exist", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).Return(errors.NewNotFound(schema.GroupResource{}, cm.Name))
+			client.EXPECT().Get(context.TODO(), cmKCMKey, &corev1.ConfigMap{}).Return(errors.NewNotFound(schema.GroupResource{}, cm.Name))
 
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
@@ -321,7 +322,7 @@ var _ = Describe("Ensurer", func() {
 		It("should create element containing cloud provider config content", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+			client.EXPECT().Get(context.TODO(), cmKCMKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
 
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
@@ -336,7 +337,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing element containing cloud provider config content", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), cmKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+			client.EXPECT().Get(context.TODO(), cmKCMKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
 
 			// Create ensurer
 			ensurer := NewEnsurer(logger)
@@ -360,10 +361,10 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment, annotations map[string
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ","))
 	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ",")))
-	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigVolumeMount))
+	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigKubeControllerManagerVolumeMount))
 
 	// Check that the Pod spec contains all needed volumes
-	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigVolume))
+	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigKubeControllerManagerVolume))
 
 	// Check that the Pod template contains all needed checksum annotations
 	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))
@@ -377,10 +378,10 @@ func checkKubeControllerManagerDeployment(dep *appsv1.Deployment, annotations, l
 	Expect(c.Command).To(ContainElement("--cloud-provider=external"))
 	Expect(c.Command).To(ContainElement("--cloud-config=/etc/kubernetes/cloudprovider/cloudprovider.conf"))
 	Expect(c.Command).To(ContainElement("--external-cloud-volume-plugin=openstack"))
-	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigVolumeMount))
+	Expect(c.VolumeMounts).To(ContainElement(cloudProviderConfigKubeControllerManagerVolumeMount))
 
 	// Check that the Pod spec contains all needed volumes
-	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigVolume))
+	Expect(dep.Spec.Template.Spec.Volumes).To(ContainElement(cloudProviderConfigKubeControllerManagerVolume))
 
 	// Check that the Pod template contains all needed checksum annotations
 	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))

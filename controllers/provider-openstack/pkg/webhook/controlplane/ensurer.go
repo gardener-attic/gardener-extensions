@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
@@ -101,14 +102,14 @@ func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
 
 var (
 	cloudProviderConfigVolumeMount = corev1.VolumeMount{
-		Name:      openstack.CloudProviderConfigCloudControtrollerManagerName,
+		Name:      openstack.CloudProviderConfigCloudControllerManagerName,
 		MountPath: "/etc/kubernetes/cloudprovider",
 	}
 	cloudProviderConfigVolume = corev1.Volume{
-		Name: openstack.CloudProviderConfigCloudControtrollerManagerName,
+		Name: openstack.CloudProviderConfigCloudControllerManagerName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: openstack.CloudProviderConfigCloudControtrollerManagerName},
+				LocalObjectReference: corev1.LocalObjectReference{Name: openstack.CloudProviderConfigCloudControllerManagerName},
 			},
 		},
 	}
@@ -135,7 +136,7 @@ func ensureVolumes(ps *corev1.PodSpec) {
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
-	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigCloudControtrollerManagerName)
+	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, openstack.CloudProviderConfigCloudControllerManagerName)
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
