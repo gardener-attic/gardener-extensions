@@ -101,18 +101,6 @@ func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
 }
 
 var (
-	cloudProviderConfigVolumeMount = corev1.VolumeMount{
-		Name:      openstack.CloudProviderConfigCloudControllerManagerName,
-		MountPath: "/etc/kubernetes/cloudprovider",
-	}
-	cloudProviderConfigVolume = corev1.Volume{
-		Name: openstack.CloudProviderConfigCloudControllerManagerName,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: openstack.CloudProviderConfigCloudControllerManagerName},
-			},
-		},
-	}
 	cloudProviderConfigKubeControllerManagerVolumeMount = corev1.VolumeMount{
 		Name:      openstack.CloudProviderConfigKubeControllerManagerName,
 		MountPath: "/etc/kubernetes/cloudprovider",
