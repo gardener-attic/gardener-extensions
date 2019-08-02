@@ -24,7 +24,7 @@ import (
 	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane"
 	mockgenericmutator "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane/genericmutator"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
 	"github.com/coreos/go-systemd/unit"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
@@ -54,7 +54,7 @@ const (
 	newKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# Provider specific settings"
 
 	encoding                 = "b64"
-	cloudproviderconf        = "[Global]\nauth-url: https://cluster.eu-de-200.cloud.sap:5000/v3"
+	cloudproviderconf        = "[Global]\nauth-url: whatever-url/keystone"
 	cloudproviderconfEncoded = "W0dsb2JhbF1cbmF1dGgtdXJsOiBodHRwczovL2NsdXN0ZXIuZXUtZGUtMjAwLmNsb3VkLnNhcDo1MDAwL3Yz"
 )
 
@@ -274,13 +274,13 @@ var _ = Describe("Mutator", func() {
 						Purpose: extensionsv1alpha1.OperatingSystemConfigPurposeReconcile,
 						Units: []extensionsv1alpha1.Unit{
 							{
-								Name:    "kubelet.service",
+								Name:    gardencorev1alpha1.OperatingSystemConfigUnitNameKubeletService,
 								Content: util.StringPtr(oldServiceContent),
 							},
 						},
 						Files: []extensionsv1alpha1.File{
 							{
-								Path: "/var/lib/kubelet/config/kubelet",
+								Path: gardencorev1alpha1.OperatingSystemConfigFilePathKubeletConfig,
 								Content: extensionsv1alpha1.FileContent{
 									Inline: &extensionsv1alpha1.FileContentInline{
 										Data: oldKubeletConfigData,
@@ -288,7 +288,7 @@ var _ = Describe("Mutator", func() {
 								},
 							},
 							{
-								Path: "/etc/sysctl.d/99-k8s-general.conf",
+								Path: gardencorev1alpha1.OperatingSystemConfigFilePathKernelSettings,
 								Content: extensionsv1alpha1.FileContent{
 									Inline: &extensionsv1alpha1.FileContentInline{
 										Data: oldKubernetesGeneralConfigData,
@@ -391,25 +391,25 @@ var _ = Describe("Mutator", func() {
 })
 
 func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
-	kubeletUnit := controlplane.UnitWithName(osc.Spec.Units, "kubelet.service")
+	kubeletUnit := extensionswebhook.UnitWithName(osc.Spec.Units, gardencorev1alpha1.OperatingSystemConfigUnitNameKubeletService)
 	Expect(kubeletUnit).To(Not(BeNil()))
 	Expect(kubeletUnit.Content).To(Equal(util.StringPtr(newServiceContent)))
 
-	customMTU := controlplane.UnitWithName(osc.Spec.Units, "custom-mtu.service")
+	customMTU := extensionswebhook.UnitWithName(osc.Spec.Units, "custom-mtu.service")
 	Expect(customMTU).To(Not(BeNil()))
 
-	customFile := controlplane.FileWithPath(osc.Spec.Files, "/test/path")
+	customFile := extensionswebhook.FileWithPath(osc.Spec.Files, "/test/path")
 	Expect(customFile).To(Not(BeNil()))
 
-	kubeletFile := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/config/kubelet")
+	kubeletFile := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKubeletConfig)
 	Expect(kubeletFile).To(Not(BeNil()))
 	Expect(kubeletFile.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
 
-	general := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf")
+	general := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKernelSettings)
 	Expect(general).To(Not(BeNil()))
 	Expect(general.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
 
-	cloudProvider := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/cloudprovider.conf")
+	cloudProvider := extensionswebhook.FileWithPath(osc.Spec.Files, cloudProviderConfigPath)
 	Expect(cloudProvider).To(Not(BeNil()))
 	Expect(cloudProvider.Path).To(Equal(cloudProviderConfigPath))
 	Expect(cloudProvider.Permissions).To(Equal(util.Int32Ptr(0644)))

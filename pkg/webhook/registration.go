@@ -17,173 +17,75 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strings"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/pkg/errors"
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-const (
-	// A seed webhook is applied only to those shoot namespaces that have the correct Seed provider label.
-	SeedKind = "seed"
-	// A shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
-	ShootKind = "shoot"
-	// A backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
-	BackupKind = "backup"
-
-	// WebhookModeService is a constant for the webhook mode indicating that the controller is running inside of the Kubernetes cluster it
-	// is serving.
-	WebhookModeService = "service"
-	// WebhookModeURL is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
-	// is serving. If this is set then a URL is required for configuration.
-	WebhookModeURL = "url"
-)
-
-// GenerateCertificates generates the certificates that are required for a webhook. It returns the ca bundle, and it
-// stores the server certificate and key locally on the file system.
-func GenerateCertificates(certDir, namespace, name, mode, url string) ([]byte, error) {
-	var (
-		serverKeyPath  = filepath.Join(certDir, "tls.key")
-		serverCertPath = filepath.Join(certDir, "tls.crt")
-	)
-
-	caConfig := &secrets.CertificateSecretConfig{
-		CommonName: "webhook-ca",
-		CertType:   secrets.CACert,
-	}
-
-	caCert, err := caConfig.GenerateCertificate()
-	if err != nil {
-		return nil, err
-	}
-
-	var dnsNames []string
-	switch mode {
-	case WebhookModeURL:
-		dnsNames = []string{
-			url,
-		}
-	case WebhookModeService:
-		dnsNames = []string{
-			fmt.Sprintf("gardener-extension-%s", name),
-			fmt.Sprintf("gardener-extension-%s.%s", name, namespace),
-			fmt.Sprintf("gardener-extension-%s.%s.svc", name, namespace),
-		}
-	}
-
-	serverConfig := &secrets.CertificateSecretConfig{
-		CommonName: name,
-		DNSNames:   dnsNames,
-		CertType:   secrets.ServerCert,
-		SigningCA:  caCert,
-	}
-
-	serverCert, err := serverConfig.GenerateCertificate()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := os.MkdirAll(certDir, 0755); err != nil {
-		return nil, err
-	}
-	if err := ioutil.WriteFile(serverKeyPath, serverCert.PrivateKeyPEM, 0666); err != nil {
-		return nil, err
-	}
-	if err := ioutil.WriteFile(serverCertPath, serverCert.CertificatePEM, 0666); err != nil {
-		return nil, err
-	}
-
-	return caCert.CertificatePEM, nil
-}
-
 // Registers the given webhooks in the Kubernetes cluster targeted by the provided manager.
-func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, providerName string, port int, mode, url string, caBundle []byte, webhooks []*Webhook) error {
+func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, providerName string, port int, mode, url string, caBundle []byte, webhooks []*Webhook) (webhooksToRegisterSeed []admissionregistrationv1beta1.Webhook, webhooksToRegisterShoot []admissionregistrationv1beta1.Webhook, err error) {
 	var (
-		fail = admissionregistrationv1beta1.Fail
-
-		mutatingWebhookConfiguration = &admissionregistrationv1beta1.MutatingWebhookConfiguration{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: "gardener-extension-" + providerName,
-			},
-		}
-
-		webhookToRegister []admissionregistrationv1beta1.Webhook
+		fail                             = admissionregistrationv1beta1.Fail
+		ignore                           = admissionregistrationv1beta1.Ignore
+		mutatingWebhookConfigurationSeed = &admissionregistrationv1beta1.MutatingWebhookConfiguration{ObjectMeta: metav1.ObjectMeta{Name: "gardener-extension-" + providerName}}
 	)
 
 	for _, webhook := range webhooks {
-		namespaceSelector, err := buildSelector(webhook.Kind, webhook.Provider)
+		namespaceSelector, err := webhook.NamespaceSelectorFunc(webhook)
 		if err != nil {
-			return err
+			return nil, nil, err
 		}
 
 		var rules []admissionregistrationv1beta1.RuleWithOperations
 		for _, t := range webhook.Types {
 			rule, err := buildRule(mgr, t)
 			if err != nil {
-				return err
+				return nil, nil, err
 			}
 			rules = append(rules, *rule)
 		}
 
-		webhookToRegister = append(webhookToRegister, admissionregistrationv1beta1.Webhook{
+		webhookToRegister := admissionregistrationv1beta1.Webhook{
 			Name:              fmt.Sprintf("%s.%s.extensions.gardener.cloud", webhook.Name, strings.TrimPrefix(providerName, "provider-")),
 			NamespaceSelector: namespaceSelector,
-			FailurePolicy:     &fail,
-			ClientConfig:      buildClientConfigFor(webhook, namespace, providerName, port, mode, url, caBundle),
 			Rules:             rules,
-		})
+		}
+
+		switch webhook.Target {
+		case TargetSeed:
+			webhookToRegister.FailurePolicy = &fail
+			webhookToRegister.ClientConfig = buildClientConfigFor(webhook, namespace, providerName, port, mode, url, caBundle)
+			webhooksToRegisterSeed = append(webhooksToRegisterSeed, webhookToRegister)
+		case TargetShoot:
+			webhookToRegister.FailurePolicy = &ignore
+			webhookToRegister.ClientConfig = buildClientConfigFor(webhook, namespace, providerName, port, ModeURLWithServiceName, url, caBundle)
+			webhooksToRegisterShoot = append(webhooksToRegisterShoot, webhookToRegister)
+		default:
+			return nil, nil, fmt.Errorf("invalid webhook target: %s", webhook.Target)
+		}
 	}
 
-	s := runtime.NewScheme()
-	if err := scheme.AddToScheme(s); err != nil {
-		return err
+	if len(webhooksToRegisterSeed) > 0 {
+		c, err := getClient(mgr)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if _, err := controllerutil.CreateOrUpdate(ctx, c, mutatingWebhookConfigurationSeed, func() error {
+			mutatingWebhookConfigurationSeed.Webhooks = webhooksToRegisterSeed
+			return nil
+		}); err != nil {
+			return nil, nil, err
+		}
 	}
 
-	c, err := client.New(mgr.GetConfig(), client.Options{Scheme: s})
-	if err != nil {
-		return err
-	}
-
-	_, err = controllerutil.CreateOrUpdate(ctx, c, mutatingWebhookConfiguration, func() error {
-		mutatingWebhookConfiguration.Webhooks = webhookToRegister
-		return nil
-	})
-	return err
-}
-
-// buildSelector creates and returns a LabelSelector for the given webhook kind and provider.
-func buildSelector(kind, provider string) (*metav1.LabelSelector, error) {
-	// Determine label selector key from the kind
-	var key string
-	switch kind {
-	case SeedKind:
-		key = gardencorev1alpha1.SeedProvider
-	case ShootKind:
-		key = gardencorev1alpha1.ShootProvider
-	case BackupKind:
-		key = gardencorev1alpha1.BackupProvider
-	default:
-		return nil, fmt.Errorf("invalid webhook kind '%s'", kind)
-	}
-
-	// Create and return LabelSelector
-	return &metav1.LabelSelector{
-		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: key, Operator: metav1.LabelSelectorOpIn, Values: []string{provider}},
-		},
-	}, nil
+	return webhooksToRegisterSeed, webhooksToRegisterShoot, nil
 }
 
 // buildRule creates and returns a RuleWithOperations for the given object type.
@@ -222,10 +124,13 @@ func buildClientConfigFor(webhook *Webhook, namespace, providerName string, port
 	}
 
 	switch mode {
-	case WebhookModeURL:
+	case ModeURL:
 		url := fmt.Sprintf("https://%s:%d%s", url, port, path)
 		clientConfig.URL = &url
-	case WebhookModeService:
+	case ModeURLWithServiceName:
+		url := fmt.Sprintf("https://gardener-extension-%s.%s:%d%s", providerName, namespace, port, path)
+		clientConfig.URL = &url
+	case ModeService:
 		clientConfig.Service = &admissionregistrationv1beta1.ServiceReference{
 			Namespace: namespace,
 			Name:      "gardener-extension-" + providerName,

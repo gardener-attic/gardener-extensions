@@ -9,7 +9,7 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener"
-  revision = "ef63d93ab5e0f54a3e96bbfb84c8b99a7ca7dcc7"
+  revision = "0.27.0"
 
 [[override]]
   name = "github.com/gardener/machine-controller-manager"
@@ -17,7 +17,7 @@ required = [
 
 [[override]]
   name = "github.com/gardener/gardener-resource-manager"
-  revision = "b1e07bafe74643292ceb13d73ab8f3baeb48d701"
+  revision = "0.3.0"
 
 [[override]]
   name = "sigs.k8s.io/controller-runtime"

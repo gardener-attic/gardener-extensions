@@ -12,16 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package shoot
 
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/runtime"
+	corev1 "k8s.io/api/core/v1"
 )
 
-// Mutator validates and if needed mutates objects.
-type Mutator interface {
-	// Mutate validates and if needed mutates the given object.
-	Mutate(ctx context.Context, obj runtime.Object) error
+func (m *mutator) mutateNginxIngressControllerConfigMap(ctx context.Context, configmap *corev1.ConfigMap) error {
+	if configmap.Data == nil {
+		configmap.Data = make(map[string]string, 1)
+	}
+
+	configmap.Data["use-proxy-protocol"] = "true"
+
+	return nil
 }

@@ -22,6 +22,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
+	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -73,7 +74,7 @@ func (w *ServerOptions) Complete() error {
 	}
 
 	if len(w.Mode) == 0 {
-		w.config.Mode = extensionswebhook.WebhookModeService
+		w.config.Mode = extensionswebhook.ModeService
 	}
 
 	return nil
@@ -213,27 +214,34 @@ type AddToManagerConfig struct {
 
 // AddToManager instantiates all webhooks of this configuration. If there are any webhooks, it creates a
 // webhook server, registers the webhooks and adds the server to the manager. Otherwise, it is a no-op.
-func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) error {
+func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) ([]admissionregistrationv1beta1.Webhook, []admissionregistrationv1beta1.Webhook, error) {
+	ctx := context.Background()
+
 	webhooks, err := c.Switch.WebhooksFactory(mgr)
 	if err != nil {
-		return errors.Wrapf(err, "could not create webhooks")
+		return nil, nil, errors.Wrapf(err, "could not create webhooks")
 	}
 
 	webhookServer := mgr.GetWebhookServer()
 	webhookServer.CertDir = c.Server.CertDir
 
 	for _, wh := range webhooks {
-		webhookServer.Register("/"+wh.Name, wh.Webhook)
+		if wh.Handler != nil {
+			webhookServer.Register("/"+wh.Name, wh.Handler)
+		} else {
+			webhookServer.Register("/"+wh.Name, wh.Webhook)
+		}
 	}
 
-	caBundle, err := extensionswebhook.GenerateCertificates(c.Server.CertDir, c.Server.Namespace, c.serverName, c.Server.Mode, c.Server.URL)
+	caBundle, err := extensionswebhook.GenerateCertificates(ctx, mgr, c.Server.CertDir, c.Server.Namespace, c.serverName, c.Server.Mode, c.Server.URL)
 	if err != nil {
-		return errors.Wrap(err, "could not generate certificates")
+		return nil, nil, errors.Wrap(err, "could not generate certificates")
 	}
 
-	if err := extensionswebhook.RegisterWebhooks(context.Background(), mgr, c.Server.Namespace, c.serverName, webhookServer.Port, c.Server.Mode, c.Server.URL, caBundle, webhooks); err != nil {
-		return errors.Wrap(err, "could not create controlplane webhook")
+	seedWebhooks, shootWebhooks, err := extensionswebhook.RegisterWebhooks(ctx, mgr, c.Server.Namespace, c.serverName, webhookServer.Port, c.Server.Mode, c.Server.URL, caBundle, webhooks)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "could not create webhooks")
 	}
 
-	return nil
+	return seedWebhooks, shootWebhooks, nil
 }

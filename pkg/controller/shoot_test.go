@@ -24,6 +24,8 @@ import (
 )
 
 var _ = Describe("Shoot", func() {
+	trueVar := true
+	falseVar := false
 	cidr := gardencorev1alpha1.CIDR("10.250.0.0/19")
 
 	DescribeTable("#GetPodNetwork",
@@ -90,8 +92,8 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("hibernation is nil", nil, false),
-		Entry("hibernation is not enabled", &gardenv1beta1.Hibernation{Enabled: false}, false),
-		Entry("hibernation is enabled", &gardenv1beta1.Hibernation{Enabled: true}, true),
+		Entry("hibernation is not enabled", &gardenv1beta1.Hibernation{Enabled: &falseVar}, false),
+		Entry("hibernation is enabled", &gardenv1beta1.Hibernation{Enabled: &trueVar}, true),
 	)
 
 	DescribeTable("#GetReplicas",
@@ -106,6 +108,6 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("hibernation is not enabled", nil, 3, 3),
-		Entry("hibernation is enabled", &gardenv1beta1.Hibernation{Enabled: true}, 1, 0),
+		Entry("hibernation is enabled", &gardenv1beta1.Hibernation{Enabled: &trueVar}, 1, 0),
 	)
 })

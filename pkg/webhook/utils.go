@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package webhook
 
 import (
 	"reflect"
@@ -21,8 +21,14 @@ import (
 
 	"github.com/coreos/go-systemd/unit"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 )
+
+// LogMutation provides a log message.
+func LogMutation(logger logr.Logger, kind, namespace, name string) {
+	logger.Info("Mutating resource", "kind", kind, "namespace", namespace, "name", name)
+}
 
 // AppendUniqueUnit appens a unit only if it does not exist.
 func AppendUniqueUnit(units *[]extensionsv1alpha1.Unit, unit extensionsv1alpha1.Unit) {

@@ -23,6 +23,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
@@ -236,14 +237,14 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]str
 		}
 	)
 
-	c := controlplane.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
+	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
 	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "0 */24 * * *", alicloud.StorageProviderName,
 		"test-repository:test-tag", nil, env, nil)))
 	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
-	c := controlplane.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
+	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
 	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDEvents, gardencorev1alpha1.StatefulSetNameETCDEvents, "0 */24 * * *", "",
 		"test-repository:test-tag", nil, nil, nil)))
 }

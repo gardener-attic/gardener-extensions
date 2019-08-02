@@ -18,7 +18,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
+
 	"github.com/onsi/gomega/types"
 )
 
@@ -42,12 +43,12 @@ func (m *containElementWithPrefixContainingMatcher) Match(actual interface{}) (s
 	if !ok {
 		return false, fmt.Errorf("ContainElementWithPrefixContaining matcher expects []string")
 	}
-	i := controlplane.StringWithPrefixIndex(items, m.prefix)
+	i := extensionswebhook.StringWithPrefixIndex(items, m.prefix)
 	if i < 0 {
 		return false, nil
 	}
 	values := strings.Split(strings.TrimPrefix(items[i], m.prefix), m.sep)
-	j := controlplane.StringIndex(values, m.value)
+	j := extensionswebhook.StringIndex(values, m.value)
 	return j >= 0, nil
 }
 

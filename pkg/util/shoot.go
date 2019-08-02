@@ -107,7 +107,7 @@ func kubeAPIServerServiceDNS(namespace string) string {
 
 // GetReplicaCount returns the given replica count base on the hibernation status of the shoot.
 func GetReplicaCount(shoot *gardenv1beta1.Shoot, count int) int {
-	if shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled {
+	if shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled != nil && *shoot.Spec.Hibernation.Enabled {
 		return 0
 	}
 	return count

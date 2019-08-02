@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -60,8 +61,8 @@ func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, svc *corev1.Se
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
-	if c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
-		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
+	if c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
+		c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
 	}
 	return nil
 }
@@ -74,7 +75,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 
 func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name string) {
 	t := e.getVolumeClaimTemplate(name)
-	spec.VolumeClaimTemplates = controlplane.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
+	spec.VolumeClaimTemplates = extensionswebhook.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
 }
 
 func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {

@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -70,9 +71,9 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1
 		return errors.Wrap(err, "could not get kube-apiserver service load balancer address")
 	}
 
-	if c := controlplane.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
-		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--advertise-address=", address)
-		c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--external-hostname=", address)
+	if c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
+		c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--advertise-address=", address)
+		c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--external-hostname=", address)
 	}
 	return nil
 }
@@ -85,7 +86,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 
 func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name string) {
 	t := e.getVolumeClaimTemplate(name)
-	spec.VolumeClaimTemplates = controlplane.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
+	spec.VolumeClaimTemplates = extensionswebhook.EnsurePVCWithName(spec.VolumeClaimTemplates, *t)
 }
 
 func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {

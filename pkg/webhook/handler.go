@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplane
+package webhook
 
 import (
 	"context"
@@ -26,14 +26,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// newHandler creates a new handler for the given types, using the given mutator, and logger.
-func newHandler(mgr manager.Manager, types []runtime.Object, mutator Mutator, logger logr.Logger) (*handler, error) {
+// NewHandler creates a new handler for the given types, using the given mutator, and logger.
+func NewHandler(mgr manager.Manager, types []runtime.Object, mutator Mutator, logger logr.Logger) (*handler, error) {
 	// Build a map of the given types keyed by their GVKs
 	typesMap, err := buildTypesMap(mgr, types)
 	if err != nil {
@@ -72,15 +71,24 @@ func (h *handler) InjectClient(client client.Client) error {
 
 // Handle handles the given admission request.
 func (h *handler) Handle(ctx context.Context, req admission.Request) admission.Response {
+	f := func(ctx context.Context, newObj runtime.Object, r *http.Request) error {
+		return h.mutator.Mutate(ctx, newObj)
+	}
+	return handle(ctx, req, nil, f, h.typesMap, h.decoder, h.logger)
+}
+
+type mutateFunc func(context.Context, runtime.Object, *http.Request) error
+
+func handle(ctx context.Context, req admission.Request, r *http.Request, f mutateFunc, typesMap map[metav1.GroupVersionKind]runtime.Object, decoder *admission.Decoder, logger logr.Logger) admission.Response {
 	ar := req.AdmissionRequest
 
 	// Decode object
-	t, ok := h.typesMap[ar.Kind]
+	t, ok := typesMap[ar.Kind]
 	if !ok {
 		return admission.Errored(http.StatusBadRequest, errors.Errorf("unexpected request kind %s", ar.Kind.String()))
 	}
 	obj := t.DeepCopyObject()
-	err := h.decoder.Decode(req, obj)
+	err := decoder.Decode(req, obj)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, errors.Wrapf(err, "could not decode request %v", ar))
 	}
@@ -92,11 +100,8 @@ func (h *handler) Handle(ctx context.Context, req admission.Request) admission.R
 	}
 
 	// Mutate the resource
-	h.logger.Info("Mutating resource", "kind", ar.Kind.String(), "namespace", accessor.GetNamespace(),
-		"name", accessor.GetName(), "operation", ar.Operation)
 	newObj := obj.DeepCopyObject()
-	err = h.mutator.Mutate(ctx, newObj)
-	if err != nil {
+	if err = f(ctx, newObj, r); err != nil {
 		return admission.Errored(http.StatusInternalServerError,
 			errors.Wrapf(err, "could not mutate %s %s/%s", ar.Kind.Kind, accessor.GetNamespace(), accessor.GetName()))
 	}
@@ -117,20 +122,4 @@ func (h *handler) Handle(ctx context.Context, req admission.Request) admission.R
 
 	// Return a validation response if the resource should not be changed
 	return admission.ValidationResponse(true, "")
-}
-
-// buildTypesMap builds a map of the given types keyed by their GroupVersionKind, using the scheme from the given Manager.
-func buildTypesMap(mgr manager.Manager, types []runtime.Object) (map[metav1.GroupVersionKind]runtime.Object, error) {
-	typesMap := make(map[metav1.GroupVersionKind]runtime.Object)
-	for _, t := range types {
-		// Get GVK from the type
-		gvk, err := apiutil.GVKForObject(t, mgr.GetScheme())
-		if err != nil {
-			return nil, errors.Wrapf(err, "could not get GroupVersionKind from object %v", t)
-		}
-
-		// Add the type to the types map
-		typesMap[metav1.GroupVersionKind(gvk)] = t
-	}
-	return typesMap, nil
 }

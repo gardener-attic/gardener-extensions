@@ -45,7 +45,7 @@ var logger = log.Log.WithName("aws-controlplanebackup-webhook")
 func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (*extensionswebhook.Webhook, error) {
 	logger.Info("Adding webhook to manager")
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Kind:     extensionswebhook.BackupKind,
+		Kind:     controlplane.KindBackup,
 		Provider: aws.Type,
 		Types:    []runtime.Object{&appsv1.StatefulSet{}},
 		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDBackup, imagevector.ImageVector(), logger), nil, nil, nil, logger),

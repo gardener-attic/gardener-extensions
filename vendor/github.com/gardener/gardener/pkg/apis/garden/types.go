@@ -96,14 +96,22 @@ type AWSConstraints struct {
 	Zones []Zone
 }
 
-// MachineImage defines the name and the version of the machine image in any environment.
+// MachineImage defines the name and multiple versions of the machine image in any environment.
 type MachineImage struct {
 	// Name is the name of the image.
 	Name string
+	// Versions contains versions and expiration dates of the machine image
+	Versions []MachineImageVersion
+}
+
+// MachineImageVersion contains a version and an expiration date of a machine image
+type MachineImageVersion struct {
 	// Version is the version of the image.
 	Version string
-	// ProviderConfig is the configuration passed to extension resource.
-	ProviderConfig *gardencore.ProviderConfig
+	// ExpirationDate defines the time at which a shoot that opted out of automatic operating system updates and
+	// that is running this image version will be forcefully updated to the latest version specified in the referenced
+	// cloud profile.
+	ExpirationDate *metav1.Time
 }
 
 // AzureProfile defines certain constraints and definitions for the Azure cloud.
@@ -635,6 +643,8 @@ type ShootStatus struct {
 	// Seed is the name of the seed cluster that runs the control plane of the Shoot. This value is only written
 	// after a successful create/reconcile operation. It will be used when control planes are moved between Seeds.
 	Seed string
+	// IsHibernated indicates whether the Shoot is currently hibernated.
+	IsHibernated *bool
 	// TechnicalID is the name that is used for creating the Seed namespace, the infrastructure resources, and
 	// basically everything that is related to this particular Shoot.
 	TechnicalID string
@@ -675,10 +685,10 @@ type Cloud struct {
 // AWSCloud contains the Shoot specification for AWS.
 
 type AWSCloud struct {
-	// MachineImage holds information about the machine image to use for all workers.
-	// It will default to the first image stated in the referenced CloudProfile if no
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
 	// value has been provided.
-	MachineImage *MachineImage
+	MachineImage *ShootMachineImage
 	// Networks holds information about the Kubernetes and infrastructure networks.
 	Networks AWSNetworks
 	// Workers is a list of worker groups.
@@ -719,10 +729,10 @@ type AWSWorker struct {
 
 // Alicloud contains the Shoot specification for Alibaba cloud
 type Alicloud struct {
-	// MachineImage holds information about the machine image to use for all workers.
-	// It will default to the first image stated in the referenced CloudProfile if no
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
 	// value has been provided.
-	MachineImage *MachineImage
+	MachineImage *ShootMachineImage
 	// Networks holds information about the Kubernetes and infrastructure networks.
 	Networks AlicloudNetworks
 	// Workers is a list of worker groups.
@@ -759,10 +769,10 @@ type AlicloudWorker struct {
 
 // PacketCloud contains the Shoot specification for Packet cloud
 type PacketCloud struct {
-	// MachineImage holds information about the machine image to use for all workers.
-	// It will default to the first image stated in the referenced CloudProfile if no
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
 	// value has been provided.
-	MachineImage *MachineImage
+	MachineImage *ShootMachineImage
 	// Networks holds information about the Kubernetes and infrastructure networks.
 	Networks PacketNetworks
 	// Workers is a list of worker groups.
@@ -787,10 +797,10 @@ type PacketWorker struct {
 
 // AzureCloud contains the Shoot specification for Azure.
 type AzureCloud struct {
-	// MachineImage holds information about the machine image to use for all workers.
-	// It will default to the first image stated in the referenced CloudProfile if no
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
 	// value has been provided.
-	MachineImage *MachineImage
+	MachineImage *ShootMachineImage
 	// Networks holds information about the Kubernetes and infrastructure networks.
 	Networks AzureNetworks
 	// ResourceGroup indicates whether to use an existing resource group or create a new one.
@@ -833,10 +843,10 @@ type AzureWorker struct {
 
 // GCPCloud contains the Shoot specification for GCP.
 type GCPCloud struct {
-	// MachineImage holds information about the machine image to use for all workers.
-	// It will default to the first image stated in the referenced CloudProfile if no
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
 	// value has been provided.
-	MachineImage *MachineImage
+	MachineImage *ShootMachineImage
 	// Networks holds information about the Kubernetes and infrastructure networks.
 	Networks GCPNetworks
 	// Workers is a list of worker groups.
@@ -879,10 +889,10 @@ type OpenStackCloud struct {
 	LoadBalancerProvider string
 	// LoadBalancerClasses available for a dedicated Shoot.
 	LoadBalancerClasses []OpenStackLoadBalancerClass
-	// MachineImage holds information about the machine image to use for all workers.
-	// It will default to the first image stated in the referenced CloudProfile if no
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
 	// value has been provided.
-	MachineImage *MachineImage
+	MachineImage *ShootMachineImage
 	// Networks holds information about the Kubernetes and infrastructure networks.
 	Networks OpenStackNetworks
 	// Workers is a list of worker groups.
@@ -930,6 +940,10 @@ type Worker struct {
 	Name string
 	// MachineType is the machine type of the worker group.
 	MachineType string
+	// ShootMachineImage holds information about the machine image to use for all workers.
+	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
+	// value has been provided.
+	MachineImage *ShootMachineImage
 	// AutoScalerMin is the minimum number of VMs to create.
 	AutoScalerMin int
 	// AutoScalerMin is the maximum number of VMs to create.
@@ -1090,8 +1104,8 @@ const (
 
 // Hibernation contains information whether the Shoot is suspended or not.
 type Hibernation struct {
-	// Enabled is true if Shoot is hibernated, false otherwise.
-	Enabled bool
+	// Enabled is true if the Shoot's desired state is hibernated, false otherwise.
+	Enabled *bool
 	// Schedules determines the hibernation schedules.
 	Schedules []HibernationSchedule
 }
@@ -1301,6 +1315,8 @@ type Maintenance struct {
 type MaintenanceAutoUpdate struct {
 	// KubernetesVersion indicates whether the patch Kubernetes version may be automatically updated.
 	KubernetesVersion bool
+	// MachineImageVersion indicates whether the machine image version may be automatically updated (default: true).
+	MachineImageVersion *bool
 }
 
 // MaintenanceTimeWindow contains information about the time window for maintenance operations.
@@ -1311,6 +1327,16 @@ type MaintenanceTimeWindow struct {
 	// End is the end of the time window in the format HHMMSS+ZONE, e.g. "220000+0100".
 	// If not present, the value will be computed based on the "Begin" value.
 	End string
+}
+
+// MachineImage defines the name and the version of the shoot's machine image in any environment. Has to be defined in the respective CloudProfile.
+type ShootMachineImage struct {
+	// Name is the name of the image.
+	Name string
+	// Version is the version of the shoot's image.
+	Version string
+	// ProviderConfig is the shoot's individual configuration passed to an extension resource.
+	ProviderConfig *gardencore.ProviderConfig
 }
 
 const (

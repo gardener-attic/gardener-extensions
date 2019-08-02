@@ -20,6 +20,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cloudinit"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/coreos/go-systemd/unit"
@@ -71,7 +72,7 @@ func NewMutator(
 	kubeletConfigCodec controlplane.KubeletConfigCodec,
 	fciCodec controlplane.FileContentInlineCodec,
 	logger logr.Logger,
-) controlplane.Mutator {
+) extensionswebhook.Mutator {
 	return &mutator{
 		ensurer:            ensurer,
 		unitSerializer:     unitSerializer,
@@ -106,20 +107,25 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	case *corev1.Service:
 		switch x.Name {
 		case gardencorev1alpha1.DeploymentNameKubeAPIServer:
+			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeAPIServerService(ctx, x)
 		}
 	case *appsv1.Deployment:
 		switch x.Name {
 		case gardencorev1alpha1.DeploymentNameKubeAPIServer:
+			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeAPIServerDeployment(ctx, x)
 		case gardencorev1alpha1.DeploymentNameKubeControllerManager:
+			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeControllerManagerDeployment(ctx, x)
 		case gardencorev1alpha1.DeploymentNameKubeScheduler:
+			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeSchedulerDeployment(ctx, x)
 		}
 	case *appsv1.StatefulSet:
 		switch x.Name {
 		case gardencorev1alpha1.StatefulSetNameETCDMain, gardencorev1alpha1.StatefulSetNameETCDEvents:
+			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			// Get cluster info
 			cluster, err := extensionscontroller.GetCluster(ctx, m.client, x.Namespace)
 			if err != nil {
@@ -130,6 +136,7 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 		}
 	case *extensionsv1alpha1.OperatingSystemConfig:
 		if x.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {
+			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.mutateOperatingSystemConfig(ctx, x)
 		}
 		return nil
@@ -139,21 +146,21 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 
 func (m *mutator) mutateOperatingSystemConfig(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) error {
 	// Mutate kubelet.service unit, if present
-	if u := controlplane.UnitWithName(osc.Spec.Units, "kubelet.service"); u != nil && u.Content != nil {
+	if u := extensionswebhook.UnitWithName(osc.Spec.Units, gardencorev1alpha1.OperatingSystemConfigUnitNameKubeletService); u != nil && u.Content != nil {
 		if err := m.ensureKubeletServiceUnitContent(ctx, u.Content); err != nil {
 			return err
 		}
 	}
 
 	// Mutate kubelet configuration file, if present
-	if f := controlplane.FileWithPath(osc.Spec.Files, "/var/lib/kubelet/config/kubelet"); f != nil && f.Content.Inline != nil {
+	if f := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKubeletConfig); f != nil && f.Content.Inline != nil {
 		if err := m.ensureKubeletConfigFileContent(ctx, f.Content.Inline); err != nil {
 			return err
 		}
 	}
 
 	// Mutate 99 kubernetes general configuration file, if present
-	if f := controlplane.FileWithPath(osc.Spec.Files, "/etc/sysctl.d/99-k8s-general.conf"); f != nil && f.Content.Inline != nil {
+	if f := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKernelSettings); f != nil && f.Content.Inline != nil {
 		if err := m.ensureKubernetesGeneralConfiguration(ctx, f.Content.Inline); err != nil {
 			return err
 		}
@@ -263,7 +270,7 @@ func (m *mutator) ensureKubeletCloudProviderConfig(ctx context.Context, osc *ext
 	}
 
 	// Ensure the cloud provider config file is part of the OperatingSystemConfig
-	osc.Spec.Files = controlplane.EnsureFileWithPath(osc.Spec.Files, extensionsv1alpha1.File{
+	osc.Spec.Files = extensionswebhook.EnsureFileWithPath(osc.Spec.Files, extensionsv1alpha1.File{
 		Path:        cloudProviderConfigPath,
 		Permissions: util.Int32Ptr(0644),
 		Content: extensionsv1alpha1.FileContent{

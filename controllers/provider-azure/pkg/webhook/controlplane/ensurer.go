@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -56,7 +57,7 @@ func (e *ensurer) InjectClient(client client.Client) error {
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
 	template := &dep.Spec.Template
 	ps := &template.Spec
-	if c := controlplane.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
+	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
 		ensureVolumeMounts(c)
 	}
@@ -68,7 +69,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1
 func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
 	template := &dep.Spec.Template
 	ps := &template.Spec
-	if c := controlplane.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
+	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
 		ensureKubeControllerManagerCommandLineArgs(c)
 		ensureVolumeMounts(c)
 	}
@@ -78,26 +79,26 @@ func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, dep
 }
 
 func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "azure")
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-config=",
+	c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "azure")
+	c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--cloud-config=",
 		"/etc/kubernetes/cloudprovider/cloudprovider.conf")
-	c.Command = controlplane.EnsureStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
-	c.Command = controlplane.EnsureNoStringWithPrefixContains(c.Command, "--disable-admission-plugins=",
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--disable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
 }
 
 func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "external")
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--cloud-config=",
+	c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--cloud-provider=", "external")
+	c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--cloud-config=",
 		"/etc/kubernetes/cloudprovider/cloudprovider.conf")
-	c.Command = controlplane.EnsureStringWithPrefix(c.Command, "--external-cloud-volume-plugin=", "azure")
+	c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--external-cloud-volume-plugin=", "azure")
 }
 
 func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
-	t.Labels = controlplane.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs, gardencorev1alpha1.LabelNetworkPolicyAllowed)
 }
 
 var (
@@ -116,11 +117,11 @@ var (
 )
 
 func ensureVolumeMounts(c *corev1.Container) {
-	c.VolumeMounts = controlplane.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
+	c.VolumeMounts = extensionswebhook.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
 }
 
 func ensureVolumes(ps *corev1.PodSpec) {
-	ps.Volumes = controlplane.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
+	ps.Volumes = extensionswebhook.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
@@ -129,17 +130,17 @@ func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
 func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
-	if opt := controlplane.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
-		command := controlplane.DeserializeCommandLine(opt.Value)
+	if opt := extensionswebhook.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
+		command := extensionswebhook.DeserializeCommandLine(opt.Value)
 		command = ensureKubeletCommandLineArgs(command)
-		opt.Value = controlplane.SerializeCommandLine(command, 1, " \\\n    ")
+		opt.Value = extensionswebhook.SerializeCommandLine(command, 1, " \\\n    ")
 	}
 	return opts, nil
 }
 
 func ensureKubeletCommandLineArgs(command []string) []string {
-	command = controlplane.EnsureStringWithPrefix(command, "--cloud-provider=", "azure")
-	command = controlplane.EnsureStringWithPrefix(command, "--cloud-config=", "/var/lib/kubelet/cloudprovider.conf")
+	command = extensionswebhook.EnsureStringWithPrefix(command, "--cloud-provider=", "azure")
+	command = extensionswebhook.EnsureStringWithPrefix(command, "--cloud-config=", "/var/lib/kubelet/cloudprovider.conf")
 	return command
 }
 

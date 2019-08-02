@@ -223,7 +223,7 @@
   version = "0.6.1"
 
 [[projects]]
-  digest = "1:440a82748925efa39bf0ba9cbabc9e50049d098bc9d4a44c5c4a1c0b084ddd3e"
+  digest = "1:b049450ba9ebc2037b08d17a43b17302952a45abc1ac6c0afaf5cd5208e010fa"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/api/extensions",
@@ -263,10 +263,10 @@
     "pkg/version",
   ]
   pruneopts = "NUT"
-  revision = "ef63d93ab5e0f54a3e96bbfb84c8b99a7ca7dcc7"
+  revision = "0.27.0"
 
 [[projects]]
-  digest = "1:8e8df1c92683f05d0c6989167286edbc9144e8b597ad08ab35a639b6144ad4b9"
+  digest = "1:ad70dc0ea115b0c56cf5fbd3a37813bd5d45d21266301ab80bcfa61f773e0c78"
   name = "github.com/gardener/gardener-resource-manager"
   packages = [
     "pkg/apis/resources",
@@ -274,7 +274,7 @@
     "pkg/manager",
   ]
   pruneopts = "NUT"
-  revision = "b1e07bafe74643292ceb13d73ab8f3baeb48d701"
+  revision = "0.3.0"
 
 [[projects]]
   digest = "1:be08b3a88137d497fc3008eaadba7b05d151c6106ebd3d1df54af7b07320562a"
