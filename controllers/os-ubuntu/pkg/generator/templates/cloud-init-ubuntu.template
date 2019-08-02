@@ -1,7 +1,14 @@
 #cloud-config
 apt_update: true
-packages: ['docker.io', 'socat','nfs-common']
+packages: ['docker.io', 'socat', 'nfs-common', 'logrotate', 'jq', 'policykit-1']
 write_files:
+{{ if .Bootstrap -}}
+- path: '/etc/cloud/cloud.cfg.d/custom-networking.cfg'
+  permissions: '0644'
+  encoding: b64
+  content: |
+    bmV0d29yazoKICBjb25maWc6IGRpc2FibGVkCg==
+{{ end -}}
 {{ range $_, $file := .Files -}}
 - path: '{{ $file.Path }}'
 {{- if $file.Permissions }}
@@ -28,13 +35,12 @@ write_files:
 {{- end -}}
 {{- end }}
 runcmd:
-- ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
 - systemctl daemon-reload
 {{ if .Bootstrap -}}
 - ln -s /usr/bin/docker /bin/docker
-- systemctl start docker
+- ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+- systemctl restart docker
 {{ end -}}
-- systemctl enable 'docker.service' && systemctl restart 'docker.service'
 {{ range $_, $unit := .Units -}}
 - systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
 {{ end -}}
