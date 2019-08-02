@@ -128,6 +128,7 @@ func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 
 // valuesProvider is a ValuesProvider that provides AWS-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
+	genericactuator.NoopValuesProvider
 	decoder runtime.Decoder
 	client  client.Client
 	logger  logr.Logger
@@ -189,24 +190,6 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 
 	// Get CCM chart values
 	return getCCMChartValues(cpConfig, cp, cluster, checksums, scaledDown)
-}
-
-// GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by the generic actuator.
-func (vp *valuesProvider) GetControlPlaneShootChartValues(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-	cluster *extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	return nil, nil
-}
-
-// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
-func (vp *valuesProvider) GetStorageClassesChartValues(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-	cluster *extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	return nil, nil
 }
 
 // getConfigChartValues collects and returns the configuration chart values.

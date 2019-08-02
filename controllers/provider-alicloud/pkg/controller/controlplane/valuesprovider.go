@@ -193,6 +193,7 @@ func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 
 // valuesProvider is a ValuesProvider that provides AWS-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
+	genericactuator.NoopValuesProvider
 	decoder runtime.Decoder
 	client  client.Client
 	logger  logr.Logger
@@ -270,15 +271,6 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 
 	// Get control plane shoot chart values
 	return getControlPlaneShootChartValues(cluster, credentials)
-}
-
-// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
-func (vp *valuesProvider) GetStorageClassesChartValues(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-	cluster *extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	return nil, nil
 }
 
 // cloudConfig wraps the settings for the Alicloud provider.

@@ -131,6 +131,7 @@ func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 
 // valuesProvider is a ValuesProvider that provides OpenStack-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
+	genericactuator.NoopValuesProvider
 	decoder runtime.Decoder
 	client  client.Client
 	logger  logr.Logger
@@ -192,15 +193,6 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 
 	// Get CCM chart values
 	return getCCMChartValues(cpConfig, cp, cluster, checksums, scaledDown)
-}
-
-// GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by this actuator.
-func (vp *valuesProvider) GetControlPlaneShootChartValues(
-	context.Context,
-	*extensionsv1alpha1.ControlPlane,
-	*extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	return nil, nil
 }
 
 // GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.

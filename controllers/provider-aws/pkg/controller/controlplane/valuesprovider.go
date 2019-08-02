@@ -29,6 +29,7 @@ import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils/chart"
+	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -38,12 +39,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Object names
 const (
 	cloudControllerManagerDeploymentName = "cloud-controller-manager"
 	cloudControllerManagerServerName     = "cloud-controller-manager-server"
+	awsLBReadvertiserDeploymentName      = "aws-lb-readvertiser"
 )
 
 var controlPlaneSecrets = &secrets.Secrets{
@@ -76,6 +79,36 @@ var controlPlaneSecrets = &secrets.Secrets{
 					DNSNames:   controlplane.DNSNamesForService(cloudControllerManagerDeploymentName, clusterName),
 					CertType:   secrets.ServerCert,
 					SigningCA:  cas[gardencorev1alpha1.SecretNameCACluster],
+				},
+			},
+		}
+	},
+}
+
+var controlPlaneExposureSecrets = &secrets.Secrets{
+	CertificateSecretConfigs: map[string]*secrets.CertificateSecretConfig{
+		gardencorev1alpha1.SecretNameCACluster: {
+			Name:       gardencorev1alpha1.SecretNameCACluster,
+			CommonName: "kubernetes",
+			CertType:   secrets.CACert,
+		},
+	},
+	SecretConfigsFunc: func(cas map[string]*secrets.Certificate, clusterName string) []secrets.ConfigInterface {
+		return []secrets.ConfigInterface{
+			&secrets.ControlPlaneSecretConfig{
+				CertificateSecretConfig: &secrets.CertificateSecretConfig{
+					Name:         awsLBReadvertiserDeploymentName,
+					CommonName:   awsLBReadvertiserDeploymentName,
+					Organization: []string{user.SystemPrivilegedGroup},
+					DNSNames:     nil,
+					IPAddresses:  nil,
+					CertType:     secrets.ClientCert,
+					SigningCA:    cas[gardencorev1alpha1.SecretNameCACluster],
+				},
+
+				KubeConfigRequest: &secrets.KubeConfigRequest{
+					ClusterName:  clusterName,
+					APIServerURL: gardencorev1alpha1.DeploymentNameKubeAPIServer,
 				},
 			},
 		}
@@ -117,6 +150,15 @@ var storageClassChart = &chart.Chart{
 	Path: filepath.Join(aws.InternalChartsPath, "shoot-storageclasses"),
 }
 
+var cpExposureChart = &chart.Chart{
+	Name:   "aws-lb-readvertiser",
+	Path:   filepath.Join(aws.InternalChartsPath, "aws-lb-readvertiser"),
+	Images: []string{aws.AWSLBReadvertiserImageName},
+	Objects: []*chart.Object{
+		{Type: &appsv1.Deployment{}, Name: "aws-lb-readvertiser"},
+	},
+}
+
 // NewValuesProvider creates a new ValuesProvider for the generic actuator.
 func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 	return &valuesProvider{
@@ -126,13 +168,21 @@ func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 
 // valuesProvider is a ValuesProvider that provides AWS-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
+	genericactuator.NoopValuesProvider
 	decoder runtime.Decoder
+	client  client.Client
 	logger  logr.Logger
 }
 
 // InjectScheme injects the given scheme into the valuesProvider.
 func (vp *valuesProvider) InjectScheme(scheme *runtime.Scheme) error {
 	vp.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
+	return nil
+}
+
+// InjectClient injects the given client into the valuesProvider.
+func (vp *valuesProvider) InjectClient(client client.Client) error {
+	vp.client = client
 	return nil
 }
 
@@ -170,22 +220,27 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	return getCCMChartValues(cpConfig, cp, cluster, checksums, scaledDown)
 }
 
-// GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by the generic actuator.
-func (vp *valuesProvider) GetControlPlaneShootChartValues(
+// GetControlPlaneExposureChartValues deploys the aws-lb-readvertiser.
+func (vp *valuesProvider) GetControlPlaneExposureChartValues(
 	ctx context.Context,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
+	checksums map[string]string,
 ) (map[string]interface{}, error) {
-	return nil, nil
-}
 
-// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
-func (vp *valuesProvider) GetStorageClassesChartValues(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-	cluster *extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	return nil, nil
+	// Get load balancer address of the kube-apiserver service
+	address, err := kutil.GetLoadBalancerIngress(ctx, vp.client, cp.Namespace, gardencorev1alpha1.DeploymentNameKubeAPIServer)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get kube-apiserver service load balancer address")
+	}
+
+	return map[string]interface{}{
+		"domain":   address,
+		"replicas": extensionscontroller.GetReplicas(cluster.Shoot, 1),
+		"podAnnotations": map[string]interface{}{
+			"checksum/secret-aws-lb-readvertiser": checksums[awsLBReadvertiserDeploymentName],
+		},
+	}, nil
 }
 
 // getConfigChartValues collects and returns the configuration chart values.
