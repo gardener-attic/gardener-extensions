@@ -15,9 +15,10 @@
 package generator
 
 import (
+	"text/template"
+
 	template_gen "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/template"
 	"github.com/gobuffalo/packr/v2"
-	"text/template"
 )
 
 var cmd = "/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"
@@ -27,7 +28,7 @@ var cmd = "/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"
 // NewCloudInitGenerator creates a new Generator using the template file for suse-jeos
 func NewCloudInitGenerator() (*template_gen.CloudInitGenerator, error) {
 	box := packr.New("templates", "./templates")
-	cloudInitTemplateString, err := box.FindString("cloud-init.template")
+	cloudInitTemplateString, err := box.FindString("cloud-init-suse-jeos.template")
 	if err != nil {
 		return nil, err
 	}
