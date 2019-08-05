@@ -29,7 +29,7 @@ var cloudInitGenerator *template_gen.CloudInitGenerator
 
 func init() {
 	box := packr.New("templates", "./templates")
-	cloudInitTemplateString, err := box.FindString("cloud-init.template")
+	cloudInitTemplateString, err := box.FindString("cloud-init-ubuntu.template")
 	runtime.Must(err)
 
 	cloudInitTemplate, err := template.New("cloud-init").Parse(cloudInitTemplateString)
