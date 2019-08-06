@@ -4,6 +4,7 @@ import (
 	"context"
 
 	certservice "github.com/gardener/gardener-extensions/controllers/extension-certificate-service/cmd/app"
+	networkcalico "github.com/gardener/gardener-extensions/controllers/networking-calico/cmd/gardener-extension-networking-calico/app"
 	coreosalicloud "github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud/app"
 	coreos "github.com/gardener/gardener-extensions/controllers/os-coreos/cmd/gardener-extension-os-coreos/app"
 	jeos "github.com/gardener/gardener-extensions/controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos/app"
@@ -35,6 +36,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		provideralicloud.NewControllerManagerCommand(ctx),
 		providerpacket.NewControllerManagerCommand(ctx),
 		certservice.NewServiceControllerCommand(ctx),
+		networkcalico.NewControllerManagerCommand(ctx),
 	)
 
 	return cmd

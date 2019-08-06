@@ -1,0 +1,9 @@
+global:
+  podCIDR: ""
+config:
+  backend: bird
+images:
+  calico-node: "quay.io/calico/node:v3.7.2"
+  calico-cni: "quay.io/calico/cni:v3.7.2"
+  calico-typha: "quay.io/calico/typha:v3.7.2"
+  calico-kube-controllers: "quay.io/calico/kube-controllers:v3.7.2"

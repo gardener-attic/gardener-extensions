@@ -17,6 +17,7 @@ package network
 import (
 	"github.com/gardener/gardener-extensions/pkg/webhook"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -28,14 +29,6 @@ import (
 const (
 	// WebhookName is the webhook name.
 	WebhookName = "network"
-	// NameSuffix is a common suffix for all webhook names.
-	NameSuffix = "extensions.gardener.cloud"
-	// ShootProviderLabel is a label on shoot namespaces in the seed cluster that identifies the Shoot cloud provider.
-	// TODO Move this constant to gardener/gardener
-	ShootCloudProviderLabel = "shoot.gardener.cloud/provider"
-	// NetworkProviderLabel is a label on shoot namespaces in the seed cluster that identifies the Shoot network provider.
-	// TODO Move this constant to gardener/gardener
-	ShootNetworkProviderLabel = "network.shoot.gardener.cloud/provider"
 )
 
 var logger = log.Log.WithName("network-webhook")
@@ -92,8 +85,8 @@ func buildSelector(networkProvider, cloudProvider string) (*metav1.LabelSelector
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: ShootCloudProviderLabel, Operator: metav1.LabelSelectorOpIn, Values: []string{cloudProvider}},
-			{Key: ShootNetworkProviderLabel, Operator: metav1.LabelSelectorOpIn, Values: []string{networkProvider}},
+			{Key: gardencorev1alpha1.ShootProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{cloudProvider}},
+			{Key: gardencorev1alpha1.NetworkingProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{networkProvider}},
 		},
 	}, nil
 }

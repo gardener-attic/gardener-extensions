@@ -17,10 +17,7 @@ package network
 import (
 	"context"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
+	extensioncontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
@@ -28,43 +25,7 @@ import (
 // Actuator acts upon Network resources.
 type Actuator interface {
 	// Reconcile reconciles the Network resource.
-	Reconcile(context.Context, *extensionsv1alpha1.Network) error
+	Reconcile(context.Context, *extensionsv1alpha1.Network, *extensioncontroller.Cluster) error
 	// Delete deletes the Network resource.
-	Delete(context.Context, *extensionsv1alpha1.Network) error
-}
-
-type operationAnnotationWrapper struct {
-	Actuator
-	client client.Client
-}
-
-// OperationAnnotationWrapper is a wrapper for an actuator that, after a successful reconcile,
-// removes the Gardener operation annotation.
-//
-// This is useful in conjunction with the OperationAnnotationPredicate.
-func OperationAnnotationWrapper(actuator Actuator) Actuator {
-	return &operationAnnotationWrapper{Actuator: actuator}
-}
-
-// InjectClient implements inject.Client.
-func (o *operationAnnotationWrapper) InjectClient(client client.Client) error {
-	o.client = client
-	return nil
-}
-
-// InjectClient implements inject.Func.
-func (o *operationAnnotationWrapper) InjectFunc(f inject.Func) error {
-	return f(o.Actuator)
-}
-
-// Reconcile implements Actuator.
-func (o *operationAnnotationWrapper) Reconcile(ctx context.Context, network *extensionsv1alpha1.Network) error {
-	if kutil.HasMetaDataAnnotation(&network.ObjectMeta, gardencorev1alpha1.GardenerOperation, gardencorev1alpha1.GardenerOperationReconcile) {
-		delete(network.Annotations, gardencorev1alpha1.GardenerOperation)
-		if err := o.client.Update(ctx, network); err != nil {
-			return err
-		}
-	}
-
-	return o.Actuator.Reconcile(ctx, network)
+	Delete(context.Context, *extensionsv1alpha1.Network, *extensioncontroller.Cluster) error
 }

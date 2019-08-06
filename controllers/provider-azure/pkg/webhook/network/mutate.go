@@ -15,36 +15,20 @@
 package network
 
 import (
-	calicov1aplha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
+	calicov1alpha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
+	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
+	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-// calicoNetworkConfigFromNetwork returns the network provider inside the network resource
-func calicoNetworkConfigFromNetwork(network *extensionsv1alpha1.Network) (*calicov1aplha1.NetworkConfig, error) {
-	decoder, err := newExtensionsDecoder()
-	if err != nil {
-		return nil, err
-	}
-
-	networkConfig := &calicov1aplha1.NetworkConfig{}
-	_, _, err = decoder.Decode(network.Spec.ProviderConfig.Raw, nil, networkConfig)
-	return networkConfig, err
-}
-
-func newExtensionsDecoder() (runtime.Decoder, error) {
-	scheme := runtime.NewScheme()
-	decoder := serializer.NewCodecFactory(scheme).UniversalDecoder()
-	return decoder, extensionsv1alpha1.AddToScheme(scheme)
-}
-
 func mutateNetworkConfig(network *extensionsv1alpha1.Network) error {
-	networkConfig, err := calicoNetworkConfigFromNetwork(network)
+	extensionswebhook.LogMutation(logger, "Network", network.Namespace, network.Name)
+	networkConfig, err := controller.CalicoNetworkConfigFromNetworkResource(network)
 	if err != nil {
 		return err
 	}
-	networkConfig.Backend = calicov1aplha1.None
+	networkConfig.Backend = calicov1alpha1.None
 	network.Spec.ProviderConfig = &runtime.RawExtension{
 		Object: networkConfig,
 	}

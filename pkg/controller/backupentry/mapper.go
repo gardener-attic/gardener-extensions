@@ -19,7 +19,7 @@ import (
 
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
-	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -44,7 +44,7 @@ func (m *secretToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Reque
 		return nil
 	}
 
-	backupEntryList := &extensions1alpha1.BackupEntryList{}
+	backupEntryList := &extensionsv1alpha1.BackupEntryList{}
 	if err := m.client.List(context.TODO(), backupEntryList, client.MatchingField("spec.secretRef.name", secret.Name), client.MatchingField("spec.secretRef.namespace", secret.Namespace)); err != nil {
 		return nil
 	}
@@ -84,7 +84,7 @@ func (m *namespaceToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Re
 		return nil
 	}
 
-	backupEntryList := &extensions1alpha1.BackupEntryList{}
+	backupEntryList := &extensionsv1alpha1.BackupEntryList{}
 	if err := m.client.List(context.TODO(), backupEntryList); err != nil {
 		return nil
 	}

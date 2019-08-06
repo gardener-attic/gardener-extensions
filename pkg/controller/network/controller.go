@@ -15,8 +15,10 @@
 package network
 
 import (
+	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -26,9 +28,9 @@ import (
 
 const (
 	// FinalizerName is the Network controller finalizer.
-	FinalizerName = "extensions.gardener.cloud/Network"
+	FinalizerName = "extensions.gardener.cloud/network"
 	// ControllerName is the name of the controller.
-	ControllerName = "network"
+	ControllerName = "network_controller"
 )
 
 // AddArgs are arguments for adding an Network controller to a manager.
@@ -60,6 +62,7 @@ func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predic
 			extensionspredicate.LastOperationNotSuccessful(),
 			extensionspredicate.IsDeleting(),
 		),
+		extensionspredicate.ShootNotFailed(),
 	}
 }
 
@@ -67,18 +70,24 @@ func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predic
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(mgr, args.Actuator)
-	return add(mgr, args.ControllerOptions, args.Predicates)
+	return add(mgr, args)
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
-func add(mgr manager.Manager, options controller.Options, predicates []predicate.Predicate) error {
-	ctrl, err := controller.New(ControllerName, mgr, options)
+func add(mgr manager.Manager, args AddArgs) error {
+	ctrl, err := controller.New(ControllerName, mgr, args.ControllerOptions)
 	if err != nil {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Network{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Network{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
 		return err
 	}
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
+		ToRequests: extensionshandler.SimpleMapper(ClusterToNetworkMapper(args.Predicates), extensionshandler.UpdateWithNew),
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }

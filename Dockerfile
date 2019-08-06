@@ -32,7 +32,10 @@ COPY controllers/provider-gcp/charts /controllers/provider-gcp/charts
 COPY controllers/provider-openstack/charts /controllers/provider-openstack/charts
 COPY controllers/provider-alicloud/charts /controllers/provider-alicloud/charts
 COPY controllers/provider-packet/charts /controllers/provider-packet/charts
+
 COPY controllers/extension-certificate-service/charts /controllers/extension-certificate-service/charts
+
+COPY controllers/networking-calico/charts /controllers/networking-calico/charts
 
 COPY --from=builder /go/bin/gardener-extension-hyper /gardener-extension-hyper
 

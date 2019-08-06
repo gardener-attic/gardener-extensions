@@ -89,14 +89,19 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 		return reconcile.Result{}, err
 	}
 
-	if network.DeletionTimestamp != nil {
-		return r.delete(r.ctx, network)
+	cluster, err := extensionscontroller.GetCluster(r.ctx, r.client, network.Namespace)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
-	return r.reconcile(r.ctx, network)
+	if network.DeletionTimestamp != nil {
+		return r.delete(r.ctx, network, cluster)
+	}
+
+	return r.reconcile(r.ctx, network, cluster)
 }
 
-func (r *reconciler) reconcile(ctx context.Context, network *extensionsv1alpha1.Network) (reconcile.Result, error) {
+func (r *reconciler) reconcile(ctx context.Context, network *extensionsv1alpha1.Network, cluster *extensionscontroller.Cluster) (reconcile.Result, error) {
 	if err := extensionscontroller.EnsureFinalizer(ctx, r.client, FinalizerName, network); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -108,7 +113,7 @@ func (r *reconciler) reconcile(ctx context.Context, network *extensionsv1alpha1.
 
 	r.logger.Info("Starting the reconciliation of network", "network", network.Name)
 	r.recorder.Event(network, corev1.EventTypeNormal, EventNetworkReconciliation, "Reconciling the network")
-	if err := r.actuator.Reconcile(ctx, network); err != nil {
+	if err := r.actuator.Reconcile(ctx, network, cluster); err != nil {
 		msg := "Error reconciling network"
 		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), network, operationType, msg))
 		r.logger.Error(err, msg, "network", network.Name)
@@ -125,7 +130,7 @@ func (r *reconciler) reconcile(ctx context.Context, network *extensionsv1alpha1.
 	return reconcile.Result{}, nil
 }
 
-func (r *reconciler) delete(ctx context.Context, network *extensionsv1alpha1.Network) (reconcile.Result, error) {
+func (r *reconciler) delete(ctx context.Context, network *extensionsv1alpha1.Network, cluster *extensionscontroller.Cluster) (reconcile.Result, error) {
 	hasFinalizer, err := extensionscontroller.HasFinalizer(network, FinalizerName)
 	if err != nil {
 		r.logger.Error(err, "Could not instantiate finalizer deletion")
@@ -143,7 +148,7 @@ func (r *reconciler) delete(ctx context.Context, network *extensionsv1alpha1.Net
 
 	r.logger.Info("Starting the deletion of network", "network", network.Name)
 	r.recorder.Event(network, corev1.EventTypeNormal, EventNetworkDeletion, "Deleting the network")
-	if err := r.actuator.Delete(r.ctx, network); err != nil {
+	if err := r.actuator.Delete(r.ctx, network, cluster); err != nil {
 		msg := "Error deleting network"
 		r.recorder.Eventf(network, corev1.EventTypeWarning, EventNetworkDeletion, "%s: %+v", msg, err)
 		utilruntime.HandleError(r.updateStatusError(ctx, extensionscontroller.ReconcileErrCauseOrErr(err), network, operationType, msg))
