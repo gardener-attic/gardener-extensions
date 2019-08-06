@@ -34,15 +34,15 @@ const (
 
 // Webhook is the specification of a webhook.
 type Webhook struct {
-	Name                  string
-	Kind                  string
-	Provider              string
-	Path                  string
-	Target                string
-	Types                 []runtime.Object
-	Webhook               *admission.Webhook
-	Handler               http.Handler
-	NamespaceSelectorFunc func(webhook *Webhook) (*metav1.LabelSelector, error)
+	Name     string
+	Kind     string
+	Provider string
+	Path     string
+	Target   string
+	Types    []runtime.Object
+	Webhook  *admission.Webhook
+	Handler  http.Handler
+	Selector *metav1.LabelSelector
 }
 
 // FactoryAggregator aggregates various Factory functions.

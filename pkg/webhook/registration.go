@@ -37,11 +37,6 @@ func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, provi
 	)
 
 	for _, webhook := range webhooks {
-		namespaceSelector, err := webhook.NamespaceSelectorFunc(webhook)
-		if err != nil {
-			return nil, nil, err
-		}
-
 		var rules []admissionregistrationv1beta1.RuleWithOperations
 		for _, t := range webhook.Types {
 			rule, err := buildRule(mgr, t)
@@ -53,7 +48,7 @@ func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, provi
 
 		webhookToRegister := admissionregistrationv1beta1.Webhook{
 			Name:              fmt.Sprintf("%s.%s.extensions.gardener.cloud", webhook.Name, strings.TrimPrefix(providerName, "provider-")),
-			NamespaceSelector: namespaceSelector,
+			NamespaceSelector: webhook.Selector,
 			Rules:             rules,
 		}
 
