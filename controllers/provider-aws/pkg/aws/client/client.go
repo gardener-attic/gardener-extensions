@@ -92,30 +92,40 @@ func (c *Client) GetInternetGateway(ctx context.Context, vpcID string) (string, 
 
 // ListKubernetesELBs returns the list of load balancers in the given <vpcID> tagged with <clusterName>.
 func (c *Client) ListKubernetesELBs(ctx context.Context, vpcID, clusterName string) ([]string, error) {
-	output, err := c.ELB.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{})
-	if err != nil {
-		return nil, err
-	}
+	var (
+		results []string
+		e       error
+	)
 
-	var results []string
-	for _, lb := range output.LoadBalancerDescriptions {
-		if lb.VPCId != nil && *lb.VPCId == vpcID {
-			// TODO: DescribeTagsWithContext can take multiple LoadBalancers,  make just 1 call to collect all Tags
-			tags, err := c.ELB.DescribeTagsWithContext(ctx, &elb.DescribeTagsInput{
-				LoadBalancerNames: []*string{lb.LoadBalancerName},
-			})
-			if err != nil {
-				return nil, err
-			}
+	if err := c.ELB.DescribeLoadBalancersPagesWithContext(ctx, &elb.DescribeLoadBalancersInput{}, func(page *elb.DescribeLoadBalancersOutput, lastPage bool) bool {
+		for _, lb := range page.LoadBalancerDescriptions {
+			if lb.VPCId != nil && *lb.VPCId == vpcID {
+				// TODO: DescribeTagsWithContext can take multiple LoadBalancers,  make just 1 call to collect all Tags
+				tags, err := c.ELB.DescribeTagsWithContext(ctx, &elb.DescribeTagsInput{
+					LoadBalancerNames: []*string{lb.LoadBalancerName},
+				})
+				if err != nil {
+					e = err
+					return false
+				}
 
-			for _, description := range tags.TagDescriptions {
-				for _, tag := range description.Tags {
-					if tag.Key != nil && *tag.Key == fmt.Sprintf("kubernetes.io/cluster/%s", clusterName) && tag.Value != nil && *tag.Value == "owned" {
-						results = append(results, *lb.LoadBalancerName)
+				for _, description := range tags.TagDescriptions {
+					for _, tag := range description.Tags {
+						if tag.Key != nil && *tag.Key == fmt.Sprintf("kubernetes.io/cluster/%s", clusterName) && tag.Value != nil && *tag.Value == "owned" {
+							results = append(results, *lb.LoadBalancerName)
+						}
 					}
 				}
 			}
 		}
+
+		return !lastPage
+	}); err != nil {
+		return nil, err
+	}
+
+	if e != nil {
+		return nil, e
 	}
 
 	return results, nil
