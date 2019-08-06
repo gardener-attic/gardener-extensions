@@ -376,6 +376,16 @@ var _ = Describe("ValuesProvider", func() {
 				"tenantID":       []byte(`TenantID`),
 			},
 		}
+		cloudProviderConfigKey = client.ObjectKey{Namespace: namespace, Name: cloudProviderConfigMapName}
+		cloudProviderConfigMap = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      cloudProviderConfigMapName,
+				Namespace: namespace,
+			},
+			Data: map[string]string{
+				cloudProviderConfigMapKey: "loadBalancerSku: \"standard\"",
+			},
+		}
 
 		checksums = map[string]string{
 			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
@@ -392,6 +402,7 @@ var _ = Describe("ValuesProvider", func() {
 			"resourceGroup":       "rg-abcd1234",
 			"vnetName":            "vnet-abcd1234",
 			"subnetName":          "subnet-abcd1234-nodes",
+			"loadBalancerSku":     "standard",
 			"region":              "eu-west-1a",
 			"availabilitySetName": "availability-set-name",
 			"routeTableName":      "route-table-name",
@@ -430,6 +441,7 @@ var _ = Describe("ValuesProvider", func() {
 		It("should return correct config chart values", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cloudProviderConfigMap))
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create valuesProvider
@@ -441,6 +453,7 @@ var _ = Describe("ValuesProvider", func() {
 
 			// Call GetConfigChartValues method and check the result
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
+
 			Expect(err).NotTo(HaveOccurred())
 			Expect(values).To(Equal(configChartValues))
 		})
@@ -450,6 +463,7 @@ var _ = Describe("ValuesProvider", func() {
 		It("should return error, missing subnet", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cloudProviderConfigMap))
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create valuesProvider
@@ -470,6 +484,7 @@ var _ = Describe("ValuesProvider", func() {
 		It("should return error, missing availability set", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cloudProviderConfigMap))
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create valuesProvider
@@ -490,6 +505,7 @@ var _ = Describe("ValuesProvider", func() {
 		It("should return error, missing route tables", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cloudProviderConfigMap))
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create valuesProvider
@@ -510,6 +526,7 @@ var _ = Describe("ValuesProvider", func() {
 		It("should return error, missing security groups", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cloudProviderConfigMap))
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
 
 			// Create valuesProvider
@@ -539,6 +556,76 @@ var _ = Describe("ValuesProvider", func() {
 			Expect(values).To(Equal(ccmChartValues))
 		})
 	})
+
+	Describe("#determineLoadBalancerType", func() {
+		It("should use standard load balancer, as configured in cloud-provider-config", func() {
+			c := mockclient.NewMockClient(ctrl)
+			c.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cloudProviderConfigMap))
+
+			vc := client.Client(c)
+			lbType, err := determineLoadBalancerType(context.TODO(), vc, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lbType).To(Equal("standard"))
+		})
+
+		It("should use standard load balancer, as cloud-provider-config is empty", func() {
+			var cm = &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cloudProviderConfigMapName,
+					Namespace: namespace,
+				},
+				Data: map[string]string{},
+			}
+
+			c := mockclient.NewMockClient(ctrl)
+			c.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			vc := client.Client(c)
+			lbType, err := determineLoadBalancerType(context.TODO(), vc, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lbType).To(Equal("standard"))
+		})
+
+		It("should use basic load balancer, as no lb config in cloud-provider-config", func() {
+			var cm = &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cloudProviderConfigMapName,
+					Namespace: namespace,
+				},
+				Data: map[string]string{
+					cloudProviderConfigMapKey: "",
+				},
+			}
+
+			c := mockclient.NewMockClient(ctrl)
+			c.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			vc := client.Client(c)
+			lbType, err := determineLoadBalancerType(context.TODO(), vc, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lbType).To(Equal("basic"))
+		})
+
+		It("should use basic load balancer, as configured in cloud-provider-config", func() {
+			var cm = &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      cloudProviderConfigMapName,
+					Namespace: namespace,
+				},
+				Data: map[string]string{
+					cloudProviderConfigMapKey: "loadBalancerSku: \"basic\"",
+				},
+			}
+
+			c := mockclient.NewMockClient(ctrl)
+			c.EXPECT().Get(context.TODO(), cloudProviderConfigKey, &corev1.ConfigMap{}).DoAndReturn(clientGet(cm))
+
+			vc := client.Client(c)
+			lbType, err := determineLoadBalancerType(context.TODO(), vc, namespace)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(lbType).To(Equal("basic"))
+		})
+	})
 })
 
 func encode(obj runtime.Object) []byte {
@@ -551,6 +638,8 @@ func clientGet(result runtime.Object) interface{} {
 		switch obj.(type) {
 		case *corev1.Secret:
 			*obj.(*corev1.Secret) = *result.(*corev1.Secret)
+		case *corev1.ConfigMap:
+			*obj.(*corev1.ConfigMap) = *result.(*corev1.ConfigMap)
 		}
 		return nil
 	}

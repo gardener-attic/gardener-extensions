@@ -9,4 +9,5 @@ availabilitySetName: av-set
 subnetName: sname
 routeTableName: rtname
 securityGroupName: sgname
+loadBalancerSku: standard
 region: location
