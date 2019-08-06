@@ -17,6 +17,7 @@ package oscommon
 import (
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/actuator"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/customizer"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -36,15 +37,15 @@ type AddOptions struct {
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
 // The opts.Reconciler is being set with a newly instantiated actuator.
-func AddToManagerWithOptions(mgr manager.Manager, os string, generator generator.Generator, opts AddOptions) error {
+func AddToManagerWithOptions(mgr manager.Manager, os string, generator generator.Generator, customizer customizer.Customizer, opts AddOptions) error {
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
-		Actuator:          actuator.NewActuator(os, generator),
+		Actuator:          actuator.NewActuator(os, generator, customizer),
 		Predicates:        operatingsystemconfig.DefaultPredicates(os, opts.IgnoreOperationAnnotation),
 		ControllerOptions: opts.Controller,
 	})
 }
 
 // AddToManager adds a controller with the default Options.
-func AddToManager(mgr manager.Manager, os string, generator generator.Generator) error {
-	return AddToManagerWithOptions(mgr, os, generator, DefaultAddOptions)
+func AddToManager(mgr manager.Manager, os string, generator generator.Generator, customizer customizer.Customizer) error {
+	return AddToManagerWithOptions(mgr, os, generator, customizer, DefaultAddOptions)
 }

@@ -12,22 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cmd
+package customizer
 
 import (
-	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon"
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/customizer"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// SwitchOptions are the cmd.SwitchOptions for the provider controllers.
-func SwitchOptions(os string, generator generator.Generator, customizer customizer.Customizer) *cmd.SwitchOptions {
-	return cmd.NewSwitchOptions(
-		cmd.Switch(operatingsystemconfig.ControllerName, func(mgr manager.Manager) error {
-			return oscommon.AddToManager(mgr, os, generator, customizer)
-		}),
-	)
+// Customizer customizes an OperatingSystemConfig
+// using a ProviderConfig
+type Customizer interface {
+	Customize(*generator.OperatingSystemConfig, *runtime.RawExtension) (*generator.OperatingSystemConfig, error)
 }

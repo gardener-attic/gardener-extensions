@@ -45,6 +45,7 @@ type DropIn struct {
 type OperatingSystemConfig struct {
 	Files     []*File
 	Units     []*Unit
+	Commands  []string
 	Bootstrap bool
 	Path      *string
 }

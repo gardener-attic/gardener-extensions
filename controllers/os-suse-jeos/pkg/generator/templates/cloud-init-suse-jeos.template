@@ -34,3 +34,6 @@ runcmd:
 {{ range $_, $unit := .Units -}}
 - systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
 {{ end -}}
+{{ range $_, $command := .Commands -}}
+- '{{ command }}'
+{{ end -}}

@@ -22,6 +22,7 @@ import (
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon"
 	oscommoncmd "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cmd"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/customizer"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
@@ -31,7 +32,7 @@ import (
 )
 
 // NewControllerCommand creates a new command for running an OS controller.
-func NewControllerCommand(ctx context.Context, osName string, generator generator.Generator) *cobra.Command {
+func NewControllerCommand(ctx context.Context, osName string, generator generator.Generator, customizer customizer.Customizer) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
 		mgrOpts  = &controllercmd.ManagerOptions{
@@ -45,7 +46,7 @@ func NewControllerCommand(ctx context.Context, osName string, generator generato
 
 		reconcileOpts = &controllercmd.ReconcilerOptions{}
 
-		controllerSwitches = oscommoncmd.SwitchOptions(osName, generator)
+		controllerSwitches = oscommoncmd.SwitchOptions(osName, generator, customizer)
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,

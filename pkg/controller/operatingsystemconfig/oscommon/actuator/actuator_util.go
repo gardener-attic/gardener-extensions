@@ -32,10 +32,9 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cloudinit"
-	commonosgenerator "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
-
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/customizer"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
 
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -43,37 +42,49 @@ import (
 
 // CloudConfigFromOperatingSystemConfig generates a CloudConfig from an OperatingSystemConfig
 // using a Generator
-func CloudConfigFromOperatingSystemConfig(ctx context.Context, cli runtimeclient.Client, config *extensionsv1alpha1.OperatingSystemConfig, generator commonosgenerator.Generator) ([]byte, *string, error) {
-	files := make([]*commonosgenerator.File, 0, len(config.Spec.Files))
+func CloudConfigFromOperatingSystemConfig(ctx context.Context, cli runtimeclient.Client, config *extensionsv1alpha1.OperatingSystemConfig, c customizer.Customizer, g generator.Generator) ([]byte, *string, error) {
+
+	files := make([]*generator.File, 0, len(config.Spec.Files))
 	for _, file := range config.Spec.Files {
 		data, err := DataForFileContent(ctx, cli, config.Namespace, &file.Content)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		files = append(files, &commonosgenerator.File{Path: file.Path, Content: data, Permissions: file.Permissions})
+		files = append(files, &generator.File{Path: file.Path, Content: data, Permissions: file.Permissions})
 	}
 
-	units := make([]*commonosgenerator.Unit, 0, len(config.Spec.Units))
+	units := make([]*generator.Unit, 0, len(config.Spec.Units))
 	for _, unit := range config.Spec.Units {
 		var content []byte
 		if unit.Content != nil {
 			content = []byte(*unit.Content)
 		}
 
-		dropIns := make([]*commonosgenerator.DropIn, 0, len(unit.DropIns))
+		dropIns := make([]*generator.DropIn, 0, len(unit.DropIns))
 		for _, dropIn := range unit.DropIns {
-			dropIns = append(dropIns, &commonosgenerator.DropIn{Name: dropIn.Name, Content: []byte(dropIn.Content)})
+			dropIns = append(dropIns, &generator.DropIn{Name: dropIn.Name, Content: []byte(dropIn.Content)})
 		}
-		units = append(units, &commonosgenerator.Unit{Name: unit.Name, Content: content, DropIns: dropIns})
+		units = append(units, &generator.Unit{Name: unit.Name, Content: content, DropIns: dropIns})
 	}
 
-	return generator.Generate(&commonosgenerator.OperatingSystemConfig{
+	osconf := &generator.OperatingSystemConfig{
 		Bootstrap: config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeProvision,
 		Files:     files,
 		Units:     units,
 		Path:      config.Spec.ReloadConfigFilePath,
-	})
+	}
+
+	// TODO: if there's an configuration but not a customizer report a warning
+	if config.Spec.ProviderConfig != nil && c != nil {
+		customized, err := c.Customize(osconf, config.Spec.ProviderConfig)
+		if err != nil {
+			return nil, nil, err
+		}
+		return g.Generate(customized)
+	}
+
+	return g.Generate(osconf)
 }
 
 // DataForFileContent returns the content for a FileContent, retrieving from a Secret if necessary.

@@ -16,6 +16,7 @@ package actuator
 
 import (
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/customizer"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 
 	"github.com/go-logr/logr"
@@ -28,19 +29,21 @@ import (
 
 // Actuator uses a generator to render an OperatingSystemConfiguration for an Operating System
 type Actuator struct {
-	scheme    *runtime.Scheme
-	client    client.Client
-	logger    logr.Logger
-	osName    string
-	generator generator.Generator
+	scheme     *runtime.Scheme
+	client     client.Client
+	logger     logr.Logger
+	osName     string
+	customizer customizer.Customizer
+	generator  generator.Generator
 }
 
 // NewActuator creates a new actuator with the given logger.
-func NewActuator(osName string, generator generator.Generator) operatingsystemconfig.Actuator {
+func NewActuator(osName string, generator generator.Generator, customizer customizer.Customizer) operatingsystemconfig.Actuator {
 	return &Actuator{
-		logger:    log.Log.WithName(osName + "-operatingsystemconfig-actuator"),
-		osName:    osName,
-		generator: generator,
+		logger:     log.Log.WithName(osName + "-operatingsystemconfig-actuator"),
+		osName:     osName,
+		customizer: customizer,
+		generator:  generator,
 	}
 }
 
