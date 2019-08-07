@@ -80,7 +80,7 @@ func (a *actuator) deployEtcdBackupSecret(ctx context.Context, be *extensionsv1a
 	}
 
 	backupSecretData := backupSecret.DeepCopy().Data
-	backupSecret.Data[backupBucketName] = []byte(be.Spec.BucketName)
+	backupSecretData[backupBucketName] = []byte(be.Spec.BucketName)
 	etcdSecretData, err := a.backupEntryDelegate.GetETCDSecretData(ctx, be, backupSecretData)
 	if err != nil {
 		return err

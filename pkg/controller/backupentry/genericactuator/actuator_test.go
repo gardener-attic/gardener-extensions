@@ -61,7 +61,8 @@ var _ = Describe("Actuator", func() {
 		}
 
 		backupProviderSecretData = map[string][]byte{
-			"foo": []byte("bar"),
+			"foo":        []byte("bar"),
+			"bucketName": []byte(bucketName),
 		}
 
 		beSecret = &corev1.Secret{
@@ -69,7 +70,9 @@ var _ = Describe("Actuator", func() {
 				Name:      providerSecretName,
 				Namespace: providerSecretNamespace,
 			},
-			Data: backupProviderSecretData,
+			Data: map[string][]byte{
+				"foo": []byte("bar"),
+			},
 		}
 
 		etcdBackupSecretData = map[string][]byte{
