@@ -85,7 +85,6 @@ type DeleteVpnRouteEntryRequest struct {
 	OwnerId              requests.Integer `position:"Query" name:"OwnerId"`
 	RouteDest            string           `position:"Query" name:"RouteDest"`
 	NextHop              string           `position:"Query" name:"NextHop"`
-	OverlayMode          string           `position:"Query" name:"OverlayMode"`
 }
 
 // DeleteVpnRouteEntryResponse is the response struct for api DeleteVpnRouteEntry

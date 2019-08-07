@@ -77,11 +77,13 @@ docker-images: docker-image-hyper
 
 .PHONY: revendor
 revendor:
-	@dep ensure -v -update
+	@GO111MODULE=on go mod vendor
+	@GO111MODULE=on go mod tidy
 
 .PHONY: start-os-coreos
 start-os-coreos:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos/cmd/gardener-extension-os-coreos \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
@@ -89,7 +91,8 @@ start-os-coreos:
 
 .PHONY: start-os-jeos
 start-os-jeos:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
@@ -97,7 +100,8 @@ start-os-jeos:
 
 .PHONY: start-os-coreos-alicloud
 start-os-coreos-alicloud:
-		@LEADER_ELECTION_NAMESPACE=garden go run \
+		@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
@@ -105,14 +109,16 @@ start-os-coreos-alicloud:
 
 .PHONY: start-os-ubuntu
 start-os-ubuntu:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/os-ubuntu/cmd/gardener-extension-os-ubuntu \
 		--leader-election=$(LEADER_ELECTION)
 
 .PHONY: start-provider-aws
 start-provider-aws:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-aws/cmd/gardener-extension-provider-aws \
 		--config-file=./controllers/provider-aws/example/00-componentconfig.yaml \
@@ -125,7 +131,8 @@ start-provider-aws:
 
 .PHONY: start-provider-azure
 start-provider-azure:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
 		--config-file=./controllers/provider-azure/example/00-componentconfig.yaml \
@@ -138,7 +145,8 @@ start-provider-azure:
 
 .PHONY: start-provider-gcp
 start-provider-gcp:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-gcp/cmd/gardener-extension-provider-gcp \
 		--config-file=./controllers/provider-gcp/example/00-componentconfig.yaml \
@@ -151,7 +159,8 @@ start-provider-gcp:
 
 .PHONY: start-provider-openstack
 start-provider-openstack:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-openstack/cmd/gardener-extension-provider-openstack \
 		--config-file=./controllers/provider-openstack/example/00-componentconfig.yaml \
@@ -164,7 +173,8 @@ start-provider-openstack:
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud \
 		--config-file=./controllers/provider-alicloud/example/00-componentconfig.yaml \
@@ -177,7 +187,8 @@ start-provider-alicloud:
 
 .PHONY: start-provider-packet
 start-provider-packet:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/provider-packet/cmd/gardener-extension-provider-packet \
 		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
@@ -190,7 +201,8 @@ start-provider-packet:
 
 .PHONY: start-certificate-service
 start-certificate-service:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/extension-certificate-service/cmd \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
@@ -199,7 +211,8 @@ start-certificate-service:
 
 .PHONY: start-networking-calico
 start-networking-calico:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
 		-ldflags $(LD_FLAGS) \
 		./controllers/networking-calico/cmd/gardener-extension-networking-calico \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \

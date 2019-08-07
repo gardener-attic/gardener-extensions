@@ -21,4 +21,4 @@ source "$DIRNAME/common.sh"
 
 header_text "Test"
 
-ginkgo "${SOURCE_TREES[@]}"
+GO111MODULE=on ginkgo -mod=vendor "${SOURCE_TREES[@]}"

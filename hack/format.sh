@@ -21,4 +21,4 @@ source "$DIRNAME/common.sh"
 
 header_text "Format"
 
-go fmt "${SOURCE_TREES[@]}"
+gofmt -l -w ./pkg ./controllers

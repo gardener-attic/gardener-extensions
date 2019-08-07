@@ -4,13 +4,14 @@ import (
 	"github.com/gobuffalo/packr/v2/file"
 	"github.com/gobuffalo/packr/v2/file/resolver"
 	"github.com/gobuffalo/packr/v2/plog"
+	"github.com/pkg/errors"
 )
 
 // Pointer is a resolvr which resolves
 // a file from a different box.
 type Pointer struct {
-	ForwardBox	string
-	ForwardPath	string
+	ForwardBox  string
+	ForwardPath string
 }
 
 var _ resolver.Resolver = Pointer{}
@@ -25,7 +26,7 @@ func (p Pointer) Resolve(box string, path string) (file.File, error) {
 	}
 	f, err := b.Resolve(p.ForwardPath)
 	if err != nil {
-		return f, err
+		return f, errors.WithStack(errors.Wrap(err, path))
 	}
 	plog.Debug(p, "Resolve", "box", box, "path", path, "file", f)
 	return file.NewFileR(path, f)
