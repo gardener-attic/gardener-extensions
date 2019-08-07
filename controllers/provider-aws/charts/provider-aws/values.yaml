@@ -47,15 +47,15 @@ config:
     burst: 130
   machineImages:
   - name: coreos
-    version: 1967.5.0
+    version: 2135.6.0
     regions:
-    - ami: ami-82645dfb
+    - ami: ami-0b4e04c2cc22a915e
       name: eu-west-1
-    - ami: ami-32042fd9
+    - ami: ami-034fd8c3f4026eb39
       name: eu-central-1
-    - ami: ami-93d3b4ec
+    - ami: ami-04e51eabc8abea762
       name: us-east-1
-    - ami: ami-e5cdf180
+    - ami: ami-00893b3a357694f05
       name: us-east-2
   etcd:
     storage:
