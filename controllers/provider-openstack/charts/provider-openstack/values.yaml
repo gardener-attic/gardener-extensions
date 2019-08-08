@@ -48,10 +48,10 @@ config:
     burst: 130
   machineImages:
   - name: coreos
-    version: 2023.5.0
+    version: 2135.6.0
     cloudProfiles:
     - name: eu-de-1
-      image: coreos-2023.5.0
+      image: coreos-2135.6.0
   etcd:
     storage:
       className: gardener.cloud-fast

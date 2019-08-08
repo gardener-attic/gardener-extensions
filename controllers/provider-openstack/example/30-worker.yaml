@@ -71,7 +71,7 @@ spec:
     machineType: medium_2_4
     machineImage:
       name: coreos
-      version: 1967.5.0
+      version: 2135.6.0
     minimum: 1
     maximum: 1
     maxSurge: 1

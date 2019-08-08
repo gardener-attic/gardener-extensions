@@ -47,7 +47,7 @@ config:
     burst: 130
   machineImages:
   - name: coreos
-    version: 2023.5.0
+    version: 2135.6.0
     publisher: CoreOS
     offer: CoreOS
     sku: Stable

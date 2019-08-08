@@ -47,8 +47,8 @@ config:
     burst: 130
   machineImages:
   - name: coreos
-    version: 2023.5.0
-    image: projects/coreos-cloud/global/images/coreos-stable-2023-5-0-v20190312
+    version: 2135.6.0
+    image: projects/coreos-cloud/global/images/coreos-stable-2135-6-0-v20190801
   etcd:
     storage:
       className: gardener.cloud-fast
