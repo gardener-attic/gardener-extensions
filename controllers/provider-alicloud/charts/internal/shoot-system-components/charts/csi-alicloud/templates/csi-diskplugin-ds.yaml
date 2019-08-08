@@ -49,9 +49,6 @@ spec:
       - name: csi-diskplugin
         securityContext:
           privileged: true
-          capabilities:
-            add: ["SYS_ADMIN"]
-          allowPrivilegeEscalation: true
         image: {{ index .Values.images "csi-plugin-alicloud" }}
         args:
         - "--endpoint=$(CSI_ENDPOINT)"
