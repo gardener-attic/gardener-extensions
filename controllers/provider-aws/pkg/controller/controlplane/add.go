@@ -49,8 +49,8 @@ type AddOptions struct {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator: genericactuator.NewActuator(aws.Name, controlPlaneSecrets, configChart, ccmChart, ccmShootChart,
-			storageClassChart, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
+		Actuator: genericactuator.NewActuator(aws.Name, controlPlaneSecrets, controlPlaneExposureSecrets, configChart, ccmChart, ccmShootChart,
+			storageClassChart, cpExposureChart, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), aws.CloudProviderConfigName, opts.ShootWebhooks, mgr.GetWebhookServer().Port, logger),
 		ControllerOptions: opts.Controller,
 		Predicates:        controlplane.DefaultPredicates(aws.Type, opts.IgnoreOperationAnnotation),

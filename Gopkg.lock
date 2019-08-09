@@ -223,7 +223,7 @@
   version = "0.6.1"
 
 [[projects]]
-  digest = "1:b049450ba9ebc2037b08d17a43b17302952a45abc1ac6c0afaf5cd5208e010fa"
+  digest = "1:9ad358d87fcb4b91af267d31974358a98490d53f20da7053e2ef86fe20fcf1d1"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/api/extensions",
@@ -263,7 +263,7 @@
     "pkg/version",
   ]
   pruneopts = "NUT"
-  revision = "0.27.0"
+  revision = "7798c480cfd8cb9f7c6bfd2e4fd7441a7a469db7"
 
 [[projects]]
   digest = "1:ad70dc0ea115b0c56cf5fbd3a37813bd5d45d21266301ab80bcfa61f773e0c78"
@@ -1546,7 +1546,6 @@
     "github.com/go-logr/zapr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
-    "github.com/gobuffalo/packr/v2/file/resolver",
     "github.com/golang/mock/gomock",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
@@ -1578,6 +1577,7 @@
     "k8s.io/api/admissionregistration/v1beta1",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
+    "k8s.io/api/networking/v1",
     "k8s.io/api/policy/v1beta1",
     "k8s.io/api/rbac/v1",
     "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1",

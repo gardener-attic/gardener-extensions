@@ -30,6 +30,8 @@ const (
 	HyperkubeImageName = "hyperkube"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
 	ETCDBackupRestoreImageName = "etcd-backup-restore"
+	// AWSLBReadvertiserImageName is the name of the AWSLBReadvertiser image.
+	AWSLBReadvertiserImageName = "aws-lb-readvertiser"
 
 	// AccessKeyID is a constant for the key in a cloud provider secret and backup secret that holds the AWS access key id.
 	AccessKeyID = "accessKeyID"

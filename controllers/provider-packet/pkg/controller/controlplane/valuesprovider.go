@@ -167,6 +167,7 @@ func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 
 // valuesProvider is a ValuesProvider that provides Packet-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
+	genericactuator.NoopValuesProvider
 	decoder runtime.Decoder
 	client  client.Client
 	logger  logr.Logger
@@ -182,16 +183,6 @@ func (vp *valuesProvider) InjectScheme(scheme *runtime.Scheme) error {
 func (vp *valuesProvider) InjectClient(client client.Client) error {
 	vp.client = client
 	return nil
-}
-
-// GetConfigChartValues returns the values for the config chart applied by the generic actuator.
-func (vp *valuesProvider) GetConfigChartValues(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-	cluster *extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	// Not needed for Packet cloud-controller-manager - it does not have a config.
-	return nil, nil
 }
 
 // GetControlPlaneChartValues returns the values for the control plane chart applied by the generic actuator.
@@ -226,15 +217,6 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 
 	// Get control plane shoot chart values
 	return getControlPlaneShootChartValues(cluster, credentials)
-}
-
-// GetStorageClassesChartValues returns the values for the shoot storageclasses chart applied by the generic actuator.
-func (vp *valuesProvider) GetStorageClassesChartValues(
-	ctx context.Context,
-	cp *extensionsv1alpha1.ControlPlane,
-	cluster *extensionscontroller.Cluster,
-) (map[string]interface{}, error) {
-	return nil, nil
 }
 
 // getCredentials determines the credentials from the secret referenced in the ControlPlane resource.

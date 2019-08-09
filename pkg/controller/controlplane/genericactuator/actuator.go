@@ -17,7 +17,6 @@ package genericactuator
 import (
 	"bytes"
 	"context"
-
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -51,6 +50,8 @@ type ValuesProvider interface {
 	GetControlPlaneShootChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
 	// GetStorageClassesChartValues returns the values for the storage classes chart applied by this actuator.
 	GetStorageClassesChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error)
+	// GetControlPlaneExposureChartValues returns the values for the control plane exposure chart applied by this actuator.
+	GetControlPlaneExposureChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster, map[string]string) (map[string]interface{}, error)
 }
 
 // NewActuator creates a new Actuator that acts upon and updates the status of ControlPlane resources.
@@ -58,8 +59,8 @@ type ValuesProvider interface {
 // the values provided by the given values provider.
 func NewActuator(
 	providerName string,
-	secrets util.Secrets,
-	configChart, controlPlaneChart, controlPlaneShootChart, storageClassesChart util.Chart,
+	secrets, exposureSecrets util.Secrets,
+	configChart, controlPlaneChart, controlPlaneShootChart, storageClassesChart, controlPlaneExposureChart util.Chart,
 	vp ValuesProvider,
 	chartRendererFactory extensionscontroller.ChartRendererFactory,
 	imageVector imagevector.ImageVector,
@@ -69,36 +70,40 @@ func NewActuator(
 	logger logr.Logger,
 ) controlplane.Actuator {
 	return &actuator{
-		providerName:           providerName,
-		secrets:                secrets,
-		configChart:            configChart,
-		controlPlaneChart:      controlPlaneChart,
-		controlPlaneShootChart: controlPlaneShootChart,
-		storageClassesChart:    storageClassesChart,
-		vp:                     vp,
-		chartRendererFactory:   chartRendererFactory,
-		imageVector:            imageVector,
-		configName:             configName,
-		shootWebhooks:          shootWebhooks,
-		webhookServerPort:      webhookServerPort,
-		logger:                 logger.WithName("controlplane-actuator"),
+		providerName:              providerName,
+		secrets:                   secrets,
+		exposureSecrets:           exposureSecrets,
+		configChart:               configChart,
+		controlPlaneChart:         controlPlaneChart,
+		controlPlaneShootChart:    controlPlaneShootChart,
+		storageClassesChart:       storageClassesChart,
+		controlPlaneExposureChart: controlPlaneExposureChart,
+		vp:                        vp,
+		chartRendererFactory:      chartRendererFactory,
+		imageVector:               imageVector,
+		configName:                configName,
+		shootWebhooks:             shootWebhooks,
+		webhookServerPort:         webhookServerPort,
+		logger:                    logger.WithName("controlplane-actuator"),
 	}
 }
 
 // actuator is an Actuator that acts upon and updates the status of ControlPlane resources.
 type actuator struct {
-	providerName           string
-	secrets                util.Secrets
-	configChart            util.Chart
-	controlPlaneChart      util.Chart
-	controlPlaneShootChart util.Chart
-	storageClassesChart    util.Chart
-	vp                     ValuesProvider
-	chartRendererFactory   extensionscontroller.ChartRendererFactory
-	imageVector            imagevector.ImageVector
-	configName             string
-	shootWebhooks          []admissionregistrationv1beta1.Webhook
-	webhookServerPort      int
+	providerName              string
+	secrets                   util.Secrets
+	exposureSecrets           util.Secrets
+	configChart               util.Chart
+	controlPlaneChart         util.Chart
+	controlPlaneShootChart    util.Chart
+	storageClassesChart       util.Chart
+	controlPlaneExposureChart util.Chart
+	vp                        ValuesProvider
+	chartRendererFactory      extensionscontroller.ChartRendererFactory
+	imageVector               imagevector.ImageVector
+	configName                string
+	shootWebhooks             []admissionregistrationv1beta1.Webhook
+	webhookServerPort         int
 
 	clientset         kubernetes.Interface
 	gardenerClientset gardenerkubernetes.Interface
@@ -155,6 +160,56 @@ func (a *actuator) Reconcile(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (bool, error) {
+	if cp.Spec.Purpose != nil && *cp.Spec.Purpose == extensionsv1alpha1.Exposure {
+		return a.reconcileControlPlaneExposure(ctx, cp, cluster)
+	}
+	return a.reconcileControlPlane(ctx, cp, cluster)
+}
+
+func (a *actuator) reconcileControlPlaneExposure(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) (bool, error) {
+	if a.controlPlaneExposureChart == nil {
+		return false, nil
+	}
+
+	// Deploy secrets
+	checksums := make(map[string]string)
+	if a.exposureSecrets != nil {
+		a.logger.Info("Deploying control plane exposure secrets", "controlplane", util.ObjectName(cp))
+		deployedSecrets, err := a.exposureSecrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
+		if err != nil {
+			return false, errors.Wrapf(err, "could not deploy control plane exposure secrets for controlplane '%s'", util.ObjectName(cp))
+		}
+		// Compute needed checksums
+		checksums = controlplane.ComputeChecksums(deployedSecrets, nil)
+	}
+
+	// Get control plane exposure chart values
+	values, err := a.vp.GetControlPlaneExposureChartValues(ctx, cp, cluster, checksums)
+	if err != nil {
+		return false, err
+	}
+
+	// Apply control plane exposure chart
+	a.logger.Info("Applying control plane exposure chart", "controlplaneexposure", util.ObjectName(cp), "values", values)
+	if err := a.controlPlaneExposureChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), cluster.Shoot.Spec.Kubernetes.Version, values); err != nil {
+		return false, errors.Wrapf(err, "could not apply control plane exposure chart for controlplane '%s'", util.ObjectName(cp))
+	}
+
+	return false, nil
+}
+
+// reconcileControlPlane reconciles the given controlplane and cluster, creating or updating the additional Shoot
+// control plane components as needed.
+func (a *actuator) reconcileControlPlane(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) (bool, error) {
+
 	if len(a.shootWebhooks) > 0 {
 		// Deploy shoot webhook configurations
 		if err := extensionswebhookshoot.EnsureNetworkPolicy(ctx, a.client, cp.Namespace, a.providerName, a.webhookServerPort); err != nil {
@@ -268,9 +323,48 @@ func (a *actuator) Reconcile(
 	return requeue, nil
 }
 
-// Delete reconciles the given controlplane and cluster, deleting the additional Shoot
+// Delete reconciles the given controlplane and cluster, deleting the additional
 // control plane components as needed.
 func (a *actuator) Delete(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) error {
+	if cp.Spec.Purpose != nil && *cp.Spec.Purpose == extensionsv1alpha1.Exposure {
+		return a.deleteControlPlaneExposure(ctx, cp, cluster)
+	}
+	return a.deleteControlPlane(ctx, cp, cluster)
+}
+
+// deleteControlPlaneExposure reconciles the given controlplane and cluster, deleting the additional Seed
+// control plane components as needed.
+func (a *actuator) deleteControlPlaneExposure(
+	ctx context.Context,
+	cp *extensionsv1alpha1.ControlPlane,
+	cluster *extensionscontroller.Cluster,
+) error {
+	// Delete control plane objects
+	if a.controlPlaneExposureChart != nil {
+		a.logger.Info("Deleting control plane exposure with objects", "controlplane", util.ObjectName(cp))
+		if err := a.controlPlaneExposureChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+			return errors.Wrapf(err, "could not delete control plane exposure objects for controlplane '%s'", util.ObjectName(cp))
+		}
+	}
+
+	// Delete secrets
+	if a.exposureSecrets != nil {
+		a.logger.Info("Deleting secrets for control plane with purpose exposure", "controlplane", util.ObjectName(cp))
+		if err := a.exposureSecrets.Delete(a.clientset, cp.Namespace); err != nil {
+			return errors.Wrapf(err, "could not delete secrets for controlplane exposure '%s'", util.ObjectName(cp))
+		}
+	}
+
+	return nil
+}
+
+// deleteControlPlane reconciles the given controlplane and cluster, deleting the additional Shoot
+// control plane components as needed.
+func (a *actuator) deleteControlPlane(
 	ctx context.Context,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,

@@ -78,6 +78,13 @@ var _ = Describe("Actuator", func() {
 			ObjectMeta: metav1.ObjectMeta{Name: "control-plane", Namespace: namespace},
 			Spec:       extensionsv1alpha1.ControlPlaneSpec{},
 		}
+		cpExposure = &extensionsv1alpha1.ControlPlane{
+			ObjectMeta: metav1.ObjectMeta{Name: "control-plane-exposure", Namespace: namespace},
+			Spec: extensionsv1alpha1.ControlPlaneSpec{
+				Purpose: getPurposeExposure(),
+			},
+		}
+
 		cluster = &extensionscontroller.Cluster{
 			Shoot: &gardenv1beta1.Shoot{
 				Spec: gardenv1beta1.ShootSpec{
@@ -91,6 +98,12 @@ var _ = Describe("Actuator", func() {
 		deployedSecrets = map[string]*corev1.Secret{
 			"cloud-controller-manager": {
 				ObjectMeta: metav1.ObjectMeta{Name: "cloud-controller-manager", Namespace: namespace},
+				Data:       map[string][]byte{"a": []byte("b")},
+			},
+		}
+		deployedExposureSecrets = map[string]*corev1.Secret{
+			"lb-readvertiser": {
+				ObjectMeta: metav1.ObjectMeta{Name: "lb-readvertiser", Namespace: namespace},
 				Data:       map[string][]byte{"a": []byte("b")},
 			},
 		}
@@ -219,6 +232,9 @@ var _ = Describe("Actuator", func() {
 			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
+		exposureChecksums = map[string]string{
+			"lb-readvertiser": "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+		}
 
 		configChartValues = map[string]interface{}{
 			"cloudProviderConfig": `[Global]`,
@@ -234,6 +250,10 @@ var _ = Describe("Actuator", func() {
 
 		storageClassesChartValues = map[string]interface{}{
 			"foo": "bar",
+		}
+
+		controlPlaneExposureChartValues = map[string]interface{}{
+			"replicas": 1,
 		}
 
 		errNotFound = &errors.StatusError{ErrStatus: metav1.Status{Reason: metav1.StatusReasonNotFound}}
@@ -322,7 +342,7 @@ var _ = Describe("Actuator", func() {
 			vp.EXPECT().GetStorageClassesChartValues(ctx, cp, cluster).Return(storageClassesChartValues, nil)
 
 			// Create actuator
-			a := NewActuator(providerName, secrets, configChart, ccmChart, ccmShootChart, storageClassesChart, vp, crf, imageVector, configName, webhooks, webhookServerPort, logger)
+			a := NewActuator(providerName, secrets, nil, configChart, ccmChart, ccmShootChart, storageClassesChart, nil, vp, crf, imageVector, configName, webhooks, webhookServerPort, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 			a.(*actuator).gardenerClientset = gardenerClientset
@@ -370,7 +390,7 @@ var _ = Describe("Actuator", func() {
 			}
 
 			// Create actuator
-			a := NewActuator(providerName, secrets, configChart, ccmChart, nil, nil, nil, nil, nil, configName, webhooks, webhookServerPort, logger)
+			a := NewActuator(providerName, secrets, nil, configChart, ccmChart, nil, nil, nil, nil, nil, nil, configName, webhooks, webhookServerPort, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -382,6 +402,65 @@ var _ = Describe("Actuator", func() {
 		Entry("should delete secrets and charts (no config)", "", []admissionregistrationv1beta1.Webhook{{}}),
 		Entry("should delete secrets and charts (no webhook)", cloudProviderConfigName, []admissionregistrationv1beta1.Webhook{{}}),
 	)
+
+	DescribeTable("#ReconsileExposure",
+		func() {
+			ctx := context.TODO()
+
+			// Create mock Gardener clientset and chart applier
+			gardenerClientset := mockkubernetes.NewMockInterface(ctrl)
+			gardenerClientset.EXPECT().Version().Return(seedVersion)
+			chartApplier := mockkubernetes.NewMockChartApplier(ctrl)
+
+			// Create mock secrets and charts
+			exposureSecrets := mockutil.NewMockSecrets(ctrl)
+			exposureSecrets.EXPECT().Deploy(gomock.Any(), gardenerClientset, namespace).Return(deployedExposureSecrets, nil)
+			cpExposureChart := mockutil.NewMockChart(ctrl)
+			cpExposureChart.EXPECT().Apply(ctx, chartApplier, namespace, imageVector, seedVersion, shootVersion, controlPlaneExposureChartValues).Return(nil)
+
+			// Create mock values provider
+			vp := mockgenericactuator.NewMockValuesProvider(ctrl)
+			vp.EXPECT().GetControlPlaneExposureChartValues(ctx, cpExposure, cluster, exposureChecksums).Return(controlPlaneExposureChartValues, nil)
+
+			// Create actuator
+			a := NewActuator(providerName, nil, exposureSecrets, nil, nil, nil, nil, cpExposureChart, vp, nil, imageVector, "", nil, 0, logger)
+			a.(*actuator).gardenerClientset = gardenerClientset
+			a.(*actuator).chartApplier = chartApplier
+
+			// Call Reconcile method and check the result
+			requeue, err := a.Reconcile(ctx, cpExposure, cluster)
+			Expect(requeue).To(Equal(false))
+			Expect(err).NotTo(HaveOccurred())
+		},
+		Entry("should deploy secrets and apply charts with correct parameters"),
+	)
+
+	DescribeTable("#DeleteExposure",
+		func() {
+			ctx := context.TODO()
+
+			// Create mock clients
+			client := mockclient.NewMockClient(ctrl)
+
+			// Create mock secrets and charts
+			exposureSecrets := mockutil.NewMockSecrets(ctrl)
+			exposureSecrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
+
+			cpExplosureChart := mockutil.NewMockChart(ctrl)
+			cpExplosureChart.EXPECT().Delete(ctx, client, namespace).Return(nil)
+
+			// Create actuator
+			a := NewActuator(providerName, nil, exposureSecrets, nil, nil, nil, nil, cpExplosureChart, nil, nil, nil, "", nil, 0, logger)
+			err := a.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call Delete method and check the result
+			err = a.Delete(ctx, cpExposure, cluster)
+			Expect(err).NotTo(HaveOccurred())
+		},
+		Entry("should delete secrets and charts"),
+	)
+
 })
 
 func clientGet(result runtime.Object) interface{} {
@@ -394,4 +473,10 @@ func clientGet(result runtime.Object) interface{} {
 		}
 		return nil
 	}
+}
+
+func getPurposeExposure() *extensionsv1alpha1.Purpose {
+	purpose := new(extensionsv1alpha1.Purpose)
+	*purpose = extensionsv1alpha1.Exposure
+	return purpose
 }

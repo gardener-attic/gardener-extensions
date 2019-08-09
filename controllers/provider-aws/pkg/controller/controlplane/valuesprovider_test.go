@@ -17,10 +17,12 @@ package controlplane
 import (
 	"context"
 	"encoding/json"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -28,6 +30,7 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -99,12 +102,26 @@ var _ = Describe("ValuesProvider", func() {
 				},
 			},
 		}
+		cpService = &corev1.Service{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      gardencorev1alpha1.DeploymentNameKubeAPIServer,
+				Namespace: namespace,
+			},
+			Status: corev1.ServiceStatus{
+				LoadBalancer: corev1.LoadBalancerStatus{
+					Ingress: []corev1.LoadBalancerIngress{
+						{IP: "10.10.10.1"},
+					},
+				},
+			},
+		}
 
 		checksums = map[string]string{
 			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 			aws.CloudProviderConfigName:                "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
 			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 			"cloud-controller-manager-server":          "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
+			awsLBReadvertiserDeploymentName:            "599aeee0cbbfdab4ea29c642cb04a6c9a3eb90ec21b41570efb987958f99d4b1",
 		}
 
 		configChartValues = map[string]interface{}{
@@ -127,6 +144,14 @@ var _ = Describe("ValuesProvider", func() {
 			},
 			"featureGates": map[string]bool{
 				"CustomResourceValidation": true,
+			},
+		}
+
+		cpExposureChartValues = map[string]interface{}{
+			"domain":   "10.10.10.1",
+			"replicas": 1,
+			"podAnnotations": map[string]interface{}{
+				"checksum/secret-aws-lb-readvertiser": "599aeee0cbbfdab4ea29c642cb04a6c9a3eb90ec21b41570efb987958f99d4b1",
 			},
 		}
 
@@ -168,9 +193,40 @@ var _ = Describe("ValuesProvider", func() {
 			Expect(values).To(Equal(ccmChartValues))
 		})
 	})
+
+	Describe("#GetControlPlaneExposureChartValues", func() {
+		It("should return correct control plane exposure chart values", func() {
+			serviceKey := client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer}
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), serviceKey, &corev1.Service{}).DoAndReturn(clientGet(cpService))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Call GetControlPlaneChartValues method and check the result
+			values, err := vp.GetControlPlaneExposureChartValues(context.TODO(), cp, cluster, checksums)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(cpExposureChartValues))
+		})
+	})
 })
 
 func encode(obj runtime.Object) []byte {
 	data, _ := json.Marshal(obj)
 	return data
+}
+
+func clientGet(result runtime.Object) interface{} {
+	return func(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+		switch obj.(type) {
+		case *corev1.Service:
+			*obj.(*corev1.Service) = *result.(*corev1.Service)
+		}
+		return nil
+	}
 }
