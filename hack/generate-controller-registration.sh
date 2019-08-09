@@ -36,6 +36,10 @@ EOM
     exit 0
 }
 
+if [ "$1" == "--optional" ]; then
+  shift
+  MODE=$'\n    globallyEnabled: false'
+fi
 NAME="$1"
 CHART_DIR="$2"
 DEST="$3"
@@ -82,7 +86,7 @@ for kind_and_type in "${KINDS_AND_TYPES[@]}"; do
   TYPE="$(echo "$kind_and_type" | cut -d ':' -f 2)"
   cat <<EOM >> "$DEST"
   - kind: $KIND
-    type: $TYPE
+    type: $TYPE$MODE
 EOM
 done
 

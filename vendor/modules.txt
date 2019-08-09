@@ -151,7 +151,7 @@ github.com/gardener/gardener/pkg/controllermanager/metrics
 github.com/gardener/gardener/pkg/scheduler/utils
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/internalinterfaces
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/garden
-# github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a
+# github.com/gardener/gardener-resource-manager v0.0.0-20190814125222-dbd11d1c9bba
 github.com/gardener/gardener-resource-manager/pkg/manager
 github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1
 github.com/gardener/gardener-resource-manager/pkg/apis/resources
@@ -212,7 +212,7 @@ github.com/gogo/protobuf/sortkeys
 github.com/golang/glog
 # github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 github.com/golang/groupcache/lru
-# github.com/golang/mock v1.2.0
+# github.com/golang/mock v1.3.1
 github.com/golang/mock/gomock
 github.com/golang/mock/mockgen
 github.com/golang/mock/mockgen/model
@@ -476,17 +476,17 @@ golang.org/x/text/internal/tag
 # golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 golang.org/x/time/rate
 # golang.org/x/tools v0.0.0-20190624180213-70d37148ca0c
-golang.org/x/tools/imports
-golang.org/x/tools/internal/imports
-golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/packages
-golang.org/x/tools/internal/gopathwalk
-golang.org/x/tools/internal/module
+golang.org/x/tools/imports
 golang.org/x/tools/go/gcexportdata
 golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/internal/gopathwalk
 golang.org/x/tools/internal/semver
-golang.org/x/tools/internal/fastwalk
+golang.org/x/tools/internal/imports
+golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/internal/fastwalk
+golang.org/x/tools/internal/module
 # google.golang.org/api v0.2.0
 google.golang.org/api/iterator
 google.golang.org/api/option
@@ -817,7 +817,7 @@ k8s.io/client-go/listers/settings/v1alpha1
 k8s.io/client-go/listers/storage/v1
 k8s.io/client-go/listers/storage/v1alpha1
 k8s.io/client-go/listers/storage/v1beta1
-# k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
+# k8s.io/code-generator v0.0.0-20190713022532-93d7507fc8ff
 k8s.io/code-generator/cmd/client-gen
 k8s.io/code-generator/cmd/conversion-gen
 k8s.io/code-generator/cmd/deepcopy-gen
