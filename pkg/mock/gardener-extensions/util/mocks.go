@@ -55,18 +55,18 @@ func (mr *MockSecretsMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 }
 
 // Deploy mocks base method
-func (m *MockSecrets) Deploy(arg0 kubernetes0.Interface, arg1 kubernetes.Interface, arg2 string) (map[string]*v1.Secret, error) {
+func (m *MockSecrets) Deploy(arg0 context.Context, arg1 kubernetes0.Interface, arg2 kubernetes.Interface, arg3 string) (map[string]*v1.Secret, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Deploy", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Deploy", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(map[string]*v1.Secret)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Deploy indicates an expected call of Deploy
-func (mr *MockSecretsMockRecorder) Deploy(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockSecretsMockRecorder) Deploy(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deploy", reflect.TypeOf((*MockSecrets)(nil).Deploy), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deploy", reflect.TypeOf((*MockSecrets)(nil).Deploy), arg0, arg1, arg2, arg3)
 }
 
 // MockChart is a mock of Chart interface

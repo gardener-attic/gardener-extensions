@@ -201,7 +201,7 @@ type OpenStackConstraints struct {
 	Zones []Zone
 }
 
-// FloatingPools contains constraints regarding allowed values of the 'floatingPoolName' block in the Shoot specification.
+// OpenStackFloatingPool contains constraints regarding allowed values of the 'floatingPoolName' block in the Shoot specification.
 type OpenStackFloatingPool struct {
 	// Name is the name of the floating pool.
 	Name string
@@ -331,6 +331,18 @@ type Zone struct {
 	Names []string
 }
 
+// BackupProfile contains the object store configuration for backups for shoot(currently only etcd).
+type BackupProfile struct {
+	// Provider is a provider name.
+	Provider CloudProvider
+	// Region is a region name.
+	Region *string
+	// SecretRef is a reference to a Secret object containing the cloud provider credentials for
+	// the object store where backups should be stored. It should have enough privileges to manipulate
+	// the objects as well as buckets.
+	SecretRef corev1.SecretReference
+}
+
 ////////////////////////////////////////////////////
 //                    PROJECTS                    //
 ////////////////////////////////////////////////////
@@ -380,7 +392,7 @@ type ProjectSpec struct {
 	Namespace *string
 	// Viewers is a list of subjects representing a user name, an email address, or any other identifier of a user
 	// that should be part of this project with limited permissions to only view some resources.
-	Viewers []rbacv1.Subject `json:"viewers,omitempty"`
+	Viewers []rbacv1.Subject
 }
 
 // ProjectStatus holds the most recently observed status of the project.
@@ -454,6 +466,11 @@ type SeedSpec struct {
 	Visible *bool
 	// Protected prevent that the Seed Cluster can be used for regular Shoot cluster control planes.
 	Protected *bool
+	// Backup holds the object store configuration for the backups of shoot(currently only etcd).
+	// If it is not specified, then there won't be any backups taken for Shoots associated with this Seed.
+	// If backup field is present in Seed, then backups of the etcd from Shoot controlplane will be stored under the
+	// configured object store.
+	Backup *BackupProfile
 }
 
 // SeedStatus holds the most recently observed status of the Seed cluster.
@@ -619,6 +636,8 @@ type ShootSpec struct {
 	Hibernation *Hibernation
 	// Kubernetes contains the version and configuration settings of the control plane components.
 	Kubernetes Kubernetes
+	// Networking contains information about cluster networking such as CNI Plugin type, CIDRs, ...etc.
+	Networking *Networking
 	// Maintenance contains information about the time window for maintenance operations and which
 	// operations should be performed.
 	Maintenance *Maintenance
@@ -656,6 +675,18 @@ type ShootStatus struct {
 ///////////////////////////////
 // Shoot Specification Types //
 ///////////////////////////////
+
+// CalicoNetworkType is a constant for the calico network type.
+const CalicoNetworkType = "calico"
+
+// Networking defines networking parameters for the shoot cluster.
+type Networking struct {
+	gardencore.K8SNetworks
+	// Type identifies the type of the networking plugin
+	Type string
+	// ProviderConfig is the configuration passed to network resource.
+	ProviderConfig *gardencore.ProviderConfig
+}
 
 // Cloud contains information about the cloud environment and their specific settings.
 // It must contain exactly one key of the below cloud providers.
@@ -958,6 +989,8 @@ type Worker struct {
 	Labels map[string]string
 	// Taints is a list of taints for all the `Node` objects in this worker pool.
 	Taints []corev1.Taint
+	// Kubelet contains configuration settings for the kubelet.
+	Kubelet *KubeletConfig
 }
 
 // Extension contains type and provider information for Shoot extensions.
@@ -1015,6 +1048,13 @@ type KubernetesDashboard struct {
 	// AuthenticationMode defines the authentication mode for the kubernetes-dashboard.
 	AuthenticationMode *string
 }
+
+const (
+	// KubernetesDashboardAuthModeBasic uses basic authentication mode for auth.
+	KubernetesDashboardAuthModeBasic = "basic"
+	// KubernetesDashboardAuthModeToken uses token-based mode for auth.
+	KubernetesDashboardAuthModeToken = "token"
+)
 
 // AddonClusterAutoscaler describes configuration values for the cluster-autoscaler addon.
 type AddonClusterAutoscaler struct {
@@ -1141,7 +1181,7 @@ type Kubernetes struct {
 	// Version is the semantic Kubernetes version to use for the Shoot cluster.
 	Version string
 	// ClusterAutoscaler contains the configration flags for the Kubernetes cluster autoscaler.
-	ClusterAutoscaler *ClusterAutoscaler `json:"clusterAutoscaler,omitempty"`
+	ClusterAutoscaler *ClusterAutoscaler
 }
 
 // ClusterAutoscaler contains the configration flags for the Kubernetes cluster autoscaler.
@@ -1169,15 +1209,36 @@ type KubernetesConfig struct {
 // KubeAPIServerConfig contains configuration settings for the kube-apiserver.
 type KubeAPIServerConfig struct {
 	KubernetesConfig
-	// RuntimeConfig contains information about enabled or disabled APIs.
-	RuntimeConfig map[string]bool
-	// OIDCConfig contains configuration settings for the OIDC provider.
-	OIDCConfig *OIDCConfig
 	// AdmissionPlugins contains the list of user-defined admission plugins (additional to those managed by Gardener), and, if desired, the corresponding
 	// configuration.
 	AdmissionPlugins []AdmissionPlugin
+	// APIAudiences are the identifiers of the API. The service account token authenticator will
+	// validate that tokens used against the API are bound to at least one of these audiences.
+	// If `serviceAccountConfig.issuer` is configured and this is not, this defaults to a single
+	// element list containing the issuer URL.
+	APIAudiences []string
 	// AuditConfig contains configuration settings for the audit of the kube-apiserver.
 	AuditConfig *AuditConfig
+	// EnableBasicAuthentication defines whether basic authentication should be enabled for this cluster or not.
+	EnableBasicAuthentication *bool
+	// OIDCConfig contains configuration settings for the OIDC provider.
+	OIDCConfig *OIDCConfig
+	// RuntimeConfig contains information about enabled or disabled APIs.
+	RuntimeConfig map[string]bool
+	// ServiceAccountConfig contains configuration settings for the service account handling
+	// of the kube-apiserver.
+	ServiceAccountConfig *ServiceAccountConfig
+}
+
+// ServiceAccountConfig is the kube-apiserver configuration for service accounts.
+type ServiceAccountConfig struct {
+	// Issuer is the identifier of the service account token issuer. The issuer will assert this
+	// identifier in "iss" claim of issued tokens. This value is a string or URI.
+	Issuer *string
+	// SigningKeySecret is a reference to a secret that contains the current private key of the
+	// service account token issuer. The issuer will sign issued ID tokens with this private key.
+	// (Requires the 'TokenRequest' feature gate.)
+	SigningKeySecret *corev1.LocalObjectReference
 }
 
 // AuditConfig contains settings for audit of the api server
@@ -1302,6 +1363,84 @@ type KubeletConfig struct {
 	CPUCFSQuota *bool
 	// CPUManagerPolicy allows to set alternative CPU management policies (default: none).
 	CPUManagerPolicy *string
+	// MaxPods is the maximum number of Pods that are allowed by the Kubelet.
+	// Default: 110
+	MaxPods *int32
+	// EvictionHard describes a set of eviction thresholds (e.g. memory.available<1Gi) that if met would trigger a Pod eviction.
+	// Default:
+	//   memory.available:   "100Mi/1Gi/5%"
+	//   nodefs.available:   "5%"
+	//   nodefs.inodesFree:  "5%"
+	//   imagefs.available:  "5%"
+	//   imagefs.inodesFree: "5%"
+	EvictionHard *KubeletConfigEviction
+	// EvictionSoft describes a set of eviction thresholds (e.g. memory.available<1.5Gi) that if met over a corresponding grace period would trigger a Pod eviction.
+	// Default:
+	//   memory.available:   "200Mi/1.5Gi/10%"
+	//   nodefs.available:   "10%"
+	//   nodefs.inodesFree:  "10%"
+	//   imagefs.available:  "10%"
+	//   imagefs.inodesFree: "10%"
+	EvictionSoft *KubeletConfigEviction
+	// EvictionSoftGracePeriod describes a set of eviction grace periods (e.g. memory.available=1m30s) that correspond to how long a soft eviction threshold must hold before triggering a Pod eviction.
+	// Default:
+	//   memory.available:   1m30s
+	//   nodefs.available:   1m30s
+	//   nodefs.inodesFree:  1m30s
+	//   imagefs.available:  1m30s
+	//   imagefs.inodesFree: 1m30s
+	EvictionSoftGracePeriod *KubeletConfigEvictionSoftGracePeriod
+	// EvictionMinimumReclaim configures the amount of resources below the configured eviction threshold that the kubelet attempts to reclaim whenever the kubelet observes resource pressure.
+	// Default: 0 for each resource
+	EvictionMinimumReclaim *KubeletConfigEvictionMinimumReclaim
+	// EvictionPressureTransitionPeriod is the duration for which the kubelet has to wait before transitioning out of an eviction pressure condition.
+	// Default: 4m0s
+	EvictionPressureTransitionPeriod *metav1.Duration
+	// EvictionMaxPodGracePeriod describes the maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
+	// Default: 90
+	EvictionMaxPodGracePeriod *int32
+}
+
+// KubeletConfigEviction contains kubelet eviction thresholds supporting either a resource.Quantity or a percentage based value.
+type KubeletConfigEviction struct {
+	// MemoryAvailable is the threshold for the free memory on the host server.
+	MemoryAvailable *string
+	// ImageFSAvailable is the threshold for the free disk space in the imagefs filesystem (docker images and container writable layers).
+	ImageFSAvailable *string
+	// ImageFSInodesFree is the threshold for the available inodes in the imagefs filesystem.
+	ImageFSInodesFree *string
+	// NodeFSAvailable is the threshold for the free disk space in the nodefs filesystem (docker volumes, logs, etc).
+	NodeFSAvailable *string
+	// NodeFSInodesFree is the threshold for the available inodes in the nodefs filesystem.
+	NodeFSInodesFree *string
+}
+
+// KubeletConfigEviction contains configuration for the kubelet eviction minimum reclaim.
+type KubeletConfigEvictionMinimumReclaim struct {
+	// MemoryAvailable is the threshold for the memory reclaim on the host server.
+	MemoryAvailable *resource.Quantity
+	// ImageFSAvailable is the threshold for the disk space reclaim in the imagefs filesystem (docker images and container writable layers).
+	ImageFSAvailable *resource.Quantity
+	// ImageFSInodesFree is the threshold for the inodes reclaim in the imagefs filesystem.
+	ImageFSInodesFree *resource.Quantity
+	// NodeFSAvailable is the threshold for the disk space reclaim in the nodefs filesystem (docker volumes, logs, etc).
+	NodeFSAvailable *resource.Quantity
+	// NodeFSInodesFree is the threshold for the inodes reclaim in the nodefs filesystem.
+	NodeFSInodesFree *resource.Quantity
+}
+
+// KubeletConfigEvictionSoftGracePeriod contains grace periods for kubelet eviction thresholds.
+type KubeletConfigEvictionSoftGracePeriod struct {
+	// MemoryAvailable is the grace period for the MemoryAvailable eviction threshold.
+	MemoryAvailable *metav1.Duration
+	// ImageFSAvailable is the grace period for the ImageFSAvailable eviction threshold.
+	ImageFSAvailable *metav1.Duration
+	// ImageFSInodesFree is the grace period for the ImageFSInodesFree eviction threshold.
+	ImageFSInodesFree *metav1.Duration
+	// NodeFSAvailable is the grace period for the NodeFSAvailable eviction threshold.
+	NodeFSAvailable *metav1.Duration
+	// NodeFSInodesFree is the grace period for the NodeFSInodesFree eviction threshold.
+	NodeFSInodesFree *metav1.Duration
 }
 
 // Maintenance contains information about the time window for maintenance operations and which

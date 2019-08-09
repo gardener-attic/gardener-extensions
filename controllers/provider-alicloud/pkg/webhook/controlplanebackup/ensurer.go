@@ -23,11 +23,12 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -96,50 +97,54 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	// They are only specified for the etcd-main stateful set (backup is enabled)
 	var (
 		provider                string
+		prefix                  string
 		env                     []corev1.EnvVar
 		volumeClaimTemplateName = name
 	)
 	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
-		provider = alicloud.StorageProviderName
-		env = []corev1.EnvVar{
-			{
-				Name: "STORAGE_CONTAINER",
-				// The bucket name is written to the backup secret by Gardener as a temporary solution.
-				// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  alicloud.BucketName,
-						LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+		if cluster.Seed.Spec.Backup == nil {
+			e.logger.Info("Backup profile is not configured;  backup will not be taken for etcd-main")
+		} else {
+			prefix = common.GenerateBackupEntryName(cluster.Shoot.Status.TechnicalID, cluster.Shoot.Status.UID)
+			provider = alicloud.StorageProviderName
+			env = []corev1.EnvVar{
+				{
+					Name: "STORAGE_CONTAINER",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  alicloud.BucketName,
+							LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+						},
 					},
 				},
-			},
-			{
-				Name: "ALICLOUD_ENDPOINT",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  alicloud.StorageEndpoint,
-						LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+				{
+					Name: "ALICLOUD_ENDPOINT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  alicloud.StorageEndpoint,
+							LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+						},
 					},
 				},
-			},
-			{
-				Name: "ALICLOUD_ACCESS_KEY_ID",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  alicloud.AccessKeyID,
-						LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+				{
+					Name: "ALICLOUD_ACCESS_KEY_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  alicloud.AccessKeyID,
+							LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+						},
 					},
 				},
-			},
-			{
-				Name: "ALICLOUD_ACCESS_KEY_SECRET",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  alicloud.AccessKeySecret,
-						LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+				{
+					Name: "ALICLOUD_ACCESS_KEY_SECRET",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  alicloud.AccessKeySecret,
+							LocalObjectReference: corev1.LocalObjectReference{Name: alicloud.BackupSecretName},
+						},
 					},
 				},
-			},
+			}
 		}
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
@@ -150,5 +155,5 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		schedule = defaultSchedule
 	}
 
-	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, image.String(), nil, env, nil), nil
+	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, prefix, image.String(), nil, env, nil), nil
 }

@@ -220,7 +220,7 @@ type OpenStackConstraints struct {
 	Zones []Zone `json:"zones"`
 }
 
-// FloatingPools contains constraints regarding allowed values of the 'floatingPoolName' block in the Shoot specification.
+// OpenStackFloatingPool contains constraints regarding allowed values of the 'floatingPoolName' block in the Shoot specification.
 type OpenStackFloatingPool struct {
 	// Name is the name of the floating pool.
 	Name string `json:"name"`
@@ -344,6 +344,19 @@ type Zone struct {
 	Region string `json:"region"`
 	// Names is a list of availability zone names in this region.
 	Names []string `json:"names"`
+}
+
+// BackupProfile contains the object store configuration for backups for shoot(currently only etcd).
+type BackupProfile struct {
+	// Provider is a provider name.
+	Provider CloudProvider `json:"provider"`
+	// Region is a region name.
+	// +optional
+	Region *string `json:"region,omitempty"`
+	// SecretRef is a reference to a Secret object containing the cloud provider credentials for
+	// the object store where backups should be stored. It should have enough privileges to manipulate
+	// the objects as well as buckets.
+	SecretRef corev1.SecretReference `json:"secretRef"`
 }
 
 ////////////////////////////////////////////////////
@@ -490,6 +503,12 @@ type SeedSpec struct {
 	// Protected prevent that the Seed Cluster can be used for regular Shoot cluster control planes.
 	// +optional
 	Protected *bool `json:"protected,omitempty"`
+	// Backup holds the object store configuration for the backups of shoot(currently only etcd).
+	// If it is not specified, then there won't be any backups taken for Shoots associated with this Seed.
+	// If backup field is present in Seed, then backups of the etcd from Shoot controlplane will be stored under the
+	// configured object store.
+	// +optional
+	Backup *BackupProfile `json:"backup,omitempty"`
 }
 
 // SeedStatus holds the most recently observed status of the Seed cluster.
@@ -658,10 +677,11 @@ type ShootSpec struct {
 	Hibernation *Hibernation `json:"hibernation,omitempty"`
 	// Kubernetes contains the version and configuration settings of the control plane components.
 	Kubernetes Kubernetes `json:"kubernetes"`
+	// Networking contains information about cluster networking such as CNI Plugin type, CIDRs, ...etc.
+	Networking *Networking `json:"networking,omitempty"`
 	// Maintenance contains information about the time window for maintenance operations and which
 	// operations should be performed.
 	// +optional
-
 	Maintenance *Maintenance `json:"maintenance,omitempty"`
 }
 
@@ -704,6 +724,19 @@ type ShootStatus struct {
 // Shoot Specification Types //
 ///////////////////////////////
 
+// CalicoNetworkType is a constant for the calico network type.
+const CalicoNetworkType = "calico"
+
+// Networking defines networking parameters for the shoot cluster.
+type Networking struct {
+	gardencorev1alpha1.K8SNetworks `json:",inline"`
+	// Type identifies the type of the networking plugin
+	Type string `json:"type"`
+	// ProviderConfig is the configuration passed to network resource.
+	// +optional
+	ProviderConfig *gardencorev1alpha1.ProviderConfig `json:"providerConfig,omitempty"`
+}
+
 // Cloud contains information about the cloud environment and their specific settings.
 // It must contain exactly one key of the below cloud providers.
 type Cloud struct {
@@ -737,7 +770,6 @@ type Cloud struct {
 }
 
 // AWSCloud contains the Shoot specification for AWS.
-
 type AWSCloud struct {
 	// ShootMachineImage holds information about the machine image to use for all workers.
 	// It will default to the latest version of the first image stated in the referenced CloudProfile if no
@@ -1038,6 +1070,9 @@ type Worker struct {
 	// Taints is a list of taints for all the `Node` objects in this worker pool.
 	// +optional
 	Taints []corev1.Taint `json:"taints,omitempty"`
+	// Kubelet contains configuration settings for the kubelet.
+	// +optional
+	Kubelet *KubeletConfig `json:"kubelet,omitempty"`
 }
 
 var (
@@ -1112,6 +1147,13 @@ type KubernetesDashboard struct {
 	// +optional
 	AuthenticationMode *string `json:"authenticationMode,omitempty"`
 }
+
+const (
+	// KubernetesDashboardAuthModeBasic uses basic authentication mode for auth.
+	KubernetesDashboardAuthModeBasic = "basic"
+	// KubernetesDashboardAuthModeToken uses token-based mode for auth.
+	KubernetesDashboardAuthModeToken = "token"
+)
 
 // ClusterAutoscaler describes configuration values for the cluster-autoscaler addon.
 type AddonClusterAutoscaler struct {
@@ -1292,19 +1334,45 @@ type KubernetesConfig struct {
 // KubeAPIServerConfig contains configuration settings for the kube-apiserver.
 type KubeAPIServerConfig struct {
 	KubernetesConfig `json:",inline"`
-	// RuntimeConfig contains information about enabled or disabled APIs.
-	// +optional
-	RuntimeConfig map[string]bool `json:"runtimeConfig,omitempty"`
-	// OIDCConfig contains configuration settings for the OIDC provider.
-	// +optional
-	OIDCConfig *OIDCConfig `json:"oidcConfig,omitempty"`
 	// AdmissionPlugins contains the list of user-defined admission plugins (additional to those managed by Gardener), and, if desired, the corresponding
 	// configuration.
 	// +optional
 	AdmissionPlugins []AdmissionPlugin `json:"admissionPlugins,omitempty"`
+	// APIAudiences are the identifiers of the API. The service account token authenticator will
+	// validate that tokens used against the API are bound to at least one of these audiences.
+	// If `serviceAccountConfig.issuer` is configured and this is not, this defaults to a single
+	// element list containing the issuer URL.
+	// +optional
+	APIAudiences []string `json:"apiAudiences,omitempty"`
 	// AuditConfig contains configuration settings for the audit of the kube-apiserver.
 	// +optional
 	AuditConfig *AuditConfig `json:"auditConfig,omitempty"`
+	// EnableBasicAuthentication defines whether basic authentication should be enabled for this cluster or not.
+	// +optional
+	EnableBasicAuthentication *bool `json:"enableBasicAuthentication,omitempty"`
+	// OIDCConfig contains configuration settings for the OIDC provider.
+	// +optional
+	OIDCConfig *OIDCConfig `json:"oidcConfig,omitempty"`
+	// RuntimeConfig contains information about enabled or disabled APIs.
+	// +optional
+	RuntimeConfig map[string]bool `json:"runtimeConfig,omitempty"`
+	// ServiceAccountConfig contains configuration settings for the service account handling
+	// of the kube-apiserver.
+	// +optional
+	ServiceAccountConfig *ServiceAccountConfig `json:"serviceAccountConfig,omitempty"`
+}
+
+// ServiceAccountConfig is the kube-apiserver configuration for service accounts.
+type ServiceAccountConfig struct {
+	// Issuer is the identifier of the service account token issuer. The issuer will assert this
+	// identifier in "iss" claim of issued tokens. This value is a string or URI.
+	// +optional
+	Issuer *string `json:"issuer,omitempty"`
+	// SigningKeySecret is a reference to a secret that contains the current private key of the
+	// service account token issuer. The issuer will sign issued ID tokens with this private key.
+	// (Requires the 'TokenRequest' feature gate.)
+	// +optional
+	SigningKeySecret *corev1.LocalObjectReference `json:"signingKeySecretName,omitempty"`
 }
 
 // AuditConfig contains settings for audit of the api server
@@ -1507,6 +1575,106 @@ type KubeletConfig struct {
 	// CPUManagerPolicy allows to set alternative CPU management policies (default: none).
 	// +optional
 	CPUManagerPolicy *string `json:"cpuManagerPolicy,omitempty"`
+	// MaxPods is the maximum number of Pods that are allowed by the Kubelet.
+	// +optional
+	// Default: 110
+	MaxPods *int32 `json:"maxPods,omitempty"`
+	// EvictionHard describes a set of eviction thresholds (e.g. memory.available<1Gi) that if met would trigger a Pod eviction.
+	// +optional
+	// Default:
+	//   memory.available:   "100Mi/1Gi/5%"
+	//   nodefs.available:   "5%"
+	//   nodefs.inodesFree:  "5%"
+	//   imagefs.available:  "5%"
+	//   imagefs.inodesFree: "5%"
+	EvictionHard *KubeletConfigEviction `json:"evictionHard,omitempty"`
+	// EvictionSoft describes a set of eviction thresholds (e.g. memory.available<1.5Gi) that if met over a corresponding grace period would trigger a Pod eviction.
+	// +optional
+	// Default:
+	//   memory.available:   "200Mi/1.5Gi/10%"
+	//   nodefs.available:   "10%"
+	//   nodefs.inodesFree:  "10%"
+	//   imagefs.available:  "10%"
+	//   imagefs.inodesFree: "10%"
+	EvictionSoft *KubeletConfigEviction `json:"evictionSoft,omitempty"`
+	// EvictionSoftGracePeriod describes a set of eviction grace periods (e.g. memory.available=1m30s) that correspond to how long a soft eviction threshold must hold before triggering a Pod eviction.
+	// +optional
+	// Default:
+	//   memory.available:   1m30s
+	//   nodefs.available:   1m30s
+	//   nodefs.inodesFree:  1m30s
+	//   imagefs.available:  1m30s
+	//   imagefs.inodesFree: 1m30s
+	EvictionSoftGracePeriod *KubeletConfigEvictionSoftGracePeriod `json:"evictionSoftGracePeriod,omitempty"`
+	// EvictionMinimumReclaim configures the amount of resources below the configured eviction threshold that the kubelet attempts to reclaim whenever the kubelet observes resource pressure.
+	// +optional
+	// Default: 0 for each resource
+	EvictionMinimumReclaim *KubeletConfigEvictionMinimumReclaim `json:"evictionMinimumReclaim,omitempty"`
+	// EvictionPressureTransitionPeriod is the duration for which the kubelet has to wait before transitioning out of an eviction pressure condition.
+	// +optional
+	// Default: 4m0s
+	EvictionPressureTransitionPeriod *metav1.Duration `json:"evictionPressureTransitionPeriod,omitempty"`
+	// EvictionMaxPodGracePeriod describes the maximum allowed grace period (in seconds) to use when terminating pods in response to a soft eviction threshold being met.
+	// +optional
+	// Default: 90
+	EvictionMaxPodGracePeriod *int32 `json:"evictionMaxPodGracePeriod,omitempty"`
+}
+
+// KubeletConfigEviction contains kubelet eviction thresholds supporting either a resource.Quantity or a percentage based value.
+type KubeletConfigEviction struct {
+	// MemoryAvailable is the threshold for the free memory on the host server.
+	// +optional
+	MemoryAvailable *string `json:"memoryAvailable,omitempty"`
+	// ImageFSAvailable is the threshold for the free disk space in the imagefs filesystem (docker images and container writable layers).
+	// +optional
+	ImageFSAvailable *string `json:"imageFSAvailable,omitempty"`
+	// ImageFSInodesFree is the threshold for the available inodes in the imagefs filesystem.
+	// +optional
+	ImageFSInodesFree *string `json:"imageFSInodesFree,omitempty"`
+	// NodeFSAvailable is the threshold for the free disk space in the nodefs filesystem (docker volumes, logs, etc).
+	// +optional
+	NodeFSAvailable *string `json:"nodeFSAvailable,omitempty"`
+	// NodeFSInodesFree is the threshold for the available inodes in the nodefs filesystem.
+	// +optional
+	NodeFSInodesFree *string `json:"nodeFSInodesFree,omitempty"`
+}
+
+// KubeletConfigEviction contains configuration for the kubelet eviction minimum reclaim.
+type KubeletConfigEvictionMinimumReclaim struct {
+	// MemoryAvailable is the threshold for the memory reclaim on the host server.
+	// +optional
+	MemoryAvailable *resource.Quantity `json:"memoryAvailable,omitempty"`
+	// ImageFSAvailable is the threshold for the disk space reclaim in the imagefs filesystem (docker images and container writable layers).
+	// +optional
+	ImageFSAvailable *resource.Quantity `json:"imageFSAvailable,omitempty"`
+	// ImageFSInodesFree is the threshold for the inodes reclaim in the imagefs filesystem.
+	// +optional
+	ImageFSInodesFree *resource.Quantity `json:"imageFSInodesFree,omitempty"`
+	// NodeFSAvailable is the threshold for the disk space reclaim in the nodefs filesystem (docker volumes, logs, etc).
+	// +optional
+	NodeFSAvailable *resource.Quantity `json:"nodeFSAvailable,omitempty"`
+	// NodeFSInodesFree is the threshold for the inodes reclaim in the nodefs filesystem.
+	// +optional
+	NodeFSInodesFree *resource.Quantity `json:"nodeFSInodesFree,omitempty"`
+}
+
+// KubeletConfigEvictionSoftGracePeriod contains grace periods for kubelet eviction thresholds.
+type KubeletConfigEvictionSoftGracePeriod struct {
+	// MemoryAvailable is the grace period for the MemoryAvailable eviction threshold.
+	// +optional
+	MemoryAvailable *metav1.Duration `json:"memoryAvailable,omitempty"`
+	// ImageFSAvailable is the grace period for the ImageFSAvailable eviction threshold.
+	// +optional
+	ImageFSAvailable *metav1.Duration `json:"imageFSAvailable,omitempty"`
+	// ImageFSInodesFree is the grace period for the ImageFSInodesFree eviction threshold.
+	// +optional
+	ImageFSInodesFree *metav1.Duration `json:"imageFSInodesFree,omitempty"`
+	// NodeFSAvailable is the grace period for the NodeFSAvailable eviction threshold.
+	// +optional
+	NodeFSAvailable *metav1.Duration `json:"nodeFSAvailable,omitempty"`
+	// NodeFSInodesFree is the grace period for the NodeFSInodesFree eviction threshold.
+	// +optional
+	NodeFSInodesFree *metav1.Duration `json:"nodeFSInodesFree,omitempty"`
 }
 
 // Maintenance contains information about the time window for maintenance operations and which

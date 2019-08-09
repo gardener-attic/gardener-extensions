@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
@@ -72,6 +73,15 @@ var _ = Describe("Ensurer", func() {
 						Kubernetes: gardenv1beta1.Kubernetes{
 							Version: "1.13.4",
 						},
+					},
+					Status: gardenv1beta1.ShootStatus{
+						TechnicalID: "shoot--test--sample",
+						UID:         types.UID("test-uid"),
+					},
+				},
+				Seed: &gardenv1beta1.Seed{
+					Spec: gardenv1beta1.SeedSpec{
+						Backup: &gardenv1beta1.BackupProfile{},
 					},
 				},
 			}
@@ -148,6 +158,28 @@ var _ = Describe("Ensurer", func() {
 			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDMainStatefulSet(ss, annotations)
+		})
+
+		It("should not configure backup to etcd-main statefulset if backup profile is missing", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.StatefulSetNameETCDMain},
+				}
+			)
+			cluster.Seed.Spec.Backup = nil
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), secretKey, &corev1.Secret{}).DoAndReturn(clientGet(secret))
+
+			// Create ensurer
+			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+			Expect(err).To(Not(HaveOccurred()))
+			checkETCDMainStatefulSetWithoutBackup(ss, annotations)
 		})
 
 		It("should add or modify elements to etcd-events statefulset", func() {
@@ -238,14 +270,21 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]str
 	)
 
 	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
-	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "0 */24 * * *", alicloud.StorageProviderName,
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "0 */24 * * *", alicloud.StorageProviderName, "shoot--test--sample--test-uid",
 		"test-repository:test-tag", nil, env, nil)))
+	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
+}
+
+func checkETCDMainStatefulSetWithoutBackup(ss *appsv1.StatefulSet, annotations map[string]string) {
+	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "0 */24 * * *", "", "",
+		"test-repository:test-tag", nil, nil, nil)))
 	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
 	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
-	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDEvents, gardencorev1alpha1.StatefulSetNameETCDEvents, "0 */24 * * *", "",
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDEvents, gardencorev1alpha1.StatefulSetNameETCDEvents, "0 */24 * * *", "", "",
 		"test-repository:test-tag", nil, nil, nil)))
 }
 

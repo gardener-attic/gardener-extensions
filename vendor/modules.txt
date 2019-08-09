@@ -100,7 +100,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/apis/dns
-# github.com/gardener/gardener v0.0.0-20190809103150-69d5b0414246
+# github.com/gardener/gardener v0.0.0-20190823131435-15a8e9bf6702
 github.com/gardener/gardener/pkg/utils
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1
 github.com/gardener/gardener/pkg/apis/garden/v1beta1
@@ -186,13 +186,13 @@ github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 github.com/gobuffalo/packr
 # github.com/gobuffalo/packr/v2 v2.1.0
 github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/packr2
 github.com/gobuffalo/packr/v2/file
+github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
-github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/packr2/cmd
+github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/jam
 github.com/gobuffalo/packr/v2/packr2/cmd/fix
 github.com/gobuffalo/packr/v2/jam/store
@@ -889,6 +889,11 @@ k8s.io/kube-aggregator/pkg/apis/apiregistration
 k8s.io/kube-openapi/pkg/util/proto
 # k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325
 k8s.io/kubelet/config/v1beta1
+# k8s.io/metrics v0.0.0-20190816224245-c61a0d549e17
+k8s.io/metrics/pkg/apis/metrics/v1beta1
+k8s.io/metrics/pkg/client/clientset/versioned/scheme
+k8s.io/metrics/pkg/apis/metrics
+k8s.io/metrics/pkg/apis/metrics/v1alpha1
 # k8s.io/utils v0.0.0-20190712204705-3dccf664f023
 k8s.io/utils/pointer
 k8s.io/utils/integer

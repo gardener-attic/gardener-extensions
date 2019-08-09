@@ -318,7 +318,7 @@ var _ = Describe("Actuator", func() {
 
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
-			secrets.EXPECT().Deploy(gomock.Any(), gardenerClientset, namespace).Return(deployedSecrets, nil)
+			secrets.EXPECT().Deploy(ctx, gomock.Any(), gardenerClientset, namespace).Return(deployedSecrets, nil)
 			var configChart util.Chart
 			if configName != "" {
 				cc := mockutil.NewMockChart(ctrl)
@@ -414,7 +414,7 @@ var _ = Describe("Actuator", func() {
 
 			// Create mock secrets and charts
 			exposureSecrets := mockutil.NewMockSecrets(ctrl)
-			exposureSecrets.EXPECT().Deploy(gomock.Any(), gardenerClientset, namespace).Return(deployedExposureSecrets, nil)
+			exposureSecrets.EXPECT().Deploy(ctx, gomock.Any(), gardenerClientset, namespace).Return(deployedExposureSecrets, nil)
 			cpExposureChart := mockutil.NewMockChart(ctrl)
 			cpExposureChart.EXPECT().Apply(ctx, chartApplier, namespace, imageVector, seedVersion, shootVersion, controlPlaneExposureChartValues).Return(nil)
 

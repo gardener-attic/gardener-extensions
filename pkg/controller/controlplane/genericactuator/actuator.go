@@ -181,7 +181,7 @@ func (a *actuator) reconcileControlPlaneExposure(
 	checksums := make(map[string]string)
 	if a.exposureSecrets != nil {
 		a.logger.Info("Deploying control plane exposure secrets", "controlplane", util.ObjectName(cp))
-		deployedSecrets, err := a.exposureSecrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
+		deployedSecrets, err := a.exposureSecrets.Deploy(ctx, a.clientset, a.gardenerClientset, cp.Namespace)
 		if err != nil {
 			return false, errors.Wrapf(err, "could not deploy control plane exposure secrets for controlplane '%s'", util.ObjectName(cp))
 		}
@@ -242,7 +242,7 @@ func (a *actuator) reconcileControlPlane(
 
 	// Deploy secrets
 	a.logger.Info("Deploying secrets", "controlplane", util.ObjectName(cp))
-	deployedSecrets, err := a.secrets.Deploy(a.clientset, a.gardenerClientset, cp.Namespace)
+	deployedSecrets, err := a.secrets.Deploy(ctx, a.clientset, a.gardenerClientset, cp.Namespace)
 	if err != nil {
 		return false, errors.Wrapf(err, "could not deploy secrets for controlplane '%s'", util.ObjectName(cp))
 	}

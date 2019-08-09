@@ -42,6 +42,9 @@ const (
 	// BackupInfrastructureReconcile is a constant for an annotation on a Backupinfrastructure indicating that a Backupinfrastructure reconciliation shall be triggered.
 	BackupInfrastructureReconcile = "reconcile"
 
+	// BasicAuthSecretName is the name of the secret containing basic authentication credentials for the kube-apiserver.
+	BasicAuthSecretName = "kube-apiserver-basic-auth"
+
 	// ChartPath is the path to the Helm charts.
 	ChartPath = "charts"
 
@@ -209,9 +212,6 @@ const (
 	// appended.
 	InternalDomainKey = "internal"
 
-	// AWSLBReadvertiserDeploymentName is the name for the aws-lb-readvertiser
-	AWSLBReadvertiserDeploymentName = "aws-lb-readvertiser"
-
 	// KubeControllerManagerServerName is the name of the kube-controller-manager server.
 	KubeControllerManagerServerName = "kube-controller-manager-server"
 
@@ -247,6 +247,18 @@ const (
 
 	// KibanaAdminIngressCredentialsSecretName is the name of the secret which holds admin credentials.
 	KibanaAdminIngressCredentialsSecretName = "logging-ingress-credentials"
+
+	// KubecfgUsername is the username for the token used for the kubeconfig the shoot.
+	KubecfgUsername = "system:cluster-admin"
+
+	// KubecfgSecretName is the name of the kubecfg secret.
+	KubecfgSecretName = "kubecfg"
+
+	// KubeAPIServerHealthCheck is a key for the kube-apiserver-health-check user.
+	KubeAPIServerHealthCheck = "kube-apiserver-health-check"
+
+	// StaticTokenSecretName is the name of the secret containing static tokens for the kube-apiserver.
+	StaticTokenSecretName = "static-token"
 
 	// FluentBitDaemonSetName is the name of the fluent-bit daemon set.
 	FluentBitDaemonSetName = "fluent-bit"
@@ -331,6 +343,10 @@ const (
 	// possible.
 	ShootOperationMaintain = "maintain"
 
+	// ShootOperationRotateKubeconfigCredentials is a constant for an annotation on a Shoot indicating that the credentials contained in the
+	// kubeconfig that is handed out to the user shall be rotated.
+	ShootOperationRotateKubeconfigCredentials = "rotate-kubeconfig-credentials"
+
 	// ShootTasks is a constant for an annotation on a Shoot which states that certain tasks should be done.
 	ShootTasks = "shoot.garden.sapcloud.io/tasks"
 
@@ -378,18 +394,6 @@ const (
 
 	// GardenerResourceManagerImageName is the name of the GardenerResourceManager image.
 	GardenerResourceManagerImageName = "gardener-resource-manager"
-
-	// CalicoNodeImageName is the name of the CalicoNode image.
-	CalicoNodeImageName = "calico-node"
-
-	// CalicoCNIImageName is the name of the CalicoCNI image.
-	CalicoCNIImageName = "calico-cni"
-
-	// CalicoTyphaImageName is the name of the CalicoTypha image.
-	CalicoTyphaImageName = "calico-typha"
-
-	// CalicoKubeControllersImageName is the name of the CalicoKubeControllers image.
-	CalicoKubeControllersImageName = "calico-kube-controllers"
 
 	// CoreDNSImageName is the name of the CoreDNS image.
 	CoreDNSImageName = "coredns"
@@ -457,9 +461,6 @@ const (
 	// CSIPluginPacketImageName is the name of csi plugin for Packet - https://github.com/packethost/csi-packet
 	CSIPluginPacketImageName = "packet-storage-interface"
 
-	// AWSLBReadvertiserImageName is the name of the AWSLBReadvertiser image.
-	AWSLBReadvertiserImageName = "aws-lb-readvertiser"
-
 	// PauseContainerImageName is the name of the PauseContainer image.
 	PauseContainerImageName = "pause-container"
 
@@ -513,6 +514,9 @@ const (
 
 	// VpaExporterImageName is the name of the vpa-exporter image
 	VpaExporterImageName = "vpa-exporter"
+
+	// ServiceAccountSigningKeySecretDataKey is the data key of a signing key Kubernetes secret.
+	ServiceAccountSigningKeySecretDataKey = "signing-key"
 )
 
 var (
