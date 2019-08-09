@@ -18,7 +18,7 @@ require (
 	github.com/evanphx/json-patch v4.5.0+incompatible // indirect
 	github.com/gardener/controller-manager-library v0.0.0-20190715130150-315e86b01963 // indirect
 	github.com/gardener/external-dns-management v0.0.0-20190722114702-f6b12f6e4b43 // indirect
-	github.com/gardener/gardener v0.0.0-20190809103150-69d5b0414246
+	github.com/gardener/gardener v0.0.0-20190812144748-dec8f3c7f288
 	github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-ini/ini v1.44.0 // indirect
