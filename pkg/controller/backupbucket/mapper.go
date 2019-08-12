@@ -16,10 +16,11 @@ package backupbucket
 
 import (
 	"context"
+
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
-	extensions1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -58,7 +59,7 @@ func (m *secretToBackupBucketMapper) Map(obj handler.MapObject) []reconcile.Requ
 		return nil
 	}
 
-	backupBucketList := &extensions1alpha1.BackupBucketList{}
+	backupBucketList := &extensionsv1alpha1.BackupBucketList{}
 	if err := m.client.List(context.TODO(), backupBucketList, client.MatchingField("spec.secretRef.name", secret.Name), client.MatchingField("spec.secretRef.namespace", secret.Namespace)); err != nil {
 		return nil
 	}

@@ -196,3 +196,11 @@ start-certificate-service:
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--config=./controllers/extension-certificate-service/example/00-config.yaml
+
+.PHONY: start-networking-calico
+start-networking-calico:
+	@LEADER_ELECTION_NAMESPACE=garden go run \
+		-ldflags $(LD_FLAGS) \
+		./controllers/networking-calico/cmd/gardener-extension-networking-calico \
+		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
+		--leader-election=$(LEADER_ELECTION)

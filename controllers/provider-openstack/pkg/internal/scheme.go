@@ -15,6 +15,8 @@
 package internal
 
 import (
+	"fmt"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -41,9 +43,12 @@ func init() {
 // ProviderConfig section of the given Infrastructure.
 func InfrastructureConfigFromInfrastructure(infra *extensionsv1alpha1.Infrastructure) (*openstackv1alpha1.InfrastructureConfig, error) {
 	config := &openstackv1alpha1.InfrastructureConfig{}
-	if _, _, err := decoder.Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
-		return nil, err
-	}
+	if infra.Spec.ProviderConfig != nil && infra.Spec.ProviderConfig.Raw != nil {
+		if _, _, err := decoder.Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
+			return nil, err
+		}
 
-	return config, nil
+		return config, nil
+	}
+	return nil, fmt.Errorf("infrastructure config is not set on the infrastructure resource")
 }

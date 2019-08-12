@@ -70,15 +70,21 @@ func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) 
 	// Create webhook
 	logger.Info("Creating webhook", "name", getName(args.Kind))
 
+	// Build namespace selector from the webhook kind and provider
+	namespaceSelector, err := buildSelector(args.Kind, args.Provider)
+	if err != nil {
+		return nil, err
+	}
+
 	return &extensionswebhook.Webhook{
-		Name:                  getName(args.Kind),
-		Kind:                  args.Kind,
-		Provider:              args.Provider,
-		Types:                 args.Types,
-		Target:                extensionswebhook.TargetSeed,
-		Path:                  getName(args.Kind),
-		Webhook:               &admission.Webhook{Handler: handler},
-		NamespaceSelectorFunc: BuildSelector,
+		Name:     getName(args.Kind),
+		Kind:     args.Kind,
+		Provider: args.Provider,
+		Types:    args.Types,
+		Target:   extensionswebhook.TargetSeed,
+		Path:     getName(args.Kind),
+		Webhook:  &admission.Webhook{Handler: handler},
+		Selector: namespaceSelector,
 	}, nil
 }
 
@@ -93,11 +99,11 @@ func getName(kind string) string {
 	}
 }
 
-// BuildSelector creates and returns a LabelSelector for the given webhook kind and provider.
-func BuildSelector(webhook *extensionswebhook.Webhook) (*metav1.LabelSelector, error) {
+// buildSelector creates and returns a LabelSelector for the given webhook kind and provider.
+func buildSelector(kind, provider string) (*metav1.LabelSelector, error) {
 	// Determine label selector key from the kind
 	var key string
-	switch webhook.Kind {
+	switch kind {
 	case KindSeed:
 		key = gardencorev1alpha1.SeedProvider
 	case KindShoot:
@@ -105,13 +111,13 @@ func BuildSelector(webhook *extensionswebhook.Webhook) (*metav1.LabelSelector, e
 	case KindBackup:
 		key = gardencorev1alpha1.BackupProvider
 	default:
-		return nil, fmt.Errorf("invalid webhook kind '%s'", webhook.Kind)
+		return nil, fmt.Errorf("invalid webhook kind '%s'", kind)
 	}
 
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: key, Operator: metav1.LabelSelectorOpIn, Values: []string{webhook.Provider}},
+			{Key: key, Operator: metav1.LabelSelectorOpIn, Values: []string{provider}},
 		},
 	}, nil
 }

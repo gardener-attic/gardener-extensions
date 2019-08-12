@@ -66,7 +66,7 @@
   version = "v2.20.0"
 
 [[projects]]
-  digest = "1:b386587c04bd56d5e248a2fe170fe6f03035e47004841b2d99d2ea0391e1b863"
+  digest = "1:b61cade8a94be1d9749f2a23a2cfe666a274521c82f71fcb94b43d8a644d78d7"
   name = "github.com/aliyun/alibaba-cloud-sdk-go"
   packages = [
     "sdk",
@@ -82,8 +82,8 @@
     "services/vpc",
   ]
   pruneopts = "NUT"
-  revision = "e63e3f9dd71208da169f2e4747afe165f2cb4eea"
-  version = "1.60.71"
+  revision = "07798873deee8b8ac106fa25f5e9d79d1869d824"
+  version = "1.60.95"
 
 [[projects]]
   digest = "1:a25823491c2f7a1ca118425e7370464bfa0559852ba40a5dfb3fe19cd1ad1216"
@@ -148,8 +148,8 @@
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
   pruneopts = "NUT"
-  revision = "4b2b341e8d7715fae06375aa633dbb6e91b3fb46"
-  version = "v1.0.0"
+  revision = "37c8de3658fcb183f997c4e13e8337516ab753e6"
+  version = "v1.0.1"
 
 [[projects]]
   digest = "1:027c348e13b5f924c925aebf0d2932545644c78da3f43cc82327220286084539"
@@ -196,7 +196,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:902d30a527fbb6e5d8b3efc82862aa0e0fd1bb19fad502f5b783e8128f051d26"
+  digest = "1:ee4f4f5b111e4e5f5e0bc7f74bc47abf13aeed4e07aa645326add877089f1746"
   name = "github.com/gardener/controller-manager-library"
   packages = [
     "pkg/ctxutil",
@@ -208,7 +208,7 @@
     "pkg/utils",
   ]
   pruneopts = "NUT"
-  revision = "315e86b01963531ea94ab4eea8be1c3dd38217d9"
+  revision = "b2516476e46a4c1ae55a35250320611f5ca4084b"
 
 [[projects]]
   digest = "1:a43196bc32e96d1cd077bc77978ae3d27286d273f0401eef708222df6e16c4cf"
@@ -223,7 +223,7 @@
   version = "0.6.1"
 
 [[projects]]
-  digest = "1:9ad358d87fcb4b91af267d31974358a98490d53f20da7053e2ef86fe20fcf1d1"
+  digest = "1:ad5088b7eb35e883a5f0386973579e6adc82060468cf7b9a63edf37428726f88"
   name = "github.com/gardener/gardener"
   packages = [
     "pkg/api/extensions",
@@ -263,7 +263,7 @@
     "pkg/version",
   ]
   pruneopts = "NUT"
-  revision = "7798c480cfd8cb9f7c6bfd2e4fd7441a7a469db7"
+  revision = "69d5b041424653220a77105062a3860c3f6e361a"
 
 [[projects]]
   digest = "1:ad70dc0ea115b0c56cf5fbd3a37813bd5d45d21266301ab80bcfa61f773e0c78"
@@ -296,12 +296,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:024a5c93cd63c160d7fedbd4fb965fce62d004511bbd10ec02d03fa07ca75b12"
+  digest = "1:643f6cb49dfafd006d393831dbc82df9b5ae09feb1ca2209c4905d200414c29d"
   name = "github.com/go-ini/ini"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "8659100d2d9ecf3760a41838b1886db49426d001"
-  version = "v1.44.0"
+  revision = "d4cae42d398bc0095297fc3315669590d29166ea"
+  version = "v1.46.0"
 
 [[projects]]
   digest = "1:53becd66889185091b58ea3fc49294996f2179fb05a89702f4de7d15e581b509"
@@ -511,15 +511,15 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:52094d0f8bdf831d1a2401e9b6fee5795fdc0b2a2d1f8bb1980834c289e79129"
+  digest = "1:ed860d2b2c1d066d36a89c982eefc7d019badd534f60e87ab65d3d94f0797ef0"
   name = "github.com/hashicorp/golang-lru"
   packages = [
     ".",
     "simplelru",
   ]
   pruneopts = "NUT"
-  revision = "7087cb70de9f7a8bc0a10c375cb0d2280a8edf9c"
-  version = "v0.5.1"
+  revision = "7f827b33c0f158ec5dfbba01bb0b14a4541fd81d"
+  version = "v0.5.3"
 
 [[projects]]
   digest = "1:dc54242755f5b6721dd880843de6e45fe234838ea9149ec8249951880fd5802f"
@@ -573,12 +573,12 @@
   version = "v1.3.0"
 
 [[projects]]
-  digest = "1:4e903242fe176238aaa469f59d7035f5abf2aa9acfefb8964ddd203651b574e9"
+  digest = "1:92f6419f388bd31a433b1388910f15a882c9980e383e89ebf8fb2524583707ac"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "0ff49de124c6f76f8494e194af75bde0f1a49a29"
-  version = "v1.1.6"
+  revision = "27518f6661eba504be5a7a9a9f6d9460d892ade3"
+  version = "v1.1.7"
 
 [[projects]]
   digest = "1:ff7e34ad2d4c454326345b7f5c67a135efeb7d3fd08b10f65f1a1ccafcaa8b65"
@@ -598,11 +598,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eac06ee8dffe39570b8a46c6aef51ed94d71a4f485510632edc6541fef4af3ec"
+  digest = "1:e0e7ecd8a4d1faddfb4b7e8a59684f803aa7f45489e25a64bb25d63691d4fc7a"
   name = "github.com/mattn/go-ieproxy"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "6dee0af9227d0863f1508ce7937af3396d6605c1"
+  revision = "f9202b1cfdeb0c82ddd3dc1e8e9cd94b3c0c1b13"
 
 [[projects]]
   digest = "1:5985ef4caf91ece5d54817c11ea25f182697534f8ae6521eadcd628c142ac4b6"
@@ -894,7 +894,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5fdc48a9ffbc138efec6c0a3d3b22a9b83d5a2efb02b6cac7630153a64b44d5f"
+  digest = "1:09b6a8d3a9dee3c68aec97bba6cf45481a6d9868b8d55a41a3c6bb81a95feb4a"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -903,7 +903,7 @@
     "windows/registry",
   ]
   pruneopts = "NUT"
-  revision = "fae7ac547cb717d141c433a2a173315e216b64c4"
+  revision = "51ab0e2deafac1f46c46ad59cf0921be2f180c3d"
 
 [[projects]]
   digest = "1:28deae5fe892797ff37a317b5bcda96d11d1c90dadd89f1337651df3bc4c586e"
@@ -952,7 +952,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:03cb7931c1d82eb61d91e3a29d672c7e1a5b97dbb64fc7ece8b4ec1016dba4ac"
+  digest = "1:396e96dc205fbf29bb19476a102a9ab3be4ed685cae2825149884bf1fd3a4b91"
   name = "golang.org/x/tools"
   packages = [
     "go/ast/astutil",
@@ -969,7 +969,7 @@
     "internal/semver",
   ]
   pruneopts = "NUT"
-  revision = "8bb11ff117ca820938b6d899b13b3f2832ef244c"
+  revision = "e713427fea3f98cb070e72a058c557a1a560cf22"
 
 [[projects]]
   digest = "1:5b9c4302ba11674993f9aa784f0369341a70b6f1a253bc02635486b91367391c"
@@ -1022,10 +1022,10 @@
     "googleapis/type/expr",
   ]
   pruneopts = "NUT"
-  revision = "c506a9f9061087022822e8da603a52fc387115a8"
+  revision = "fa694d86fc64c7654a660f8908de4e879866748d"
 
 [[projects]]
-  digest = "1:2faab8e13984b728cde9ced456912a0fc5cd43da5b9a4b45b749dc3ae63f27b2"
+  digest = "1:b5fb6a9fb9d276fe26f303d502e79a7e93afcaae43d05dc95b4993f5b59c6c6a"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -1063,8 +1063,8 @@
     "tap",
   ]
   pruneopts = "NUT"
-  revision = "1d89a3c832915b2314551c1d2a506874d62e53f7"
-  version = "v1.22.0"
+  revision = "045159ad57f3781d409358e3ade910a018c16b30"
+  version = "v1.22.1"
 
 [[projects]]
   digest = "1:1b91ae0dc69a41d4c2ed23ea5cffb721ea63f5037ca4b81e6d6771fbb8f45129"
@@ -1084,12 +1084,12 @@
   version = "v0.9.1"
 
 [[projects]]
-  digest = "1:024a5c93cd63c160d7fedbd4fb965fce62d004511bbd10ec02d03fa07ca75b12"
+  digest = "1:643f6cb49dfafd006d393831dbc82df9b5ae09feb1ca2209c4905d200414c29d"
   name = "gopkg.in/ini.v1"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "8659100d2d9ecf3760a41838b1886db49426d001"
-  version = "v1.44.0"
+  revision = "d4cae42d398bc0095297fc3315669590d29166ea"
+  version = "v1.46.0"
 
 [[projects]]
   digest = "1:18108594151654e9e696b27b181b953f9a90b16bf14d253dd1b397b025a1487f"
@@ -1386,16 +1386,16 @@
     "pkg/version",
   ]
   pruneopts = "NUT"
-  revision = "a8b13cc5ab6a7dbef0a58f5061bcc7c0c61598e7"
-  version = "v2.14.2"
+  revision = "0e7f3b6637f7af8fcfddb3d2941fcc7cbebb0085"
+  version = "v2.14.3"
 
 [[projects]]
-  digest = "1:43099cc4ed575c40f80277c7ba7168df37d0c663bdc4f541325430bd175cce8a"
+  digest = "1:c05ad592787fc6cdacf8c5309d826561aa4a7d9e4e7ea28660dfb2c77ff68ab0"
   name = "k8s.io/klog"
   packages = ["."]
   pruneopts = "NUT"
-  revision = "d98d8acdac006fb39831f1b25640813fef9c314f"
-  version = "v0.3.3"
+  revision = "3ca30a56d8a775276f9cdae009ba326fdc05af7f"
+  version = "v0.4.0"
 
 [[projects]]
   digest = "1:1991ba7d774f627862c0b1d8e20e48f75a7714db897ff98c541c74d4ae3b0ce5"
@@ -1431,7 +1431,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d3e62eb3f97ef31de7ba84e84954ef9f9def7f83bfd21792449f17dae2f11e4a"
+  digest = "1:99dbf7ef753ca02399778c93a4ed4b689b28668317134ecd1fabeb07be70f354"
   name = "k8s.io/utils"
   packages = [
     "buffer",
@@ -1440,7 +1440,7 @@
     "trace",
   ]
   pruneopts = "NUT"
-  revision = "3dccf664f023863740c508fb4284e49742bedfa4"
+  revision = "6c36bc71fc4aeb1f49801054e71aebdaef1fbeb4"
 
 [[projects]]
   digest = "1:04efdfbc9fce303435a7da26116a7f97f586ab5cd07b49a9cc253589bead3908"
@@ -1546,6 +1546,7 @@
     "github.com/go-logr/zapr",
     "github.com/gobuffalo/packr",
     "github.com/gobuffalo/packr/v2",
+    "github.com/gobuffalo/packr/v2/file/resolver",
     "github.com/golang/mock/gomock",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",

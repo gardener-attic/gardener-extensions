@@ -50,12 +50,18 @@ type AddArgs struct {
 func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) {
 	logger.Info("Creating webhook", "name", WebhookName)
 
+	// Build namespace selector from the webhook kind and provider
+	namespaceSelector, err := buildSelector()
+	if err != nil {
+		return nil, err
+	}
+
 	wh := &extensionswebhook.Webhook{
-		Name:                  WebhookName,
-		Types:                 args.Types,
-		Path:                  WebhookName,
-		Target:                extensionswebhook.TargetShoot,
-		NamespaceSelectorFunc: BuildSelector,
+		Name:     WebhookName,
+		Types:    args.Types,
+		Path:     WebhookName,
+		Target:   extensionswebhook.TargetShoot,
+		Selector: namespaceSelector,
 	}
 
 	switch {
@@ -89,8 +95,8 @@ func Add(mgr manager.Manager, args AddArgs) (*extensionswebhook.Webhook, error) 
 	return nil, fmt.Errorf("neither mutator nor mutator with shoot client is set")
 }
 
-// BuildSelector creates and returns a LabelSelector for the given webhook kind and provider.
-func BuildSelector(webhook *extensionswebhook.Webhook) (*metav1.LabelSelector, error) {
+// buildSelector creates and returns a LabelSelector for the given webhook kind and provider.
+func buildSelector() (*metav1.LabelSelector, error) {
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
