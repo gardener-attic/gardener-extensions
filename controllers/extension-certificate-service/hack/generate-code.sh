@@ -53,7 +53,11 @@ GROUPS_WITH_VERSIONS="$3"
 
 rm -f $GOPATH/bin/*-gen
 
-$(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh \
+PROJECT_ROOT=$(dirname $0)/../../..
+
+source "${PROJECT_ROOT}"/hack/code-generator/common.sh
+
+bash "${PROJECT_ROOT}"/vendor/k8s.io/code-generator/generate-internal-groups.sh \
   deepcopy,defaulter \
   $OUTPUT_PKG \
   $EXT_APIS_PKG \
@@ -61,7 +65,7 @@ $(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh 
   $GROUPS_WITH_VERSIONS \
   -h <(headers)
 
-$(dirname $0)/../../../vendor/k8s.io/code-generator/generate-internal-groups.sh \
+bash "${PROJECT_ROOT}"/vendor/k8s.io/code-generator/generate-internal-groups.sh \
   conversion \
   $OUTPUT_PKG \
   $EXT_APIS_PKG \

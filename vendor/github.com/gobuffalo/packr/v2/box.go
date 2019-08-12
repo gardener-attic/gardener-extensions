@@ -16,7 +16,8 @@ import (
 	"github.com/gobuffalo/packr/v2/file"
 	"github.com/gobuffalo/packr/v2/file/resolver"
 	"github.com/gobuffalo/packr/v2/plog"
-	"github.com/gobuffalo/packr/v2/internal/takeon/github.com/markbates/oncer"
+	"github.com/markbates/oncer"
+	"errors"
 )
 
 var _ packd.Box = &Box{}
@@ -28,12 +29,12 @@ var _ packd.Finder = &Box{}
 // Box represent a folder on a disk you want to
 // have access to in the built Go binary.
 type Box struct {
-	Path		string			`json:"path"`
-	Name		string			`json:"name"`
-	ResolutionDir	string			`json:"resolution_dir"`
-	DefaultResolver	resolver.Resolver	`json:"default_resolver"`
-	resolvers	resolversMap
-	dirs		dirsMap
+	Path            string            `json:"path"`
+	Name            string            `json:"name"`
+	ResolutionDir   string            `json:"resolution_dir"`
+	DefaultResolver resolver.Resolver `json:"default_resolver"`
+	resolvers       resolversMap
+	dirs            dirsMap
 }
 
 // NewBox returns a Box that can be used to
@@ -207,7 +208,7 @@ func (b *Box) Resolve(key string) (file.File, error) {
 		if r == nil {
 			r = resolver.DefaultResolver
 			if r == nil {
-				return nil, fmt.Errorf("resolver.DefaultResolver is nil")
+				return nil, errors.New("resolver.DefaultResolver is nil")
 			}
 		}
 	}
@@ -215,7 +216,7 @@ func (b *Box) Resolve(key string) (file.File, error) {
 
 	f, err := r.Resolve(b.Name, key)
 	if err != nil {
-		z := filepath.Join(resolver.OsPath(b.ResolutionDir), filepath.FromSlash(path.Clean("/"+resolver.OsPath(key))))
+		z := filepath.Join(resolver.OsPath(b.ResolutionDir), resolver.OsPath(key))
 		f, err = r.Resolve(b.Name, z)
 		if err != nil {
 			plog.Debug(r, "Resolve", "box", b.Name, "key", z, "err", err)

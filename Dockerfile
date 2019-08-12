@@ -1,10 +1,10 @@
 #############      builder-base                             #############
-FROM golang:1.12.4 AS builder-base
+FROM golang:1.12.7 AS builder-base
 
-COPY ./hack/install-requirements.sh /install-requirements.sh
-COPY ./tools /tools
+WORKDIR /go/src/github.com/gardener/gardener-extensions
+COPY . .
 
-RUN /install-requirements.sh
+RUN ./hack/install-requirements.sh
 
 #############      builder                                  #############
 FROM builder-base AS builder

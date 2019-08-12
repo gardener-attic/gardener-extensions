@@ -87,7 +87,6 @@ type CreateVpnRouteEntryRequest struct {
 	RouteDest            string           `position:"Query" name:"RouteDest"`
 	NextHop              string           `position:"Query" name:"NextHop"`
 	PublishVpc           requests.Boolean `position:"Query" name:"PublishVpc"`
-	OverlayMode          string           `position:"Query" name:"OverlayMode"`
 }
 
 // CreateVpnRouteEntryResponse is the response struct for api CreateVpnRouteEntry

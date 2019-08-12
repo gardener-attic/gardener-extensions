@@ -17,13 +17,12 @@ set -e
 
 DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
 
-cd "$DIRNAME/../tools"
 export GO111MODULE=on
 echo "Installing requirements"
-go get "github.com/gobuffalo/packr/v2/packr2@v2.1.0"
-go get "github.com/onsi/ginkgo/ginkgo@v1.8.0"
-go get "github.com/golang/mock/mockgen@v1.2.0"
-go get "github.com/golangci/golangci-lint/cmd/golangci-lint@692dacb773b703162c091c2d8c59f9cd2d6801db"
+go install -mod=vendor ./vendor/github.com/gobuffalo/packr/v2/packr2
+go install -mod=vendor ./vendor/github.com/onsi/ginkgo/ginkgo
+go install -mod=vendor ./vendor/github.com/golang/mock/mockgen
+curl -sfL "https://install.goreleaser.com/github.com/golangci/golangci-lint.sh" | sh -s -- -b $(go env GOPATH)/bin v1.17.1
 curl -s "https://raw.githubusercontent.com/helm/helm/v2.13.1/scripts/get" | bash -s -- --version 'v2.13.1'
 
 if [[ "$(uname -s)" == *"Darwin"* ]]; then
