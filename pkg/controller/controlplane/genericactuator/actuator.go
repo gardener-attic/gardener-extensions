@@ -167,20 +167,33 @@ func (a *actuator) Reconcile(
 		return false, err
 	}
 
-	// If the cluster is hibernated, check if kube-apiserver has been already scaled down
-	requeue := false
-	scaledDown := false
+	var (
+		requeue    = false
+		scaledDown = false
+	)
+
 	if extensionscontroller.IsHibernated(cluster.Shoot) {
 		dep := &appsv1.Deployment{}
 		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer}, dep); err != nil {
 			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, gardencorev1alpha1.DeploymentNameKubeAPIServer)
 		}
 
-		// If kube-apiserver has not been already scaled down, requeue. Otherwise, set the scaledDown flag so the value provider could scale CCM down.
-		if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 0 {
-			requeue = true
+		// If the cluster is hibernated, check if kube-apiserver has been already scaled down. If it is not yet scaled down
+		// then we requeue the `ControlPlane` CRD in order to give the provider-specific control plane components time to
+		// properly prepare the cluster for hibernation (whatever needs to be done). If the kube-apiserver is already scaled down
+		// then we allow continuing the reconciliation.
+		if cluster.Shoot.DeletionTimestamp == nil {
+			if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 0 {
+				requeue = true
+			} else {
+				scaledDown = true
+			}
+			// Similarly, if a hibernated shoot is deleted then we might need to wake up all the provider-specific components. We
+			// wait until the kube-apiserver is woken up again before we wake up the provider-specific components.
 		} else {
-			scaledDown = true
+			if dep.Spec.Replicas == nil || *dep.Spec.Replicas == 0 {
+				return true, nil
+			}
 		}
 	}
 

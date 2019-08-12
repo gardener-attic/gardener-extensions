@@ -43,7 +43,7 @@ const (
 	EventControlPlaneDeletion string = "ControlPlaneDeletion"
 
 	// RequeueAfter is the duration to requeue a controlplane reconciliation if indicated by the actuator.
-	RequeueAfter time.Duration = 10 * time.Second
+	RequeueAfter time.Duration = 2 * time.Second
 )
 
 type reconciler struct {
