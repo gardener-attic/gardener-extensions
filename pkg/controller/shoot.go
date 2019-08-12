@@ -77,7 +77,7 @@ func GetReplicas(shoot *gardenv1beta1.Shoot, wokenUp int) int {
 // GetControlPlaneReplicas returns the woken up replicas for controlplane components of the given Shoot
 // that should only be scaled down at the end of the flow.
 func GetControlPlaneReplicas(shoot *gardenv1beta1.Shoot, scaledDown bool, wokenUp int) int {
-	if IsHibernated(shoot) && scaledDown {
+	if shoot.DeletionTimestamp == nil && IsHibernated(shoot) && scaledDown {
 		return 0
 	}
 	return wokenUp
