@@ -22,6 +22,8 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -50,6 +52,15 @@ func (m *mutator) InjectClient(client client.Client) error {
 
 // Mutate validates and if needed mutates the given object.
 func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
+	acc, err := meta.Accessor(obj)
+	if err != nil {
+		return errors.Wrapf(err, "could not create accessor during webhook")
+	}
+	// If the object does have a deletion timestamp then we don't want to mutate anything.
+	if acc.GetDeletionTimestamp() != nil {
+		return nil
+	}
+
 	network, ok := obj.(*extensionsv1alpha1.Network)
 	if !ok {
 		return fmt.Errorf("could not mutate, object is not of type \"Network\"")

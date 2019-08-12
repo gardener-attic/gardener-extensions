@@ -30,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -103,6 +104,15 @@ func (m *mutator) InjectClient(client client.Client) error {
 
 // Mutate validates and if needed mutates the given object.
 func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
+	acc, err := meta.Accessor(obj)
+	if err != nil {
+		return errors.Wrapf(err, "could not create accessor during webhook")
+	}
+	// If the object does have a deletion timestamp then we don't want to mutate anything.
+	if acc.GetDeletionTimestamp() != nil {
+		return nil
+	}
+
 	switch x := obj.(type) {
 	case *corev1.Service:
 		switch x.Name {
