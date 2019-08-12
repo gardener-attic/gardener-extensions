@@ -45,9 +45,9 @@ type AddOptions struct {
 // The opts.Reconciler is being set with a newly instantiated actuator.
 func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return controlplane.Add(mgr, controlplane.AddArgs{
-		Actuator: &wrapper{genericactuator.NewActuator(controlPlaneSecrets, configChart, ccmChart, ccmShootChart,
+		Actuator: genericactuator.NewActuator(controlPlaneSecrets, configChart, ccmChart, ccmShootChart,
 			storageClassChart, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
-			imagevector.ImageVector(), openstack.CloudProviderConfigCloudControllerManagerName, logger)},
+			imagevector.ImageVector(), openstack.CloudProviderConfigCloudControllerManagerName, logger),
 		ControllerOptions: opts.Controller,
 		Predicates:        controlplane.DefaultPredicates(openstack.Type, opts.IgnoreOperationAnnotation),
 	})
