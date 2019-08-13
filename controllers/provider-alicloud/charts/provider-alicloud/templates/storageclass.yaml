@@ -9,6 +9,7 @@ metadata:
 provisioner: alicloud/disk
 parameters:
   type: cloud_ssd
+  encrypted: "true"
 {{- else }}
 provisioner: diskplugin.csi.alibabacloud.com
 parameters:
