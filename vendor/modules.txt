@@ -93,7 +93,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/apis/dns
-# github.com/gardener/gardener v0.0.0-20190809103150-69d5b0414246
+# github.com/gardener/gardener v0.0.0-20190812144748-dec8f3c7f288
 github.com/gardener/gardener/pkg/utils
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1
 github.com/gardener/gardener/pkg/apis/garden/v1beta1
@@ -164,13 +164,13 @@ github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 github.com/gobuffalo/packr
 # github.com/gobuffalo/packr/v2 v2.1.0
 github.com/gobuffalo/packr/v2
+github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/packr2
 github.com/gobuffalo/packr/v2/file
-github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
-github.com/gobuffalo/packr/v2/packr2/cmd
 github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
+github.com/gobuffalo/packr/v2/packr2/cmd
 github.com/gobuffalo/packr/v2/jam
 github.com/gobuffalo/packr/v2/packr2/cmd/fix
 github.com/gobuffalo/packr/v2/jam/store

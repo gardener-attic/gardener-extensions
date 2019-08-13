@@ -17,6 +17,8 @@ package controlplanebackup
 import (
 	"context"
 
+	"github.com/gardener/gardener/pkg/operation/common"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -96,41 +98,48 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	// They are only specified for the etcd-main stateful set (backup is enabled)
 	var (
 		provider                string
+		prefix                  string
 		env                     []corev1.EnvVar
 		volumeClaimTemplateName = name
 	)
 	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
-		provider = azure.StorageProviderName
-		env = []corev1.EnvVar{
-			{
-				Name: "STORAGE_CONTAINER",
-				// The bucket name is written to the backup secret by Gardener as a temporary solution.
-				// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  azure.BucketName,
-						LocalObjectReference: corev1.LocalObjectReference{Name: azure.BackupSecretName},
+		if cluster.CloudProfile.Spec.Backup == nil {
+			e.logger.Info("Backup profile is not configured;  backup will not be taken for etcd-main")
+		} else {
+			prefix = common.GenerateBackupEntryName(cluster.Shoot.Status.TechnicalID, cluster.Shoot.Status.UID)
+
+			provider = azure.StorageProviderName
+			env = []corev1.EnvVar{
+				{
+					Name: "STORAGE_CONTAINER",
+					// The bucket name is written to the backup secret by Gardener as a temporary solution.
+					// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  azure.BucketName,
+							LocalObjectReference: corev1.LocalObjectReference{Name: azure.BackupSecretName},
+						},
 					},
 				},
-			},
-			{
-				Name: "STORAGE_ACCOUNT",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: azure.BackupSecretName},
-						Key:                  azure.StorageAccount,
+				{
+					Name: "STORAGE_ACCOUNT",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: azure.BackupSecretName},
+							Key:                  azure.StorageAccount,
+						},
 					},
 				},
-			},
-			{
-				Name: "STORAGE_KEY",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: azure.BackupSecretName},
-						Key:                  azure.StorageKey,
+				{
+					Name: "STORAGE_KEY",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: azure.BackupSecretName},
+							Key:                  azure.StorageKey,
+						},
 					},
 				},
-			},
+			}
 		}
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
@@ -141,5 +150,5 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		schedule = defaultSchedule
 	}
 
-	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, image.String(), nil, env, nil), nil
+	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, prefix, image.String(), nil, env, nil), nil
 }
