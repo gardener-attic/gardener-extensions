@@ -37,3 +37,6 @@ extensions:
 - name: dns-external
   gitHubRepo: https://github.com/gardener/external-dns-management
   examplePath: examples/gardener-controllerregistration.yaml
+- name: networking-calico
+  gitHubRepo: https://github.com/gardener/gardener-extensions
+  path: controllers/networking-calico
