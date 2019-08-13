@@ -117,6 +117,12 @@ func (c *storageClient) CreateBucketIfNotExists(ctx context.Context, bucketName 
 		}
 		return err
 	}
+
+	config := oss.ServerEncryptionRule{SSEDefault: oss.SSEDefaultRule{SSEAlgorithm: "KMS"}}
+	if err := c.client.SetBucketEncryption(bucketName, config); err != nil {
+		return err
+	}
+
 	return nil
 }
 
