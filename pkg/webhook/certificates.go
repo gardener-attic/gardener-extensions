@@ -30,7 +30,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -86,16 +85,14 @@ func GenerateCertificates(ctx context.Context, mgr manager.Manager, certDir, nam
 		}
 
 		secret.ObjectMeta = metav1.ObjectMeta{Namespace: namespace, Name: certSecretName}
-		if _, err := controllerutil.CreateOrUpdate(ctx, c, secret, func() error {
-			secret.Type = corev1.SecretTypeOpaque
-			secret.Data = map[string][]byte{
-				secrets.DataKeyCertificateCA: caCert.CertificatePEM,
-				secrets.DataKeyPrivateKeyCA:  caCert.PrivateKeyPEM,
-				secrets.DataKeyCertificate:   serverCert.CertificatePEM,
-				secrets.DataKeyPrivateKey:    serverCert.PrivateKeyPEM,
-			}
-			return nil
-		}); err != nil {
+		secret.Type = corev1.SecretTypeOpaque
+		secret.Data = map[string][]byte{
+			secrets.DataKeyCertificateCA: caCert.CertificatePEM,
+			secrets.DataKeyPrivateKeyCA:  caCert.PrivateKeyPEM,
+			secrets.DataKeyCertificate:   serverCert.CertificatePEM,
+			secrets.DataKeyPrivateKey:    serverCert.PrivateKeyPEM,
+		}
+		if err := c.Create(ctx, secret); err != nil {
 			return nil, err
 		}
 
