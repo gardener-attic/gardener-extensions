@@ -273,7 +273,7 @@ func (a *actuator) reconcileControlPlane(
 
 	if extensionscontroller.IsHibernated(cluster.Shoot) {
 		dep := &appsv1.Deployment{}
-		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer}, dep); err != nil {
+		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer}, dep); client.IgnoreNotFound(err) != nil {
 			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, gardencorev1alpha1.DeploymentNameKubeAPIServer)
 		}
 
