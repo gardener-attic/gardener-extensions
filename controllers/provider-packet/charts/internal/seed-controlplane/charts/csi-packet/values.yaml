@@ -3,6 +3,7 @@ images:
   csi-provisioner: image-repository:image-tag
   packet-storage-interface: image-repository:image-tag
 podAnnotations: {}
+replicas: 1
 attacherResources:
   requests:
     cpu: 10m
