@@ -272,6 +272,7 @@ func getControlPlaneChartValues(
 			},
 		},
 		"csi-packet": map[string]interface{}{
+			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
 			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"regionID":          cp.Spec.Region,
 			"podAnnotations": map[string]interface{}{

@@ -26,7 +26,7 @@ spec:
     rollingUpdate:
       partition: 0
   serviceName: csi-packet-pd
-  replicas: 1
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: csi-packet-pd-driver

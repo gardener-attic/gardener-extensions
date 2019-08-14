@@ -121,6 +121,7 @@ var _ = Describe("ValuesProvider", func() {
 				},
 			},
 			"csi-packet": map[string]interface{}{
+				"replicas":          1,
 				"kubernetesVersion": "1.13.4",
 				"regionID":          "WER1",
 				"podAnnotations": map[string]interface{}{
