@@ -42,6 +42,8 @@ const (
 
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
+	// MachineControllerManagerVpaName is the name of the VerticalPodAutoscaler of the machine-controller-manager deployment.
+	MachineControllerManagerVpaName = "machine-controller-manager-vpa"
 	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.
 	BackupSecretName = "etcd-backup"
 )

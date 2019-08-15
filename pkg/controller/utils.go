@@ -30,10 +30,12 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/wait"
+	autoscalingv1beta2 "k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1beta2"
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -292,4 +294,12 @@ func UnsafeGuessKind(obj runtime.Object) string {
 	}
 
 	return t.Elem().Name()
+}
+
+// GetVerticalPodAutoscalerObject returns unstructured.Unstructured representing autoscalingv1beta2.VerticalPodAutoscaler
+func GetVerticalPodAutoscalerObject() *unstructured.Unstructured {
+	obj := &unstructured.Unstructured{}
+	obj.SetAPIVersion(autoscalingv1beta2.SchemeGroupVersion.String())
+	obj.SetKind("VerticalPodAutoscaler")
+	return obj
 }
