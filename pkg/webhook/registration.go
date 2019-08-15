@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Registers the given webhooks in the Kubernetes cluster targeted by the provided manager.
+// RegisterWebhooks registers the given webhooks in the Kubernetes cluster targeted by the provided manager.
 func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, providerName string, port int, mode, url string, caBundle []byte, webhooks []*Webhook) (webhooksToRegisterSeed []admissionregistrationv1beta1.Webhook, webhooksToRegisterShoot []admissionregistrationv1beta1.Webhook, err error) {
 	var (
 		fail                             = admissionregistrationv1beta1.Fail

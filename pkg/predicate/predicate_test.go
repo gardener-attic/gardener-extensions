@@ -142,7 +142,7 @@ var _ = Describe("Predicate", func() {
 					AWS: &v1beta1.AWSProfile{
 						Constraints: v1beta1.AWSConstraints{
 							MachineTypes: []v1beta1.MachineType{
-								v1beta1.MachineType{
+								{
 									Name: oldMachine,
 								},
 							},
@@ -151,7 +151,7 @@ var _ = Describe("Predicate", func() {
 				},
 			}
 			newCloudProfile := oldCloudProfile.DeepCopy()
-			newCloudProfile.Spec.AWS.Constraints.MachineTypes = []v1beta1.MachineType{v1beta1.MachineType{Name: newMachine}}
+			newCloudProfile.Spec.AWS.Constraints.MachineTypes = []v1beta1.MachineType{{Name: newMachine}}
 
 			updateEvent := event.UpdateEvent{
 				ObjectNew: &v1alpha1.Cluster{

@@ -1,5 +1,5 @@
 #############      builder-base                             #############
-FROM golang:1.12.7 AS builder-base
+FROM golang:1.12.8 AS builder-base
 
 WORKDIR /go/src/github.com/gardener/gardener-extensions
 COPY . .

@@ -115,14 +115,14 @@ var _ = Describe("ChartValues", func() {
 						},
 						"dns01": map[string]interface{}{
 							"providers": []map[string]interface{}{
-								map[string]interface{}{
+								{
 									"type":        apisconfig.Route53Provider,
 									"region":      "eu-west-1",
 									"accessKeyID": "accessKey",
 									"accessKey":   "secretAccessKey",
 									"name":        "route53",
 								},
-								map[string]interface{}{
+								{
 									"type":      apisconfig.CloudDNSProvider,
 									"project":   "project-id",
 									"accessKey": "svcJson",
