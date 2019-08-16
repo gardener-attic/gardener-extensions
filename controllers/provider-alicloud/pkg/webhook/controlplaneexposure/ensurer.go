@@ -50,8 +50,8 @@ type ensurer struct {
 }
 
 // InjectClient injects the given client into the ensurer.
-func (m *ensurer) InjectClient(client client.Client) error {
-	m.client = client
+func (e *ensurer) InjectClient(client client.Client) error {
+	e.client = client
 	return nil
 }
 

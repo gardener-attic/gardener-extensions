@@ -18,7 +18,7 @@ Please find more information regarding the extensibility concepts and a detailed
 
 You can run the controller locally on your machine by executing `make start-provider-openstack`.
 
-Static code checks and tests can be executed by running `VERIFY=true make all`. We are using [dep](https://github.com/golang/dep) for Golang package dependency management and [Ginkgo](https://github.com/onsi/ginkgo)/[Gomega](https://github.com/onsi/gomega) for testing.
+Static code checks and tests can be executed by running `VERIFY=true make all`. We are using Go modules for Golang package dependency management and [Ginkgo](https://github.com/onsi/ginkgo)/[Gomega](https://github.com/onsi/gomega) for testing.
 
 ## Feedback and Support
 

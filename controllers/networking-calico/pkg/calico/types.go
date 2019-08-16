@@ -25,7 +25,7 @@ const (
 	TyphaImageName           = "calico-typha"
 	KubeControllersImageName = "calico-kube-controllers"
 
-	// CalicoRelease is the name of the Calico Release
+	// ReleaseName is the name of the Calico Release
 	ReleaseName = "calico"
 )
 
@@ -35,6 +35,6 @@ var (
 	// InternalChartsPath is the path to the internal charts
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 
-	// CalicoChartPath path for internal Calico Chart
+	// ChartPath path for internal Calico Chart
 	ChartPath = filepath.Join(InternalChartsPath, "calico")
 )

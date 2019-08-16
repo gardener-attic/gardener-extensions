@@ -64,25 +64,25 @@ func init() {
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 				},
 				AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Ready",
 						Type:        "integer",
 						Description: "Total number of ready machines targeted by this machine deployment.",
 						JSONPath:    ".status.readyReplicas",
 					},
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Desired",
 						Type:        "integer",
 						Description: "Number of desired machines.",
 						JSONPath:    ".spec.replicas",
 					},
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Up-to-date",
 						Type:        "integer",
 						Description: "Total number of non-terminated machines targeted by this machine deployment that have the desired template spec.",
 						JSONPath:    ".status.updatedReplicas",
 					},
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Available",
 						Type:        "integer",
 						Description: "Total number of available machines (ready for at least minReadySeconds) targeted by this machine deployment.",
@@ -110,19 +110,19 @@ func init() {
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 				},
 				AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Desired",
 						Type:        "integer",
 						Description: "Number of desired replicas.",
 						JSONPath:    ".spec.replicas",
 					},
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Current",
 						Type:        "integer",
 						Description: "Number of actual replicas.",
 						JSONPath:    ".status.replicas",
 					},
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Ready",
 						Type:        "integer",
 						Description: "Number of ready replicas for this machine set.",
@@ -150,7 +150,7 @@ func init() {
 					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
 				},
 				AdditionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-					apiextensionsv1beta1.CustomResourceColumnDefinition{
+					{
 						Name:        "Status",
 						Type:        "string",
 						Description: "Current status of the machine.",
@@ -169,16 +169,16 @@ func init() {
 	}
 
 	machineClasses := []machineClass{
-		machineClass{
+		{
 			name: "alicloud",
 			kind: "Alicloud",
 			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Instance Type",
 					Type:     "string",
 					JSONPath: ".spec.instanceType",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Region",
 					Type:     "string",
 					Priority: 1,
@@ -187,21 +187,21 @@ func init() {
 				agePrinterColumn,
 			},
 		},
-		machineClass{
+		{
 			name: "aws",
 			kind: "AWS",
 			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Machine Type",
 					Type:     "string",
 					JSONPath: ".spec.machineType",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "AMI",
 					Type:     "string",
 					JSONPath: ".spec.ami",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Region",
 					Type:     "string",
 					Priority: 1,
@@ -210,16 +210,16 @@ func init() {
 				agePrinterColumn,
 			},
 		},
-		machineClass{
+		{
 			name: "azure",
 			kind: "Azure",
 			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "VM Size",
 					Type:     "string",
 					JSONPath: ".spec.properties.hardwareProfile.vmSize",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Location",
 					Type:     "string",
 					Priority: 1,
@@ -228,16 +228,16 @@ func init() {
 				agePrinterColumn,
 			},
 		},
-		machineClass{
+		{
 			name: "gcp",
 			kind: "GCP",
 			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Machine Type",
 					Type:     "string",
 					JSONPath: ".spec.machineType",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Region",
 					Type:     "string",
 					Priority: 1,
@@ -246,21 +246,21 @@ func init() {
 				agePrinterColumn,
 			},
 		},
-		machineClass{
+		{
 			name: "openstack",
 			kind: "OpenStack",
 			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Flavor",
 					Type:     "string",
 					JSONPath: ".spec.flavorName",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Image",
 					Type:     "string",
 					JSONPath: ".spec.imageName",
 				},
-				apiextensionsv1beta1.CustomResourceColumnDefinition{
+				{
 					Name:     "Region",
 					Type:     "string",
 					Priority: 1,
@@ -269,7 +269,7 @@ func init() {
 				agePrinterColumn,
 			},
 		},
-		machineClass{
+		{
 			name: "packet",
 			kind: "Packet",
 			additionalPrinterColumns: []apiextensionsv1beta1.CustomResourceColumnDefinition{

@@ -88,7 +88,7 @@ Please make sure:
 - `ca` and `gardener` secrets for the Shoot cluster exists.
 - [Configuration](#Configuration) is in place.
 
-Static code checks and tests can be executed by running `VERIFY=true make all`. We are using [dep](https://github.com/golang/dep) for Golang package dependency management and [Ginkgo](https://github.com/onsi/ginkgo)/[Gomega](https://github.com/onsi/gomega) for testing.
+Static code checks and tests can be executed by running `VERIFY=true make all`. We are using Go modules for Golang package dependency management and [Ginkgo](https://github.com/onsi/ginkgo)/[Gomega](https://github.com/onsi/gomega) for testing.
 
 ## Feedback and Support
 

@@ -46,7 +46,7 @@ type NetworkConfig struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// InfrastructureStatus contains information about created Network resources.
+// NetworkStatus contains information about created Network resources.
 type NetworkStatus struct {
 	metav1.TypeMeta `json:",inline"`
 }

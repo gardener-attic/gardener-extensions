@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// WithClient containts an instance of `client.Client`.
+// WithClient contains an instance of `client.Client`.
 type WithClient struct {
 	Client client.Client
 }
@@ -33,7 +33,7 @@ func (w *WithClient) InjectClient(c client.Client) error {
 	return nil
 }
 
-// WithStopChannel containts a stop channel.
+// WithStopChannel contains a stop channel.
 type WithStopChannel struct {
 	StopChannel <-chan struct{}
 }
@@ -44,7 +44,7 @@ func (w *WithStopChannel) InjectStopChannel(stopChan <-chan struct{}) error {
 	return nil
 }
 
-// WithContext containts a `context.Context.
+// WithContext contains a `context.Context`.
 type WithContext struct {
 	Context context.Context
 }
