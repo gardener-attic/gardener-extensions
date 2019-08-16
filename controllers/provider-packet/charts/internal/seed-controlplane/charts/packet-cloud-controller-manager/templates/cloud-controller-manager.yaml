@@ -31,7 +31,7 @@ spec:
       - key: CriticalAddonsOnly
         operator: Exists
       containers:
-      - name: cloud-controller-manager
+      - name: packet-cloud-controller-manager
         image: {{ index .Values.images "cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:
