@@ -39,6 +39,7 @@ $ brew install coreutils gnu-tar
 
 Please allow them to be used without their "g" prefix:
 $ export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH
+$ export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:\$PATH
 
 EOM
 fi
