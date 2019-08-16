@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	"github.com/gardener/gardener/pkg/utils/chart"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -38,6 +39,7 @@ var (
 			{Type: &corev1.Service{}, Name: aws.MachineControllerManagerName},
 			{Type: &corev1.ServiceAccount{}, Name: aws.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: aws.MachineControllerManagerName},
+			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: aws.MachineControllerManagerVpaName},
 		},
 	}
 

@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	"github.com/gardener/gardener/pkg/utils/chart"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -38,6 +39,7 @@ var (
 			{Type: &corev1.Service{}, Name: packet.MachineControllerManagerName},
 			{Type: &corev1.ServiceAccount{}, Name: packet.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: packet.MachineControllerManagerName},
+			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: packet.MachineControllerManagerVpaName},
 		},
 	}
 

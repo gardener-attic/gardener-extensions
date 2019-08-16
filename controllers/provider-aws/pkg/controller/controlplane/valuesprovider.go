@@ -36,7 +36,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
@@ -157,7 +156,7 @@ var cpExposureChart = &chart.Chart{
 	Images: []string{aws.AWSLBReadvertiserImageName},
 	Objects: []*chart.Object{
 		{Type: &appsv1.Deployment{}, Name: "aws-lb-readvertiser"},
-		{Type: &unstructured.Unstructured{}, Name: "aws-lb-readvertiser-vpa"},
+		{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: "aws-lb-readvertiser-vpa"},
 	},
 }
 
