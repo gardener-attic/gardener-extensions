@@ -26,10 +26,16 @@ data:
           "datastore_type": "kubernetes",
           "nodename": "__KUBERNETES_NODE_NAME__",
           "mtu": __CNI_MTU__,
+        {{- if .Values.config.ipam.subnet }}
           "ipam": {
-            "type": "host-local",
-            "subnet": "usePodCidr"
+            "type": "{{ .Values.config.ipam.type }}",
+            "subnet": "{{ .Values.config.ipam.subnet }}"
           },
+        {{- else }}
+          "ipam": {
+            "type": "{{ .Values.config.ipam.type }}",
+          },
+        {{- end }}
           "policy": {
             "type": "k8s"
           },

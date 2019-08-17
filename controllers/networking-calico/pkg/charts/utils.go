@@ -21,20 +21,64 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 
+const (
+	hostLocal  = "host-local"
+	usePodCIDR = "usePodCidr"
+)
+
 // ComputeCalicoChartValues computes the values for the calico chart.
 func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calicov1alpha1.NetworkConfig) map[string]interface{} {
-	return map[string]interface{}{
-		"images": map[string]interface{}{
-			calico.CNIImageName:             imagevector.CalicoCNIImage(),
-			calico.TyphaImageName:           imagevector.CalicoTyphaImage(),
-			calico.KubeControllersImageName: imagevector.CalicoKubeControllersImage(),
-			calico.NodeImageName:            imagevector.CalicoNodeImage(),
-		},
-		"config": map[string]string{
-			"backend": string(config.Backend),
-		},
-		"global": map[string]string{
-			"podCIDR": network.Spec.PodCIDR,
-		},
+	var (
+		calicoChartValues = map[string]interface{}{
+			"images": map[string]interface{}{
+				calico.CNIImageName:             imagevector.CalicoCNIImage(),
+				calico.TyphaImageName:           imagevector.CalicoTyphaImage(),
+				calico.KubeControllersImageName: imagevector.CalicoKubeControllersImage(),
+				calico.NodeImageName:            imagevector.CalicoNodeImage(),
+			},
+			"global": map[string]string{
+				"podCIDR": network.Spec.PodCIDR,
+			},
+			"config": map[string]interface{}{
+				"backend": string(config.Backend),
+				"ipam": map[string]interface{}{
+					"type":   hostLocal,
+					"subnet": usePodCIDR,
+				},
+			},
+		}
+	)
+
+	var configValues = map[string]interface{}{}
+	if config.IPAM != nil && len(config.IPAM.Type) > 0 {
+		if config.IPAM.Type == hostLocal {
+			if config.IPAM.CIDR != nil {
+				configValues = map[string]interface{}{
+					"backend": string(config.Backend),
+					"ipam": map[string]interface{}{
+						"type":   config.IPAM.Type,
+						"subnet": string(*config.IPAM.CIDR),
+					},
+				}
+			} else {
+				configValues = map[string]interface{}{
+					"backend": string(config.Backend),
+					"ipam": map[string]interface{}{
+						"type":   config.IPAM.Type,
+						"subnet": usePodCIDR,
+					},
+				}
+			}
+		} else {
+			configValues = map[string]interface{}{
+				"backend": string(config.Backend),
+				"ipam": map[string]interface{}{
+					"type": config.IPAM.Type,
+				},
+			}
+		}
 	}
+
+	calicoChartValues["config"] = configValues
+	return calicoChartValues
 }

@@ -43,6 +43,7 @@ var _ = Describe("Chart package test", func() {
 			Name:      "foo",
 			Namespace: "bar",
 		}
+		podCIDR = calicov1alpha1.CIDR("usePodCidr")
 	)
 
 	BeforeEach(func() {
@@ -55,6 +56,10 @@ var _ = Describe("Chart package test", func() {
 		}
 		networkConfig = &calicov1alpha1.NetworkConfig{
 			Backend: calicov1alpha1.None,
+			IPAM: &calicov1alpha1.IPAM{
+				CIDR: &podCIDR,
+				Type: "host-local",
+			},
 		}
 	})
 
@@ -68,11 +73,15 @@ var _ = Describe("Chart package test", func() {
 					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
 					"calico-node":             imagevector.CalicoNodeImage(),
 				},
-				"config": map[string]string{
-					"backend": "none",
-				},
 				"global": map[string]string{
 					"podCIDR": network.Spec.PodCIDR,
+				},
+				"config": map[string]interface{}{
+					"backend": "none",
+					"ipam": map[string]interface{}{
+						"type":   "host-local",
+						"subnet": "usePodCidr",
+					},
 				},
 			}))
 		})
