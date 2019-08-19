@@ -26,6 +26,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -183,6 +184,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			})
 
 			machineClassSpec["name"] = className
+			machineClassSpec["labels"] = map[string]string{
+				gardencorev1alpha1.GardenPurpose: gardencorev1alpha1.GardenPurposeMachineClass,
+			}
 			machineClassSpec["secret"].(map[string]interface{})[aws.AccessKeyID] = string(machineClassSecretData[machinev1alpha1.AWSAccessKeyID])
 			machineClassSpec["secret"].(map[string]interface{})[aws.SecretAccessKey] = string(machineClassSecretData[machinev1alpha1.AWSSecretAccessKey])
 

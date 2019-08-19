@@ -29,6 +29,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -606,6 +607,9 @@ func useDefaultMachineClass(def map[string]interface{}, key string, value interf
 
 func addNameAndSecretToMachineClass(class map[string]interface{}, awsAccessKeyID, awsSecretAccessKey, name string) {
 	class["name"] = name
+	class["labels"] = map[string]string{
+		gardencorev1alpha1.GardenPurpose: gardencorev1alpha1.GardenPurposeMachineClass,
+	}
 	class["secret"].(map[string]interface{})[aws.AccessKeyID] = awsAccessKeyID
 	class["secret"].(map[string]interface{})[aws.SecretAccessKey] = awsSecretAccessKey
 }
