@@ -54,17 +54,16 @@ var _ = Describe("Helper", func() {
 	)
 
 	DescribeTable("#FindMachineImage",
-		func(machineImages []openstack.MachineImage, name, version, cloudProfile string, expectedMachineImage *openstack.MachineImage, expectErr bool) {
-			machineImage, err := FindMachineImage(machineImages, name, version, cloudProfile)
+		func(machineImages []openstack.MachineImage, name, version string, expectedMachineImage *openstack.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(machineImages, name, version)
 			expectResults(machineImage, expectedMachineImage, err, expectErr)
 		},
 
-		Entry("list is nil", nil, "foo", "1.2.3", "openstack1", nil, true),
-		Entry("empty list", []openstack.MachineImage{}, "foo", "1.2.3", "openstack1", nil, true),
-		Entry("entry not found (no name)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3", CloudProfile: "openstack1"}}, "foo", "1.2.3", "openstack1", nil, true),
-		Entry("entry not found (no version)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3", CloudProfile: "openstack1"}}, "foo", "1.2.3", "openstack2", nil, true),
-		Entry("entry not found (no cloud profile)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3", CloudProfile: "openstack1"}}, "bar", "1.2.3", "openstack2", nil, true),
-		Entry("entry exists", []openstack.MachineImage{{Name: "bar", Version: "1.2.3", CloudProfile: "openstack1"}}, "bar", "1.2.3", "openstack1", &openstack.MachineImage{Name: "bar", Version: "1.2.3", CloudProfile: "openstack1"}, false),
+		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
+		Entry("empty list", []openstack.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
+		Entry("entry exists", []openstack.MachineImage{{Name: "bar", Version: "1.2.3"}}, "bar", "1.2.3", &openstack.MachineImage{Name: "bar", Version: "1.2.3"}, false),
 	)
 })
 
