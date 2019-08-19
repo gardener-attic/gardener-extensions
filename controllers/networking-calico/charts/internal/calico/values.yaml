@@ -2,6 +2,9 @@ global:
   podCIDR: ""
 config:
   backend: bird
+  ipam:
+    type: "host-local"
+#    subnet: "usePodCidr"
 images:
   calico-node: "quay.io/calico/node:v3.7.2"
   calico-cni: "quay.io/calico/cni:v3.7.2"

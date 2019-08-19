@@ -11,6 +11,14 @@ rules:
 - apiGroups:
   - extensions.gardener.cloud
   resources:
+  - clusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions.gardener.cloud
+  resources:
   - networks
   - networks/status
   verbs:
