@@ -360,7 +360,7 @@ func (a *actuator) deleteControlPlaneExposure(
 	// Delete control plane objects
 	if a.controlPlaneExposureChart != nil {
 		a.logger.Info("Deleting control plane exposure with objects", "controlplane", util.ObjectName(cp))
-		if err := a.controlPlaneExposureChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+		if err := a.controlPlaneExposureChart.Delete(ctx, a.client, cp.Namespace); client.IgnoreNotFound(err) != nil {
 			return errors.Wrapf(err, "could not delete control plane exposure objects for controlplane '%s'", util.ObjectName(cp))
 		}
 	}
@@ -368,7 +368,7 @@ func (a *actuator) deleteControlPlaneExposure(
 	// Delete secrets
 	if a.exposureSecrets != nil {
 		a.logger.Info("Deleting secrets for control plane with purpose exposure", "controlplane", util.ObjectName(cp))
-		if err := a.exposureSecrets.Delete(a.clientset, cp.Namespace); err != nil {
+		if err := a.exposureSecrets.Delete(a.clientset, cp.Namespace); client.IgnoreNotFound(err) != nil {
 			return errors.Wrapf(err, "could not delete secrets for controlplane exposure '%s'", util.ObjectName(cp))
 		}
 	}
@@ -394,21 +394,21 @@ func (a *actuator) deleteControlPlane(
 
 	// Delete control plane objects
 	a.logger.Info("Deleting control plane objects", "controlplane", util.ObjectName(cp))
-	if err := a.controlPlaneChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+	if err := a.controlPlaneChart.Delete(ctx, a.client, cp.Namespace); client.IgnoreNotFound(err) != nil {
 		return errors.Wrapf(err, "could not delete control plane objects for controlplane '%s'", util.ObjectName(cp))
 	}
 
 	if a.configChart != nil {
 		// Delete config objects
 		a.logger.Info("Deleting configuration objects", "controlplane", util.ObjectName(cp))
-		if err := a.configChart.Delete(ctx, a.client, cp.Namespace); err != nil {
+		if err := a.configChart.Delete(ctx, a.client, cp.Namespace); client.IgnoreNotFound(err) != nil {
 			return errors.Wrapf(err, "could not delete configuration objects for controlplane '%s'", util.ObjectName(cp))
 		}
 	}
 
 	// Delete secrets
 	a.logger.Info("Deleting secrets", "controlplane", util.ObjectName(cp))
-	if err := a.secrets.Delete(a.clientset, cp.Namespace); err != nil {
+	if err := a.secrets.Delete(a.clientset, cp.Namespace); client.IgnoreNotFound(err) != nil {
 		return errors.Wrapf(err, "could not delete secrets for controlplane '%s'", util.ObjectName(cp))
 	}
 
