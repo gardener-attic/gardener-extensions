@@ -19,15 +19,33 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
 func mutateNetworkConfig(network *extensionsv1alpha1.Network) error {
 	extensionswebhook.LogMutation(logger, "Network", network.Namespace, network.Name)
-	networkConfig, err := controller.CalicoNetworkConfigFromNetworkResource(network)
-	if err != nil {
-		return err
+
+	var (
+		networkConfig *calicov1alpha1.NetworkConfig
+		err           error
+	)
+
+	if network.Spec.ProviderConfig != nil {
+		networkConfig, err = controller.CalicoNetworkConfigFromNetworkResource(network)
+		if err != nil {
+			return err
+		}
+	} else {
+		networkConfig = &calicov1alpha1.NetworkConfig{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: calicov1alpha1.SchemeGroupVersion.String(),
+				Kind:       "NetworkConfig",
+			},
+		}
 	}
+
 	networkConfig.Backend = calicov1alpha1.None
 	network.Spec.ProviderConfig = &runtime.RawExtension{
 		Object: networkConfig,

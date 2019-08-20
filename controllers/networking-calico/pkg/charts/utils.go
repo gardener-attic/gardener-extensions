@@ -39,46 +39,31 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 			"global": map[string]string{
 				"podCIDR": network.Spec.PodCIDR,
 			},
-			"config": map[string]interface{}{
-				"backend": string(config.Backend),
-				"ipam": map[string]interface{}{
-					"type":   hostLocal,
-					"subnet": usePodCIDR,
-				},
-			},
+		}
+		calicoConfigValues = map[string]interface{}{
+			"backend": calicov1alpha1.Bird,
+		}
+		ipamConfig = map[string]interface{}{
+			"type":   hostLocal,
+			"subnet": usePodCIDR,
 		}
 	)
 
-	var configValues = map[string]interface{}{}
-	if config.IPAM != nil && len(config.IPAM.Type) > 0 {
-		if config.IPAM.Type == hostLocal {
-			if config.IPAM.CIDR != nil {
-				configValues = map[string]interface{}{
-					"backend": string(config.Backend),
-					"ipam": map[string]interface{}{
-						"type":   config.IPAM.Type,
-						"subnet": string(*config.IPAM.CIDR),
-					},
-				}
-			} else {
-				configValues = map[string]interface{}{
-					"backend": string(config.Backend),
-					"ipam": map[string]interface{}{
-						"type":   config.IPAM.Type,
-						"subnet": usePodCIDR,
-					},
-				}
+	if config != nil {
+		calicoConfigValues["backend"] = config.Backend
+
+		if config.IPAM != nil {
+			if len(config.IPAM.Type) > 0 {
+				ipamConfig["type"] = config.IPAM.Type
 			}
-		} else {
-			configValues = map[string]interface{}{
-				"backend": string(config.Backend),
-				"ipam": map[string]interface{}{
-					"type": config.IPAM.Type,
-				},
+			if config.IPAM.Type == hostLocal && config.IPAM.CIDR != nil {
+				ipamConfig["subnet"] = *config.IPAM.CIDR
 			}
 		}
 	}
 
-	calicoChartValues["config"] = configValues
+	calicoConfigValues["ipam"] = ipamConfig
+	calicoChartValues["config"] = calicoConfigValues
+
 	return calicoChartValues
 }

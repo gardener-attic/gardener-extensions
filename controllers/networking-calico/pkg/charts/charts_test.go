@@ -17,41 +17,38 @@ package charts_test
 import (
 	"fmt"
 
-	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
-	"github.com/gardener/gardener/pkg/chartrenderer"
-
-	"k8s.io/helm/pkg/manifest"
-
-	"github.com/golang/mock/gomock"
-
 	calicov1alpha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
+	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/charts"
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/imagevector"
 	mockchartrenderer "github.com/gardener/gardener-extensions/pkg/mock/gardener/chartrenderer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/chartrenderer"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/helm/pkg/manifest"
 )
 
 var _ = Describe("Chart package test", func() {
 	var (
 		network       *extensionsv1alpha1.Network
 		networkConfig *calicov1alpha1.NetworkConfig
-		foorBar       = metav1.ObjectMeta{
+		objectMeta    = metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
 		}
-		podCIDR = calicov1alpha1.CIDR("usePodCidr")
+		podCIDR = calicov1alpha1.CIDR("12.0.0.0/8")
 	)
 
 	BeforeEach(func() {
 		network = &extensionsv1alpha1.Network{
-			ObjectMeta: foorBar,
+			ObjectMeta: objectMeta,
 			Spec: extensionsv1alpha1.NetworkSpec{
 				ServiceCIDR: "10.0.0.0/8",
-				PodCIDR:     "192.168.1.0/24",
+				PodCIDR:     string(podCIDR),
 			},
 		}
 		networkConfig = &calicov1alpha1.NetworkConfig{
@@ -77,10 +74,10 @@ var _ = Describe("Chart package test", func() {
 					"podCIDR": network.Spec.PodCIDR,
 				},
 				"config": map[string]interface{}{
-					"backend": "none",
+					"backend": networkConfig.Backend,
 					"ipam": map[string]interface{}{
-						"type":   "host-local",
-						"subnet": "usePodCidr",
+						"type":   networkConfig.IPAM.Type,
+						"subnet": *networkConfig.IPAM.CIDR,
 					},
 				},
 			}))

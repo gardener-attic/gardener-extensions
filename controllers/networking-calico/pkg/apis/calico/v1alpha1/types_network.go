@@ -37,11 +37,11 @@ type NetworkConfig struct {
 	Backend Backend `json:"backend"`
 	// IPAM to use for the Calico Plugin (e.g., host-local or Calico)
 	// +optional
-	IPAM *IPAM `json:"ipam"`
+	IPAM *IPAM `json:"ipam,omitempty"`
 	// IPAutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
 	// https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods
 	// +optional
-	IPAutoDetectionMethod *string `json:"ipAutodetectionMethod"`
+	IPAutoDetectionMethod *string `json:"ipAutodetectionMethod,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
