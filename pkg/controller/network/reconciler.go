@@ -24,15 +24,12 @@ import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -59,11 +56,14 @@ type reconciler struct {
 // NewReconciler creates a new reconcile.Reconciler that reconciles
 // Network resources of Gardener's `extensions.gardener.cloud` API group.
 func NewReconciler(mgr manager.Manager, actuator Actuator) reconcile.Reconciler {
-	return &reconciler{
-		logger:   log.Log.WithName(ControllerName),
-		actuator: actuator,
-		recorder: mgr.GetEventRecorderFor(ControllerName),
-	}
+	return extensionscontroller.OperationAnnotationWrapper(
+		&extensionsv1alpha1.Network{},
+		&reconciler{
+			logger:   log.Log.WithName(ControllerName),
+			actuator: actuator,
+			recorder: mgr.GetEventRecorderFor(ControllerName),
+		},
+	)
 }
 
 func (r *reconciler) InjectFunc(f inject.Func) error {

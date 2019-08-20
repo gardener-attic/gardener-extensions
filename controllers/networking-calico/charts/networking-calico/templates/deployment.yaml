@@ -28,7 +28,8 @@ spec:
         command:
         - /gardener-extension-hyper
         - networking-calico-controller-manager
-        - --max-concurrent-reconciles={{ .Values.concurrentSyncs }}
+        - --max-concurrent-reconciles={{ .Values.controller.concurrentSyncs }}
+        - --ignore-operation-annotation={{ .Values.controller.ignoreOperationAnnotation }}
         env:
         - name: LEADER_ELECTION_NAMESPACE
           valueFrom:
