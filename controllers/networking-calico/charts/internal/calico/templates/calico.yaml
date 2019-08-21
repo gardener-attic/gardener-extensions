@@ -383,6 +383,7 @@ metadata:
   namespace: kube-system
   labels:
     k8s-app: calico-kube-controllers
+    garden.sapcloud.io/role: system-component
   annotations:
     scheduler.alpha.kubernetes.io/critical-pod: ''
 spec:
@@ -400,6 +401,7 @@ spec:
       namespace: kube-system
       labels:
         k8s-app: calico-kube-controllers
+        garden.sapcloud.io/role: system-component
     spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
