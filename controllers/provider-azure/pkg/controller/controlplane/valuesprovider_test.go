@@ -63,10 +63,8 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisazure.ControlPlaneConfig{
 						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),
@@ -125,10 +123,8 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisazure.ControlPlaneConfig{
 						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),
@@ -187,10 +183,8 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisazure.ControlPlaneConfig{
 						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),
@@ -242,10 +236,8 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisazure.ControlPlaneConfig{
 						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),
@@ -304,10 +296,8 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisazure.ControlPlaneConfig{
 						CloudControllerManager: &apisazure.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),
