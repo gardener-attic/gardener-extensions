@@ -8,6 +8,7 @@ import (
 	coreosalicloud "github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud/app"
 	coreos "github.com/gardener/gardener-extensions/controllers/os-coreos/cmd/gardener-extension-os-coreos/app"
 	jeos "github.com/gardener/gardener-extensions/controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos/app"
+	ubuntualicloud "github.com/gardener/gardener-extensions/controllers/os-ubuntu-alicloud/cmd/gardener-extension-os-ubuntu-alicloud/app"
 	ubuntu "github.com/gardener/gardener-extensions/controllers/os-ubuntu/cmd/gardener-extension-os-ubuntu/app"
 	provideralicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud/app"
 	provideraws "github.com/gardener/gardener-extensions/controllers/provider-aws/cmd/gardener-extension-provider-aws/app"
@@ -29,6 +30,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		coreosalicloud.NewControllerCommand(ctx),
 		jeos.NewControllerCommand(ctx),
 		ubuntu.NewControllerCommand(ctx),
+		ubuntualicloud.NewControllerCommand(ctx),
 		provideraws.NewControllerManagerCommand(ctx),
 		providerazure.NewControllerManagerCommand(ctx),
 		providergcp.NewControllerManagerCommand(ctx),

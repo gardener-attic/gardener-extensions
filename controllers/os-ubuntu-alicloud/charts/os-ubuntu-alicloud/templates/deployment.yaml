@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gardener-extension-os-ubuntu-alicloud
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: gardener-extension-os-ubuntu-alicloud
+    helm.sh/chart: gardener-extension-os-ubuntu-alicloud
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  revisionHistoryLimit: 0
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gardener-extension-os-ubuntu-alicloud
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gardener-extension-os-ubuntu-alicloud
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: gardener-extension-os-ubuntu-alicloud
+      containers:
+      - name: gardener-extension-os-ubuntu-alicloud
+        image: {{ include "image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command:
+        - /gardener-extension-hyper
+        - os-ubuntu-alicloud-controller-manager
+        - --max-concurrent-reconciles={{ .Values.controllers.concurrentSyncs }}
+        - --disable-controllers={{ .Values.disableControllers | join "," }}
+        - --ignore-operation-annotation={{ .Values.controllers.ignoreOperationAnnotation }}
+        env:
+        - name: LEADER_ELECTION_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+{{- if .Values.resources }}
+        resources:
+{{ toYaml .Values.resources | nindent 10 }}
+{{- end }}
