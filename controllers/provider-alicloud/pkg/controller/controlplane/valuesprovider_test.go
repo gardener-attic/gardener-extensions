@@ -64,10 +64,8 @@ var _ = Describe("ValuesProvider", func() {
 					Raw: encode(&apisalicloud.ControlPlaneConfig{
 						Zone: "eu-central-1a",
 						CloudControllerManager: &apisalicloud.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),

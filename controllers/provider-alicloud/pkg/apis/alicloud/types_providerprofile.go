@@ -20,19 +20,27 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ControlPlaneConfig contains configuration settings for the control plane.
-type ControlPlaneConfig struct {
+// ProviderProfileConfig contains provider-specific configuration that is embedded into Gardener's `ProviderProfile`
+// resource.
+type ProviderProfileConfig struct {
 	metav1.TypeMeta
-
-	// Zone is the Alicloud zone
-	Zone string
-
-	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
-	CloudControllerManager *CloudControllerManagerConfig
+	// MachineImages is the list of machine images that are understood by the controller. It maps
+	// logical names and versions to provider-specific identifiers.
+	MachineImages []MachineImages
 }
 
-// CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.
-type CloudControllerManagerConfig struct {
-	// FeatureGates contains information about enabled feature gates.
-	FeatureGates map[string]bool
+// MachineImages is a mapping from logical names and versions to provider-specific identifiers.
+type MachineImages struct {
+	// Name is the logical name of the machine image.
+	Name string
+	// Versions contains versions and a provider-specific identifier.
+	Versions []MachineImageVersion
+}
+
+// MachineImageVersion contains a version and a provider-specific identifier.
+type MachineImageVersion struct {
+	// Version is the version of the image.
+	Version string
+	// ID is the id of the image.
+	ID string
 }
