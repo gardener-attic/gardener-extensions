@@ -120,7 +120,6 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		machineImages = appendMachineImage(machineImages, apisaws.MachineImage{
 			Name:    pool.MachineImage.Name,
 			Version: pool.MachineImage.Version,
-			Region:  w.worker.Spec.Region,
 			AMI:     ami,
 		})
 

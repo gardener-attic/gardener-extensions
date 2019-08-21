@@ -74,17 +74,16 @@ var _ = Describe("Helper", func() {
 	)
 
 	DescribeTable("#FindMachineImage",
-		func(machineImages []aws.MachineImage, name, version, region string, expectedMachineImage *aws.MachineImage, expectErr bool) {
-			machineImage, err := FindMachineImage(machineImages, name, version, region)
+		func(machineImages []aws.MachineImage, name, version string, expectedMachineImage *aws.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(machineImages, name, version)
 			expectResults(machineImage, expectedMachineImage, err, expectErr)
 		},
 
-		Entry("list is nil", nil, "foo", "1.2.3", "europe", nil, true),
-		Entry("empty list", []aws.MachineImage{}, "foo", "1.2.3", "europe", nil, true),
-		Entry("entry not found (no name)", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "foo", "1.2.3", "europe", nil, true),
-		Entry("entry not found (no version)", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "foo", "1.2.3", "asia", nil, true),
-		Entry("entry not found (no region)", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "bar", "1.2.3", "asia", nil, true),
-		Entry("entry exists", []aws.MachineImage{{Name: "bar", Version: "1.2.3", Region: "europe"}}, "bar", "1.2.3", "europe", &aws.MachineImage{Name: "bar", Version: "1.2.3", Region: "europe"}, false),
+		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
+		Entry("empty list", []aws.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []aws.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []aws.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
+		Entry("entry exists", []aws.MachineImage{{Name: "bar", Version: "1.2.3"}}, "bar", "1.2.3", &aws.MachineImage{Name: "bar", Version: "1.2.3"}, false),
 	)
 })
 
