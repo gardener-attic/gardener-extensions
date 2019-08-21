@@ -64,10 +64,8 @@ var _ = Describe("ValuesProvider", func() {
 					Raw: encode(&apisgcp.ControlPlaneConfig{
 						Zone: "europe-west1a",
 						CloudControllerManager: &apisgcp.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),
