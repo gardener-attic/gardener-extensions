@@ -16,7 +16,6 @@ package controlplane
 
 import (
 	"fmt"
-	"path"
 
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
@@ -33,7 +32,7 @@ const EtcdMainVolumeClaimTemplateName = "main-etcd"
 // GetBackupRestoreContainer returns an etcd backup-restore container with the given name, schedule, provider, image,
 // and additional provider-specific command line args and env variables.
 func GetBackupRestoreContainer(
-	name, volumeClaimTemplateName, schedule, provider, prefix, image string,
+	name, volumeClaimTemplateName, schedule, provider, image string,
 	args map[string]string,
 	env []corev1.EnvVar,
 	volumeMounts []corev1.VolumeMount,
@@ -46,7 +45,7 @@ func GetBackupRestoreContainer(
 			fmt.Sprintf("--schedule=%s", schedule),
 			"--data-dir=/var/etcd/data/new.etcd",
 			fmt.Sprintf("--storage-provider=%s", provider),
-			fmt.Sprintf("--store-prefix=%s", path.Join(prefix, name)),
+			fmt.Sprintf("--store-prefix=%s", name),
 			"--cert=/var/etcd/ssl/client/tls.crt",
 			"--key=/var/etcd/ssl/client/tls.key",
 			"--cacert=/var/etcd/ssl/ca/ca.crt",

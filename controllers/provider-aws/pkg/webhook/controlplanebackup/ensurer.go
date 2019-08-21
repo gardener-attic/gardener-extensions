@@ -17,8 +17,6 @@ package controlplanebackup
 import (
 	"context"
 
-	"github.com/gardener/gardener/pkg/operation/common"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -98,56 +96,50 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	// They are only specified for the etcd-main stateful set (backup is enabled)
 	var (
 		provider                string
-		prefix                  string
 		env                     []corev1.EnvVar
 		volumeClaimTemplateName = name
 	)
 	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
-		if cluster.CloudProfile.Spec.Backup == nil {
-			e.logger.Info("Backup profile is not configured;  backup will not be taken for etcd-main")
-		} else {
-			prefix = common.GenerateBackupEntryName(cluster.Shoot.Status.TechnicalID, cluster.Shoot.Status.UID)
-			provider = aws.StorageProviderName
-			env = []corev1.EnvVar{
-				{
-					Name: "STORAGE_CONTAINER",
-					// The bucket name is written to the backup secret by Gardener as a temporary solution.
-					// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  aws.BucketName,
-							LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
-						},
+		provider = aws.StorageProviderName
+		env = []corev1.EnvVar{
+			{
+				Name: "STORAGE_CONTAINER",
+				// The bucket name is written to the backup secret by Gardener as a temporary solution.
+				// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						Key:                  aws.BucketName,
+						LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
 					},
 				},
-				{
-					Name: "AWS_REGION",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  aws.Region,
-							LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
-						},
+			},
+			{
+				Name: "AWS_REGION",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						Key:                  aws.Region,
+						LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
 					},
 				},
-				{
-					Name: "AWS_ACCESS_KEY_ID",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  aws.AccessKeyID,
-							LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
-						},
+			},
+			{
+				Name: "AWS_ACCESS_KEY_ID",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						Key:                  aws.AccessKeyID,
+						LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
 					},
 				},
-				{
-					Name: "AWS_SECRET_ACCESS_KEY",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  aws.SecretAccessKey,
-							LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
-						},
+			},
+			{
+				Name: "AWS_SECRET_ACCESS_KEY",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						Key:                  aws.SecretAccessKey,
+						LocalObjectReference: corev1.LocalObjectReference{Name: aws.BackupSecretName},
 					},
 				},
-			}
+			},
 		}
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
@@ -158,5 +150,5 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		schedule = defaultSchedule
 	}
 
-	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, prefix, image.String(), nil, env, nil), nil
+	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, image.String(), nil, env, nil), nil
 }

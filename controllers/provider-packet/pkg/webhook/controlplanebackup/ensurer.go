@@ -76,5 +76,5 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
 
-	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, "", "", "", image.String(), nil, nil, nil), nil
+	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, "", "", image.String(), nil, nil, nil), nil
 }

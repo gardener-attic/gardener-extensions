@@ -93,7 +93,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/apis/dns
-# github.com/gardener/gardener v0.0.0-20190812144748-dec8f3c7f288
+# github.com/gardener/gardener v0.0.0-20190809103150-69d5b0414246
 github.com/gardener/gardener/pkg/utils
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1
 github.com/gardener/gardener/pkg/apis/garden/v1beta1
