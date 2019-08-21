@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   targetRef:
-    apiVersion: {{ include "deploymentversion" . }}
+    apiVersion: apps/v1
     kind: Deployment
     name:  {{ include "name" . }}
   updatePolicy:
