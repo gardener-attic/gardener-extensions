@@ -17,6 +17,7 @@ set -e
 
 DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
 
+cd "$DIRNAME/.."
 export GO111MODULE=on
 echo "Installing requirements"
 go install -mod=vendor ./vendor/github.com/gobuffalo/packr/v2/packr2
