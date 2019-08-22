@@ -1,7 +1,12 @@
 openstack:
   authURL: https://keystone/v3/
-  domainName: CP
-  tenantName: kubernetes
+  # at least on of domainName or domainID has to be provided
+  # domainName: CP
+  # domainID: abc-123
+  # tenantName: kubernetes
+  # tenantID: abc-123
+  # userDomainName: ABC # optional
+  # userDomainID: abc-123 # optional
   region: eu-de-1
   floatingPoolName: my-pool
 

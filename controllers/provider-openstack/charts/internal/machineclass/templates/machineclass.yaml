@@ -12,8 +12,24 @@ data:
   userData: {{ $machineClass.secret.cloudConfig | b64enc }}
   authURL: {{ $machineClass.secret.authURL | b64enc }}
   insecure: dHJ1ZQ== # true
+  {{- if $machineClass.secret.domainName }}
   domainName: {{ $machineClass.secret.domainName | b64enc }}
+  {{- end }}
+  {{- if $machineClass.secret.domainID }}
+  domainID: {{ $machineClass.secret.domainID | b64enc }}
+  {{- end }}
+  {{- if $machineClass.secret.tenantName }}
   tenantName: {{ $machineClass.secret.tenantName | b64enc }}
+  {{- end }}
+  {{- if $machineClass.secret.tenantID }}
+  tenantID: {{ $machineClass.secret.tenantID | b64enc }}
+  {{- end }}
+  {{- if $machineClass.secret.userDomainName }}
+  userDomainName: {{ $machineClass.secret.userDomainName }}
+  {{- end }}
+  {{- if $machineClass.secret.userDomainID }}
+  userDomainID: {{ $machineClass.secret.userDomainID }}
+  {{- end }}
   username: {{ $machineClass.secret.username | b64enc }}
   password: {{ $machineClass.secret.password | b64enc }}
 ---

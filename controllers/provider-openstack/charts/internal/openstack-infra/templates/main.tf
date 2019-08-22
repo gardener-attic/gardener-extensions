@@ -1,7 +1,23 @@
 provider "openstack" {
   auth_url    = "{{ required "openstack.authURL is required" .Values.openstack.authURL }}"
-  domain_name = "{{ required "openstack.domainName is required" .Values.openstack.domainName }}"
-  tenant_name = "{{ required "openstack.tenantName is required" .Values.openstack.tenantName }}"
+  {{- if .Values.openstack.domainName }}
+  domain_name = "{{ .Values.openstack.domainName }}"
+  {{- end}}
+  {{- if .Values.openstack.domainID }}
+  domain_id   = "{{ .Values.openstack.domainID }}"
+  {{- end}}
+  {{- if .Values.openstack.tenantName }}
+  tenant_name = "{{ .Values.openstack.tenantName }}"
+  {{- end}}
+  {{- if .Values.openstack.tenantID }}
+  tenant_id = "{{ .Values.openstack.tenantID }}"
+  {{- end}}
+  {{- if .Values.openstack.userDomainName }}
+  user_domain_name = "{{ .Values.openstack.userDomainName }}"
+  {{- end}}
+  {{- if .Values.openstack.userDomainID }}
+  user_domain_id = "{{ .Values.openstack.userDomainID }}"
+  {{- end}}
   region      = "{{ required "openstack.region is required" .Values.openstack.region }}"
   user_name   = "${var.USER_NAME}"
   password    = "${var.PASSWORD}"

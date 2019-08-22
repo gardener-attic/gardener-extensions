@@ -14,8 +14,14 @@ machineClasses:
     kubernetes.io/role/node: "1"
   secret:
     authURL: ABCD
-    domainName: ABCD
-    tenantName: abc
+    # at least one of domainName or domainID has to be provided
+    # domainName: ABCD
+    # domainID: abc-123
+    # at least one of tenantName or tenantID has to be provided
+    # tenantName: abc
+    # tenantID: abc-123
+    # userDomainName: ABCD # optional
+    # userDomainID: abc-123 # optional
     username: abc
     password: abc
     cloudConfig: abc

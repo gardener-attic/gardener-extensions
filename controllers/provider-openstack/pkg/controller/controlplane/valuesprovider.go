@@ -42,6 +42,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	gutils "github.com/gardener/gardener/pkg/utils"
 )
 
 // Object names
@@ -229,15 +231,29 @@ func getConfigChartValues(
 	values := map[string]interface{}{
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"domainName":        c.DomainName,
+		"domainID":          c.DomainID,
 		"tenantName":        c.TenantName,
+		"tenantID":          c.TenantID,
 		"username":          c.Username,
 		"password":          c.Password,
+		"userDomainID":      c.UserDomainID,
+		"userDomainName":    c.UserDomainName,
 		"lbProvider":        cpConfig.LoadBalancerProvider,
 		"floatingNetworkID": infraStatus.Networks.FloatingPool.ID,
 		"subnetID":          subnet.ID,
 		"authUrl":           cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 		"dhcpDomain":        cluster.CloudProfile.Spec.OpenStack.DHCPDomain,
 		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,
+	}
+
+	// Only the 1.15 out of tree provider for OpenStack support the OS_DOMAIN_NAME/ID
+	// https://github.com/kubernetes/cloud-provider-openstack/pull/733
+	ok, err := gutils.CompareVersions(cluster.Shoot.Spec.Kubernetes.Version, ">=", "1.15")
+	if ok {
+		values = map[string]interface{}{
+			"userDomainName": c.UserDomainName,
+			"userDomainID":   c.UserDomainID,
+		}
 	}
 
 	if cpConfig.LoadBalancerClasses == nil {

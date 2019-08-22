@@ -106,7 +106,11 @@ var _ = Describe("Terraform", func() {
 				"openstack": map[string]interface{}{
 					"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 					"domainName":       credentials.DomainName,
+					"domainID":         credentials.DomainID,
 					"tenantName":       credentials.TenantName,
+					"tenantID":         credentials.TenantID,
+					"userDomainID":     credentials.UserDomainID,
+					"userDomainName":   credentials.UserDomainName,
 					"region":           infra.Spec.Region,
 					"floatingPoolName": config.FloatingPoolName,
 				},
@@ -142,7 +146,11 @@ var _ = Describe("Terraform", func() {
 				"openstack": map[string]interface{}{
 					"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 					"domainName":       credentials.DomainName,
+					"domainID":         credentials.DomainID,
 					"tenantName":       credentials.TenantName,
+					"tenantID":         credentials.TenantID,
+					"userDomainID":     credentials.UserDomainID,
+					"userDomainName":   credentials.UserDomainName,
 					"region":           infra.Spec.Region,
 					"floatingPoolName": config.FloatingPoolName,
 				},

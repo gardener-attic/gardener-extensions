@@ -33,8 +33,16 @@ const (
 	AuthURL = "authURL"
 	// DomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
 	DomainName = "domainName"
+	// DomainID is a constant for the key in a cloud provider secret that holds the OpenStack domain name.
+	DomainID = "domainID"
 	// TenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
 	TenantName = "tenantName"
+	// TenantID is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
+	TenantID = "tenantID"
+	// UserDomainName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
+	UserDomainName = "userDomainName"
+	// UserDomainID is a constant for the key in a cloud provider secret that holds the OpenStack tenant name.
+	UserDomainID = "userDomainID"
 	// UserName is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack username.
 	UserName = "username"
 	// Password is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack password.
@@ -46,9 +54,9 @@ const (
 	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
 	BucketName = "bucketName"
 
-	// CloudProviderConfigName is the name of the configmap containing the cloud provider config.
+	// CloudProviderConfigCloudControllerManagerName is the name of the configmap containing the cloud provider config.
 	CloudProviderConfigCloudControllerManagerName = "cloud-provider-config-cloud-controller-manager"
-	// CloudProviderConfigNameInTree is the name of the original configmap containing the cloud provider config (for compatibility reasons).
+	// CloudProviderConfigKubeControllerManagerName is the name of the original configmap containing the cloud provider config (for compatibility reasons).
 	CloudProviderConfigKubeControllerManagerName = "cloud-provider-config-kube-controller-manager"
 	// CloudProviderConfigMapKey is the key storing the cloud provider config as value in the cloud provider configmap.
 	CloudProviderConfigMapKey = "cloudprovider.conf"

@@ -130,40 +130,15 @@ var _ = Describe("ValuesProvider", func() {
 			},
 		}
 
-		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
-		cpSecret    = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      gardencorev1alpha1.SecretNameCloudProvider,
-				Namespace: namespace,
-			},
-			Type: corev1.SecretTypeOpaque,
-			Data: map[string][]byte{
-				"domainName": []byte(`domain-name`),
-				"tenantName": []byte(`tenant-name`),
-				"username":   []byte(`username`),
-				"password":   []byte(`password`),
-			},
-		}
+		cpSecret          *corev1.Secret
+		cpSecretKey       = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
+		configChartValues map[string]interface{}
 
 		checksums = map[string]string{
 			gardencorev1alpha1.SecretNameCloudProvider:                   "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 			"cloud-controller-manager":                                   "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 			"cloud-controller-manager-server":                            "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
 			openstacktypes.CloudProviderConfigCloudControllerManagerName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-		}
-
-		configChartValues = map[string]interface{}{
-			"kubernetesVersion": "1.13.4",
-			"domainName":        "domain-name",
-			"tenantName":        "tenant-name",
-			"username":          "username",
-			"password":          "password",
-			"subnetID":          "subnet-acbd1234",
-			"lbProvider":        "load-balancer-provider",
-			"floatingNetworkID": "floating-network-id",
-			"authUrl":           authURL,
-			"dhcpDomain":        dhcpDomain,
-			"requestTimeout":    requestTimeout,
 		}
 
 		ccmChartValues = map[string]interface{}{
@@ -187,6 +162,36 @@ var _ = Describe("ValuesProvider", func() {
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
+		cpSecret = &corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      gardencorev1alpha1.SecretNameCloudProvider,
+				Namespace: namespace,
+			},
+			Type: corev1.SecretTypeOpaque,
+			Data: map[string][]byte{
+				"domainName": []byte(`domain-name`),
+				"tenantName": []byte(`tenant-name`),
+				"username":   []byte(`username`),
+				"password":   []byte(`password`),
+			},
+		}
+		configChartValues = map[string]interface{}{
+			"kubernetesVersion": "1.13.4",
+			"domainName":        "domain-name",
+			"domainID":          "",
+			"tenantName":        "tenant-name",
+			"tenantID":          "",
+			"userDomainID":      "",
+			"userDomainName":    "",
+			"username":          "username",
+			"password":          "password",
+			"subnetID":          "subnet-acbd1234",
+			"lbProvider":        "load-balancer-provider",
+			"floatingNetworkID": "floating-network-id",
+			"authUrl":           authURL,
+			"dhcpDomain":        dhcpDomain,
+			"requestTimeout":    requestTimeout,
+		}
 	})
 
 	AfterEach(func() {
@@ -283,7 +288,11 @@ var _ = Describe("ValuesProvider", func() {
 			configChartValues = map[string]interface{}{
 				"kubernetesVersion": "1.13.4",
 				"domainName":        "domain-name",
+				"domainID":          "",
 				"tenantName":        "tenant-name",
+				"tenantID":          "",
+				"userDomainID":      "",
+				"userDomainName":    "",
 				"username":          "username",
 				"password":          "password",
 				"subnetID":          "subnet-acbd1234",
@@ -314,6 +323,156 @@ var _ = Describe("ValuesProvider", func() {
 				"authUrl":        authURL,
 				"dhcpDomain":     dhcpDomain,
 				"requestTimeout": requestTimeout,
+			}
+			// Call GetConfigChartValues method and check the result
+			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(configChartValues))
+		})
+	})
+	Describe("#GetConfigWithIDsChartValues", func() {
+		It("should return correct config chart values", func() {
+			cpSecret = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      gardencorev1alpha1.SecretNameCloudProvider,
+					Namespace: namespace,
+				},
+				Type: corev1.SecretTypeOpaque,
+				Data: map[string][]byte{
+					"domainID": []byte(`domain-id`),
+					"tenantID": []byte(`tenant-id`),
+					"username": []byte(`username`),
+					"password": []byte(`password`),
+				},
+			}
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			configChartValues = map[string]interface{}{
+				"userDomainName":    "",
+				"floatingNetworkID": "floating-network-id",
+				"domainName":        "",
+				"username":          "username",
+				"password":          "password",
+				"kubernetesVersion": "1.13.4",
+				"tenantID":          "tenant-id",
+				"lbProvider":        "load-balancer-provider",
+				"subnetID":          "subnet-acbd1234",
+				"domainID":          "domain-id",
+				"userDomainID":      "",
+				"tenantName":        "",
+				"authUrl":           authURL,
+				"dhcpDomain":        dhcpDomain,
+				"requestTimeout":    requestTimeout,
+			}
+
+			// Call GetConfigChartValues method and check the result
+			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(configChartValues))
+		})
+	})
+	Describe("#GetConfigWithUserDomainNameChartValues", func() {
+		It("should return correct config chart values", func() {
+			cpSecret = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      gardencorev1alpha1.SecretNameCloudProvider,
+					Namespace: namespace,
+				},
+				Type: corev1.SecretTypeOpaque,
+				Data: map[string][]byte{
+					"domainName":     []byte(`domain-name`),
+					"tenantName":     []byte(`tenant-name`),
+					"userDomainName": []byte(`user-domain-name`),
+					"username":       []byte(`username`),
+					"password":       []byte(`password`),
+				},
+			}
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			configChartValues = map[string]interface{}{
+				"userDomainName":    "user-domain-name",
+				"floatingNetworkID": "floating-network-id",
+				"domainName":        "domain-name",
+				"username":          "username",
+				"password":          "password",
+				"kubernetesVersion": "1.13.4",
+				"tenantID":          "",
+				"lbProvider":        "load-balancer-provider",
+				"subnetID":          "subnet-acbd1234",
+				"domainID":          "",
+				"userDomainID":      "",
+				"tenantName":        "tenant-name",
+				"authUrl":           authURL,
+				"dhcpDomain":        dhcpDomain,
+				"requestTimeout":    requestTimeout,
+			}
+			// Call GetConfigChartValues method and check the result
+			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(values).To(Equal(configChartValues))
+		})
+	})
+	Describe("#GetConfigWithUserDomainIDChartValues", func() {
+		It("should return correct config chart values", func() {
+			cpSecret = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      gardencorev1alpha1.SecretNameCloudProvider,
+					Namespace: namespace,
+				},
+				Type: corev1.SecretTypeOpaque,
+				Data: map[string][]byte{
+					"domainName":   []byte(`domain-name`),
+					"tenantName":   []byte(`tenant-name`),
+					"userDomainID": []byte(`user-domain-id`),
+					"username":     []byte(`username`),
+					"password":     []byte(`password`),
+				},
+			}
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+
+			// Create valuesProvider
+			vp := NewValuesProvider(logger)
+			err := vp.(inject.Scheme).InjectScheme(scheme)
+			Expect(err).NotTo(HaveOccurred())
+			err = vp.(inject.Client).InjectClient(client)
+			Expect(err).NotTo(HaveOccurred())
+
+			configChartValues = map[string]interface{}{
+				"userDomainName":    "",
+				"floatingNetworkID": "floating-network-id",
+				"domainName":        "domain-name",
+				"username":          "username",
+				"password":          "password",
+				"kubernetesVersion": "1.13.4",
+				"tenantID":          "",
+				"lbProvider":        "load-balancer-provider",
+				"subnetID":          "subnet-acbd1234",
+				"domainID":          "",
+				"userDomainID":      "user-domain-id",
+				"tenantName":        "tenant-name",
+				"authUrl":           authURL,
+				"dhcpDomain":        dhcpDomain,
+				"requestTimeout":    requestTimeout,
 			}
 			// Call GetConfigChartValues method and check the result
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)

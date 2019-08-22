@@ -80,7 +80,11 @@ func ComputeTerraformerChartValues(
 		"openstack": map[string]interface{}{
 			"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
 			"domainName":       credentials.DomainName,
+			"domainID":         credentials.DomainID,
 			"tenantName":       credentials.TenantName,
+			"tenantID":         credentials.TenantID,
+			"userDomainName":   credentials.UserDomainName,
+			"userDomainID":     credentials.UserDomainID,
 			"region":           infra.Spec.Region,
 			"floatingPoolName": config.FloatingPoolName,
 		},

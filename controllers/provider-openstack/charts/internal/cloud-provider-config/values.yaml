@@ -1,8 +1,12 @@
 kubernetesVersion: 0.0.1
 #[Global]
 authUrl: fooURL
-domainName: fooDomain
-tenantName: fooTenant
+# domainName: fooDomain
+# domainID: foo-1234
+# tenantName: fooTenant
+# tenantID: foo-1234
+# userDomainName: fooDomain
+# userDomainID: foo-1234
 username: barUser
 password: barPass
 # [LoadBalancer]

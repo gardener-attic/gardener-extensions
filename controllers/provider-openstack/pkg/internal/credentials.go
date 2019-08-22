@@ -27,11 +27,15 @@ import (
 
 // Credentials contains the necessary OpenStack credential information.
 type Credentials struct {
-	DomainName string
-	TenantName string
-	Username   string
-	Password   string
-	AuthURL    string
+	DomainName     string
+	DomainID       string
+	TenantName     string
+	TenantID       string
+	UserDomainName string
+	UserDomainID   string
+	Username       string
+	Password       string
+	AuthURL        string
 }
 
 // GetCredentials computes for a given context and infrastructure the corresponding credentials object.
@@ -48,13 +52,15 @@ func ExtractCredentials(secret *corev1.Secret) (*Credentials, error) {
 	if secret.Data == nil {
 		return nil, fmt.Errorf("secret does not contain any data")
 	}
-	domainName, err := getRequired(secret.Data, openstack.DomainName)
-	if err != nil {
-		return nil, err
+	domainName, ok := getRequired(secret.Data, openstack.DomainName)
+	domainID, ok2 := getRequired(secret.Data, openstack.DomainID)
+	if ok != nil && ok2 != nil {
+		return nil, fmt.Errorf("at least one of %s or %s has to be provided", openstack.DomainName, openstack.DomainID)
 	}
-	tenantName, err := getRequired(secret.Data, openstack.TenantName)
-	if err != nil {
-		return nil, err
+	tenantName, ok := getRequired(secret.Data, openstack.TenantName)
+	tenantID, ok2 := getRequired(secret.Data, openstack.TenantID)
+	if ok != nil && ok2 != nil {
+		return nil, fmt.Errorf("at least one of %s or %s has to be provided", openstack.TenantName, openstack.TenantID)
 	}
 	userName, err := getRequired(secret.Data, openstack.UserName)
 	if err != nil {
@@ -65,13 +71,19 @@ func ExtractCredentials(secret *corev1.Secret) (*Credentials, error) {
 		return nil, err
 	}
 	authURL := secret.Data[openstack.AuthURL]
+	userDomainName := secret.Data[openstack.UserDomainName]
+	userDomainID := secret.Data[openstack.UserDomainID]
 
 	return &Credentials{
-		DomainName: domainName,
-		TenantName: tenantName,
-		Username:   userName,
-		Password:   password,
-		AuthURL:    string(authURL),
+		DomainName:     domainName,
+		DomainID:       domainID,
+		TenantName:     tenantName,
+		TenantID:       tenantID,
+		UserDomainName: string(userDomainName),
+		UserDomainID:   string(userDomainID),
+		Username:       userName,
+		Password:       password,
+		AuthURL:        string(authURL),
 	}, nil
 }
 

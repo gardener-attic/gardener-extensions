@@ -43,11 +43,15 @@ func NewStorageClientFromSecretRef(ctx context.Context, c client.Client, secretR
 func newStorageClientFromCredentials(credentials *internal.Credentials, region string) (*StorageClient, error) {
 	opts := &clientconfig.ClientOpts{
 		AuthInfo: &clientconfig.AuthInfo{
-			AuthURL:     credentials.AuthURL,
-			Username:    credentials.Username,
-			Password:    credentials.Password,
-			ProjectName: credentials.TenantName,
-			DomainName:  credentials.DomainName,
+			AuthURL:        credentials.AuthURL,
+			Username:       credentials.Username,
+			Password:       credentials.Password,
+			ProjectName:    credentials.TenantName,
+			ProjectID:      credentials.TenantID,
+			DomainName:     credentials.DomainName,
+			DomainID:       credentials.DomainID,
+			UserDomainName: credentials.UserDomainName,
+			UserDomainID:   credentials.UserDomainID,
 		},
 		RegionName: region,
 	}

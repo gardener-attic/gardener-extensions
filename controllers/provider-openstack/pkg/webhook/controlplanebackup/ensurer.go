@@ -139,6 +139,15 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 					},
 				},
 				{
+					Name: "OS_DOMAIN_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  openstack.DomainID,
+							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
+						},
+					},
+				},
+				{
 					Name: "OS_USERNAME",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
@@ -161,6 +170,33 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							Key:                  openstack.TenantName,
+							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
+						},
+					},
+				},
+				{
+					Name: "OS_TENANT_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  openstack.TenantID,
+							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
+						},
+					},
+				},
+				{
+					Name: "OS_USER_DOMAIN_NAME",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  openstack.UserDomainName,
+							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
+						},
+					},
+				},
+				{
+					Name: "OS_USER_DOMAIN_ID",
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  openstack.UserDomainID,
 							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						},
 					},

@@ -12,10 +12,14 @@ metadata:
   namespace: shoot--foobar--openstack
 type: Opaque
 data:
-  domainName: AAAA
-  tenantName: AAAA
-  username: AAAA
-  password: AAAA
+# domainName: base64(domain-name)
+# domainID: base64(domain-id)
+# tenantName: base64(tenant-name)
+# tenantID: base64(tenant-id)
+# username: base64(username)
+# password: base64(password)
+# userDomainName: base64(user-domain-name)
+# userDomainID: base64(user-domain-id)
 
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
