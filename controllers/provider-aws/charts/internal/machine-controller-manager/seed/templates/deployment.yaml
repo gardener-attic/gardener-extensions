@@ -46,7 +46,7 @@ spec:
         - --namespace={{ .Release.Namespace }}
         - --port={{ .Values.metricsPort }}
         - --machine-creation-timeout=20m
-        - --machine-drain-timeout=12h
+        - --machine-drain-timeout=2h
         - --machine-health-timeout=10m
         - --machine-safety-apiserver-statuscheck-timeout=30s
         - --machine-safety-apiserver-statuscheck-period=1m
@@ -54,7 +54,7 @@ spec:
         - --machine-safety-overshooting-period=1m
         - --safety-up=2
         - --safety-down=1
-        - --v=2
+        - --v=3
         livenessProbe:
           failureThreshold: 3
           httpGet:
