@@ -12,10 +12,10 @@ metadata:
   namespace: shoot--foobar--openstack
 type: Opaque
 data:
-# domainName: base64(domain-name)
-# tenantName: base64(tenant-name)
-# username: base64(username)
-# password: base64(password)
+  domainName: AAAA
+  tenantName: AAAA
+  username: AAAA
+  password: AAAA
 
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
@@ -46,6 +46,7 @@ apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Infrastructure
 metadata:
   name: infrastructure
+  namespace: shoot--foobar--openstack
 spec:
   type: openstack
   region: eu-de-1
@@ -59,7 +60,7 @@ spec:
     networks:
     # router:
     #   id: 1234
-      worker: '10.250.0.0/19'
+      worker: 10.250.0.0/19
     zones:
     - name: zone_1_1
-  sshPublicKey: ...
+  sshPublicKey: AAAA
