@@ -226,13 +226,13 @@ func LastOperationNotSuccessful() predicate.Predicate {
 			return operationNotSucceeded(event.Object)
 		},
 		UpdateFunc: func(event event.UpdateEvent) bool {
-			return false
+			return operationNotSucceeded(event.ObjectNew)
 		},
 		GenericFunc: func(event event.GenericEvent) bool {
-			return false
+			return operationNotSucceeded(event.Object)
 		},
 		DeleteFunc: func(event event.DeleteEvent) bool {
-			return false
+			return operationNotSucceeded(event.Object)
 		},
 	}
 }
