@@ -19,29 +19,26 @@ import (
 	"fmt"
 	"time"
 
-	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
-
-	"k8s.io/client-go/util/retry"
-
-	"github.com/gardener/gardener-extensions/pkg/util"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
-
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
@@ -89,6 +86,10 @@ func DefaultPredicates(extensionType string, ignoreOperationAnnotation bool) []p
 			extensionspredicate.IsDeleting(),
 		),
 		extensionspredicate.ShootNotFailed(),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.GenerationChanged(),
+		),
 	}
 }
 

@@ -70,6 +70,10 @@ func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predic
 			extensionspredicate.LastOperationNotSuccessful(),
 			extensionspredicate.IsDeleting(),
 		),
+		extensionspredicate.Or(
+			extensionspredicate.HasOperationAnnotation(),
+			extensionspredicate.GenerationChanged(),
+		),
 	}
 }
 
