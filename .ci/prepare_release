@@ -27,6 +27,7 @@ apk add --no-cache \
     curl \
     openssl \
     tar \
+    gzip \
     gcc \
     sed
 
