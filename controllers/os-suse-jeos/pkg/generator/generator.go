@@ -15,20 +15,44 @@
 package generator
 
 import (
+	"fmt"
+	"os"
+	"strings"
 	"text/template"
 
 	template_gen "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/template"
 	"github.com/gobuffalo/packr/v2"
 )
 
-var cmd = "/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"
+const (
+	// OsConfigFormat format of the OSC to be generated. Must match the name of a subdirectory under
+	// the 'templates' directory. Presently 'script' and 'cloud-init' are supported
+	OsConfigFormat = "OS_CONFIG_FORMAT"
+
+	// BootCommand command to be executed to bootstap the OS Configuraton
+	// Depends on the OSC format and the infrastructure platform.
+	// Well known valid values are `"/bin/bash %s"` and `"/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"`.
+	BootCommand = "BOOT_COMMAND"
+)
 
 //go:generate packr2
 
 // NewCloudInitGenerator creates a new Generator using the template file for suse-jeos
 func NewCloudInitGenerator() (*template_gen.CloudInitGenerator, error) {
 	box := packr.New("templates", "./templates")
-	cloudInitTemplateString, err := box.FindString("cloud-init-suse-jeos.template")
+
+	templateName, exists := os.LookupEnv(OsConfigFormat)
+	if !exists || templateName == "" {
+		return nil, fmt.Errorf("Environment variable %s must be defined", OsConfigFormat)
+	}
+	templateName = strings.ToLower(templateName) + "/suse-jeos.template"
+
+	bootCmd, exists := os.LookupEnv(BootCommand)
+	if !exists || bootCmd == "" {
+		return nil, fmt.Errorf("Environment variable %s must be defined", BootCommand)
+	}
+
+	cloudInitTemplateString, err := box.FindString(templateName)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +61,6 @@ func NewCloudInitGenerator() (*template_gen.CloudInitGenerator, error) {
 	if err != nil {
 		return nil, err
 	}
-	generator := template_gen.NewCloudInitGenerator(cloudInitTemplate, template_gen.DefaultUnitsPath, cmd)
+	generator := template_gen.NewCloudInitGenerator(cloudInitTemplate, template_gen.DefaultUnitsPath, bootCmd)
 	return generator, nil
 }

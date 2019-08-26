@@ -1,0 +1,37 @@
+#!/bin/bash
+{{- define "put-content" -}}
+cat << EOF | base64 -d > '{{ .Path }}'
+{{ .Content }}
+EOF
+{{- end }}
+
+{{ range $_, $file := .Files -}}
+mkdir -p '{{ $file.Dirname }}'
+{{ template "put-content" $file }}
+{{- if $file.Permissions }}
+chmod '{{ $file.Permissions }}' '{{ $file.Path }}'
+{{ end }}
+{{ end }}
+{{- range $_, $unit := .Units -}}
+{{ if $unit.Content -}}
+{{ template "put-content" $unit }}
+{{- end }}
+{{ if $unit.DropIns }}
+mkdir -p '{{ $unit.DropIns.Path }}'
+{{ range $_, $dropIn := $unit.DropIns.Items -}}
+{{ template "put-content" $dropIn }}
+{{- end -}}
+{{- end -}}
+{{- end }}
+
+until zypper -q install -y docker wget socat jq nfs-client; [ $? -ne 7 ]; do sleep 1; done
+systemctl daemon-reload
+{{ if .Bootstrap -}}
+ln -s /usr/bin/docker /bin/docker
+ln -s /bin/ip /usr/bin/ip
+if [ ! -s /etc/hostname ]; then hostname > /etc/hostname; fi
+systemctl restart docker
+{{ range $_, $unit := .Units -}}
+systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
+{{ end -}}
+{{ end -}}

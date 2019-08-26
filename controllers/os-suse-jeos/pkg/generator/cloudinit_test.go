@@ -19,15 +19,18 @@ import (
 	"github.com/gobuffalo/packr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"os"
 )
 
-var _ = Describe("JeOS Generator Test", func() {
-	var box = packr.NewBox("./testfiles")
+var _ = Describe("JeOS Cloud-init Generator Test", func() {
+	var box = packr.NewBox("./testfiles/cloud-init")
+	os.Setenv(BootCommand, "cloud-init-command")
+	os.Setenv(OsConfigFormat, "cloud-init")
 	generator, err := NewCloudInitGenerator()
 
 	It("should not fail creating generator", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Describe("Conformance Tests", test.DescribeTest(generator, box))
+	Describe("Conformance Tests Cloud Init", test.DescribeTest(generator, box))
 })

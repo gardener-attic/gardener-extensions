@@ -36,6 +36,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: OS_CONFIG_FORMAT
+          value: {{ .Values.osConfig.format }}
+        - name: BOOT_COMMAND
+          value: {{ .Values.osConfig.bootCmd }}
 {{- if .Values.resources }}
         resources:
 {{ toYaml .Values.resources | nindent 10 }}
