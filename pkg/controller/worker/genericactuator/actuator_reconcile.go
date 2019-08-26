@@ -142,7 +142,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	}
 
 	// Wait until all generated machine deployments are healthy/available.
-	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Minute)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
 	if err := a.waitUntilMachineDeploymentsAvailable(timeoutCtx, cluster, worker, wantedMachineDeployments); err != nil {
