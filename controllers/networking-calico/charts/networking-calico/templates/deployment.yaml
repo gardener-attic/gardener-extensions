@@ -16,6 +16,10 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      {{- if .Values.imageVectorOverwrite }}
+      annotations:
+        checksum/configmap-network-imagevector-overwrite: {{ include (print $.Template.BasePath "/configmap-imagevector-overwrite.yaml") . | sha256sum }}
+      {{- end }}
       labels:
         app.kubernetes.io/name: gardener-extension-networking-calico
         app.kubernetes.io/instance: {{ .Release.Name }}
@@ -35,7 +39,24 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        {{- if .Values.imageVectorOverwrite }}
+        - name: IMAGEVECTOR_OVERWRITE
+          value: /charts_overwrite/images_overwrite.yaml
+        {{- end }}
 {{- if .Values.resources }}
         resources:
 {{ toYaml .Values.resources | nindent 10 }}
 {{- end }}
+        {{- if .Values.imageVectorOverwrite }}
+        volumeMounts:
+        - name: imagevector-overwrite
+          mountPath: /charts_overwrite/
+          readOnly: true
+        {{- end }}
+      {{- if .Values.imageVectorOverwrite }}
+      volumes:
+      - name: imagevector-overwrite
+        configMap:
+          name: {{ include "name" . }}-imagevector-overwrite
+          defaultMode: 420
+      {{- end }}
