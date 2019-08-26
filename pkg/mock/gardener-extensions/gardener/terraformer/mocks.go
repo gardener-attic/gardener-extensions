@@ -13,6 +13,7 @@ import (
 	rest "k8s.io/client-go/rest"
 	reflect "reflect"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	time "time"
 )
 
 // MockInterface is a mock of Interface interface
@@ -112,6 +113,76 @@ func (m *MockInterface) InitializeWith(arg0 terraformer.Initializer) terraformer
 func (mr *MockInterfaceMockRecorder) InitializeWith(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeWith", reflect.TypeOf((*MockInterface)(nil).InitializeWith), arg0)
+}
+
+// SetActiveDeadlineSeconds mocks base method
+func (m *MockInterface) SetActiveDeadlineSeconds(arg0 int64) terraformer.Interface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetActiveDeadlineSeconds", arg0)
+	ret0, _ := ret[0].(terraformer.Interface)
+	return ret0
+}
+
+// SetActiveDeadlineSeconds indicates an expected call of SetActiveDeadlineSeconds
+func (mr *MockInterfaceMockRecorder) SetActiveDeadlineSeconds(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetActiveDeadlineSeconds", reflect.TypeOf((*MockInterface)(nil).SetActiveDeadlineSeconds), arg0)
+}
+
+// SetDeadlineCleaning mocks base method
+func (m *MockInterface) SetDeadlineCleaning(arg0 time.Duration) terraformer.Interface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDeadlineCleaning", arg0)
+	ret0, _ := ret[0].(terraformer.Interface)
+	return ret0
+}
+
+// SetDeadlineCleaning indicates an expected call of SetDeadlineCleaning
+func (mr *MockInterfaceMockRecorder) SetDeadlineCleaning(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlineCleaning", reflect.TypeOf((*MockInterface)(nil).SetDeadlineCleaning), arg0)
+}
+
+// SetDeadlineJob mocks base method
+func (m *MockInterface) SetDeadlineJob(arg0 time.Duration) terraformer.Interface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDeadlineJob", arg0)
+	ret0, _ := ret[0].(terraformer.Interface)
+	return ret0
+}
+
+// SetDeadlineJob indicates an expected call of SetDeadlineJob
+func (mr *MockInterfaceMockRecorder) SetDeadlineJob(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlineJob", reflect.TypeOf((*MockInterface)(nil).SetDeadlineJob), arg0)
+}
+
+// SetDeadlinePod mocks base method
+func (m *MockInterface) SetDeadlinePod(arg0 time.Duration) terraformer.Interface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetDeadlinePod", arg0)
+	ret0, _ := ret[0].(terraformer.Interface)
+	return ret0
+}
+
+// SetDeadlinePod indicates an expected call of SetDeadlinePod
+func (mr *MockInterfaceMockRecorder) SetDeadlinePod(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlinePod", reflect.TypeOf((*MockInterface)(nil).SetDeadlinePod), arg0)
+}
+
+// SetJobBackoffLimit mocks base method
+func (m *MockInterface) SetJobBackoffLimit(arg0 int32) terraformer.Interface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetJobBackoffLimit", arg0)
+	ret0, _ := ret[0].(terraformer.Interface)
+	return ret0
+}
+
+// SetJobBackoffLimit indicates an expected call of SetJobBackoffLimit
+func (mr *MockInterfaceMockRecorder) SetJobBackoffLimit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetJobBackoffLimit", reflect.TypeOf((*MockInterface)(nil).SetJobBackoffLimit), arg0)
 }
 
 // SetVariablesEnvironment mocks base method

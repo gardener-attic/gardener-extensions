@@ -15,7 +15,10 @@
 package terraformer
 
 import (
+	"time"
+
 	gardenerterraformer "github.com/gardener/gardener/pkg/operation/terraformer"
+
 	"github.com/sirupsen/logrus"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
@@ -25,6 +28,11 @@ import (
 // Interface is the terraformer interface.
 type Interface interface {
 	SetVariablesEnvironment(tfVarsEnvironment map[string]string) Interface
+	SetJobBackoffLimit(int32) Interface
+	SetActiveDeadlineSeconds(int64) Interface
+	SetDeadlineCleaning(time.Duration) Interface
+	SetDeadlinePod(time.Duration) Interface
+	SetDeadlineJob(time.Duration) Interface
 	InitializeWith(initializer Initializer) Interface
 	Apply() error
 	Destroy() error

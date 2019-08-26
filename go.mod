@@ -12,7 +12,7 @@ require (
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/aws/aws-sdk-go v1.12.79
 	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
-	github.com/gardener/gardener v0.0.0-20190823131435-15a8e9bf6702
+	github.com/gardener/gardener v0.0.0-20190827050434-cdafc6bd869f
 	github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
