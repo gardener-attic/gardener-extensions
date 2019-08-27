@@ -53,7 +53,7 @@ spec:
       - effect: NoExecute
         operator: Exists
       containers:
-      - name: cloud-controller-manager
+      - name: openstack-cloud-controller-manager
         image: {{ index .Values.images "openstack-cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:

@@ -49,7 +49,7 @@ spec:
         networking.gardener.cloud/from-prometheus: allowed
     spec:
       containers:
-      - name: cloud-controller-manager
+      - name: alicloud-cloud-controller-manager
         image: {{ index .Values.images "alicloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:

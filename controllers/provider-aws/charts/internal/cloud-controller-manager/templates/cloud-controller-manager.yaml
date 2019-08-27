@@ -52,7 +52,7 @@ spec:
       - effect: NoExecute
         operator: Exists
       containers:
-      - name: cloud-controller-manager
+      - name: aws-cloud-controller-manager
         image: {{ index .Values.images "hyperkube" }}
         imagePullPolicy: IfNotPresent
         command:
