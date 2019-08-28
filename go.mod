@@ -13,13 +13,13 @@ require (
 	github.com/aws/aws-sdk-go v1.12.79
 	github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
 	github.com/gardener/gardener v0.0.0-20190827050434-cdafc6bd869f
-	github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a
+	github.com/gardener/gardener-resource-manager v0.0.0-20190814125222-dbd11d1c9bba
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1
 	github.com/gobuffalo/packr v1.25.0
 	github.com/gobuffalo/packr/v2 v2.1.0
-	github.com/golang/mock v1.2.0
+	github.com/golang/mock v1.3.1
 	github.com/gophercloud/gophercloud v0.2.0
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/huandu/xstrings v1.2.0
@@ -42,7 +42,7 @@ require (
 	k8s.io/apiserver v0.0.0-20190313205120-8b27c41bdbb1
 	k8s.io/autoscaler v0.0.0-20190425094807-60ef58f770d8
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
-	k8s.io/code-generator v0.0.0-20190311093542-50b561225d70
+	k8s.io/code-generator v0.0.0-20190713022532-93d7507fc8ff
 	k8s.io/component-base v0.0.0-20190314000054-4a91899592f4
 	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
 	k8s.io/helm v2.14.2+incompatible

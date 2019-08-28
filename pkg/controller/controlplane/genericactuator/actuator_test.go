@@ -60,6 +60,11 @@ const (
 	shootVersion = "1.14.0"
 )
 
+var (
+	vFalse = false
+	pFalse = &vFalse
+)
+
 func TestControlplane(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Controlplane Generic Actuator Suite")
@@ -132,6 +137,7 @@ var _ = Describe("Actuator", func() {
 					{Name: controlPlaneShootChartResourceName},
 				},
 				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
+				KeepObjects:  pFalse,
 			},
 		}
 		deletedMRSecretForCPShootChart = &corev1.Secret{
@@ -154,6 +160,7 @@ var _ = Describe("Actuator", func() {
 					{Name: storageClassesChartResourceName},
 				},
 				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
+				KeepObjects:  pFalse,
 			},
 		}
 		deletedMRSecretForStorageClassesChart = &corev1.Secret{

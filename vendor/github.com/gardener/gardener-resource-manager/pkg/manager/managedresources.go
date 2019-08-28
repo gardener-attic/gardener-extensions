@@ -43,6 +43,15 @@ func (m *ManagedResource) WithNamespacedName(namespace, name string) *ManagedRes
 	return m
 }
 
+func (m *ManagedResource) WithClass(name string) *ManagedResource {
+	if name == "" {
+		m.resource.Spec.Class = nil
+	} else {
+		m.resource.Spec.Class = &name
+	}
+	return m
+}
+
 func (m *ManagedResource) WithSecretRef(secretRefName string) *ManagedResource {
 	m.resource.Spec.SecretRefs = append(m.resource.Spec.SecretRefs, corev1.LocalObjectReference{Name: secretRefName})
 	return m
@@ -77,11 +86,7 @@ func (m *ManagedResource) Reconcile(ctx context.Context) error {
 	resource := &resourcesv1alpha1.ManagedResource{ObjectMeta: m.resource.ObjectMeta}
 
 	_, err := controllerutil.CreateOrUpdate(ctx, m.client, resource, func() error {
-		resource.Spec.SecretRefs = m.resource.Spec.SecretRefs
-		resource.Spec.InjectLabels = m.resource.Spec.InjectLabels
-		resource.Spec.ForceOverwriteAnnotations = m.resource.Spec.ForceOverwriteAnnotations
-		resource.Spec.ForceOverwriteLabels = m.resource.Spec.ForceOverwriteLabels
-		resource.Spec.KeepObjects = m.resource.Spec.KeepObjects
+		resource.Spec = m.resource.Spec
 		return nil
 	})
 	return err
