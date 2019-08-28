@@ -17,6 +17,8 @@ package internal
 import (
 	"bytes"
 	"encoding/json"
+	"time"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/imagevector"
 	"github.com/gardener/gardener/pkg/logger"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
@@ -59,5 +61,11 @@ func NewTerraformer(
 		return nil, err
 	}
 
-	return tf.SetVariablesEnvironment(variables), nil
+	return tf.
+		SetVariablesEnvironment(variables).
+		SetJobBackoffLimit(1).
+		SetActiveDeadlineSeconds(900).
+		SetDeadlineCleaning(5 * time.Minute).
+		SetDeadlinePod(5 * time.Minute).
+		SetDeadlineJob(15 * time.Minute), nil
 }

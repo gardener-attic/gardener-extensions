@@ -15,6 +15,8 @@
 package common
 
 import (
+	"time"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	"github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
@@ -40,5 +42,11 @@ func NewTerraformer(factory terraformer.Factory, config *rest.Config, credential
 		TerraformVarAccessKeySecret: credentials.AccessKeySecret,
 	}
 
-	return tf.SetVariablesEnvironment(variablesEnvironment), nil
+	return tf.
+		SetVariablesEnvironment(variablesEnvironment).
+		SetJobBackoffLimit(1).
+		SetActiveDeadlineSeconds(900).
+		SetDeadlineCleaning(5 * time.Minute).
+		SetDeadlinePod(5 * time.Minute).
+		SetDeadlineJob(15 * time.Minute), nil
 }

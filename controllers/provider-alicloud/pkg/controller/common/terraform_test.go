@@ -15,6 +15,8 @@
 package common
 
 import (
+	"time"
+
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/gardener/terraformer"
@@ -57,11 +59,15 @@ var _ = Describe("Terraform", func() {
 				factory.EXPECT().
 					NewForConfig(gomock.Any(), &config, purpose, namespace, name, imagevector.TerraformerImage()).
 					Return(tf, nil),
-
 				tf.EXPECT().SetVariablesEnvironment(map[string]string{
 					TerraformVarAccessKeyID:     accessKeyID,
 					TerraformVarAccessKeySecret: accessKeySecret,
 				}).Return(tf),
+				tf.EXPECT().SetJobBackoffLimit(int32(1)).Return(tf),
+				tf.EXPECT().SetActiveDeadlineSeconds(int64(900)).Return(tf),
+				tf.EXPECT().SetDeadlineCleaning(5*time.Minute).Return(tf),
+				tf.EXPECT().SetDeadlinePod(5*time.Minute).Return(tf),
+				tf.EXPECT().SetDeadlineJob(15*time.Minute).Return(tf),
 			)
 
 			actual, err := NewTerraformer(factory, &config, &credentials, purpose, namespace, name)

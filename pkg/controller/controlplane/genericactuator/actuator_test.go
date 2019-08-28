@@ -403,7 +403,7 @@ var _ = Describe("Actuator", func() {
 		Entry("should delete secrets and charts (no webhook)", cloudProviderConfigName, []admissionregistrationv1beta1.Webhook{{}}),
 	)
 
-	DescribeTable("#ReconsileExposure",
+	DescribeTable("#ReconcileExposure",
 		func() {
 			ctx := context.TODO()
 

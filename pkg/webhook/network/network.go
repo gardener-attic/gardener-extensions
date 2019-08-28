@@ -85,8 +85,8 @@ func buildSelector(networkProvider, cloudProvider string) (*metav1.LabelSelector
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: gardencorev1alpha1.ShootProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{cloudProvider}},
-			{Key: gardencorev1alpha1.NetworkingProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{networkProvider}},
+			{Key: gardencorev1alpha1.LabelShootProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{cloudProvider}},
+			{Key: gardencorev1alpha1.LabelNetworkingProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{networkProvider}},
 		},
 	}, nil
 }

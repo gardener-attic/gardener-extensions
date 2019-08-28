@@ -105,11 +105,11 @@ func buildSelector(kind, provider string) (*metav1.LabelSelector, error) {
 	var key string
 	switch kind {
 	case KindSeed:
-		key = gardencorev1alpha1.SeedProvider
+		key = gardencorev1alpha1.LabelSeedProvider
 	case KindShoot:
-		key = gardencorev1alpha1.ShootProvider
+		key = gardencorev1alpha1.LabelShootProvider
 	case KindBackup:
-		key = gardencorev1alpha1.BackupProvider
+		key = gardencorev1alpha1.LabelBackupProvider
 	default:
 		return nil, fmt.Errorf("invalid webhook kind '%s'", kind)
 	}

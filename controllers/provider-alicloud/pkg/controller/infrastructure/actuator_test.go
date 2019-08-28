@@ -17,6 +17,7 @@ package infrastructure_test
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
@@ -170,6 +171,11 @@ var _ = Describe("Actuator", func() {
 						common.TerraformVarAccessKeyID:     accessKeyID,
 						common.TerraformVarAccessKeySecret: accessKeySecret,
 					}).Return(terraformer),
+					terraformer.EXPECT().SetJobBackoffLimit(int32(1)).Return(terraformer),
+					terraformer.EXPECT().SetActiveDeadlineSeconds(int64(900)).Return(terraformer),
+					terraformer.EXPECT().SetDeadlineCleaning(5*time.Minute).Return(terraformer),
+					terraformer.EXPECT().SetDeadlinePod(5*time.Minute).Return(terraformer),
+					terraformer.EXPECT().SetDeadlineJob(15*time.Minute).Return(terraformer),
 
 					alicloudClientFactory.EXPECT().NewVPC(region, accessKeyID, accessKeySecret).Return(vpcClient, nil),
 

@@ -15,9 +15,11 @@
 package terraformer
 
 import (
+	"time"
+
 	gardenerterraformer "github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/sirupsen/logrus"
-	"k8s.io/client-go/kubernetes/typed/core/v1"
+	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -29,6 +31,31 @@ type terraformer struct {
 // SetVariablesEnvironment implements Terraformer.
 func (t *terraformer) SetVariablesEnvironment(tfVarsEnvironment map[string]string) Interface {
 	return &terraformer{t.tf.SetVariablesEnvironment(tfVarsEnvironment)}
+}
+
+// SetJobBackoffLimit implements Terraformer.
+func (t *terraformer) SetJobBackoffLimit(val int32) Interface {
+	return &terraformer{t.tf.SetJobBackoffLimit(val)}
+}
+
+// SetActiveDeadlineSeconds implements Terraformer.
+func (t *terraformer) SetActiveDeadlineSeconds(val int64) Interface {
+	return &terraformer{t.tf.SetActiveDeadlineSeconds(val)}
+}
+
+// SetDeadlineCleaning implements Terraformer.
+func (t *terraformer) SetDeadlineCleaning(val time.Duration) Interface {
+	return &terraformer{t.tf.SetDeadlineCleaning(val)}
+}
+
+// SetDeadlinePod implements Terraformer.
+func (t *terraformer) SetDeadlinePod(val time.Duration) Interface {
+	return &terraformer{t.tf.SetDeadlinePod(val)}
+}
+
+// SetDeadlineJob implements Terraformer.
+func (t *terraformer) SetDeadlineJob(val time.Duration) Interface {
+	return &terraformer{t.tf.SetDeadlineJob(val)}
 }
 
 // InitializeWith implements Terraformer.

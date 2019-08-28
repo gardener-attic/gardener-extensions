@@ -129,8 +129,8 @@ github.com/gardener/external-dns-management v0.0.0-20190220100540-b4bbb5832a03/g
 github.com/gardener/external-dns-management v0.0.0-20190722114702-f6b12f6e4b43 h1:WzBYkDAOSMd8D6fNnN1eiaWXnSJuB6QytoENi4Np/iY=
 github.com/gardener/external-dns-management v0.0.0-20190722114702-f6b12f6e4b43/go.mod h1:Y3om11E865x4aQ7cmcHjknb8RMgCO153huRb/SvP+9o=
 github.com/gardener/gardener v0.0.0-20190812144748-dec8f3c7f288/go.mod h1:ioI69PbfNBUp10k2OtIED7u0l6u1NePBw/wgox9uayQ=
-github.com/gardener/gardener v0.0.0-20190823131435-15a8e9bf6702 h1:4sAfiGqeoTnHx4sHdwKzHwy3dl9ARNE7BJnzDeGF1DI=
-github.com/gardener/gardener v0.0.0-20190823131435-15a8e9bf6702/go.mod h1:PGukycluxIf6hNPTQuvNlrn5G6DZ6rSBLsOmTGCF3Ho=
+github.com/gardener/gardener v0.0.0-20190827050434-cdafc6bd869f h1:A8kXc14PVX9XNZ2/FJM0FByyiClrDBVY4lGu4J7ybuI=
+github.com/gardener/gardener v0.0.0-20190827050434-cdafc6bd869f/go.mod h1:PGukycluxIf6hNPTQuvNlrn5G6DZ6rSBLsOmTGCF3Ho=
 github.com/gardener/gardener-extensions v0.0.0-20190725050243-a80ef643c64b/go.mod h1:uXjtl3KeVdQXuGIP26+84wJY1Kwru67l0FXm7A5DiME=
 github.com/gardener/gardener-extensions v0.0.0-20190820050625-a15de8a82f6b/go.mod h1:q69+1cUGSfQ8gSMWzU7GFz/R8K8MpOLQBT2wJJcCjEA=
 github.com/gardener/gardener-resource-manager v0.0.0-20190802142246-6b2029430332/go.mod h1:kIPm1DlE5jChb4moAseumj1qr+IITKXPJcqyIKJp14Y=
