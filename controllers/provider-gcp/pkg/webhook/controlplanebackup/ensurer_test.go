@@ -162,15 +162,13 @@ var _ = Describe("Ensurer", func() {
 		})
 
 		It("should not configure backup to etcd-main statefulset if backup profile is missing", func() {
-			var (
-				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.StatefulSetNameETCDMain},
-				}
-			)
+			ss := &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.StatefulSetNameETCDMain},
+			}
 			cluster.Seed.Spec.Backup = nil
+
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), secretKey, &corev1.Secret{}).DoAndReturn(clientGet(secret))
 
 			// Create ensurer
 			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
@@ -272,7 +270,7 @@ func checkETCDMainStatefulSetWithoutBackup(ss *appsv1.StatefulSet, annotations m
 	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
 	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(gardencorev1alpha1.StatefulSetNameETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "0 */24 * * *", "", "",
 		"test-repository:test-tag", nil, nil, nil)))
-	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
+	Expect(ss.Spec.Template.Annotations).To(BeNil())
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
