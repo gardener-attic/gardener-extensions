@@ -62,7 +62,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 	if err := e.ensureContainers(&ss.Spec.Template.Spec, ss.Name, cluster); err != nil {
 		return err
 	}
-	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name)
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, cluster.Seed.Spec.Backup != nil)
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
@@ -74,8 +74,8 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 	return nil
 }
 
-func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace, name string) error {
-	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
+func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace, name string, backupConfigured bool) error {
+	if name == gardencorev1alpha1.StatefulSetNameETCDMain && backupConfigured {
 		return controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, azure.BackupSecretName)
 	}
 	return nil
