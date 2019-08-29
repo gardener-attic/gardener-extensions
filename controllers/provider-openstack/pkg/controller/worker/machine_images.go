@@ -74,7 +74,7 @@ func (w *workerDelegate) findMachineImage(name, version, cloudProfile string) (s
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apisopenstackhelper.FindMachineImage(workerStatus.MachineImages, name, version, cloudProfile)
+		machineImage, err := apisopenstackhelper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
 			return "", errorMachineImageNotFound(name, version, cloudProfile)
 		}
@@ -90,7 +90,7 @@ func errorMachineImageNotFound(name, version, cloudProfile string) error {
 }
 
 func appendMachineImage(machineImages []apisopenstack.MachineImage, machineImage apisopenstack.MachineImage) []apisopenstack.MachineImage {
-	if _, err := apisopenstackhelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version, machineImage.CloudProfile); err != nil {
+	if _, err := apisopenstackhelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

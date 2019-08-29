@@ -18,7 +18,6 @@ import (
 	"context"
 	"path/filepath"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
@@ -156,13 +155,13 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
-	cpConfig := &openstack.ControlPlaneConfig{}
+	cpConfig := &apisopenstack.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Decode infrastructureProviderStatus
-	infraStatus := &openstack.InfrastructureStatus{}
+	infraStatus := &apisopenstack.InfrastructureStatus{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
 		return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
@@ -186,7 +185,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	scaledDown bool,
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
-	cpConfig := &openstack.ControlPlaneConfig{}
+	cpConfig := &apisopenstack.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 	}
@@ -214,14 +213,14 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 
 // getConfigChartValues collects and returns the configuration chart values.
 func getConfigChartValues(
-	cpConfig *openstack.ControlPlaneConfig,
-	infraStatus *openstack.InfrastructureStatus,
+	cpConfig *apisopenstack.ControlPlaneConfig,
+	infraStatus *apisopenstack.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 	c *internal.Credentials,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	// Get the first subnet with purpose "nodes"
-	subnet, err := helper.FindSubnetByPurpose(infraStatus.Networks.Subnets, openstack.PurposeNodes)
+	subnet, err := helper.FindSubnetByPurpose(infraStatus.Networks.Subnets, apisopenstack.PurposeNodes)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not determine subnet from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
@@ -251,7 +250,7 @@ func getConfigChartValues(
 	}
 
 	for _, class := range cpConfig.LoadBalancerClasses {
-		if class.Name == openstack.DefaultLoadBalancerClass {
+		if class.Name == apisopenstack.DefaultLoadBalancerClass {
 			utils.SetStringValue(values, "floatingNetworkID", class.FloatingNetworkID)
 			utils.SetStringValue(values, "floatingSubnetID", class.FloatingSubnetID)
 			utils.SetStringValue(values, "subnetID", class.SubnetID)
@@ -259,7 +258,7 @@ func getConfigChartValues(
 		}
 	}
 	for _, class := range cpConfig.LoadBalancerClasses {
-		if class.Name == openstack.PrivateLoadBalancerClass {
+		if class.Name == apisopenstack.PrivateLoadBalancerClass {
 			utils.SetStringValue(values, "subnetID", class.SubnetID)
 			break
 		}
@@ -288,7 +287,7 @@ func getConfigChartValues(
 
 // getCCMChartValues collects and returns the CCM chart values.
 func getCCMChartValues(
-	cpConfig *openstack.ControlPlaneConfig,
+	cpConfig *apisopenstack.ControlPlaneConfig,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,
@@ -314,10 +313,10 @@ func getCCMChartValues(
 	return values, nil
 }
 
-func gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(loadBalancerClasses []gardenv1beta1.OpenStackLoadBalancerClass) []openstack.LoadBalancerClass {
-	out := make([]openstack.LoadBalancerClass, 0, len(loadBalancerClasses))
+func gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(loadBalancerClasses []gardenv1beta1.OpenStackLoadBalancerClass) []apisopenstack.LoadBalancerClass {
+	out := make([]apisopenstack.LoadBalancerClass, 0, len(loadBalancerClasses))
 	for _, loadBalancerClass := range loadBalancerClasses {
-		out = append(out, openstack.LoadBalancerClass{
+		out = append(out, apisopenstack.LoadBalancerClass{
 			Name:              loadBalancerClass.Name,
 			FloatingSubnetID:  loadBalancerClass.FloatingSubnetID,
 			FloatingNetworkID: loadBalancerClass.FloatingNetworkID,

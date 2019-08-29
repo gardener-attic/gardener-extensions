@@ -17,7 +17,6 @@ package controlplane
 import (
 	"context"
 	"encoding/json"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
@@ -33,6 +32,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
@@ -58,10 +58,8 @@ var _ = Describe("ValuesProvider", func() {
 				ProviderConfig: &runtime.RawExtension{
 					Raw: encode(&apisaws.ControlPlaneConfig{
 						CloudControllerManager: &apisaws.CloudControllerManagerConfig{
-							KubernetesConfig: gardenv1beta1.KubernetesConfig{
-								FeatureGates: map[string]bool{
-									"CustomResourceValidation": true,
-								},
+							FeatureGates: map[string]bool{
+								"CustomResourceValidation": true,
 							},
 						},
 					}),

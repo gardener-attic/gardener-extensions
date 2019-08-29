@@ -113,10 +113,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 		machineImages = appendMachineImage(machineImages, apisopenstack.MachineImage{
-			Name:         pool.MachineImage.Name,
-			Version:      pool.MachineImage.Version,
-			CloudProfile: w.cluster.CloudProfile.Name,
-			Image:        machineImage,
+			Name:    pool.MachineImage.Name,
+			Version: pool.MachineImage.Version,
+			Image:   machineImage,
 		})
 
 		for zoneIndex, zone := range pool.Zones {

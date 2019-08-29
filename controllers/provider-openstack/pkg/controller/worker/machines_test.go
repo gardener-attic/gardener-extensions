@@ -357,10 +357,9 @@ var _ = Describe("Machines", func() {
 					},
 					MachineImages: []openstackv1alpha1.MachineImage{
 						{
-							Name:         machineImageName,
-							Version:      machineImageVersion,
-							CloudProfile: cloudProfileName,
-							Image:        machineImage,
+							Name:    machineImageName,
+							Version: machineImageVersion,
+							Image:   machineImage,
 						},
 					},
 				}))

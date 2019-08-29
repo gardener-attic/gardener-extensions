@@ -74,7 +74,7 @@ func (w *workerDelegate) findMachineImage(name, version, region string) (string,
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apisawshelper.FindMachineImage(workerStatus.MachineImages, name, version, region)
+		machineImage, err := apisawshelper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
 			return "", errorMachineImageNotFound(name, version, region)
 		}
@@ -90,7 +90,7 @@ func errorMachineImageNotFound(name, version, region string) error {
 }
 
 func appendMachineImage(machineImages []apisaws.MachineImage, machineImage apisaws.MachineImage) []apisaws.MachineImage {
-	if _, err := apisawshelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version, machineImage.Region); err != nil {
+	if _, err := apisawshelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

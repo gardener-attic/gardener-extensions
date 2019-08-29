@@ -52,10 +52,8 @@ func defaultControlPlane() *extensionsv1alpha1.ControlPlane {
 		&openstack.ControlPlaneConfig{
 			LoadBalancerProvider: "load-balancer-provider",
 			CloudControllerManager: &openstack.CloudControllerManagerConfig{
-				KubernetesConfig: gardenv1beta1.KubernetesConfig{
-					FeatureGates: map[string]bool{
-						"CustomResourceValidation": true,
-					},
+				FeatureGates: map[string]bool{
+					"CustomResourceValidation": true,
 				},
 			},
 		})
@@ -275,10 +273,8 @@ var _ = Describe("ValuesProvider", func() {
 						},
 					},
 					CloudControllerManager: &openstack.CloudControllerManagerConfig{
-						KubernetesConfig: gardenv1beta1.KubernetesConfig{
-							FeatureGates: map[string]bool{
-								"CustomResourceValidation": true,
-							},
+						FeatureGates: map[string]bool{
+							"CustomResourceValidation": true,
 						},
 					},
 				},

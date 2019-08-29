@@ -396,7 +396,6 @@ var _ = Describe("Machines", func() {
 						{
 							Name:    machineImageName,
 							Version: machineImageVersion,
-							Region:  region,
 							AMI:     machineImageAMI,
 						},
 					},
