@@ -40,6 +40,7 @@ var (
 			{Type: &corev1.ServiceAccount{}, Name: gcp.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: gcp.MachineControllerManagerName},
 			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: gcp.MachineControllerManagerVpaName},
+			{Type: &corev1.ConfigMap{}, Name: gcp.MachineControllerManagerMonitoringConfigName},
 		},
 	}
 

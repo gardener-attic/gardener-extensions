@@ -40,6 +40,7 @@ var (
 			{Type: &corev1.ServiceAccount{}, Name: alicloud.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: alicloud.MachineControllerManagerName},
 			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: alicloud.MachineControllerManagerVpaName},
+			{Type: &corev1.ConfigMap{}, Name: alicloud.MachineControllerManagerMonitoringConfigName},
 		},
 	}
 

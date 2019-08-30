@@ -66,6 +66,8 @@ const (
 	BackupSecretName = "etcd-backup"
 	// MachineControllerManagerVpaName is the name of the VerticalPodAutoscaler of the machine-controller-manager deployment.
 	MachineControllerManagerVpaName = "machine-controller-manager-vpa"
+	// MachineControllerManagerMonitoringConfigName is the name of the ConfigMap containing monitoring stack configurations for machine-controller-manager.
+	MachineControllerManagerMonitoringConfigName = "machine-controller-manager-monitoring-config"
 )
 
 var (

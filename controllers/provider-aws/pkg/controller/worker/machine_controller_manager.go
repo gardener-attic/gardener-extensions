@@ -40,6 +40,7 @@ var (
 			{Type: &corev1.ServiceAccount{}, Name: aws.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: aws.MachineControllerManagerName},
 			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: aws.MachineControllerManagerVpaName},
+			{Type: &corev1.ConfigMap{}, Name: aws.MachineControllerManagerMonitoringConfigName},
 		},
 	}
 

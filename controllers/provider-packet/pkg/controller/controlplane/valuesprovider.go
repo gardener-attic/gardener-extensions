@@ -103,6 +103,7 @@ var controlPlaneChart = &chart.Chart{
 			Images: []string{packet.CloudControllerManagerImageName},
 			Objects: []*chart.Object{
 				{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
+				{Type: &corev1.ConfigMap{}, Name: "cloud-controller-manager-monitoring-config"},
 			},
 		},
 		{

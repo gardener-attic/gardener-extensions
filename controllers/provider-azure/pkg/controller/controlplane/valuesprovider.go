@@ -106,6 +106,7 @@ var ccmChart = &chart.Chart{
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
+		{Type: &corev1.ConfigMap{}, Name: "cloud-controller-manager-monitoring-config"},
 	},
 }
 

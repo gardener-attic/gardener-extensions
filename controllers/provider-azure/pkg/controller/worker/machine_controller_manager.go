@@ -40,6 +40,7 @@ var (
 			{Type: &corev1.ServiceAccount{}, Name: azure.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: azure.MachineControllerManagerName},
 			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: azure.MachineControllerManagerVpaName},
+			{Type: &corev1.ConfigMap{}, Name: azure.MachineControllerManagerMonitoringConfigName},
 		},
 	}
 
