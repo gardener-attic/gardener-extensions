@@ -17,6 +17,8 @@ package client
 import (
 	"context"
 
+	"google.golang.org/api/googleapi"
+
 	"cloud.google.com/go/storage"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"google.golang.org/api/iterator"
@@ -24,6 +26,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const (
+	errCodeBucketAlreadyOwnedByYou = 409
 )
 
 // StorageClient is an interface which must be implemented by GCS clients.
@@ -65,7 +71,10 @@ func (s *storageClient) CreateBucketIfNotExists(ctx context.Context, bucketName,
 	if err := s.client.Bucket(bucketName).Create(ctx, s.serviceAccount.ProjectID, &storage.BucketAttrs{
 		Name:     bucketName,
 		Location: region,
-	}); err != storage.ErrBucketNotExist {
+	}); err != nil {
+		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == errCodeBucketAlreadyOwnedByYou {
+			return nil
+		}
 		return err
 	}
 	return nil

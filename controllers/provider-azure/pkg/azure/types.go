@@ -44,16 +44,9 @@ const (
 	ClientSecretKey = "clientSecret"
 
 	// StorageAccount is a constant for the key in a cloud provider secret and backup secret that holds the Azure account name.
-	StorageAccount = "storage-account"
+	StorageAccount = "storageAccount"
 	// StorageKey is a constant for the key in a cloud provider secret and backup secret that holds the Azure secret storage access key.
-	StorageKey = "storage-key"
-	//TOREMOVE: To keep up with naming convention we will change these constant related to storage. But will removed at the time we completely move to
-	// shared bucket approach.
-
-	// NewStorageAccount is a constant for the key in a cloud provider secret and backup secret that holds the Azure account name.
-	NewStorageAccount = "storageAccount"
-	// NewStorageKey is a constant for the key in a cloud provider secret and backup secret that holds the Azure secret storage access key.
-	NewStorageKey = "storageKey"
+	StorageKey = "storageKey"
 
 	// AzureBlobStorageHostName is the host name for azure blob storage service.
 	AzureBlobStorageHostName = "blob.core.windows.net"

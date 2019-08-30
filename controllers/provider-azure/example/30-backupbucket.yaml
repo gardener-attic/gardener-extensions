@@ -6,8 +6,10 @@ metadata:
   namespace: garden
 type: Opaque
 data:
-# storageAccount: base64(storageAccount)
-# storageKey: base64(storageKey)
+# clientID: base64(clientID)
+# clientSecret: base64(clientSecret)
+# subscriptionID: base64(subscriptionID)
+# tenantID: base64(tenantID)
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: BackupBucket

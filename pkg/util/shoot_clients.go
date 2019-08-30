@@ -94,7 +94,7 @@ func NewClientsForShoot(ctx context.Context, c client.Client, namespace string, 
 	if err != nil {
 		return nil, err
 	}
-	shootGardenerClientset, err := gardenerkubernetes.NewForConfig(shootRESTConfig, opts)
+	shootGardenerClientset, err := gardenerkubernetes.NewWithConfig(gardenerkubernetes.WithRESTConfig(shootRESTConfig), gardenerkubernetes.WithClientOptions(opts))
 	if err != nil {
 		return nil, err
 	}

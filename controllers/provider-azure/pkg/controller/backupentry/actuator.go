@@ -47,7 +47,7 @@ func (a *actuator) GetETCDSecretData(ctx context.Context, be *extensionsv1alpha1
 }
 
 func (a *actuator) Delete(ctx context.Context, be *extensionsv1alpha1.BackupEntry) error {
-	azureClient, err := azureclient.NewStorageClientFromSecretRef(ctx, a.client, be.Spec.SecretRef)
+	azureClient, err := azureclient.NewStorageClientFromSecretRef(ctx, a.client, &be.Spec.SecretRef)
 	if err != nil {
 		return err
 	}

@@ -8,8 +8,31 @@ cloud.google.com/go/internal/version
 cloud.google.com/go/compute/metadata
 # github.com/Azure/azure-pipeline-go v0.2.2
 github.com/Azure/azure-pipeline-go/pipeline
+# github.com/Azure/azure-sdk-for-go v32.6.0+incompatible
+github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources
+github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-04-01/storage
+github.com/Azure/azure-sdk-for-go/version
 # github.com/Azure/azure-storage-blob-go v0.7.0
 github.com/Azure/azure-storage-blob-go/azblob
+# github.com/Azure/go-autorest/autorest v0.9.0
+github.com/Azure/go-autorest/autorest
+github.com/Azure/go-autorest/autorest/azure
+# github.com/Azure/go-autorest/autorest/adal v0.6.0
+github.com/Azure/go-autorest/autorest/adal
+# github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
+github.com/Azure/go-autorest/autorest/azure/auth
+# github.com/Azure/go-autorest/autorest/azure/cli v0.3.0
+github.com/Azure/go-autorest/autorest/azure/cli
+# github.com/Azure/go-autorest/autorest/date v0.2.0
+github.com/Azure/go-autorest/autorest/date
+# github.com/Azure/go-autorest/autorest/to v0.3.0
+github.com/Azure/go-autorest/autorest/to
+# github.com/Azure/go-autorest/autorest/validation v0.2.0
+github.com/Azure/go-autorest/autorest/validation
+# github.com/Azure/go-autorest/logger v0.1.0
+github.com/Azure/go-autorest/logger
+# github.com/Azure/go-autorest/tracing v0.5.0
+github.com/Azure/go-autorest/tracing
 # github.com/BurntSushi/toml v0.3.1
 github.com/BurntSushi/toml
 # github.com/Masterminds/goutils v1.1.0
@@ -76,6 +99,10 @@ github.com/coreos/go-systemd/unit
 github.com/cyphar/filepath-securejoin
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew
+# github.com/dgrijalva/jwt-go v3.2.0+incompatible
+github.com/dgrijalva/jwt-go
+# github.com/dimchansky/utfbom v1.1.0
+github.com/dimchansky/utfbom
 # github.com/docker/spdystream v0.0.0-20181023171402-6480d4af844c
 github.com/docker/spdystream
 github.com/docker/spdystream/spdy
@@ -100,7 +127,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/apis/dns
-# github.com/gardener/gardener v0.0.0-20190827050434-cdafc6bd869f
+# github.com/gardener/gardener v0.0.0-20190830053951-194cf8abb797
 github.com/gardener/gardener/pkg/utils
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1
 github.com/gardener/gardener/pkg/apis/garden/v1beta1
@@ -125,6 +152,7 @@ github.com/gardener/gardener/pkg/client/machine/clientset/versioned
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/extensions
 github.com/gardener/gardener/pkg/apis/garden
+github.com/gardener/gardener/pkg/apis/garden/helper
 github.com/gardener/gardener/pkg/client/core/clientset/versioned/scheme
 github.com/gardener/gardener/pkg/client/extensions/clientset/versioned/scheme
 github.com/gardener/gardener/pkg/client/garden/clientset/versioned/scheme
@@ -151,7 +179,7 @@ github.com/gardener/gardener/pkg/controllermanager/metrics
 github.com/gardener/gardener/pkg/scheduler/utils
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/internalinterfaces
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/garden
-# github.com/gardener/gardener-resource-manager v0.0.0-20190814125222-dbd11d1c9bba
+# github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993
 github.com/gardener/gardener-resource-manager/pkg/manager
 github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1
 github.com/gardener/gardener-resource-manager/pkg/apis/resources
@@ -161,7 +189,7 @@ github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/sc
 github.com/gardener/machine-controller-manager/pkg/apis/machine
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/go-ini/ini v1.44.0
+# github.com/go-ini/ini v1.46.0
 github.com/go-ini/ini
 # github.com/go-logr/logr v0.1.0
 github.com/go-logr/logr
@@ -290,6 +318,8 @@ github.com/mattn/go-ieproxy
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/mholt/archiver v3.1.1+incompatible
 github.com/mholt/archiver
+# github.com/mitchellh/go-homedir v1.1.0
+github.com/mitchellh/go-homedir
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
@@ -408,12 +438,14 @@ go.uber.org/zap/internal/exit
 # golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/ssh
+golang.org/x/crypto/pkcs12
 golang.org/x/crypto/ssh/terminal
 golang.org/x/crypto/blowfish
 golang.org/x/crypto/curve25519
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/internal/chacha20
 golang.org/x/crypto/poly1305
+golang.org/x/crypto/pkcs12/internal/rc2
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ed25519/internal/edwards25519
 golang.org/x/crypto/internal/subtle
@@ -488,15 +520,15 @@ golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/internal/module
 # google.golang.org/api v0.2.0
+google.golang.org/api/googleapi
 google.golang.org/api/iterator
 google.golang.org/api/option
 google.golang.org/api/compute/v1
-google.golang.org/api/googleapi
 google.golang.org/api/storage/v1
 google.golang.org/api/transport/http
+google.golang.org/api/googleapi/internal/uritemplates
 google.golang.org/api/internal
 google.golang.org/api/gensupport
-google.golang.org/api/googleapi/internal/uritemplates
 google.golang.org/api/googleapi/transport
 google.golang.org/api/transport/http/internal/propagation
 # google.golang.org/appengine v1.6.1
@@ -905,13 +937,13 @@ sigs.k8s.io/controller-runtime/pkg/manager
 sigs.k8s.io/controller-runtime/pkg/client
 sigs.k8s.io/controller-runtime/pkg/controller
 sigs.k8s.io/controller-runtime/pkg/runtime/inject
+sigs.k8s.io/controller-runtime/pkg/controller/controllerutil
 sigs.k8s.io/controller-runtime/pkg/event
 sigs.k8s.io/controller-runtime/pkg/reconcile
 sigs.k8s.io/controller-runtime/pkg/runtime/signals
 sigs.k8s.io/controller-runtime/pkg/handler
 sigs.k8s.io/controller-runtime/pkg/predicate
 sigs.k8s.io/controller-runtime/pkg/source
-sigs.k8s.io/controller-runtime/pkg/controller/controllerutil
 sigs.k8s.io/controller-runtime/pkg/cache
 sigs.k8s.io/controller-runtime/pkg/log/zap
 sigs.k8s.io/controller-runtime/pkg/webhook
