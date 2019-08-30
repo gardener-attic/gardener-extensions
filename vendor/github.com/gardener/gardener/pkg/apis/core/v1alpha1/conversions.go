@@ -30,11 +30,6 @@ func addConversionFuncs(scheme *runtime.Scheme) error {
 }
 
 func Convert_v1alpha1_Seed_To_garden_Seed(in *Seed, out *garden.Seed, s conversion.Scope) error {
-	var (
-		trueVar  = true
-		falseVar = false
-	)
-
 	if err := autoConvert_v1alpha1_Seed_To_garden_Seed(in, out, s); err != nil {
 		return err
 	}
@@ -51,15 +46,6 @@ func Convert_v1alpha1_Seed_To_garden_Seed(in *Seed, out *garden.Seed, s conversi
 
 	out.Spec.IngressDomain = in.Spec.DNS.IngressDomain
 	out.Spec.Cloud.Region = in.Spec.Provider.Region
-
-	for _, taint := range in.Spec.Taints {
-		if taint.Key == SeedTaintProtected {
-			out.Spec.Protected = &trueVar
-		}
-		if taint.Key == SeedTaintInvisible {
-			out.Spec.Visible = &falseVar
-		}
-	}
 
 	return nil
 }
@@ -93,18 +79,6 @@ func Convert_garden_Seed_To_v1alpha1_Seed(in *garden.Seed, out *Seed, s conversi
 		}
 	}
 
-	if p := in.Spec.Protected; p != nil && *p {
-		out.Spec.Taints = append(out.Spec.Taints, SeedTaint{
-			Key: SeedTaintProtected,
-		})
-	}
-
-	if v := in.Spec.Visible; v != nil && !*v {
-		out.Spec.Taints = append(out.Spec.Taints, SeedTaint{
-			Key: SeedTaintInvisible,
-		})
-	}
-
 	return nil
 }
 
@@ -114,4 +88,34 @@ func Convert_garden_SeedSpec_To_v1alpha1_SeedSpec(in *garden.SeedSpec, out *Seed
 
 func Convert_v1alpha1_SeedSpec_To_garden_SeedSpec(in *SeedSpec, out *garden.SeedSpec, s conversion.Scope) error {
 	return autoConvert_v1alpha1_SeedSpec_To_garden_SeedSpec(in, out, s)
+}
+
+func Convert_v1alpha1_ProjectSpec_To_garden_ProjectSpec(in *ProjectSpec, out *garden.ProjectSpec, s conversion.Scope) error {
+	if err := autoConvert_v1alpha1_ProjectSpec_To_garden_ProjectSpec(in, out, s); err != nil {
+		return err
+	}
+
+	for _, member := range in.Members {
+		out.ProjectMembers = append(out.ProjectMembers, garden.ProjectMember{
+			Subject: member.Subject,
+			Role:    member.Role,
+		})
+	}
+
+	return nil
+}
+
+func Convert_garden_ProjectSpec_To_v1alpha1_ProjectSpec(in *garden.ProjectSpec, out *ProjectSpec, s conversion.Scope) error {
+	if err := autoConvert_garden_ProjectSpec_To_v1alpha1_ProjectSpec(in, out, s); err != nil {
+		return err
+	}
+
+	for _, member := range in.ProjectMembers {
+		out.Members = append(out.Members, ProjectMember{
+			Subject: member.Subject,
+			Role:    member.Role,
+		})
+	}
+
+	return nil
 }

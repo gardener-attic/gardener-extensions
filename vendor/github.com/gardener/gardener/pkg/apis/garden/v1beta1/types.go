@@ -302,8 +302,9 @@ type KubernetesConstraints struct {
 	// Versions is the list of allowed Kubernetes versions for Shoot clusters (e.g., 1.13.1).
 	// +optional
 	Versions []string `json:"versions,omitempty"`
-	// OfferedVersions is the list of allowed Kubernetes versions with optional expiration dates for Shoot clusters
-	OfferedVersions []KubernetesVersion `json:"offeredVersions"`
+	// OfferedVersions is the list of allowed Kubernetes versions with optional expiration dates for Shoot clusters.
+	// +optional
+	OfferedVersions []KubernetesVersion `json:"offeredVersions,omitempty"`
 }
 
 // KubernetesVersion contains the version code and optional expiration date for a kubernetes version
@@ -1223,13 +1224,6 @@ type Backup struct {
 
 // DNS holds information about the provider, the hosted zone id and the domain.
 type DNS struct {
-	// Provider is the DNS provider type for the Shoot.
-	// +optional
-	Provider *string `json:"provider,omitempty"`
-	// HostedZoneID is the ID of an existing DNS Hosted Zone used to create the DNS records in.
-	// +optional
-	// deprecated
-	HostedZoneID *string `json:"hostedZoneID,omitempty"`
 	// Domain is the external available domain of the Shoot cluster.
 	// +optional
 	Domain *string `json:"domain,omitempty"`
@@ -1239,6 +1233,18 @@ type DNS struct {
 	// this behavior, i.e. forcing the Gardener to only look into the given secret.
 	// +optional
 	SecretName *string `json:"secretName,omitempty"`
+	// Provider is the DNS provider type for the Shoot.  Only relevant if not the default
+	// domain is used for this shoot.
+	// +optional
+	Provider *string `json:"provider,omitempty"`
+	// IncludeZones is a list of hosted zone IDs that shall be included. Only relevant if not the default
+	// domain is used for this shoot.
+	// +optional
+	IncludeZones []string `json:"includeZones,omitempty"`
+	// ExcludeZones is a list of hosted zone IDs that shall be excluded. Only relevant if not the default
+	// domain is used for this shoot.
+	// +optional
+	ExcludeZones []string `json:"excludeZones,omitempty"`
 }
 
 // DNSUnmanaged is a constant for the 'unmanaged' DNS provider.

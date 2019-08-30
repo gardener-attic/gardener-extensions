@@ -393,15 +393,28 @@ type ProjectSpec struct {
 	Owner *rbacv1.Subject
 	// Purpose is a human-readable explanation of the project's purpose.
 	Purpose *string
-	// Members is a list of subjects representing a user name, an email address, or any other identifier of a user
-	// that should be part of this project with full permissions to manage it.
-	Members []rbacv1.Subject
+	// Members is a list of subjects representing a user name, an email address, or any other identifier of a user,
+	// group, or service account that has a certain role.
+	ProjectMembers []ProjectMember
 	// Namespace is the name of the namespace that has been created for the Project object.
 	Namespace *string
-	// Viewers is a list of subjects representing a user name, an email address, or any other identifier of a user
-	// that should be part of this project with limited permissions to only view some resources.
-	Viewers []rbacv1.Subject
 }
+
+// ProjectMember is a member of a project.
+type ProjectMember struct {
+	// Subject is representing a user name, an email address, or any other identifier of a user, group, or service
+	// account that has a certain role.
+	rbacv1.Subject
+	// Role represents the role of this member.
+	Role string
+}
+
+const (
+	// ProjectMemberAdmin is a const for a role that provides full admin access.
+	ProjectMemberAdmin = "admin"
+	// ProjectMemberViewer is a const for a role that provides limited permissions to only view some resources.
+	ProjectMemberViewer = "viewer"
+)
 
 // ProjectStatus holds the most recently observed status of the project.
 type ProjectStatus struct {
@@ -472,10 +485,8 @@ type SeedSpec struct {
 	// BlockCIDRs is a list of network addresses tha should be blocked for shoot control plane components running
 	// in the seed cluster.
 	BlockCIDRs []CIDR
-	// Visible labels the Seed cluster as selectable for the seedfinder admission controller.
-	Visible *bool
-	// Protected prevent that the Seed Cluster can be used for regular Shoot cluster control planes.
-	Protected *bool
+	// Taints describes taints on the seed.
+	Taints []SeedTaint
 	// Backup holds the object store configuration for the backups of shoot(currently only etcd).
 	// If it is not specified, then there won't be any backups taken for Shoots associated with this Seed.
 	// If backup field is present in Seed, then backups of the etcd from Shoot controlplane will be stored under the
@@ -492,6 +503,7 @@ const (
 	MigrationSeedProviderRegion    = "migration.seed.gardener.cloud/providerRegion"
 	MigrationSeedVolumeMinimumSize = "migration.seed.gardener.cloud/volumeMinimumSize"
 	MigrationSeedVolumeProviders   = "migration.seed.gardener.cloud/volumeProviders"
+	MigrationSeedTaints            = "migration.seed.gardener.cloud/taints"
 )
 
 // SeedStatus holds the most recently observed status of the Seed cluster.
@@ -549,6 +561,24 @@ type SeedNetworks struct {
 	// Services is the CIDR of the service network.
 	Services CIDR
 }
+
+// SeedTaint describes a taint on a seed.
+type SeedTaint struct {
+	// Key is the taint key to be applied to a seed.
+	Key string
+	// Value is the taint value corresponding to the taint key.
+	// +optional
+	Value *string
+}
+
+const (
+	// SeedTaintProtected is a constant for a taint key on a seed that marks it as protected. Protected seeds
+	// may only be used by shoots in the `garden` namespace.
+	SeedTaintProtected = "seed.gardener.cloud/protected"
+	// SeedTaintInvisible is a constant for a taint key on a seed that marks it as invisible. Invisible seeds
+	// are not considered by the gardener-scheduler.
+	SeedTaintInvisible = "seed.gardener.cloud/invisible"
+)
 
 ////////////////////////////////////////////////////
 //                      QUOTAS                    //
@@ -1155,11 +1185,6 @@ type Backup struct {
 
 // DNS holds information about the provider, the hosted zone id and the domain.
 type DNS struct {
-	// Provider is the DNS provider type for the Shoot.
-	Provider *string
-	// HostedZoneID is the ID of an existing DNS Hosted Zone used to create the DNS records in.
-	// deprecated
-	HostedZoneID *string
 	// Domain is the external available domain of the Shoot cluster.
 	Domain *string
 	// SecretName is a name of a secret containing credentials for the stated domain and the
@@ -1167,6 +1192,15 @@ type DNS struct {
 	// by the Shoot and try to find respective credentials there. Specifying this field may override
 	// this behavior, i.e. forcing the Gardener to only look into the given secret.
 	SecretName *string
+	// Provider is the DNS provider type for the Shoot.  Only relevant if not the default
+	// domain is used for this shoot.
+	Provider *string
+	// IncludeZones is a list of hosted zone IDs that shall be included. Only relevant if not the default
+	// domain is used for this shoot.
+	IncludeZones []string
+	// ExcludeZones is a list of hosted zone IDs that shall be excluded. Only relevant if not the default
+	// domain is used for this shoot.
+	ExcludeZones []string
 }
 
 // DNSUnmanaged is a constant for the 'unmanaged' DNS provider.

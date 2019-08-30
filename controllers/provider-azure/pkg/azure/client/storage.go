@@ -19,17 +19,94 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2019-05-01/resources"
+	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2019-04-01/storage"
 	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/Azure/go-autorest/autorest/azure/auth"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// NewStorageClientAuthFromSubscriptionSecretRef retrieves the azure storage client auth from specified by the secret reference.
+func NewStorageClientAuthFromSubscriptionSecretRef(ctx context.Context, c client.Client, secretRef *corev1.SecretReference, resourceGroupName, accountName, region string) (*StorageAuth, error) {
+	// Reference : https://github.com/Azure-Samples/azure-sdk-for-go-samples/blob/master/storage/account.go
+	clientAuth, err := internal.GetClientAuthData(ctx, c, *secretRef)
+	if err != nil {
+		return nil, err
+	}
+
+	groupsClient := resources.NewGroupsClient(clientAuth.SubscriptionID)
+	clientCredConfig := auth.NewClientCredentialsConfig(clientAuth.ClientID, clientAuth.ClientSecret, clientAuth.TenantID)
+	authorizer, err := clientCredConfig.Authorizer()
+	if err != nil {
+		return nil, err
+	}
+	groupsClient.Authorizer = authorizer
+	if _, err := groupsClient.CreateOrUpdate(ctx, resourceGroupName, resources.Group{
+		Location: &region,
+	}); err != nil {
+		return nil, err
+	}
+
+	storageAccountClient := storage.NewAccountsClient(clientAuth.SubscriptionID)
+	storageAccountClient.Authorizer = authorizer
+	future, err := storageAccountClient.Create(ctx, resourceGroupName, accountName, storage.AccountCreateParameters{
+		Sku: &storage.Sku{
+			Name: storage.StandardLRS,
+		},
+		Kind:     storage.BlobStorage,
+		Location: &region,
+		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{
+			AccessTier: storage.Cool,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if err := future.WaitForCompletionRef(ctx, storageAccountClient.Client); err != nil {
+		return nil, err
+	}
+
+	keysResponse, err := storageAccountClient.ListKeys(ctx, resourceGroupName, accountName)
+	if err != nil {
+		return nil, err
+	}
+
+	key := (*keysResponse.Keys)[0]
+
+	return &StorageAuth{
+		StorageAccount: []byte(accountName),
+		StorageKey:     []byte(*key.Value),
+	}, nil
+}
+
+// DeleteResourceGroupFromSubscriptionSecretRef deletes the resource group using subscription details from secretRef .
+func DeleteResourceGroupFromSubscriptionSecretRef(ctx context.Context, c client.Client, secretRef *corev1.SecretReference, resourceGroupName string) error {
+	clientAuth, err := internal.GetClientAuthData(ctx, c, *secretRef)
+	if err != nil {
+		return err
+	}
+
+	groupsClient := resources.NewGroupsClient(clientAuth.SubscriptionID)
+	clientCredConfig := auth.NewClientCredentialsConfig(clientAuth.ClientID, clientAuth.ClientSecret, clientAuth.TenantID)
+	authorizer, err := clientCredConfig.Authorizer()
+	if err != nil {
+		return err
+	}
+	groupsClient.Authorizer = authorizer
+
+	_, err = groupsClient.Delete(ctx, resourceGroupName)
+	return err
+}
+
 // NewStorageClientFromSecretRef retrieves the azure client from specified by the secret reference.
-func NewStorageClientFromSecretRef(ctx context.Context, c client.Client, secretRef corev1.SecretReference) (*StorageClient, error) {
-	secret, err := extensionscontroller.GetSecretByReference(ctx, c, &secretRef)
+func NewStorageClientFromSecretRef(ctx context.Context, c client.Client, secretRef *corev1.SecretReference) (*StorageClient, error) {
+	secret, err := extensionscontroller.GetSecretByReference(ctx, c, secretRef)
 	if err != nil {
 		return nil, err
 	}
@@ -44,12 +121,12 @@ func NewStorageClientFromSecretRef(ctx context.Context, c client.Client, secretR
 
 // ReadStorageClientAuthDataFromSecret reads the storage client auth details from the given secret.
 func ReadStorageClientAuthDataFromSecret(secret *corev1.Secret) (*StorageAuth, error) {
-	storageAccount, ok := secret.Data[azure.NewStorageAccount]
+	storageAccount, ok := secret.Data[azure.StorageAccount]
 	if !ok {
 		return nil, fmt.Errorf("secret %s/%s doesn't have a storage account", secret.Namespace, secret.Name)
 	}
 
-	storageKey, ok := secret.Data[azure.NewStorageKey]
+	storageKey, ok := secret.Data[azure.StorageKey]
 	if !ok {
 		return nil, fmt.Errorf("secret %s/%s doesn't have a storage key", secret.Namespace, secret.Name)
 	}

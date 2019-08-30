@@ -43,6 +43,16 @@ func (m *ManagedResource) WithNamespacedName(namespace, name string) *ManagedRes
 	return m
 }
 
+func (m *ManagedResource) WithLabels(labels map[string]string) *ManagedResource {
+	m.resource.Labels = labels
+	return m
+}
+
+func (m *ManagedResource) WithAnnotations(annotations map[string]string) *ManagedResource {
+	m.resource.Annotations = annotations
+	return m
+}
+
 func (m *ManagedResource) WithClass(name string) *ManagedResource {
 	if name == "" {
 		m.resource.Spec.Class = nil
@@ -86,6 +96,8 @@ func (m *ManagedResource) Reconcile(ctx context.Context) error {
 	resource := &resourcesv1alpha1.ManagedResource{ObjectMeta: m.resource.ObjectMeta}
 
 	_, err := controllerutil.CreateOrUpdate(ctx, m.client, resource, func() error {
+		resource.Labels = m.resource.Labels
+		resource.Annotations = m.resource.Annotations
 		resource.Spec = m.resource.Spec
 		return nil
 	})

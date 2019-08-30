@@ -94,6 +94,14 @@ const (
 	// domain name.
 	DNSDomain = "dns.gardener.cloud/domain"
 
+	// DNSIncludeZones is the key for an annotation on a Kubernetes Secret object whose value must point to a list
+	// of zones that shall be included.
+	DNSIncludeZones = "dns.gardener.cloud/include-zones"
+
+	// DNSExcludeZones is the key for an annotation on a Kubernetes Secret object whose value must point to a list
+	// of zones that shall be excluded.
+	DNSExcludeZones = "dns.gardener.cloud/exclude-zones"
+
 	// EtcdRoleMain is the constant defining the role for main etcd storing data about objects in Shoot.
 	EtcdRoleMain = "main"
 
@@ -206,6 +214,11 @@ const (
 	// a Shoot cluster. For example, when a Shoot specifies domain 'cluster.example.com', the ingress domain would be
 	// '*.<IngressPrefix>.cluster.example.com'.
 	IngressPrefix = "ingress"
+
+	// APIServerPrefix is the part of a FQDN which will be used to construct the domain name for the kube-apiserver of
+	// a Shoot cluster. For example, when a Shoot specifies domain 'cluster.example.com', the apiserver domain would be
+	// 'api.cluster.example.com'.
+	APIServerPrefix = "api"
 
 	// InternalDomainKey is a key which must be present in an internal domain constructed for a Shoot cluster. If the
 	// configured internal domain already contains it, it won't be added twice. If it does not contain it, it will be

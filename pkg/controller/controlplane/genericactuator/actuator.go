@@ -129,7 +129,7 @@ func (a *actuator) InjectConfig(config *rest.Config) error {
 	}
 
 	// Create Gardener clientset
-	a.gardenerClientset, err = gardenerkubernetes.NewForConfig(config, client.Options{})
+	a.gardenerClientset, err = gardenerkubernetes.NewWithConfig(gardenerkubernetes.WithRESTConfig(config))
 	if err != nil {
 		return errors.Wrap(err, "could not create Gardener client")
 	}
