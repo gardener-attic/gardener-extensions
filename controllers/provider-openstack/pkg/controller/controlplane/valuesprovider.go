@@ -236,8 +236,6 @@ func getConfigChartValues(
 		"tenantID":          c.TenantID,
 		"username":          c.Username,
 		"password":          c.Password,
-		"userDomainID":      c.UserDomainID,
-		"userDomainName":    c.UserDomainName,
 		"lbProvider":        cpConfig.LoadBalancerProvider,
 		"floatingNetworkID": infraStatus.Networks.FloatingPool.ID,
 		"subnetID":          subnet.ID,
@@ -250,10 +248,8 @@ func getConfigChartValues(
 	// https://github.com/kubernetes/cloud-provider-openstack/pull/733
 	ok, err := gutils.CompareVersions(cluster.Shoot.Spec.Kubernetes.Version, ">=", "1.15")
 	if ok {
-		values = map[string]interface{}{
-			"userDomainName": c.UserDomainName,
-			"userDomainID":   c.UserDomainID,
-		}
+		values["userDomainName"] = c.UserDomainName
+		values["userDomainID"] = c.UserDomainID
 	}
 
 	if cpConfig.LoadBalancerClasses == nil {
