@@ -63,10 +63,10 @@ var _ = Describe("Terraform", func() {
 					TerraformVarAccessKeyID:     accessKeyID,
 					TerraformVarAccessKeySecret: accessKeySecret,
 				}).Return(tf),
-				tf.EXPECT().SetJobBackoffLimit(int32(1)).Return(tf),
-				tf.EXPECT().SetActiveDeadlineSeconds(int64(900)).Return(tf),
+				tf.EXPECT().SetJobBackoffLimit(int32(0)).Return(tf),
+				tf.EXPECT().SetActiveDeadlineSeconds(int64(630)).Return(tf),
 				tf.EXPECT().SetDeadlineCleaning(5*time.Minute).Return(tf),
-				tf.EXPECT().SetDeadlinePod(5*time.Minute).Return(tf),
+				tf.EXPECT().SetDeadlinePod(15*time.Minute).Return(tf),
 				tf.EXPECT().SetDeadlineJob(15*time.Minute).Return(tf),
 			)
 
