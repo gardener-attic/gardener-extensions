@@ -16,6 +16,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	alicloudvpc "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
@@ -45,13 +46,13 @@ type storageClient struct {
 }
 
 // NewStorageClientFromSecretRef creates a new Aliclous storage Client using the credentials from <secretRef>.
-func NewStorageClientFromSecretRef(ctx context.Context, client client.Client, secretRef *corev1.SecretReference) (Storage, error) {
+func NewStorageClientFromSecretRef(ctx context.Context, client client.Client, secretRef *corev1.SecretReference, region string) (Storage, error) {
 	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, client, secretRef)
 	if err != nil {
 		return nil, err
 	}
 
-	ossClient, err := oss.New(credentials.StorageEndpoint, credentials.AccessKeyID, credentials.AccessKeySecret)
+	ossClient, err := oss.New(ComputeStorageEndpoint(region), credentials.AccessKeyID, credentials.AccessKeySecret)
 	if err != nil {
 		return nil, err
 	}
@@ -141,4 +142,9 @@ func (c *storageClient) DeleteBucketIfExists(ctx context.Context, bucketName str
 		}
 	}
 	return nil
+}
+
+// ComputeStorageEndpoint computes the OSS storage endpoint based on the given region.
+func ComputeStorageEndpoint(region string) string {
+	return fmt.Sprintf("https://oss-%s.aliyuncs.com/", region)
 }

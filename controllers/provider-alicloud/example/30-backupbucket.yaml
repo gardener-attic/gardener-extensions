@@ -8,7 +8,6 @@ type: Opaque
 data:
 # accessKeyID: base64(access-key-id)
 # accessKeySecret: base64(access-key-secret)
-# storageEndpoint: base64(storage-endpoint)
 
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1

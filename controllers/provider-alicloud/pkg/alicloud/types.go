@@ -55,6 +55,8 @@ const (
 	MachineControllerManagerVpaName = "machine-controller-manager-vpa"
 	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.
 	BackupSecretName = "etcd-backup"
+	// StorageEndpoint is the data field in a secret where the storage endpoint is stored at.
+	StorageEndpoint = "storageEndpoint"
 )
 
 var (

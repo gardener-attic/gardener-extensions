@@ -28,7 +28,6 @@ import (
 type Credentials struct {
 	AccessKeyID     string
 	AccessKeySecret string
-	StorageEndpoint string
 }
 
 const (
@@ -36,8 +35,6 @@ const (
 	AccessKeyID = "accessKeyID"
 	// AccessKeySecret is the data field in a secret where the access key secret is stored at.
 	AccessKeySecret = "accessKeySecret"
-	// StorageEndpoint is the data field in a secret where the storage endpoint is stored at.
-	StorageEndpoint = "storageEndpoint"
 )
 
 // ReadSecretCredentials reads the Credentials from the given secret.
@@ -56,12 +53,9 @@ func ReadSecretCredentials(secret *corev1.Secret) (*Credentials, error) {
 		return nil, fmt.Errorf("secret %s/%s has no access key secret at data.%s", secret.Namespace, secret.Name, AccessKeySecret)
 	}
 
-	storageEndpoint := secret.Data[StorageEndpoint]
-
 	return &Credentials{
 		AccessKeyID:     string(accessKeyID),
 		AccessKeySecret: string(accessKeySecret),
-		StorageEndpoint: string(storageEndpoint),
 	}, nil
 }
 

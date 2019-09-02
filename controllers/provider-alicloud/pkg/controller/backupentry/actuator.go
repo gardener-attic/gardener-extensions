@@ -18,11 +18,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/go-logr/logr"
 
+	"github.com/go-logr/logr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -43,11 +44,12 @@ func (a *actuator) InjectClient(client client.Client) error {
 }
 
 func (a *actuator) GetETCDSecretData(ctx context.Context, be *extensionsv1alpha1.BackupEntry, backupSecretData map[string][]byte) (map[string][]byte, error) {
+	backupSecretData[alicloud.StorageEndpoint] = []byte(alicloudclient.ComputeStorageEndpoint(be.Spec.Region))
 	return backupSecretData, nil
 }
 
 func (a *actuator) Delete(ctx context.Context, be *extensionsv1alpha1.BackupEntry) error {
-	cli, err := alicloudclient.NewStorageClientFromSecretRef(ctx, a.client, &be.Spec.SecretRef)
+	cli, err := alicloudclient.NewStorageClientFromSecretRef(ctx, a.client, &be.Spec.SecretRef, be.Spec.Region)
 	if err != nil {
 		return err
 	}
