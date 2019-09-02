@@ -63,8 +63,10 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 	if err := e.ensureContainers(&ss.Spec.Template.Spec, ss.Name, cluster); err != nil {
 		return err
 	}
-	e.ensureVolumes(&ss.Spec.Template.Spec, ss.Name)
-	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, cluster.Seed.Spec.Backup != nil)
+
+	backupConfigured := cluster.Seed.Spec.Backup != nil
+	e.ensureVolumes(&ss.Spec.Template.Spec, ss.Name, backupConfigured)
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, backupConfigured)
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
@@ -148,8 +150,8 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, prefix, image.String(), nil, env, volumeMounts), nil
 }
 
-func (e *ensurer) ensureVolumes(ps *corev1.PodSpec, name string) {
-	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
+func (e *ensurer) ensureVolumes(ps *corev1.PodSpec, name string, backupConfigured bool) {
+	if name == gardencorev1alpha1.StatefulSetNameETCDMain && backupConfigured {
 		etcdBackupSecretVolume := corev1.Volume{
 			Name: gcp.BackupSecretName,
 			VolumeSource: corev1.VolumeSource{
