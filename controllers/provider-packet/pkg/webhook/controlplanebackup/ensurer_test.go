@@ -119,6 +119,27 @@ var _ = Describe("Ensurer", func() {
 			checkETCDMainStatefulSet(ss, nil)
 		})
 
+		It("should not modify elements to same etcd-main statefulset", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDMain},
+				}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(imageVector, logger)
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+			Expect(err).To(Not(HaveOccurred()))
+			oldSS := ss.DeepCopy()
+
+			// Re-ensure
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(ss).Should(Equal(oldSS))
+		})
+
 		It("should add or modify elements to etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{

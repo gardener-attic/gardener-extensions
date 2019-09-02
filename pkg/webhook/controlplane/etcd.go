@@ -16,19 +16,27 @@ package controlplane
 
 import (
 	"fmt"
+	"math/rand"
 	"path"
+	"strings"
 
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
+	"github.com/gardener/gardener/pkg/utils"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EtcdMainVolumeClaimTemplateName is the name of the volume claim template in the etcd-main StatefulSet. It uses a
-// different naming scheme because Gardener was using HDD-based volumes for etcd in the past and did migrate to fast
-// SSD volumes recently. Due to the migration of the data of the old volume to the new one the PVC name is now different.
-const EtcdMainVolumeClaimTemplateName = "main-etcd"
+const (
+	// EtcdMainVolumeClaimTemplateName is the name of the volume claim template in the etcd-main StatefulSet. It uses a
+	// different naming scheme because Gardener was using HDD-based volumes for etcd in the past and did migrate to fast
+	// SSD volumes recently. Due to the migration of the data of the old volume to the new one the PVC name is now different.
+	EtcdMainVolumeClaimTemplateName = "main-etcd"
+	// BackupRestoreContainerName is the name of the backup-restore sidecar injected in etcd StatefulSet.
+	BackupRestoreContainerName = "backup-restore"
+)
 
 // GetBackupRestoreContainer returns an etcd backup-restore container with the given name, schedule, provider, image,
 // and additional provider-specific command line args and env variables.
@@ -39,7 +47,7 @@ func GetBackupRestoreContainer(
 	volumeMounts []corev1.VolumeMount,
 ) *corev1.Container {
 	c := &corev1.Container{
-		Name: "backup-restore",
+		Name: BackupRestoreContainerName,
 		Command: []string{
 			"etcdbrctl",
 			"server",
@@ -113,6 +121,7 @@ func GetBackupRestoreContainer(
 	return c
 }
 
+// GetETCDVolumeClaimTemplate returns an etcd backup-restore container with the given name, storageClass and storageCapacity.
 func GetETCDVolumeClaimTemplate(name string, storageClassName *string, storageCapacity *resource.Quantity) *corev1.PersistentVolumeClaim {
 	// Determine the storage capacity
 	// A non-default storage capacity is used only if it's configured
@@ -133,4 +142,53 @@ func GetETCDVolumeClaimTemplate(name string, storageClassName *string, storageCa
 			},
 		},
 	}
+}
+
+// DetermineBackupSchedule determines the backup schedule based on the shoot creation and maintainance time window.
+func DetermineBackupSchedule(c *corev1.Container, cluster *extensionscontroller.Cluster) (string, error) {
+	schedule := ParseExistingBackupSchedule(c)
+	if len(schedule) != 0 {
+		return schedule, nil
+	}
+
+	var begin, end string
+	if cluster.Shoot != nil && cluster.Shoot.Spec.Maintenance != nil && cluster.Shoot.Spec.Maintenance.TimeWindow != nil {
+		begin = cluster.Shoot.Spec.Maintenance.TimeWindow.Begin
+		end = cluster.Shoot.Spec.Maintenance.TimeWindow.End
+	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.Maintenance != nil && cluster.CoreShoot.Spec.Maintenance.TimeWindow != nil {
+		begin = cluster.CoreShoot.Spec.Maintenance.TimeWindow.Begin
+		end = cluster.CoreShoot.Spec.Maintenance.TimeWindow.End
+	}
+
+	if len(begin) != 0 && len(end) != 0 {
+		maintenanceTimeWindow, err := utils.ParseMaintenanceTimeWindow(begin, end)
+		if err != nil {
+			return "", err
+		}
+
+		if maintenanceTimeWindow != utils.AlwaysTimeWindow {
+			// Randomize the snapshot timing daily but within last hour.
+			// The 15 minutes buffer is set to snapshot upload time before actual maintainance window start.
+			snapshotWindowBegin := maintenanceTimeWindow.Begin().Add(-1, -15, 0)
+			randomMinutes := rand.Intn(59)
+			snapshotTime := snapshotWindowBegin.Add(0, randomMinutes, 0)
+			return fmt.Sprintf("%d %d * * *", snapshotTime.Minute(), snapshotTime.Hour()), nil
+		}
+	}
+
+	creationMinute := cluster.Shoot.CreationTimestamp.Minute()
+	creationHour := cluster.Shoot.CreationTimestamp.Hour()
+	return fmt.Sprintf("%d %d * * *", creationMinute, creationHour), nil
+}
+
+// ParseExistingBackupSchedule parse the backup container to get already configured schedule.
+func ParseExistingBackupSchedule(c *corev1.Container) string {
+	if c != nil {
+		for _, c := range c.Command {
+			if strings.HasPrefix(c, "--schedule=") {
+				return strings.TrimPrefix(c, "--schedule=")
+			}
+		}
+	}
+	return ""
 }

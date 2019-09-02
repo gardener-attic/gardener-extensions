@@ -66,7 +66,8 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
-	c, err := e.getBackupRestoreContainer(name, cluster)
+	backupRestoreContainer := extensionswebhook.ContainerWithName(ps.Containers, controlplane.BackupRestoreContainerName)
+	c, err := e.ensureBackupRestoreContainer(backupRestoreContainer, name, cluster)
 	if err != nil {
 		return err
 	}
@@ -81,17 +82,13 @@ func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev
 	return nil
 }
 
-func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscontroller.Cluster) (*corev1.Container, error) {
+func (e *ensurer) ensureBackupRestoreContainer(existingContainer *corev1.Container, name string, cluster *extensionscontroller.Cluster) (*corev1.Container, error) {
 	// Find etcd-backup-restore image
 	// TODO Get seed version from clientset when it's possible to inject it
 	image, err := e.imageVector.FindImage(openstack.ETCDBackupRestoreImageName, imagevector.TargetVersion(extensionscontroller.GetKubernetesVersion(cluster)))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find image %s", openstack.ETCDBackupRestoreImageName)
 	}
-
-	const (
-		defaultSchedule = "0 */24 * * *"
-	)
 
 	// Determine provider and container env variables
 	// They are only specified for the etcd-main stateful set (backup is enabled)
@@ -170,10 +167,14 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
 
-	// Determine schedule
-	var schedule = defaultSchedule
-	if e.etcdBackup.Schedule != nil {
-		schedule = defaultSchedule
+	var schedule string
+	if e.etcdBackup != nil && e.etcdBackup.Schedule != nil {
+		schedule = *e.etcdBackup.Schedule
+	} else {
+		schedule, err = controlplane.DetermineBackupSchedule(existingContainer, cluster)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return controlplane.GetBackupRestoreContainer(name, volumeClaimTemplateName, schedule, provider, prefix, image.String(), nil, env, nil), nil

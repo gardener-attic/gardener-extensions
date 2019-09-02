@@ -61,8 +61,8 @@ config:
     storage:
       className: gardener.cloud-fast
       capacity: 80Gi
-    backup:
-      schedule: "0 */24 * * *"
+#   backup:
+#     schedule: "0 */24 * * *"
 
 gardener:
   seed:
