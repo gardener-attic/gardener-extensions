@@ -95,11 +95,22 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 
 func (r *reconciler) reconcile(ctx context.Context, bb *extensionsv1alpha1.BackupBucket) (reconcile.Result, error) {
 	if err := extensionscontroller.EnsureFinalizer(ctx, r.client, FinalizerName, bb); err != nil {
+		r.logger.Info("failed to ensure finalizer on backup bucket, %v", err)
 		return reconcile.Result{}, err
 	}
 
 	operationType := gardencorev1alpha1helper.ComputeOperationType(bb.ObjectMeta, bb.Status.LastOperation)
 	if err := r.updateStatusProcessing(ctx, bb, operationType, "Reconciling the backupbucket"); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	secret, err := extensionscontroller.GetSecretByReference(ctx, r.client, &bb.Spec.SecretRef)
+	if err != nil {
+		r.logger.Info("failed to get backup bucket secret, %v", err)
+		return reconcile.Result{}, err
+	}
+	if err := extensionscontroller.EnsureFinalizer(ctx, r.client, FinalizerName, secret); err != nil {
+		r.logger.Info("failed to ensure finalizer on bucket secret, %v", err)
 		return reconcile.Result{}, err
 	}
 
@@ -152,6 +163,16 @@ func (r *reconciler) delete(ctx context.Context, bb *extensionsv1alpha1.BackupBu
 	r.logger.Info(msg, "backupbucket", bb.Name)
 	r.recorder.Event(bb, corev1.EventTypeNormal, EventBackupBucketDeletion, msg)
 	if err := r.updateStatusSuccess(ctx, bb, operationType, msg); err != nil {
+		return reconcile.Result{}, err
+	}
+
+	secret, err := extensionscontroller.GetSecretByReference(ctx, r.client, &bb.Spec.SecretRef)
+	if err != nil {
+		r.logger.Info("failed to get backup bucket secret, %v", err)
+		return reconcile.Result{}, err
+	}
+	if err := extensionscontroller.DeleteFinalizer(ctx, r.client, FinalizerName, secret); err != nil {
+		r.logger.Info("failed to remove finalizer on bucket secret, %v", err)
 		return reconcile.Result{}, err
 	}
 
