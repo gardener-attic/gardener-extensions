@@ -48,7 +48,7 @@ images:
 - name: etcd-backup-restore
   sourceRepository: github.com/gardener/etcd-backup-restore
   repository: eu.gcr.io/gardener-project/gardener/etcdbrctl
-  tag: "0.7.1"
+  tag: "0.7.2"
 - name: metabot
   sourceRepository: https://github.com/packethost/metabot
   repository: packethost/metabot
