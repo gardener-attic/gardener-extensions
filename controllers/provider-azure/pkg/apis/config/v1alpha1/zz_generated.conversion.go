@@ -197,6 +197,7 @@ func autoConvert_v1alpha1_MachineImage_To_config_MachineImage(in *MachineImage, 
 	out.Publisher = in.Publisher
 	out.Offer = in.Offer
 	out.SKU = in.SKU
+	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
 
@@ -211,6 +212,7 @@ func autoConvert_config_MachineImage_To_v1alpha1_MachineImage(in *config.Machine
 	out.Publisher = in.Publisher
 	out.Offer = in.Offer
 	out.SKU = in.SKU
+	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
 

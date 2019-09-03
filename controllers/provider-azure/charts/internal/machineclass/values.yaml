@@ -17,9 +17,10 @@ machineClasses:
     cloudConfig: abc
   machineType: Standard_DS1_V2
   image:
-    publisher: CoreOS
-    offer: CoreOS
-    sku: Stable
-    version: "1576.5.0"
+    publisher: CoreOS # TODO: remove these deprecated field after couple of releases
+    offer: CoreOS # TODO: remove these deprecated field after couple of releases
+    sku: Stable # TODO: remove these deprecated field after couple of releases
+    version: "1576.5.0" # TODO: remove these deprecated field after couple of releases
+    urn: "CoreOS:CoreOS:Stable:1576.5.0"
   volumeSize: 50
   sshPublicKey: ssh-rsa AAAAB3...

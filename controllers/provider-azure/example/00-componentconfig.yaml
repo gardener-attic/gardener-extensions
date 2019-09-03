@@ -9,9 +9,10 @@ clientConnection:
 machineImages:
 - name: coreos
   version: 2135.6.0
-  publisher: CoreOS
-  offer: CoreOS
-  sku: Stable
+  publisher: CoreOS # TODO: remove these deprecated field after couple of releases
+  offer: CoreOS # TODO: remove these deprecated field after couple of releases
+  sku: Stable # TODO: remove these deprecated field after couple of releases
+  urn: "CoreOS:CoreOS:Stable:2135.6.0"
 etcd:
   storage:
     className: gardener.cloud-fast

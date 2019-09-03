@@ -107,7 +107,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	for _, pool := range w.worker.Spec.Pools {
-		publisher, sku, offer, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
+		publisher, sku, offer, urn, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
@@ -117,11 +117,22 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			Publisher: publisher,
 			SKU:       sku,
 			Offer:     offer,
+			URN:       urn,
 		})
 
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
 		if err != nil {
 			return err
+		}
+
+		image := map[string]interface{}{
+			"publisher": publisher,
+			"offer":     offer,
+			"sku":       sku,
+			"version":   pool.MachineImage.Version,
+		}
+		if urn != nil {
+			image["urn"] = *urn
 		}
 
 		machineClassSpec := map[string]interface{}{
@@ -138,13 +149,8 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			"secret": map[string]interface{}{
 				"cloudConfig": string(pool.UserData),
 			},
-			"machineType": pool.MachineType,
-			"image": map[string]interface{}{
-				"publisher": publisher,
-				"offer":     offer,
-				"sku":       sku,
-				"version":   pool.MachineImage.Version,
-			},
+			"machineType":  pool.MachineType,
+			"image":        image,
 			"volumeSize":   volumeSize,
 			"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
 		}

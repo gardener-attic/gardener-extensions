@@ -37,10 +37,11 @@ spec:
             keyData: {{ $machineClass.sshPublicKey }}
     storageProfile:
       imageReference:
-        publisher: {{ $machineClass.image.publisher }}
-        offer: {{ $machineClass.image.offer }}
-        sku: {{ $machineClass.image.sku }}
-        version: {{ $machineClass.image.version }}
+        publisher: {{ $machineClass.image.publisher }} # TODO: remove this deprecated field after couple of releases
+        offer: {{ $machineClass.image.offer }} # TODO: remove this deprecated field after couple of releases
+        sku: {{ $machineClass.image.sku }} # TODO: remove this deprecated field after couple of releases
+        version: {{ $machineClass.image.version }} # TODO: remove this deprecated field after couple of releases
+        urn: {{ $machineClass.image.urn }}
       osDisk:
         caching: None
         diskSizeGB: {{ $machineClass.volumeSize }}
