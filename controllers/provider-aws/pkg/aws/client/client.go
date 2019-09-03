@@ -233,6 +233,10 @@ func (c *Client) CreateBucketIfNotExists(ctx context.Context, bucket, region str
 		},
 	}
 
+	if region == "us-east-1" {
+		createBucketInput.CreateBucketConfiguration = nil
+	}
+
 	if _, err := c.S3.CreateBucketWithContext(ctx, createBucketInput); err != nil {
 		if aerr, ok := err.(awserr.Error); ok && (aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou) {
 			return nil
