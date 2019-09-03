@@ -90,10 +90,8 @@ var configChart = &chart.Chart{
 	Name: "cloud-provider-config",
 	Path: filepath.Join(openstacktypes.InternalChartsPath, "cloud-provider-config"),
 	Objects: []*chart.Object{
-		{
-			Type: &corev1.ConfigMap{},
-			Name: openstacktypes.CloudProviderConfigCloudControllerManagerName,
-		},
+		{Type: &corev1.ConfigMap{}, Name: openstacktypes.CloudProviderConfigCloudControllerManagerName},
+		{Type: &corev1.ConfigMap{}, Name: openstacktypes.CloudProviderConfigKubeControllerManagerName},
 	},
 }
 
@@ -104,6 +102,7 @@ var ccmChart = &chart.Chart{
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
+		{Type: &corev1.ConfigMap{}, Name: "cloud-controller-manager-monitoring-config"},
 	},
 }
 

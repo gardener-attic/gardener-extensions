@@ -40,6 +40,7 @@ var (
 			{Type: &corev1.ServiceAccount{}, Name: openstack.MachineControllerManagerName},
 			{Type: &corev1.Secret{}, Name: openstack.MachineControllerManagerName},
 			{Type: extensionscontroller.GetVerticalPodAutoscalerObject(), Name: openstack.MachineControllerManagerVpaName},
+			{Type: &corev1.ConfigMap{}, Name: openstack.MachineControllerManagerMonitoringConfigName},
 		},
 	}
 
