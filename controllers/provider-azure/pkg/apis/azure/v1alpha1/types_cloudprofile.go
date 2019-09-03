@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package gcp
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,27 +20,39 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProviderProfileConfig contains provider-specific configuration that is embedded into Gardener's `ProviderProfile`
+// CloudProfileConfig contains provider-specific configuration that is embedded into Gardener's `CloudProfile`
 // resource.
-type ProviderProfileConfig struct {
-	metav1.TypeMeta
+type CloudProfileConfig struct {
+	metav1.TypeMeta `json:",inline"`
+	// CountUpdateDomains is list of update domain counts for each region.
+	CountUpdateDomains []DomainCount `json:"countUpdateDomains"`
+	// CountFaultDomains is list of fault domain counts for each region.
+	CountFaultDomains []DomainCount `json:"countFaultDomains"`
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to provider-specific identifiers.
-	MachineImages []MachineImages
+	MachineImages []MachineImages `json:"machineImages"`
+}
+
+// DomainCount defines the region and the count for this domain count value.
+type DomainCount struct {
+	// Region is a region.
+	Region string `json:"region"`
+	// Count is the count value for the respective domain count.
+	Count int `json:"count"`
 }
 
 // MachineImages is a mapping from logical names and versions to provider-specific identifiers.
 type MachineImages struct {
 	// Name is the logical name of the machine image.
-	Name string
+	Name string `json:"name"`
 	// Versions contains versions and a provider-specific identifier.
-	Versions []MachineImageVersion
+	Versions []MachineImageVersion `json:"versions"`
 }
 
 // MachineImageVersion contains a version and a provider-specific identifier.
 type MachineImageVersion struct {
 	// Version is the version of the image.
-	Version string
-	// Image is the path to the image.
-	Image string
+	Version string `json:"version"`
+	// URN is the identifier for the image.
+	URN string `json:"urn"`
 }

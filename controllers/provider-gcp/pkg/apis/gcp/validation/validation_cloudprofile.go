@@ -17,20 +17,20 @@ package validation
 import (
 	"fmt"
 
-	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// ValidateProviderProfileConfig validates a ProviderProfileConfig object.
-func ValidateProviderProfileConfig(providerProfile *apisaws.ProviderProfileConfig) field.ErrorList {
+// ValidateCloudProfileConfig validates a CloudProfileConfig object.
+func ValidateCloudProfileConfig(cloudProfile *apisgcp.CloudProfileConfig) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	machineImagesPath := field.NewPath("machineImages")
-	if len(providerProfile.MachineImages) == 0 {
+	if len(cloudProfile.MachineImages) == 0 {
 		allErrs = append(allErrs, field.Required(machineImagesPath, "must provide at least one machine image"))
 	}
-	for i, machineImage := range providerProfile.MachineImages {
+	for i, machineImage := range cloudProfile.MachineImages {
 		idxPath := machineImagesPath.Index(i)
 
 		if len(machineImage.Name) == 0 {
@@ -46,19 +46,8 @@ func ValidateProviderProfileConfig(providerProfile *apisaws.ProviderProfileConfi
 			if len(version.Version) == 0 {
 				allErrs = append(allErrs, field.Required(jdxPath.Child("version"), "must provide a version"))
 			}
-
-			if len(version.Regions) == 0 {
-				allErrs = append(allErrs, field.Required(jdxPath.Child("regions"), fmt.Sprintf("must provide at least one region for machine image %q and version %q", machineImage.Name, version.Version)))
-			}
-			for k, region := range version.Regions {
-				kdxPath := jdxPath.Child("regions").Index(k)
-
-				if len(region.Name) == 0 {
-					allErrs = append(allErrs, field.Required(kdxPath.Child("name"), "must provide a name"))
-				}
-				if len(region.AMI) == 0 {
-					allErrs = append(allErrs, field.Required(kdxPath.Child("ami"), "must provide an ami"))
-				}
+			if len(version.Image) == 0 {
+				allErrs = append(allErrs, field.Required(jdxPath.Child("image"), "must provide an image"))
 			}
 		}
 	}

@@ -20,9 +20,9 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProviderProfileConfig contains provider-specific configuration that is embedded into Gardener's `ProviderProfile`
+// CloudProfileConfig contains provider-specific configuration that is embedded into Gardener's `CloudProfile`
 // resource.
-type ProviderProfileConfig struct {
+type CloudProfileConfig struct {
 	metav1.TypeMeta `json:",inline"`
 	// Constraints is an object containing constraints for certain values in the control plane config.
 	Constraints Constraints `json:"constraints"`

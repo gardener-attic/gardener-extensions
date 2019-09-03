@@ -22,15 +22,15 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// ValidateProviderProfileConfig validates a ProviderProfileConfig object.
-func ValidateProviderProfileConfig(providerProfile *apisalicloud.ProviderProfileConfig) field.ErrorList {
+// ValidateCloudProfileConfig validates a CloudProfileConfig object.
+func ValidateCloudProfileConfig(cloudProfile *apisalicloud.CloudProfileConfig) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	machineImagesPath := field.NewPath("machineImages")
-	if len(providerProfile.MachineImages) == 0 {
+	if len(cloudProfile.MachineImages) == 0 {
 		allErrs = append(allErrs, field.Required(machineImagesPath, "must provide at least one machine image"))
 	}
-	for i, machineImage := range providerProfile.MachineImages {
+	for i, machineImage := range cloudProfile.MachineImages {
 		idxPath := machineImagesPath.Index(i)
 
 		if len(machineImage.Name) == 0 {

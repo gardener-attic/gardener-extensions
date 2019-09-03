@@ -15,8 +15,8 @@
 package validation_test
 
 import (
-	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
-	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/validation"
+	apispacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
+	. "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/validation"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,16 +24,16 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var _ = Describe("ValidateProviderProfileConfig", func() {
-	Describe("#ValidateProviderProfileConfig", func() {
-		var providerProfileConfig *apisalicloud.ProviderProfileConfig
+var _ = Describe("ValidateCloudProfileConfig", func() {
+	Describe("#ValidateCloudProfileConfig", func() {
+		var cloudProfileConfig *apispacket.CloudProfileConfig
 
 		BeforeEach(func() {
-			providerProfileConfig = &apisalicloud.ProviderProfileConfig{
-				MachineImages: []apisalicloud.MachineImages{
+			cloudProfileConfig = &apispacket.CloudProfileConfig{
+				MachineImages: []apispacket.MachineImages{
 					{
 						Name: "ubuntu",
-						Versions: []apisalicloud.MachineImageVersion{
+						Versions: []apispacket.MachineImageVersion{
 							{
 								Version: "1.2.3",
 								ID:      "some-image-id",
@@ -46,9 +46,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("machine image validation", func() {
 			It("should enforce that at least one machine image has been defined", func() {
-				providerProfileConfig.MachineImages = []apisalicloud.MachineImages{}
+				cloudProfileConfig.MachineImages = []apispacket.MachineImages{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -57,9 +57,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image configuration", func() {
-				providerProfileConfig.MachineImages = []apisalicloud.MachineImages{{}}
+				cloudProfileConfig.MachineImages = []apispacket.MachineImages{{}}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -71,14 +71,14 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image version configuration", func() {
-				providerProfileConfig.MachineImages = []apisalicloud.MachineImages{
+				cloudProfileConfig.MachineImages = []apispacket.MachineImages{
 					{
 						Name:     "abc",
-						Versions: []apisalicloud.MachineImageVersion{{}},
+						Versions: []apispacket.MachineImageVersion{{}},
 					},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),

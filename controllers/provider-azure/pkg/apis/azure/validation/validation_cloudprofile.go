@@ -16,21 +16,25 @@ package validation
 
 import (
 	"fmt"
+	"strings"
 
-	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
+	apisazure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-// ValidateProviderProfileConfig validates a ProviderProfileConfig object.
-func ValidateProviderProfileConfig(providerProfile *apisgcp.ProviderProfileConfig) field.ErrorList {
+// ValidateCloudProfileConfig validates a CloudProfileConfig object.
+func ValidateCloudProfileConfig(cloudProfile *apisazure.CloudProfileConfig) field.ErrorList {
 	allErrs := field.ErrorList{}
 
+	allErrs = append(allErrs, validateDomainCount(cloudProfile.CountFaultDomains, field.NewPath("countFaultDomains"))...)
+	allErrs = append(allErrs, validateDomainCount(cloudProfile.CountUpdateDomains, field.NewPath("countUpdateDomains"))...)
+
 	machineImagesPath := field.NewPath("machineImages")
-	if len(providerProfile.MachineImages) == 0 {
+	if len(cloudProfile.MachineImages) == 0 {
 		allErrs = append(allErrs, field.Required(machineImagesPath, "must provide at least one machine image"))
 	}
-	for i, machineImage := range providerProfile.MachineImages {
+	for i, machineImage := range cloudProfile.MachineImages {
 		idxPath := machineImagesPath.Index(i)
 
 		if len(machineImage.Name) == 0 {
@@ -46,9 +50,35 @@ func ValidateProviderProfileConfig(providerProfile *apisgcp.ProviderProfileConfi
 			if len(version.Version) == 0 {
 				allErrs = append(allErrs, field.Required(jdxPath.Child("version"), "must provide a version"))
 			}
-			if len(version.Image) == 0 {
-				allErrs = append(allErrs, field.Required(jdxPath.Child("image"), "must provide an image"))
+			if len(version.URN) == 0 {
+				allErrs = append(allErrs, field.Required(jdxPath.Child("urn"), "must provide an urn"))
 			}
+			if len(strings.Split(version.URN, ":")) != 4 {
+				allErrs = append(allErrs, field.Invalid(jdxPath.Child("urn"), version.URN, "please use the format `Publisher:Offer:Sku:Version` for the urn"))
+			}
+		}
+	}
+
+	return allErrs
+}
+
+func validateDomainCount(domainCount []apisazure.DomainCount, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if len(domainCount) == 0 {
+		allErrs = append(allErrs, field.Required(fldPath, "must provide at least one domain count"))
+	}
+
+	for i, count := range domainCount {
+		idxPath := fldPath.Index(i)
+		regionPath := idxPath.Child("region")
+		countPath := idxPath.Child("count")
+
+		if len(count.Region) == 0 {
+			allErrs = append(allErrs, field.Required(regionPath, "must provide a region"))
+		}
+		if count.Count < 0 {
+			allErrs = append(allErrs, field.Invalid(countPath, count.Count, "count must not be negative"))
 		}
 	}
 

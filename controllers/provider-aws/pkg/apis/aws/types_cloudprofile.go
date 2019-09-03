@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package aws
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,35 +20,35 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProviderProfileConfig contains provider-specific configuration that is embedded into Gardener's `ProviderProfile`
+// CloudProfileConfig contains provider-specific configuration that is embedded into Gardener's `CloudProfile`
 // resource.
-type ProviderProfileConfig struct {
-	metav1.TypeMeta `json:",inline"`
+type CloudProfileConfig struct {
+	metav1.TypeMeta
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to provider-specific identifiers.
-	MachineImages []MachineImages `json:"machineImages"`
+	MachineImages []MachineImages
 }
 
 // MachineImages is a mapping from logical names and versions to provider-specific identifiers.
 type MachineImages struct {
 	// Name is the logical name of the machine image.
-	Name string `json:"name"`
+	Name string
 	// Versions contains versions and a provider-specific identifier.
-	Versions []MachineImageVersion `json:"versions"`
+	Versions []MachineImageVersion
 }
 
 // MachineImageVersion contains a version and a provider-specific identifier.
 type MachineImageVersion struct {
 	// Version is the version of the image.
-	Version string `json:"version"`
+	Version string
 	// Regions is a mapping to the correct AMI for the machine image in the supported regions.
-	Regions []RegionAMIMapping `json:"regions"`
+	Regions []RegionAMIMapping
 }
 
 // RegionAMIMapping is a mapping to the correct AMI for the machine image in the given region.
 type RegionAMIMapping struct {
 	// Name is the name of the region.
-	Name string `json:"name"`
+	Name string
 	// AMI is the AMI for the machine image.
-	AMI string `json:"ami"`
+	AMI string
 }

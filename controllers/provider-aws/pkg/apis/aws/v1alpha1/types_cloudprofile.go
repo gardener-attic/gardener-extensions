@@ -20,25 +20,13 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProviderProfileConfig contains provider-specific configuration that is embedded into Gardener's `ProviderProfile`
+// CloudProfileConfig contains provider-specific configuration that is embedded into Gardener's `CloudProfile`
 // resource.
-type ProviderProfileConfig struct {
+type CloudProfileConfig struct {
 	metav1.TypeMeta `json:",inline"`
-	// CountUpdateDomains is list of update domain counts for each region.
-	CountUpdateDomains []DomainCount `json:"countUpdateDomains"`
-	// CountFaultDomains is list of fault domain counts for each region.
-	CountFaultDomains []DomainCount `json:"countFaultDomains"`
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to provider-specific identifiers.
 	MachineImages []MachineImages `json:"machineImages"`
-}
-
-// DomainCount defines the region and the count for this domain count value.
-type DomainCount struct {
-	// Region is a region.
-	Region string `json:"region"`
-	// Count is the count value for the respective domain count.
-	Count int `json:"count"`
 }
 
 // MachineImages is a mapping from logical names and versions to provider-specific identifiers.
@@ -53,6 +41,14 @@ type MachineImages struct {
 type MachineImageVersion struct {
 	// Version is the version of the image.
 	Version string `json:"version"`
-	// URN is the identifier for the image.
-	URN string `json:"urn"`
+	// Regions is a mapping to the correct AMI for the machine image in the supported regions.
+	Regions []RegionAMIMapping `json:"regions"`
+}
+
+// RegionAMIMapping is a mapping to the correct AMI for the machine image in the given region.
+type RegionAMIMapping struct {
+	// Name is the name of the region.
+	Name string `json:"name"`
+	// AMI is the AMI for the machine image.
+	AMI string `json:"ami"`
 }

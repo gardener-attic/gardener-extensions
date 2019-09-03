@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1alpha1
+package azure
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,13 +20,25 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// ProviderProfileConfig contains provider-specific configuration that is embedded into Gardener's `ProviderProfile`
+// CloudProfileConfig contains provider-specific configuration that is embedded into Gardener's `CloudProfile`
 // resource.
-type ProviderProfileConfig struct {
-	metav1.TypeMeta `json:",inline"`
+type CloudProfileConfig struct {
+	metav1.TypeMeta
+	// CountUpdateDomains is list of update domain counts for each region.
+	CountUpdateDomains []DomainCount
+	// CountFaultDomains is list of fault domain counts for each region.
+	CountFaultDomains []DomainCount
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to provider-specific identifiers.
-	MachineImages []MachineImages `json:"machineImages"`
+	MachineImages []MachineImages
+}
+
+// DomainCount defines the region and the count for this domain count value.
+type DomainCount struct {
+	// Region is a region.
+	Region string
+	// Count is the count value for the respective domain count.
+	Count int
 }
 
 // MachineImages is a mapping from logical names and versions to provider-specific identifiers.
@@ -41,6 +53,6 @@ type MachineImages struct {
 type MachineImageVersion struct {
 	// Version is the version of the image.
 	Version string `json:"version"`
-	// ID is the id of the image.
-	ID string `json:"id"`
+	// URN is the identifier for the image.
+	URN string `json:"urn"`
 }

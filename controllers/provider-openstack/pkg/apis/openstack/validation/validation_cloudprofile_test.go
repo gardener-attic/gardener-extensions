@@ -24,12 +24,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var _ = Describe("ValidateProviderProfileConfig", func() {
-	Describe("#ValidateProviderProfileConfig", func() {
-		var providerProfileConfig *apisopenstack.ProviderProfileConfig
+var _ = Describe("ValidateCloudProfileConfig", func() {
+	Describe("#ValidateCloudProfileConfig", func() {
+		var cloudProfileConfig *apisopenstack.CloudProfileConfig
 
 		BeforeEach(func() {
-			providerProfileConfig = &apisopenstack.ProviderProfileConfig{
+			cloudProfileConfig = &apisopenstack.CloudProfileConfig{
 				Constraints: apisopenstack.Constraints{
 					FloatingPools: []apisopenstack.FloatingPool{
 						{Name: "MY-POOL"},
@@ -59,9 +59,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("floating pools constraints", func() {
 			It("should enforce that at least one pool has been defined", func() {
-				providerProfileConfig.Constraints.FloatingPools = []apisopenstack.FloatingPool{}
+				cloudProfileConfig.Constraints.FloatingPools = []apisopenstack.FloatingPool{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -70,11 +70,11 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported providers", func() {
-				providerProfileConfig.Constraints.FloatingPools = []apisopenstack.FloatingPool{
+				cloudProfileConfig.Constraints.FloatingPools = []apisopenstack.FloatingPool{
 					{Name: ""},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -85,9 +85,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("load balancer provider constraints", func() {
 			It("should enforce that at least one provider has been defined", func() {
-				providerProfileConfig.Constraints.LoadBalancerProviders = []apisopenstack.LoadBalancerProvider{}
+				cloudProfileConfig.Constraints.LoadBalancerProviders = []apisopenstack.LoadBalancerProvider{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -96,11 +96,11 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported providers", func() {
-				providerProfileConfig.Constraints.LoadBalancerProviders = []apisopenstack.LoadBalancerProvider{
+				cloudProfileConfig.Constraints.LoadBalancerProviders = []apisopenstack.LoadBalancerProvider{
 					{Name: ""},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -111,9 +111,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("keystone url validation", func() {
 			It("should forbid keystone urls with unsupported format", func() {
-				providerProfileConfig.KeyStoneURL = ""
+				cloudProfileConfig.KeyStoneURL = ""
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -124,9 +124,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("dns server validation", func() {
 			It("should forbid not invalid dns server ips", func() {
-				providerProfileConfig.DNSServers = []string{"not-a-valid-ip"}
+				cloudProfileConfig.DNSServers = []string{"not-a-valid-ip"}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeInvalid),
@@ -137,9 +137,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("dhcp domain validation", func() {
 			It("should forbid not specifying a value when the key is present", func() {
-				providerProfileConfig.DHCPDomain = makeStringPointer("")
+				cloudProfileConfig.DHCPDomain = makeStringPointer("")
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -150,9 +150,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("requestTimeout validation", func() {
 			It("should reject invalid durations", func() {
-				providerProfileConfig.RequestTimeout = makeStringPointer("1GiB")
+				cloudProfileConfig.RequestTimeout = makeStringPointer("1GiB")
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeInvalid),
@@ -163,9 +163,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("machine image validation", func() {
 			It("should enforce that at least one machine image has been defined", func() {
-				providerProfileConfig.MachineImages = []apisopenstack.MachineImages{}
+				cloudProfileConfig.MachineImages = []apisopenstack.MachineImages{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -174,9 +174,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image configuration", func() {
-				providerProfileConfig.MachineImages = []apisopenstack.MachineImages{{}}
+				cloudProfileConfig.MachineImages = []apisopenstack.MachineImages{{}}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -188,14 +188,14 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image version configuration", func() {
-				providerProfileConfig.MachineImages = []apisopenstack.MachineImages{
+				cloudProfileConfig.MachineImages = []apisopenstack.MachineImages{
 					{
 						Name:     "abc",
 						Versions: []apisopenstack.MachineImageVersion{{}},
 					},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),

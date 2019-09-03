@@ -26,12 +26,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var _ = Describe("ValidateProviderProfileConfig", func() {
-	Describe("#ValidateProviderProfileConfig", func() {
-		var providerProfileConfig *apisazure.ProviderProfileConfig
+var _ = Describe("ValidateCloudProfileConfig", func() {
+	Describe("#ValidateCloudProfileConfig", func() {
+		var cloudProfileConfig *apisazure.CloudProfileConfig
 
 		BeforeEach(func() {
-			providerProfileConfig = &apisazure.ProviderProfileConfig{
+			cloudProfileConfig = &apisazure.CloudProfileConfig{
 				CountUpdateDomains: []apisazure.DomainCount{
 					{
 						Region: "westeurope",
@@ -60,9 +60,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("machine image validation", func() {
 			It("should enforce that at least one machine image has been defined", func() {
-				providerProfileConfig.MachineImages = []apisazure.MachineImages{}
+				cloudProfileConfig.MachineImages = []apisazure.MachineImages{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -71,9 +71,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image values", func() {
-				providerProfileConfig.MachineImages = []apisazure.MachineImages{{}}
+				cloudProfileConfig.MachineImages = []apisazure.MachineImages{{}}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -86,7 +86,7 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 			DescribeTable("forbid unsupported machine image urn",
 				func(urn string, matcher gomegatypes.GomegaMatcher) {
-					providerProfileConfig.MachineImages = []apisazure.MachineImages{
+					cloudProfileConfig.MachineImages = []apisazure.MachineImages{
 						{
 							Name: "my-image",
 							Versions: []apisazure.MachineImageVersion{
@@ -98,7 +98,7 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 						},
 					}
 
-					errorList := ValidateProviderProfileConfig(providerProfileConfig)
+					errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 					Expect(errorList).To(matcher)
 				},
@@ -110,14 +110,14 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			)
 
 			It("should forbid unsupported machine image version configuration", func() {
-				providerProfileConfig.MachineImages = []apisazure.MachineImages{
+				cloudProfileConfig.MachineImages = []apisazure.MachineImages{
 					{
 						Name:     "abc",
 						Versions: []apisazure.MachineImageVersion{{}},
 					},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -134,9 +134,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("fault domain count validation", func() {
 			It("should enforce that at least one fault domain count has been defined", func() {
-				providerProfileConfig.CountFaultDomains = []apisazure.DomainCount{}
+				cloudProfileConfig.CountFaultDomains = []apisazure.DomainCount{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -145,14 +145,14 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid fault domain count with unsupported format", func() {
-				providerProfileConfig.CountFaultDomains = []apisazure.DomainCount{
+				cloudProfileConfig.CountFaultDomains = []apisazure.DomainCount{
 					{
 						Region: "",
 						Count:  -1,
 					},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -166,9 +166,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("update domain count validation", func() {
 			It("should enforce that at least one update domain count has been defined", func() {
-				providerProfileConfig.CountUpdateDomains = []apisazure.DomainCount{}
+				cloudProfileConfig.CountUpdateDomains = []apisazure.DomainCount{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -177,14 +177,14 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid update domain count with unsupported format", func() {
-				providerProfileConfig.CountUpdateDomains = []apisazure.DomainCount{
+				cloudProfileConfig.CountUpdateDomains = []apisazure.DomainCount{
 					{
 						Region: "",
 						Count:  -1,
 					},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),

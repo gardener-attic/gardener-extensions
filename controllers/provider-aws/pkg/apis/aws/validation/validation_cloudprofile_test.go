@@ -15,8 +15,8 @@
 package validation_test
 
 import (
-	apispacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
-	. "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/validation"
+	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,19 +24,24 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var _ = Describe("ValidateProviderProfileConfig", func() {
-	Describe("#ValidateProviderProfileConfig", func() {
-		var providerProfileConfig *apispacket.ProviderProfileConfig
+var _ = Describe("ValidateCloudProfileConfig", func() {
+	Describe("#ValidateCloudProfileConfig", func() {
+		var cloudProfileConfig *apisaws.CloudProfileConfig
 
 		BeforeEach(func() {
-			providerProfileConfig = &apispacket.ProviderProfileConfig{
-				MachineImages: []apispacket.MachineImages{
+			cloudProfileConfig = &apisaws.CloudProfileConfig{
+				MachineImages: []apisaws.MachineImages{
 					{
 						Name: "ubuntu",
-						Versions: []apispacket.MachineImageVersion{
+						Versions: []apisaws.MachineImageVersion{
 							{
 								Version: "1.2.3",
-								ID:      "some-image-id",
+								Regions: []apisaws.RegionAMIMapping{
+									{
+										Name: "eu",
+										AMI:  "ami-1234",
+									},
+								},
 							},
 						},
 					},
@@ -46,9 +51,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 
 		Context("machine image validation", func() {
 			It("should enforce that at least one machine image has been defined", func() {
-				providerProfileConfig.MachineImages = []apispacket.MachineImages{}
+				cloudProfileConfig.MachineImages = []apisaws.MachineImages{}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -57,9 +62,9 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image configuration", func() {
-				providerProfileConfig.MachineImages = []apispacket.MachineImages{{}}
+				cloudProfileConfig.MachineImages = []apisaws.MachineImages{{}}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -71,21 +76,45 @@ var _ = Describe("ValidateProviderProfileConfig", func() {
 			})
 
 			It("should forbid unsupported machine image version configuration", func() {
-				providerProfileConfig.MachineImages = []apispacket.MachineImages{
+				cloudProfileConfig.MachineImages = []apisaws.MachineImages{
 					{
 						Name:     "abc",
-						Versions: []apispacket.MachineImageVersion{{}},
+						Versions: []apisaws.MachineImageVersion{{}},
 					},
 				}
 
-				errorList := ValidateProviderProfileConfig(providerProfileConfig)
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
 					"Field": Equal("machineImages[0].versions[0].version"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
-					"Field": Equal("machineImages[0].versions[0].id"),
+					"Field": Equal("machineImages[0].versions[0].regions"),
+				}))))
+			})
+
+			It("should forbid unsupported machine image region configuration", func() {
+				cloudProfileConfig.MachineImages = []apisaws.MachineImages{
+					{
+						Name: "abc",
+						Versions: []apisaws.MachineImageVersion{
+							{
+								Version: "1.2.3",
+								Regions: []apisaws.RegionAMIMapping{{}},
+							},
+						},
+					},
+				}
+
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
+
+				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("machineImages[0].versions[0].regions[0].name"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("machineImages[0].versions[0].regions[0].ami"),
 				}))))
 			})
 		})
