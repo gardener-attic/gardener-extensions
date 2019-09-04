@@ -49,6 +49,13 @@ const (
 	Password = "password"
 	// Region is a constant for the key in a backup secret that holds the Openstack region.
 	Region = "region"
+	// CloudYAML is a constant for the key in the backup or cloud provider secret that holds the access information for
+	// the etcd backup infrastructure.
+	CloudYAML = "cloudYAML"
+	// CloudYAMLKey is a constant for the credential key inside the CloudYAML.
+	CloudYAMLKey = "cloudYAMLKey"
+	// CloudYAMLDefaultKey is a constant for the default credentials key inside the CloudYAML.
+	CloudYAMLDefaultKey = "openstack"
 	// BucketName is a constant for the key in a backup secret that holds the bucket name.
 	// The bucket name is written to the backup secret by Gardener as a temporary solution.
 	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)

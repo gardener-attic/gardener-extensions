@@ -110,93 +110,21 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 			provider = openstack.StorageProviderName
 			env = []corev1.EnvVar{
 				{
-					Name: "STORAGE_CONTAINER",
+					Name: "OS_CLIENT_CONFIG_FILE",
 					// The bucket name is written to the backup secret by Gardener as a temporary solution.
 					// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.BucketName,
+							Key:                  openstack.CloudYAML,
 							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						},
 					},
 				},
 				{
-					Name: "OS_AUTH_URL",
+					Name: "OS_CLOUD",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.AuthURL,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_DOMAIN_NAME",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.DomainName,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_DOMAIN_ID",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.DomainID,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_USERNAME",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.UserName,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_PASSWORD",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.Password,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_TENANT_NAME",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.TenantName,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_TENANT_ID",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.TenantID,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_USER_DOMAIN_NAME",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.UserDomainName,
-							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-						},
-					},
-				},
-				{
-					Name: "OS_USER_DOMAIN_ID",
-					ValueFrom: &corev1.EnvVarSource{
-						SecretKeyRef: &corev1.SecretKeySelector{
-							Key:                  openstack.UserDomainID,
+							Key:                  openstack.CloudYAMLKey,
 							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 						},
 					},

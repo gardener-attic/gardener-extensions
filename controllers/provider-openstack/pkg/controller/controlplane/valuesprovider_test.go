@@ -101,35 +101,8 @@ var _ = Describe("ValuesProvider", func() {
 
 		cp = defaultControlPlane()
 
-		cidr    = gardencorev1alpha1.CIDR("10.250.0.0/19")
-		cluster = &extensionscontroller.Cluster{
-			CloudProfile: &gardenv1beta1.CloudProfile{
-				Spec: gardenv1beta1.CloudProfileSpec{
-					OpenStack: &gardenv1beta1.OpenStackProfile{
-						KeyStoneURL:    authURL,
-						DHCPDomain:     dhcpDomain,
-						RequestTimeout: requestTimeout,
-					},
-				},
-			},
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						OpenStack: &gardenv1beta1.OpenStackCloud{
-							Networks: gardenv1beta1.OpenStackNetworks{
-								K8SNetworks: gardencorev1alpha1.K8SNetworks{
-									Pods: &cidr,
-								},
-							},
-						},
-					},
-					Kubernetes: gardenv1beta1.Kubernetes{
-						Version: "1.13.4",
-					},
-				},
-			},
-		}
-
+		cidr              = gardencorev1alpha1.CIDR("10.250.0.0/19")
+		cluster           *extensionscontroller.Cluster
 		cpSecret          *corev1.Secret
 		cpSecretKey       = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
 		configChartValues map[string]interface{}
@@ -162,6 +135,33 @@ var _ = Describe("ValuesProvider", func() {
 
 	BeforeEach(func() {
 		ctrl = gomock.NewController(GinkgoT())
+		cluster = &extensionscontroller.Cluster{
+			CloudProfile: &gardenv1beta1.CloudProfile{
+				Spec: gardenv1beta1.CloudProfileSpec{
+					OpenStack: &gardenv1beta1.OpenStackProfile{
+						KeyStoneURL:    authURL,
+						DHCPDomain:     dhcpDomain,
+						RequestTimeout: requestTimeout,
+					},
+				},
+			},
+			Shoot: &gardenv1beta1.Shoot{
+				Spec: gardenv1beta1.ShootSpec{
+					Cloud: gardenv1beta1.Cloud{
+						OpenStack: &gardenv1beta1.OpenStackCloud{
+							Networks: gardenv1beta1.OpenStackNetworks{
+								K8SNetworks: gardencorev1alpha1.K8SNetworks{
+									Pods: &cidr,
+								},
+							},
+						},
+					},
+					Kubernetes: gardenv1beta1.Kubernetes{
+						Version: "1.13.4",
+					},
+				},
+			},
+		}
 		cpSecret = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      gardencorev1alpha1.SecretNameCloudProvider,
@@ -177,12 +177,10 @@ var _ = Describe("ValuesProvider", func() {
 		}
 		configChartValues = map[string]interface{}{
 			"kubernetesVersion": "1.13.4",
-			"domainName":        "domain-name",
+			"domainName":        "",
 			"domainID":          "",
-			"tenantName":        "tenant-name",
+			"tenantName":        "",
 			"tenantID":          "",
-			"userDomainID":      "",
-			"userDomainName":    "",
 			"username":          "username",
 			"password":          "password",
 			"subnetID":          "subnet-acbd1234",
@@ -200,6 +198,9 @@ var _ = Describe("ValuesProvider", func() {
 
 	Describe("#GetConfigChartValues", func() {
 		It("should return correct config chart values", func() {
+			configChartValues["domainName"] = "domain-name"
+			configChartValues["tenantName"] = "tenant-name"
+
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
@@ -285,45 +286,37 @@ var _ = Describe("ValuesProvider", func() {
 				},
 			)
 
-			configChartValues = map[string]interface{}{
-				"kubernetesVersion": "1.13.4",
-				"domainName":        "domain-name",
-				"domainID":          "",
-				"tenantName":        "tenant-name",
-				"tenantID":          "",
-				"userDomainID":      "",
-				"userDomainName":    "",
-				"username":          "username",
-				"password":          "password",
-				"subnetID":          "subnet-acbd1234",
-				"lbProvider":        "load-balancer-provider",
-				"floatingNetworkID": fnid,
-				"floatingSubnetID":  dfsid,
-				"floatingClasses": []map[string]interface{}{
-					{
-						"name":              "test",
-						"floatingNetworkID": fnid,
-						"floatingSubnetID":  fsid,
-					},
-					{
-						"name":              "default",
-						"floatingNetworkID": fnid,
-						"floatingSubnetID":  dfsid,
-					},
-					{
-						"name":              "public",
-						"floatingNetworkID": fnid2,
-						"floatingSubnetID":  fsid2,
-					},
-					{
-						"name":     "other",
-						"subnetID": psid,
-					},
+			// Set the correct Kubernetes version and chart values
+			cluster.Shoot.Spec.Kubernetes.Version = "1.15.0"
+			configChartValues["userDomainName"] = ""
+			configChartValues["userDomainID"] = ""
+			configChartValues["domainName"] = "domain-name"
+			configChartValues["tenantName"] = "tenant-name"
+			configChartValues["kubernetesVersion"] = cluster.Shoot.Spec.Kubernetes.Version
+			configChartValues["floatingNetworkID"] = fnid
+			configChartValues["floatingSubnetID"] = dfsid
+			configChartValues["floatingClasses"] = []map[string]interface{}{
+				{
+					"name":              "test",
+					"floatingNetworkID": fnid,
+					"floatingSubnetID":  fsid,
 				},
-				"authUrl":        authURL,
-				"dhcpDomain":     dhcpDomain,
-				"requestTimeout": requestTimeout,
+				{
+					"name":              "default",
+					"floatingNetworkID": fnid,
+					"floatingSubnetID":  dfsid,
+				},
+				{
+					"name":              "public",
+					"floatingNetworkID": fnid2,
+					"floatingSubnetID":  fsid2,
+				},
+				{
+					"name":     "other",
+					"subnetID": psid,
+				},
 			}
+
 			// Call GetConfigChartValues method and check the result
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
 			Expect(err).NotTo(HaveOccurred())
@@ -345,6 +338,10 @@ var _ = Describe("ValuesProvider", func() {
 					"password": []byte(`password`),
 				},
 			}
+
+			configChartValues["domainID"] = "domain-id"
+			configChartValues["tenantID"] = "tenant-id"
+
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
@@ -355,24 +352,6 @@ var _ = Describe("ValuesProvider", func() {
 			Expect(err).NotTo(HaveOccurred())
 			err = vp.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
-
-			configChartValues = map[string]interface{}{
-				"userDomainName":    "",
-				"floatingNetworkID": "floating-network-id",
-				"domainName":        "",
-				"username":          "username",
-				"password":          "password",
-				"kubernetesVersion": "1.13.4",
-				"tenantID":          "tenant-id",
-				"lbProvider":        "load-balancer-provider",
-				"subnetID":          "subnet-acbd1234",
-				"domainID":          "domain-id",
-				"userDomainID":      "",
-				"tenantName":        "",
-				"authUrl":           authURL,
-				"dhcpDomain":        dhcpDomain,
-				"requestTimeout":    requestTimeout,
-			}
 
 			// Call GetConfigChartValues method and check the result
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
@@ -396,6 +375,15 @@ var _ = Describe("ValuesProvider", func() {
 					"password":       []byte(`password`),
 				},
 			}
+
+			// Set the correct Kubernetes version and chart values
+			cluster.Shoot.Spec.Kubernetes.Version = "1.15.0"
+			configChartValues["kubernetesVersion"] = cluster.Shoot.Spec.Kubernetes.Version
+			configChartValues["userDomainName"] = "user-domain-name"
+			configChartValues["userDomainID"] = ""
+			configChartValues["domainName"] = "domain-name"
+			configChartValues["tenantName"] = "tenant-name"
+
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
@@ -407,23 +395,6 @@ var _ = Describe("ValuesProvider", func() {
 			err = vp.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 
-			configChartValues = map[string]interface{}{
-				"userDomainName":    "user-domain-name",
-				"floatingNetworkID": "floating-network-id",
-				"domainName":        "domain-name",
-				"username":          "username",
-				"password":          "password",
-				"kubernetesVersion": "1.13.4",
-				"tenantID":          "",
-				"lbProvider":        "load-balancer-provider",
-				"subnetID":          "subnet-acbd1234",
-				"domainID":          "",
-				"userDomainID":      "",
-				"tenantName":        "tenant-name",
-				"authUrl":           authURL,
-				"dhcpDomain":        dhcpDomain,
-				"requestTimeout":    requestTimeout,
-			}
 			// Call GetConfigChartValues method and check the result
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
 			Expect(err).NotTo(HaveOccurred())
@@ -446,6 +417,15 @@ var _ = Describe("ValuesProvider", func() {
 					"password":     []byte(`password`),
 				},
 			}
+
+			// Set the correct Kubernetes version and chart values
+			cluster.Shoot.Spec.Kubernetes.Version = "1.15.0"
+			configChartValues["kubernetesVersion"] = cluster.Shoot.Spec.Kubernetes.Version
+			configChartValues["userDomainID"] = "user-domain-id"
+			configChartValues["userDomainName"] = ""
+			configChartValues["domainName"] = "domain-name"
+			configChartValues["tenantName"] = "tenant-name"
+
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
@@ -457,23 +437,6 @@ var _ = Describe("ValuesProvider", func() {
 			err = vp.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 
-			configChartValues = map[string]interface{}{
-				"userDomainName":    "",
-				"floatingNetworkID": "floating-network-id",
-				"domainName":        "domain-name",
-				"username":          "username",
-				"password":          "password",
-				"kubernetesVersion": "1.13.4",
-				"tenantID":          "",
-				"lbProvider":        "load-balancer-provider",
-				"subnetID":          "subnet-acbd1234",
-				"domainID":          "",
-				"userDomainID":      "user-domain-id",
-				"tenantName":        "tenant-name",
-				"authUrl":           authURL,
-				"dhcpDomain":        dhcpDomain,
-				"requestTimeout":    requestTimeout,
-			}
 			// Call GetConfigChartValues method and check the result
 			values, err := vp.GetConfigChartValues(context.TODO(), cp, cluster)
 			Expect(err).NotTo(HaveOccurred())

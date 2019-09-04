@@ -229,91 +229,19 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]str
 	var (
 		env = []corev1.EnvVar{
 			{
-				Name: "STORAGE_CONTAINER",
+				Name: "OS_CLIENT_CONFIG_FILE",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.BucketName,
+						Key:                  openstack.CloudYAML,
 						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},
 			},
 			{
-				Name: "OS_AUTH_URL",
+				Name: "OS_CLOUD",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.AuthURL,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_DOMAIN_NAME",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.DomainName,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_DOMAIN_ID",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.DomainID,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_USERNAME",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.UserName,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_PASSWORD",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.Password,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_TENANT_NAME",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.TenantName,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_TENANT_ID",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.TenantID,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_USER_DOMAIN_NAME",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.UserDomainName,
-						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
-					},
-				},
-			},
-			{
-				Name: "OS_USER_DOMAIN_ID",
-				ValueFrom: &corev1.EnvVarSource{
-					SecretKeyRef: &corev1.SecretKeySelector{
-						Key:                  openstack.UserDomainID,
+						Key:                  openstack.CloudYAMLKey,
 						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
 					},
 				},

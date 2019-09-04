@@ -23,9 +23,13 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
+	"github.com/gophercloud/utils/openstack/clientconfig"
+	"gopkg.in/yaml.v2"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const ()
 
 type actuator struct {
 	client client.Client
@@ -44,8 +48,43 @@ func (a *actuator) InjectClient(client client.Client) error {
 }
 
 func (a *actuator) GetETCDSecretData(ctx context.Context, be *extensionsv1alpha1.BackupEntry, backupSecretData map[string][]byte) (map[string][]byte, error) {
-	backupSecretData[openstack.Region] = []byte(be.Spec.Region)
-	return backupSecretData, nil
+	clouds := &clientconfig.Clouds{
+		Clouds: map[string]clientconfig.Cloud{
+			openstack.CloudYAMLDefaultKey: clientconfig.Cloud{
+				AuthInfo: &clientconfig.AuthInfo{
+					Username:       getValue(backupSecretData, openstack.UserName, "OS_USERNAME"),
+					Password:       getValue(backupSecretData, openstack.Password, "OS_PASSWORD"),
+					AuthURL:        getValue(backupSecretData, openstack.AuthURL, "OS_AUTH_URL"),
+					ProjectName:    getValue(backupSecretData, openstack.TenantName, "OS_TENANT_NAME", "OS_PROJECT_NAME"),
+					ProjectID:      getValue(backupSecretData, openstack.TenantID, "OS_TENANT_ID", "OS_PROJECT_ID"),
+					DomainName:     getValue(backupSecretData, openstack.DomainName, "OS_DOMAIN_NAME"),
+					DomainID:       getValue(backupSecretData, openstack.DomainID, "OS_DOMAIN_ID"),
+					UserDomainName: getValue(backupSecretData, openstack.UserDomainName, "OS_USER_DOMAIN_NAME"),
+					UserDomainID:   getValue(backupSecretData, openstack.UserDomainID, "OS_USER_DOMAIN_ID"),
+				},
+				RegionName: be.Spec.Region,
+			},
+		},
+	}
+	bytes, err := yaml.Marshal(clouds)
+	if err != nil {
+		return nil, err
+	}
+	return map[string][]byte{
+		openstack.CloudYAML:    bytes,
+		openstack.CloudYAMLKey: []byte(openstack.CloudYAMLDefaultKey),
+		openstack.BucketName:   []byte(be.Spec.BucketName),
+	}, nil
+}
+
+func getValue(secretData map[string][]byte, keys ...string) string {
+	for _, key := range keys {
+		v, ok := secretData[key]
+		if ok {
+			return string(v)
+		}
+	}
+	return ""
 }
 
 func (a *actuator) Delete(ctx context.Context, be *extensionsv1alpha1.BackupEntry) error {
