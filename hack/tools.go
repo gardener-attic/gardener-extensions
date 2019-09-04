@@ -21,7 +21,6 @@ import (
 	_ "github.com/gobuffalo/packr/v2/packr2"
 	_ "github.com/golang/mock/mockgen"
 	_ "github.com/onsi/ginkgo/ginkgo"
-	_ "github.com/pierrec/lz4" // TODO: workaround for https://github.com/golang/go/issues/31248; Remove with golang-1.13
 	_ "k8s.io/code-generator/cmd/client-gen"
 	_ "k8s.io/code-generator/cmd/conversion-gen"
 	_ "k8s.io/code-generator/cmd/deepcopy-gen"
