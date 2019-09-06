@@ -24,8 +24,6 @@ import (
 	unsafe "unsafe"
 
 	aws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	core "github.com/gardener/gardener/pkg/apis/core"
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -610,7 +608,7 @@ func Convert_aws_Subnet_To_v1alpha1_Subnet(in *aws.Subnet, out *Subnet, s conver
 
 func autoConvert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) error {
 	out.ID = (*string)(unsafe.Pointer(in.ID))
-	out.CIDR = (*core.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*string)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -621,7 +619,7 @@ func Convert_v1alpha1_VPC_To_aws_VPC(in *VPC, out *aws.VPC, s conversion.Scope) 
 
 func autoConvert_aws_VPC_To_v1alpha1_VPC(in *aws.VPC, out *VPC, s conversion.Scope) error {
 	out.ID = (*string)(unsafe.Pointer(in.ID))
-	out.CIDR = (*corev1alpha1.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*string)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -676,9 +674,9 @@ func Convert_aws_WorkerStatus_To_v1alpha1_WorkerStatus(in *aws.WorkerStatus, out
 
 func autoConvert_v1alpha1_Zone_To_aws_Zone(in *Zone, out *aws.Zone, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Internal = core.CIDR(in.Internal)
-	out.Public = core.CIDR(in.Public)
-	out.Workers = core.CIDR(in.Workers)
+	out.Internal = in.Internal
+	out.Public = in.Public
+	out.Workers = in.Workers
 	return nil
 }
 
@@ -689,9 +687,9 @@ func Convert_v1alpha1_Zone_To_aws_Zone(in *Zone, out *aws.Zone, s conversion.Sco
 
 func autoConvert_aws_Zone_To_v1alpha1_Zone(in *aws.Zone, out *Zone, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Internal = corev1alpha1.CIDR(in.Internal)
-	out.Public = corev1alpha1.CIDR(in.Public)
-	out.Workers = corev1alpha1.CIDR(in.Workers)
+	out.Internal = in.Internal
+	out.Public = in.Public
+	out.Workers = in.Workers
 	return nil
 }
 

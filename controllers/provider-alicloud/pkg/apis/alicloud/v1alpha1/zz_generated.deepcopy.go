@@ -21,7 +21,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -263,7 +262,7 @@ func (in *VPC) DeepCopyInto(out *VPC) {
 	}
 	if in.CIDR != nil {
 		in, out := &in.CIDR, &out.CIDR
-		*out = new(corev1alpha1.CIDR)
+		*out = new(string)
 		**out = **in
 	}
 	return

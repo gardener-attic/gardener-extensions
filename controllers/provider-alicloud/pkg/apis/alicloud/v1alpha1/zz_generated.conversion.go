@@ -24,7 +24,6 @@ import (
 	unsafe "unsafe"
 
 	alicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -419,7 +418,7 @@ func Convert_alicloud_SecurityGroup_To_v1alpha1_SecurityGroup(in *alicloud.Secur
 
 func autoConvert_v1alpha1_VPC_To_alicloud_VPC(in *VPC, out *alicloud.VPC, s conversion.Scope) error {
 	out.ID = (*string)(unsafe.Pointer(in.ID))
-	out.CIDR = (*corev1alpha1.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*string)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -430,7 +429,7 @@ func Convert_v1alpha1_VPC_To_alicloud_VPC(in *VPC, out *alicloud.VPC, s conversi
 
 func autoConvert_alicloud_VPC_To_v1alpha1_VPC(in *alicloud.VPC, out *VPC, s conversion.Scope) error {
 	out.ID = (*string)(unsafe.Pointer(in.ID))
-	out.CIDR = (*corev1alpha1.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*string)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -509,7 +508,7 @@ func Convert_alicloud_WorkerStatus_To_v1alpha1_WorkerStatus(in *alicloud.WorkerS
 
 func autoConvert_v1alpha1_Zone_To_alicloud_Zone(in *Zone, out *alicloud.Zone, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Worker = corev1alpha1.CIDR(in.Worker)
+	out.Worker = in.Worker
 	return nil
 }
 
@@ -520,7 +519,7 @@ func Convert_v1alpha1_Zone_To_alicloud_Zone(in *Zone, out *alicloud.Zone, s conv
 
 func autoConvert_alicloud_Zone_To_v1alpha1_Zone(in *alicloud.Zone, out *Zone, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Worker = corev1alpha1.CIDR(in.Worker)
+	out.Worker = in.Worker
 	return nil
 }
 

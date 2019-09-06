@@ -24,7 +24,6 @@ import (
 	unsafe "unsafe"
 
 	openstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -601,7 +600,7 @@ func Convert_openstack_NetworkStatus_To_v1alpha1_NetworkStatus(in *openstack.Net
 
 func autoConvert_v1alpha1_Networks_To_openstack_Networks(in *Networks, out *openstack.Networks, s conversion.Scope) error {
 	out.Router = (*openstack.Router)(unsafe.Pointer(in.Router))
-	out.Worker = corev1alpha1.CIDR(in.Worker)
+	out.Worker = in.Worker
 	return nil
 }
 
@@ -612,7 +611,7 @@ func Convert_v1alpha1_Networks_To_openstack_Networks(in *Networks, out *openstac
 
 func autoConvert_openstack_Networks_To_v1alpha1_Networks(in *openstack.Networks, out *Networks, s conversion.Scope) error {
 	out.Router = (*Router)(unsafe.Pointer(in.Router))
-	out.Worker = corev1alpha1.CIDR(in.Worker)
+	out.Worker = in.Worker
 	return nil
 }
 

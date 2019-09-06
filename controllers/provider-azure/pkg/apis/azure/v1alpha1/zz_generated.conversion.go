@@ -24,7 +24,6 @@ import (
 	unsafe "unsafe"
 
 	azure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -477,7 +476,7 @@ func autoConvert_v1alpha1_NetworkConfig_To_azure_NetworkConfig(in *NetworkConfig
 	if err := Convert_v1alpha1_VNet_To_azure_VNet(&in.VNet, &out.VNet, s); err != nil {
 		return err
 	}
-	out.Workers = corev1alpha1.CIDR(in.Workers)
+	out.Workers = in.Workers
 	return nil
 }
 
@@ -490,7 +489,7 @@ func autoConvert_azure_NetworkConfig_To_v1alpha1_NetworkConfig(in *azure.Network
 	if err := Convert_azure_VNet_To_v1alpha1_VNet(&in.VNet, &out.VNet, s); err != nil {
 		return err
 	}
-	out.Workers = corev1alpha1.CIDR(in.Workers)
+	out.Workers = in.Workers
 	return nil
 }
 
@@ -613,7 +612,7 @@ func Convert_azure_Subnet_To_v1alpha1_Subnet(in *azure.Subnet, out *Subnet, s co
 
 func autoConvert_v1alpha1_VNet_To_azure_VNet(in *VNet, out *azure.VNet, s conversion.Scope) error {
 	out.Name = (*string)(unsafe.Pointer(in.Name))
-	out.CIDR = (*corev1alpha1.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*string)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 
@@ -624,7 +623,7 @@ func Convert_v1alpha1_VNet_To_azure_VNet(in *VNet, out *azure.VNet, s conversion
 
 func autoConvert_azure_VNet_To_v1alpha1_VNet(in *azure.VNet, out *VNet, s conversion.Scope) error {
 	out.Name = (*string)(unsafe.Pointer(in.Name))
-	out.CIDR = (*corev1alpha1.CIDR)(unsafe.Pointer(in.CIDR))
+	out.CIDR = (*string)(unsafe.Pointer(in.CIDR))
 	return nil
 }
 

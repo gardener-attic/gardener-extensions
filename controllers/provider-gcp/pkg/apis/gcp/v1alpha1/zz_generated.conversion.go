@@ -24,7 +24,6 @@ import (
 	unsafe "unsafe"
 
 	gcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
-	corev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -351,8 +350,8 @@ func Convert_gcp_MachineImages_To_v1alpha1_MachineImages(in *gcp.MachineImages, 
 
 func autoConvert_v1alpha1_NetworkConfig_To_gcp_NetworkConfig(in *NetworkConfig, out *gcp.NetworkConfig, s conversion.Scope) error {
 	out.VPC = (*gcp.VPC)(unsafe.Pointer(in.VPC))
-	out.Internal = (*corev1alpha1.CIDR)(unsafe.Pointer(in.Internal))
-	out.Worker = corev1alpha1.CIDR(in.Worker)
+	out.Internal = (*string)(unsafe.Pointer(in.Internal))
+	out.Worker = in.Worker
 	return nil
 }
 
@@ -363,8 +362,8 @@ func Convert_v1alpha1_NetworkConfig_To_gcp_NetworkConfig(in *NetworkConfig, out 
 
 func autoConvert_gcp_NetworkConfig_To_v1alpha1_NetworkConfig(in *gcp.NetworkConfig, out *NetworkConfig, s conversion.Scope) error {
 	out.VPC = (*VPC)(unsafe.Pointer(in.VPC))
-	out.Internal = (*corev1alpha1.CIDR)(unsafe.Pointer(in.Internal))
-	out.Worker = corev1alpha1.CIDR(in.Worker)
+	out.Internal = (*string)(unsafe.Pointer(in.Internal))
+	out.Worker = in.Worker
 	return nil
 }
 

@@ -18,6 +18,7 @@ import (
 	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -75,7 +76,7 @@ var _ = Describe("Terraform", func() {
 	BeforeEach(func() {
 		var (
 			VNetName = "vnet"
-			TestCIDR = gardencorev1alpha1.CIDR("10.1.0.0/16")
+			TestCIDR = "10.1.0.0/16"
 			VNetCIDR = TestCIDR
 		)
 		config = &azurev1alpha1.InfrastructureConfig{

@@ -47,7 +47,7 @@ var _ = Describe("Terraform", func() {
 				Router: &openstackv1alpha1.Router{
 					ID: "1",
 				},
-				Worker: gardencorev1alpha1.CIDR("10.1.0.0/16"),
+				Worker: "10.1.0.0/16",
 			},
 		}
 

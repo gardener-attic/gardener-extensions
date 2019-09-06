@@ -20,6 +20,7 @@ import (
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -41,7 +42,7 @@ var _ = Describe("Terraform", func() {
 	)
 
 	BeforeEach(func() {
-		internalCIDR := gardencorev1alpha1.CIDR("192.168.0.0/16")
+		internalCIDR := "192.168.0.0/16"
 
 		config = &gcpv1alpha1.InfrastructureConfig{
 			Networks: gcpv1alpha1.NetworkConfig{
@@ -49,7 +50,7 @@ var _ = Describe("Terraform", func() {
 					Name: "vpc",
 				},
 				Internal: &internalCIDR,
-				Worker:   gardencorev1alpha1.CIDR("10.1.0.0/16"),
+				Worker:   "10.1.0.0/16",
 			},
 		}
 

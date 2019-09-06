@@ -17,7 +17,6 @@ package infrastructure_test
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -40,7 +39,7 @@ var _ = Describe("TerraformChartOps", func() {
 	Describe("#ComputeCreateVPCInitializerValues", func() {
 		It("should compute the values from the config", func() {
 			var (
-				cidr               = gardencorev1alpha1.CIDR("192.168.0.0/16")
+				cidr               = "192.168.0.0/16"
 				internetChargeType = "foo"
 				config             = v1alpha1.InfrastructureConfig{
 					Networks: v1alpha1.Networks{
@@ -121,11 +120,11 @@ var _ = Describe("TerraformChartOps", func() {
 						Zones: []v1alpha1.Zone{
 							{
 								Name:   zone1Name,
-								Worker: gardencorev1alpha1.CIDR(zone1Worker),
+								Worker: zone1Worker,
 							},
 							{
 								Name:   zone2Name,
-								Worker: gardencorev1alpha1.CIDR(zone2Worker),
+								Worker: zone2Worker,
 							},
 						},
 					},

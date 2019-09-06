@@ -37,7 +37,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util/chart"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/golang/mock/gomock"
@@ -108,11 +107,11 @@ var _ = Describe("Actuator", func() {
 
 					chartRenderer = mockgardenerchartrenderer.NewMockInterface(ctrl)
 
-					gardenCoreCIDR = gardencorev1alpha1.CIDR("192.168.0.0/16")
-					config         = alicloudv1alpha1.InfrastructureConfig{
+					cidr   = "192.168.0.0/16"
+					config = alicloudv1alpha1.InfrastructureConfig{
 						Networks: alicloudv1alpha1.Networks{
 							VPC: alicloudv1alpha1.VPC{
-								CIDR: &gardenCoreCIDR,
+								CIDR: &cidr,
 							},
 						},
 					}
