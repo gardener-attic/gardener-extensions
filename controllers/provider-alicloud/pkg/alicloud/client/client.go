@@ -79,7 +79,8 @@ func (c *storageClient) DeleteObjectsWithPrefix(ctx context.Context, bucketName,
 
 	marker := ""
 	for {
-		lsRes, err := bucket.ListObjects(oss.Marker(marker), oss.Prefix(prefix), expirationOption)
+		lsRes, err := bucket.ListObjects(oss.Marker(marker), oss.Prefix(prefix), oss.MaxKeys(1000), expirationOption)
+
 		if err != nil {
 			return err
 		}
@@ -89,8 +90,10 @@ func (c *storageClient) DeleteObjectsWithPrefix(ctx context.Context, bucketName,
 			objectKeys = append(objectKeys, object.Key)
 		}
 
-		if _, err := bucket.DeleteObjects(objectKeys, oss.DeleteObjectsQuiet(true), expirationOption); err != nil {
-			return err
+		if len(objectKeys) != 0 {
+			if _, err := bucket.DeleteObjects(objectKeys, oss.DeleteObjectsQuiet(true), expirationOption); err != nil {
+				return err
+			}
 		}
 
 		if lsRes.IsTruncated {
