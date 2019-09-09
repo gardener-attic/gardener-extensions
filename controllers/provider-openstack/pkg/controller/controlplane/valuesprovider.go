@@ -246,7 +246,7 @@ func getConfigChartValues(
 
 	// Only the 1.15 out of tree provider for OpenStack support the OS_DOMAIN_NAME/ID
 	// https://github.com/kubernetes/cloud-provider-openstack/pull/733
-	ok, err := gutils.CompareVersions(cluster.Shoot.Spec.Kubernetes.Version, ">=", "1.15")
+	ok, _ := gutils.CompareVersions(cluster.Shoot.Spec.Kubernetes.Version, ">=", "1.15")
 	if ok {
 		values["userDomainName"] = c.UserDomainName
 		values["userDomainID"] = c.UserDomainID
