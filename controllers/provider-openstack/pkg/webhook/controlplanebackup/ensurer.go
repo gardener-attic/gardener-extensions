@@ -110,9 +110,18 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 			provider = openstack.StorageProviderName
 			env = []corev1.EnvVar{
 				{
-					Name: "OS_CLIENT_CONFIG_FILE",
+					Name: "STORAGE_CONTAINER",
 					// The bucket name is written to the backup secret by Gardener as a temporary solution.
 					// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
+					ValueFrom: &corev1.EnvVarSource{
+						SecretKeyRef: &corev1.SecretKeySelector{
+							Key:                  openstack.BucketName,
+							LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
+						},
+					},
+				},
+				{
+					Name: "OS_CLIENT_CONFIG_FILE",
 					ValueFrom: &corev1.EnvVarSource{
 						SecretKeyRef: &corev1.SecretKeySelector{
 							Key:                  openstack.CloudYAML,

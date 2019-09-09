@@ -229,6 +229,15 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]str
 	var (
 		env = []corev1.EnvVar{
 			{
+				Name: "STORAGE_CONTAINER",
+				ValueFrom: &corev1.EnvVarSource{
+					SecretKeyRef: &corev1.SecretKeySelector{
+						Key:                  openstack.BucketName,
+						LocalObjectReference: corev1.LocalObjectReference{Name: openstack.BackupSecretName},
+					},
+				},
+			},
+			{
 				Name: "OS_CLIENT_CONFIG_FILE",
 				ValueFrom: &corev1.EnvVarSource{
 					SecretKeyRef: &corev1.SecretKeySelector{
