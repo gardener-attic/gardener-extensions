@@ -1,12 +1,13 @@
 {{- define "cloud-provider-config"}}
 cloud: AZUREPUBLICCLOUD
-resourceGroup: "{{ .Values.resourceGroup }}"
 location: "{{ .Values.region }}"
-vnetName: "{{ .Values.vnetName }}"
-subnetName: "{{ .Values.subnetName }}"
-securityGroupName: "{{ .Values.securityGroupName }}"
-routeTableName: "{{ .Values.routeTableName }}"
 primaryAvailabilitySetName: "{{ .Values.availabilitySetName }}"
+resourceGroup: "{{ .Values.resourceGroup }}"
+routeTableName: "{{ .Values.routeTableName }}"
+securityGroupName: "{{ .Values.securityGroupName }}"
+loadBalancerSku: "{{ .Values.loadBalancerSku }}"
+subnetName: "{{ .Values.subnetName }}"
+vnetName: "{{ .Values.vnetName }}"
 cloudProviderBackoff: true
 cloudProviderBackoffRetries: 6
 cloudProviderBackoffExponent: 1.5
