@@ -61,28 +61,28 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	return workerStatusV1alpha1, nil
 }
 
-func (w *workerDelegate) findMachineImage(name, version string) (publisher, sku, offer string, err error) {
+func (w *workerDelegate) findMachineImage(name, version string) (publisher, sku, offer string, urn *string, err error) {
 	machineImage, err := confighelper.FindImage(w.machineImageMapping, name, version)
 	if err == nil {
-		return machineImage.Publisher, machineImage.SKU, machineImage.Offer, nil
+		return machineImage.Publisher, machineImage.SKU, machineImage.Offer, machineImage.URN, nil
 	}
 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
 		workerStatus := &apisazure.WorkerStatus{}
 		if _, _, err := w.decoder.Decode(providerStatus.Raw, nil, workerStatus); err != nil {
-			return "", "", "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
+			return "", "", "", nil, errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
 		machineImage, err := apisazurehelper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
-			return "", "", "", errorMachineImageNotFound(name, version)
+			return "", "", "", nil, errorMachineImageNotFound(name, version)
 		}
 
-		return machineImage.Publisher, machineImage.SKU, machineImage.Offer, nil
+		return machineImage.Publisher, machineImage.SKU, machineImage.Offer, machineImage.URN, nil
 	}
 
-	return "", "", "", errorMachineImageNotFound(name, version)
+	return "", "", "", nil, errorMachineImageNotFound(name, version)
 }
 
 func errorMachineImageNotFound(name, version string) error {

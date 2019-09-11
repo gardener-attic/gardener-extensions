@@ -92,6 +92,7 @@ var _ = Describe("Machines", func() {
 				machineImageSKU       string
 				machineImagePublisher string
 				machineImageOffer     string
+				machineImageURN       string
 
 				resourceGroupName string
 				vnetName          string
@@ -133,10 +134,11 @@ var _ = Describe("Machines", func() {
 				azureTenantID = "1234"
 
 				machineImageName = "my-os"
-				machineImageVersion = "123"
+				machineImageVersion = "1"
 				machineImageSKU = "foo"
 				machineImagePublisher = "bar"
 				machineImageOffer = "baz"
+				machineImageURN = "bar:baz:foo:123"
 
 				resourceGroupName = "my-rg"
 				vnetName = "my-vnet"
@@ -169,6 +171,7 @@ var _ = Describe("Machines", func() {
 						Offer:     machineImageOffer,
 						Publisher: machineImagePublisher,
 						SKU:       machineImageSKU,
+						URN:       &machineImageURN,
 					},
 				}
 
@@ -287,6 +290,7 @@ var _ = Describe("Machines", func() {
 							"offer":     machineImageOffer,
 							"sku":       machineImageSKU,
 							"version":   machineImageVersion,
+							"urn":       machineImageURN,
 						},
 						"volumeSize":   volumeSize,
 						"sshPublicKey": sshKey,
@@ -340,6 +344,7 @@ var _ = Describe("Machines", func() {
 							Publisher: machineImagePublisher,
 							SKU:       machineImageSKU,
 							Offer:     machineImageOffer,
+							URN:       &machineImageURN,
 						},
 					},
 				}))

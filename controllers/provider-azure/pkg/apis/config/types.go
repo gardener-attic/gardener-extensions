@@ -42,12 +42,14 @@ type MachineImage struct {
 	Name string
 	// Version is the logical version of the machine image.
 	Version string
-	// Publisher is the publisher of the image.
+	// DEPRECATED: Publisher is the publisher of the image.
 	Publisher string
-	// Offer is the offering of the image.
+	// DEPRECATED: Offer is the offering of the image.
 	Offer string
-	// SKU is the stock keeping unit to pull images from.
+	// DEPRECATED: SKU is the stock keeping unit to pull images from.
 	SKU string
+	// URN is the uniform resource name, it has the format 'publisher:offer:sku:version'
+	URN *string
 }
 
 // ETCD is an etcd configuration.

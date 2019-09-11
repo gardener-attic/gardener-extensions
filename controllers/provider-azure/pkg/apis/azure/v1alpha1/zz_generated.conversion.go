@@ -406,6 +406,7 @@ func autoConvert_v1alpha1_MachineImage_To_azure_MachineImage(in *MachineImage, o
 	out.Publisher = in.Publisher
 	out.Offer = in.Offer
 	out.SKU = in.SKU
+	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
 
@@ -420,6 +421,7 @@ func autoConvert_azure_MachineImage_To_v1alpha1_MachineImage(in *azure.MachineIm
 	out.Publisher = in.Publisher
 	out.Offer = in.Offer
 	out.SKU = in.SKU
+	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
 
