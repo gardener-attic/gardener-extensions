@@ -73,3 +73,10 @@ func CalicoKubeControllersImage() string {
 	runtime.Must(err)
 	return image.String()
 }
+
+// CalicoFlexVolumeDriverImage returns the Calico flexvol image.
+func CalicoFlexVolumeDriverImage() string {
+	image, err := imageVector.FindImage(calico.PodToDaemonFlexVolumeDriverImageName)
+	runtime.Must(err)
+	return image.String()
+}

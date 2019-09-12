@@ -31,10 +31,11 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 	var (
 		calicoChartValues = map[string]interface{}{
 			"images": map[string]interface{}{
-				calico.CNIImageName:             imagevector.CalicoCNIImage(),
-				calico.TyphaImageName:           imagevector.CalicoTyphaImage(),
-				calico.KubeControllersImageName: imagevector.CalicoKubeControllersImage(),
-				calico.NodeImageName:            imagevector.CalicoNodeImage(),
+				calico.CNIImageName:                         imagevector.CalicoCNIImage(),
+				calico.TyphaImageName:                       imagevector.CalicoTyphaImage(),
+				calico.KubeControllersImageName:             imagevector.CalicoKubeControllersImage(),
+				calico.NodeImageName:                        imagevector.CalicoNodeImage(),
+				calico.PodToDaemonFlexVolumeDriverImageName: imagevector.CalicoFlexVolumeDriverImage(),
 			},
 			"global": map[string]string{
 				"podCIDR": network.Spec.PodCIDR,

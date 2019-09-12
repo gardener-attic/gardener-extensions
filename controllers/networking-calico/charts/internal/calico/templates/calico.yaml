@@ -50,7 +50,7 @@ spec:
         scheduler.alpha.kubernetes.io/critical-pod: ''
         checksum/configmap-calico: {{ include (print $.Template.BasePath "/config.yaml") . | sha256sum }}
     spec:
-      priorityClassName: system-cluster-critical
+      priorityClassName: system-node-critical
       nodeSelector:
         beta.kubernetes.io/os: linux
       hostNetwork: true
@@ -102,6 +102,13 @@ spec:
             name: cni-bin-dir
           - mountPath: /host/etc/cni/net.d
             name: cni-net-dir
+        # Adds a Flex Volume Driver that creates a per-pod Unix Domain Socket to allow Dikastes
+        # to communicate with Felix over the Policy Sync API.
+      - name: flexvol-driver
+        image: {{ index .Values.images "calico-podtodaemon-flex" }}
+        volumeMounts:
+          - name: flexvol-driver-host
+            mountPath: /host/driver
       containers:
         # Runs calico/node container on each Kubernetes node.  This
         # container programs network policy and routes on each
@@ -215,6 +222,8 @@ spec:
             - mountPath: /var/lib/calico
               name: var-lib-calico
               readOnly: false
+            - name: policysync
+              mountPath: /var/run/nodeagent
       volumes:
         # Used by calico/node.
         - name: lib-modules
@@ -237,6 +246,18 @@ spec:
         - name: cni-net-dir
           hostPath:
             path: /etc/cni/net.d
+        # Used to create per-pod Unix Domain Sockets
+        - name: policysync
+          hostPath:
+            type: DirectoryOrCreate
+            path: /var/run/nodeagent
+        # Used to install Flex Volume Driver
+        # NOTE: the default path is changed to /var/lib/kubelet/volumeplugins since CoreOS does not allow write access on the default dir /usr/libexec
+        - name: flexvol-driver-host
+          hostPath:
+            type: DirectoryOrCreate
+            path: /var/lib/kubelet/volumeplugins/nodeagent~uds
+
 ---
 
 # This manifest creates a Service, which will be backed by Calico's Typha daemon.
@@ -412,6 +433,7 @@ spec:
         - key: node-role.kubernetes.io/master
           effect: NoSchedule
       serviceAccountName: calico-kube-controllers
+      priorityClassName: system-cluster-critical
       hostIPC: false
       hostNetwork: false
       hostPID: false

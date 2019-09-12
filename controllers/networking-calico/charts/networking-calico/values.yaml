@@ -9,19 +9,23 @@ resources: {}
   # - name: calico-node
   #   sourceRepository: github.com/projectcalico/calico
   #   repository: quay.io/calico/node
-  #   tag: v3.7.2
+  #   tag: v3.8.2
   # - name: calico-cni
   #   sourceRepository: github.com/projectcalico/cni-plugin
   #   repository: quay.io/calico/cni
-  #   tag: v3.7.2
+  #   tag: v3.8.2
   # - name: calico-typha
   #   sourceRepository: github.com/projectcalico/typha
   #   repository: quay.io/calico/typha
-  #   tag: v3.7.2
+  #   tag: v3.8.2
   # - name: calico-kube-controllers
   #   sourceRepository: github.com/projectcalico/typha
   #   repository: quay.io/calico/kube-controllers
-  #   tag: v3.7.2
+  #   tag: v3.8.2
+  #  - name: calico-podtodaemon-flex
+  #    sourceRepository: github.com/projectcalico/pod2daemon
+  #    repository: quay.io/calico/pod2daemon-flexvol
+  #    tag: v3.8.2
 controller:
   concurrentSyncs: 5
   ignoreOperationAnnotation: false
