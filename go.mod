@@ -44,7 +44,7 @@ require (
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/code-generator v0.0.0-20190713022532-93d7507fc8ff
 	k8s.io/component-base v0.0.0-20190314000054-4a91899592f4
-	k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
+	k8s.io/gengo v0.0.0-20190826232639-a874a240740c
 	k8s.io/helm v2.14.2+incompatible
 	k8s.io/klog v0.3.3
 	k8s.io/kube-aggregator v0.0.0-20190314000639-da8327669ac5

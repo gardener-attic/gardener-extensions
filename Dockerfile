@@ -35,6 +35,7 @@ COPY controllers/provider-packet/charts /controllers/provider-packet/charts
 
 COPY controllers/extension-certificate-service/charts /controllers/extension-certificate-service/charts
 COPY controllers/extension-shoot-dns-service/charts /controllers/extension-shoot-dns-service/charts
+COPY controllers/extension-shoot-cert-service/charts /controllers/extension-shoot-cert-service/charts
 
 COPY controllers/networking-calico/charts /controllers/networking-calico/charts
 
