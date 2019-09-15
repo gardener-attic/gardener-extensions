@@ -19,9 +19,11 @@ import (
 	"fmt"
 	"strings"
 
+	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	"github.com/gardener/gardener/pkg/apis/garden"
 	"github.com/gardener/gardener/pkg/apis/garden/helper"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -317,6 +319,33 @@ func Convert_garden_Seed_To_v1beta1_Seed(in *garden.Seed, out *Seed, s conversio
 		out.Spec.Protected = &falseVar
 	}
 
+	var (
+		defaultPodCIDR             = DefaultPodNetworkCIDR
+		defaultServiceCIDR         = DefaultServiceNetworkCIDR
+		defaultPodCIDRAlicloud     = DefaultPodNetworkCIDRAlicloud
+		defaultServiceCIDRAlicloud = DefaultServiceNetworkCIDRAlicloud
+	)
+
+	if out.Spec.Networks.ShootDefaults == nil {
+		out.Spec.Networks.ShootDefaults = &ShootNetworks{}
+	}
+
+	if v, ok := out.Annotations[garden.MigrationSeedProviderType]; ok && v == "alicloud" {
+		if out.Spec.Networks.ShootDefaults.Pods == nil && !gardencorev1alpha1helper.NetworksIntersect(out.Spec.Networks.Pods, defaultPodCIDRAlicloud) {
+			out.Spec.Networks.ShootDefaults.Pods = &defaultPodCIDRAlicloud
+		}
+		if out.Spec.Networks.ShootDefaults.Services == nil && !gardencorev1alpha1helper.NetworksIntersect(out.Spec.Networks.Services, defaultServiceCIDRAlicloud) {
+			out.Spec.Networks.ShootDefaults.Services = &defaultServiceCIDRAlicloud
+		}
+	} else {
+		if out.Spec.Networks.ShootDefaults.Pods == nil && !gardencorev1alpha1helper.NetworksIntersect(out.Spec.Networks.Pods, defaultPodCIDR) {
+			out.Spec.Networks.ShootDefaults.Pods = &defaultPodCIDR
+		}
+		if out.Spec.Networks.ShootDefaults.Services == nil && !gardencorev1alpha1helper.NetworksIntersect(out.Spec.Networks.Services, defaultServiceCIDR) {
+			out.Spec.Networks.ShootDefaults.Services = &defaultServiceCIDR
+		}
+	}
+
 	return nil
 }
 
@@ -362,6 +391,42 @@ func Convert_garden_ProjectSpec_To_v1beta1_ProjectSpec(in *garden.ProjectSpec, o
 		if member.Role == garden.ProjectMemberViewer {
 			out.Viewers = append(out.Viewers, member.Subject)
 		}
+	}
+
+	return nil
+}
+
+func Convert_v1beta1_QuotaSpec_To_garden_QuotaSpec(in *QuotaSpec, out *garden.QuotaSpec, s conversion.Scope) error {
+	if err := autoConvert_v1beta1_QuotaSpec_To_garden_QuotaSpec(in, out, s); err != nil {
+		return err
+	}
+
+	switch in.Scope {
+	case QuotaScopeProject:
+		out.Scope = corev1.ObjectReference{
+			APIVersion: "core.gardener.cloud/v1alpha1",
+			Kind:       "Project",
+		}
+	case QuotaScopeSecret:
+		out.Scope = corev1.ObjectReference{
+			APIVersion: "v1",
+			Kind:       "Secret",
+		}
+	}
+
+	return nil
+}
+
+func Convert_garden_QuotaSpec_To_v1beta1_QuotaSpec(in *garden.QuotaSpec, out *QuotaSpec, s conversion.Scope) error {
+	if err := autoConvert_garden_QuotaSpec_To_v1beta1_QuotaSpec(in, out, s); err != nil {
+		return err
+	}
+
+	if in.Scope.APIVersion == "core.gardener.cloud/v1alpha1" && in.Scope.Kind == "Project" {
+		out.Scope = QuotaScopeProject
+	}
+	if in.Scope.APIVersion == "v1" && in.Scope.Kind == "Secret" {
+		out.Scope = QuotaScopeSecret
 	}
 
 	return nil

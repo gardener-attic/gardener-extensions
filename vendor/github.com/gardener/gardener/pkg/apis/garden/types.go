@@ -560,6 +560,16 @@ type SeedNetworks struct {
 	Pods CIDR
 	// Services is the CIDR of the service network.
 	Services CIDR
+	// ShootDefaults contains the default networks CIDRs for shoots.
+	ShootDefaults *ShootNetworks
+}
+
+// ShootNetworks contains the default networks CIDRs for shoots.
+type ShootNetworks struct {
+	// Pods is the CIDR of the pod network.
+	Pods *CIDR
+	// Services is the CIDR of the service network.
+	Services *CIDR
 }
 
 // SeedTaint describes a taint on a seed.
@@ -613,8 +623,8 @@ type QuotaSpec struct {
 	ClusterLifetimeDays *int
 	// Metrics is a list of resources which will be put under constraints.
 	Metrics corev1.ResourceList
-	// Scope is the scope of the Quota object, either 'project' or 'secret'.
-	Scope QuotaScope
+	// Scope is reference to an object version/kind.
+	Scope corev1.ObjectReference
 }
 
 const (
@@ -1644,6 +1654,7 @@ const (
 ////////////////////////////////////////////////////
 //              Backup Infrastructure             //
 ////////////////////////////////////////////////////
+// TODO: Remove in further release.
 
 // BackupInfrastructure holds details about backup infrastructure
 // +genclient

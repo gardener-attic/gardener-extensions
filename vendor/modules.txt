@@ -1,4 +1,4 @@
-# cloud.google.com/go v0.37.1
+# cloud.google.com/go v0.43.0
 cloud.google.com/go/storage
 cloud.google.com/go/iam
 cloud.google.com/go/internal
@@ -57,7 +57,7 @@ github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/signers
 github.com/aliyun/aliyun-oss-go-sdk/oss
 # github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 github.com/appscode/jsonpatch
-# github.com/aws/aws-sdk-go v1.12.79
+# github.com/aws/aws-sdk-go v1.21.10
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/awserr
 github.com/aws/aws-sdk-go/aws/credentials
@@ -71,10 +71,14 @@ github.com/aws/aws-sdk-go/service/s3/s3iface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
 github.com/aws/aws-sdk-go/aws/endpoints
+github.com/aws/aws-sdk-go/internal/sdkio
+github.com/aws/aws-sdk-go/internal/ini
 github.com/aws/aws-sdk-go/internal/shareddefaults
 github.com/aws/aws-sdk-go/aws/client
 github.com/aws/aws-sdk-go/aws/corehandlers
+github.com/aws/aws-sdk-go/aws/credentials/processcreds
 github.com/aws/aws-sdk-go/aws/credentials/stscreds
+github.com/aws/aws-sdk-go/aws/csm
 github.com/aws/aws-sdk-go/aws/defaults
 github.com/aws/aws-sdk-go/aws/request
 github.com/aws/aws-sdk-go/aws/awsutil
@@ -84,16 +88,21 @@ github.com/aws/aws-sdk-go/internal/sdkrand
 github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/ec2query
 github.com/aws/aws-sdk-go/private/protocol/query
+github.com/aws/aws-sdk-go/internal/s3err
+github.com/aws/aws-sdk-go/private/protocol/eventstream
+github.com/aws/aws-sdk-go/private/protocol/eventstream/eventstreamapi
+github.com/aws/aws-sdk-go/private/protocol/rest
 github.com/aws/aws-sdk-go/private/protocol/restxml
+github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
 github.com/aws/aws-sdk-go/aws/credentials/ec2rolecreds
 github.com/aws/aws-sdk-go/aws/credentials/endpointcreds
 github.com/aws/aws-sdk-go/aws/ec2metadata
-github.com/aws/aws-sdk-go/private/protocol/rest
 github.com/aws/aws-sdk-go/private/protocol/query/queryutil
-github.com/aws/aws-sdk-go/private/protocol/xml/xmlutil
-# github.com/beorn7/perks v1.0.0
+github.com/aws/aws-sdk-go/internal/sdkuri
+github.com/aws/aws-sdk-go/private/protocol/json/jsonutil
+# github.com/beorn7/perks v1.0.1
 github.com/beorn7/perks/quantile
-# github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e
+# github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
 github.com/coreos/go-systemd/unit
 # github.com/cyphar/filepath-securejoin v0.2.2
 github.com/cyphar/filepath-securejoin
@@ -127,7 +136,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/apis/dns
-# github.com/gardener/gardener v0.0.0-20190830053951-194cf8abb797
+# github.com/gardener/gardener v0.0.0-20190906111529-f9ad04069615
 github.com/gardener/gardener/pkg/utils
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1
 github.com/gardener/gardener/pkg/apis/garden/v1beta1
@@ -141,7 +150,6 @@ github.com/gardener/gardener/pkg/apis/core/v1alpha1
 github.com/gardener/gardener/pkg/operation/common
 github.com/gardener/gardener/pkg/logger
 github.com/gardener/gardener/pkg/operation/terraformer
-github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper
 github.com/gardener/gardener/pkg/utils/flow
 github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper
@@ -158,6 +166,7 @@ github.com/gardener/gardener/pkg/client/extensions/clientset/versioned/scheme
 github.com/gardener/gardener/pkg/client/garden/clientset/versioned/scheme
 github.com/gardener/gardener/pkg/client/machine/clientset/versioned/scheme
 github.com/gardener/gardener/pkg/utils/retry
+github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/client/garden/listers/garden/v1beta1
 github.com/gardener/gardener/pkg/version
 github.com/gardener/gardener/test/integration/framework
@@ -170,12 +179,13 @@ github.com/gardener/gardener/pkg/apis/garden/v1beta1/helper
 github.com/gardener/gardener/pkg/operation/shoot
 github.com/gardener/gardener/pkg/scheduler/apis/config
 github.com/gardener/gardener/pkg/scheduler/apis/config/v1alpha1
-github.com/gardener/gardener/pkg/scheduler/controller
+github.com/gardener/gardener/pkg/scheduler/controller/shoot
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/garden/v1beta1
 github.com/gardener/gardener/pkg/operation/garden
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions
 github.com/gardener/gardener/pkg/controllermanager/controller/utils
 github.com/gardener/gardener/pkg/controllermanager/metrics
+github.com/gardener/gardener/pkg/scheduler/controller/common
 github.com/gardener/gardener/pkg/scheduler/utils
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/internalinterfaces
 github.com/gardener/gardener/pkg/client/garden/informers/externalversions/garden
@@ -189,8 +199,6 @@ github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/sc
 github.com/gardener/machine-controller-manager/pkg/apis/machine
 # github.com/ghodss/yaml v1.0.0
 github.com/ghodss/yaml
-# github.com/go-ini/ini v1.46.0
-github.com/go-ini/ini
 # github.com/go-logr/logr v0.1.0
 github.com/go-logr/logr
 # github.com/go-logr/zapr v0.1.1
@@ -214,13 +222,13 @@ github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
 github.com/gobuffalo/packr
 # github.com/gobuffalo/packr/v2 v2.1.0
 github.com/gobuffalo/packr/v2
-github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/packr2
 github.com/gobuffalo/packr/v2/file
+github.com/gobuffalo/packr/v2/file/resolver
 github.com/gobuffalo/packr/v2/jam/parser
 github.com/gobuffalo/packr/v2/plog
-github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/packr2/cmd
+github.com/gobuffalo/packr/v2/file/resolver/encoding/hex
 github.com/gobuffalo/packr/v2/jam
 github.com/gobuffalo/packr/v2/packr2/cmd/fix
 github.com/gobuffalo/packr/v2/jam/store
@@ -257,13 +265,13 @@ github.com/golang/snappy
 github.com/google/gofuzz
 # github.com/google/uuid v1.1.1
 github.com/google/uuid
-# github.com/googleapis/gax-go/v2 v2.0.4
+# github.com/googleapis/gax-go/v2 v2.0.5
 github.com/googleapis/gax-go/v2
 # github.com/googleapis/gnostic v0.3.0
 github.com/googleapis/gnostic/OpenAPIv2
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
-# github.com/gophercloud/gophercloud v0.2.0
+# github.com/gophercloud/gophercloud v0.3.0
 github.com/gophercloud/gophercloud
 github.com/gophercloud/gophercloud/openstack
 github.com/gophercloud/gophercloud/openstack/objectstorage/v1/containers
@@ -280,7 +288,7 @@ github.com/gophercloud/utils/openstack/clientconfig
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/golang-lru v0.5.1
+# github.com/hashicorp/golang-lru v0.5.3
 github.com/hashicorp/golang-lru/simplelru
 github.com/hashicorp/golang-lru
 # github.com/hpcloud/tail v1.0.0
@@ -302,7 +310,7 @@ github.com/jetstack/cert-manager/pkg/apis/certmanager
 github.com/jmespath/go-jmespath
 # github.com/joho/godotenv v1.3.0
 github.com/joho/godotenv
-# github.com/json-iterator/go v1.1.6
+# github.com/json-iterator/go v1.1.7
 github.com/json-iterator/go
 # github.com/karrick/godirwalk v1.10.12
 github.com/karrick/godirwalk
@@ -312,7 +320,7 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/markbates/oncer
 # github.com/markbates/safe v1.0.1
 github.com/markbates/safe
-# github.com/mattn/go-ieproxy v0.0.0-20190702010315-6dee0af9227d
+# github.com/mattn/go-ieproxy v0.0.0-20190805055040-f9202b1cfdeb
 github.com/mattn/go-ieproxy
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
@@ -377,7 +385,7 @@ github.com/pierrec/lz4
 github.com/pierrec/lz4/internal/xxh32
 # github.com/pkg/errors v0.8.1
 github.com/pkg/errors
-# github.com/prometheus/client_golang v1.0.0
+# github.com/prometheus/client_golang v1.1.0
 github.com/prometheus/client_golang/prometheus/promhttp
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
@@ -479,7 +487,7 @@ golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
 # golang.org/x/sync v0.0.0-20190423024810-112230192c58
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7
+# golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/cpu
@@ -507,7 +515,7 @@ golang.org/x/text/internal/language/compact
 golang.org/x/text/internal/tag
 # golang.org/x/time v0.0.0-20190308202827-9d24e82272b4
 golang.org/x/time/rate
-# golang.org/x/tools v0.0.0-20190624180213-70d37148ca0c
+# golang.org/x/tools v0.0.0-20190628153133-6cdbf07be9d0
 golang.org/x/tools/go/packages
 golang.org/x/tools/imports
 golang.org/x/tools/go/gcexportdata
@@ -519,7 +527,7 @@ golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/internal/gcimporter
 golang.org/x/tools/internal/fastwalk
 golang.org/x/tools/internal/module
-# google.golang.org/api v0.2.0
+# google.golang.org/api v0.7.0
 google.golang.org/api/googleapi
 google.golang.org/api/iterator
 google.golang.org/api/option
@@ -542,13 +550,13 @@ google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/datastore
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
-# google.golang.org/genproto v0.0.0-20190716160619-c506a9f90610
+# google.golang.org/genproto v0.0.0-20190801165951-fa694d86fc64
 google.golang.org/genproto/googleapis/iam/v1
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/type/expr
 google.golang.org/genproto/googleapis/rpc/status
-# google.golang.org/grpc v1.22.0
+# google.golang.org/grpc v1.22.1
 google.golang.org/grpc
 google.golang.org/grpc/codes
 google.golang.org/grpc/metadata
