@@ -16,6 +16,23 @@ metadata:
   name: calico-kube-controllers
   namespace: kube-system
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: typha-cpha
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: typha-cpva
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+---
+
 # This manifest installs the calico/node container, as well
 # as the Calico CNI plugins and network config on
 # each master and worker node in a Kubernetes cluster.
@@ -119,6 +136,12 @@ spec:
             # Use Kubernetes API as the backing datastore.
             - name: DATASTORE_TYPE
               value: "kubernetes"
+            # Typha support: controlled by the ConfigMap.
+            - name: FELIX_TYPHAK8SSERVICENAME
+              valueFrom:
+                configMapKeyRef:
+                  name: calico-config
+                  key: typha_service_name
             # Enable felix info logging.
             - name: FELIX_LOGSEVERITYSCREEN
               value: "error"
@@ -288,6 +311,12 @@ kind: Deployment
 metadata:
   name: calico-typha
   namespace: kube-system
+  annotations:
+    # This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
+    # add-on, ensuring it gets priority scheduling and that its resources are reserved
+    # if it ever gets evicted.
+    scheduler.alpha.kubernetes.io/critical-pod: ''
+    cluster-autoscaler.kubernetes.io/safe-to-evict: 'true'
   labels:
     k8s-app: calico-typha
     garden.sapcloud.io/role: system-component
@@ -301,7 +330,7 @@ spec:
   # We recommend using Typha if you have more than 50 nodes.  Above 100 nodes it is essential
   # (when using the Kubernetes datastore).  Use one replica for every 100-200 nodes.  In
   # production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade.
-  replicas: 0
+  replicas: 1
   revisionHistoryLimit: 0
   template:
     metadata:
@@ -355,43 +384,118 @@ spec:
             value: "true"
           # Uncomment these lines to enable prometheus metrics.  Since Typha is host-networked,
           # this opens a port on the host, which may need to be secured.
-          #- name: TYPHA_PROMETHEUSMETRICSENABLED
-          #  value: "true"
-          #- name: TYPHA_PROMETHEUSMETRICSPORT
-          #  value: "9093"
+#          - name: TYPHA_PROMETHEUSMETRICSENABLED
+#            value: "true"
+#          - name: TYPHA_PROMETHEUSMETRICSPORT
+#            value: "9093"
         livenessProbe:
-          exec:
-            command:
-            - calico-typha
-            - check
-            - liveness
+          httpGet:
+            path: /liveness
+            port: 9098
+            host: localhost
           periodSeconds: 30
           initialDelaySeconds: 30
         readinessProbe:
-          exec:
-            command:
-            - calico-typha
-            - check
-            - readiness
+          httpGet:
+            path: /readiness
+            port: 9098
+            host: localhost
           periodSeconds: 10
-
-
 ---
-
+apiVersion: {{ include "deploymentversion" . }}
+kind: Deployment
+metadata:
+  name: calico-typha-horizontal-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-app: calico-typha-autoscaler
+    kubernetes.io/cluster-service: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: calico-typha-autoscaler
+  template:
+    metadata:
+      labels:
+        k8s-app: calico-typha-autoscaler
+    spec:
+      priorityClassName: system-cluster-critical
+      securityContext:
+        supplementalGroups: [ 65534 ]
+        fsGroup: 65534
+      containers:
+        - image: {{ index .Values.images "typha-cpa" }}
+          name: autoscaler
+          command:
+            - /cluster-proportional-autoscaler
+            - --namespace=kube-system
+            - --configmap=calico-typha-horizontal-autoscaler
+            - --target=deployment/calico-typha
+            - --logtostderr=true
+            - --v=2
+          resources:
+            requests:
+              cpu: 10m
+            limits:
+              cpu: 10m
+      serviceAccountName: typha-cpha
+---
+kind: Deployment
+apiVersion: {{ include "deploymentversion" . }}
+metadata:
+  name: calico-typha-vertical-autoscaler
+  namespace: kube-system
+  labels:
+    k8s-app: calico-typha-autoscaler
+    kubernetes.io/cluster-service: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: calico-typha-autoscaler
+  template:
+    metadata:
+      annotations:
+        checksum/configmap-calico-typha-vertical-autoscaler: {{ include (print $.Template.BasePath "/typha-vertical-autoscaling-config.yaml") . | sha256sum }}
+      labels:
+        k8s-app: calico-typha-autoscaler
+    spec:
+      priorityClassName: system-cluster-critical
+      containers:
+        - image:  {{ index .Values.images "typha-cpva" }}
+          name: autoscaler
+          command:
+            - /cpvpa
+            - --target=deployment/calico-typha
+            - --namespace=kube-system
+            - --logtostderr=true
+            - --poll-period-seconds=30
+            - --v=2
+            - --config-file=/etc/config/typha-autoscaler
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+      volumes:
+        - name: config
+          configMap:
+            name: calico-typha-vertical-autoscaler
+      serviceAccountName: typha-cpva
+---
 # This manifest creates a Pod Disruption Budget for Typha to allow K8s Cluster Autoscaler to evict
 
-# apiVersion: {{ include "poddisruptionbudgetversion" . }}
-# kind: PodDisruptionBudget
-# metadata:
-#   name: calico-typha
-#   namespace: kube-system
-#   labels:
-#     k8s-app: calico-typha
-# spec:
-#   maxUnavailable: 1
-#   selector:
-#     matchLabels:
-#       k8s-app: calico-typha
+ apiVersion: {{ include "poddisruptionbudgetversion" . }}
+ kind: PodDisruptionBudget
+ metadata:
+   name: calico-typha
+   namespace: kube-system
+   labels:
+     k8s-app: calico-typha
+ spec:
+   maxUnavailable: 1
+   selector:
+     matchLabels:
+       k8s-app: calico-typha
 
 ---
 
