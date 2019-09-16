@@ -23,6 +23,19 @@ func addDefaultingFuncs(scheme *runtime.Scheme) error {
 	return RegisterDefaults(scheme)
 }
 
+// SetDefaults_SecretBinding sets default values for SecretBinding objects.
+func SetDefaults_SecretBinding(obj *SecretBinding) {
+	if len(obj.SecretRef.Namespace) == 0 {
+		obj.SecretRef.Namespace = obj.Namespace
+	}
+
+	for i, quota := range obj.Quotas {
+		if len(quota.Namespace) == 0 {
+			obj.Quotas[i].Namespace = obj.Namespace
+		}
+	}
+}
+
 // SetDefaults_Project sets default values for Project objects.
 func SetDefaults_Project(obj *Project) {
 	if obj.Spec.Owner != nil && len(obj.Spec.Owner.APIGroup) == 0 {
@@ -34,5 +47,21 @@ func SetDefaults_Project(obj *Project) {
 		case rbacv1.GroupKind:
 			obj.Spec.Owner.APIGroup = rbacv1.GroupName
 		}
+	}
+}
+
+// SetDefaults_MachineType sets default values for MachineType objects.
+func SetDefaults_MachineType(obj *MachineType) {
+	if obj.Usable == nil {
+		trueVar := true
+		obj.Usable = &trueVar
+	}
+}
+
+// SetDefaults_VolumeType sets default values for VolumeType objects.
+func SetDefaults_VolumeType(obj *VolumeType) {
+	if obj.Usable == nil {
+		trueVar := true
+		obj.Usable = &trueVar
 	}
 }

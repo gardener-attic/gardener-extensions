@@ -455,7 +455,7 @@ var _ = Describe("Network Policy Testing", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				shoot := &v1beta1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
-				shootTestOperations, err = gardenerframework.NewGardenTestOperation(ctx, shootGardenerTest.GardenClient, shootAppTestLogger, shoot)
+				shootTestOperations, err = gardenerframework.NewGardenTestOperationWithShoot(ctx, shootGardenerTest.GardenClient, shootAppTestLogger, shoot)
 				Expect(err).NotTo(HaveOccurred())
 			}
 		}

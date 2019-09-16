@@ -28,7 +28,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/chart"
@@ -52,8 +52,8 @@ const (
 
 var controlPlaneSecrets = &secrets.Secrets{
 	CertificateSecretConfigs: map[string]*secrets.CertificateSecretConfig{
-		gardencorev1alpha1.SecretNameCACluster: {
-			Name:       gardencorev1alpha1.SecretNameCACluster,
+		v1alpha1constants.SecretNameCACluster: {
+			Name:       v1alpha1constants.SecretNameCACluster,
 			CommonName: "kubernetes",
 			CertType:   secrets.CACert,
 		},
@@ -66,11 +66,11 @@ var controlPlaneSecrets = &secrets.Secrets{
 					CommonName:   "system:cloud-controller-manager",
 					Organization: []string{user.SystemPrivilegedGroup},
 					CertType:     secrets.ClientCert,
-					SigningCA:    cas[gardencorev1alpha1.SecretNameCACluster],
+					SigningCA:    cas[v1alpha1constants.SecretNameCACluster],
 				},
 				KubeConfigRequest: &secrets.KubeConfigRequest{
 					ClusterName:  clusterName,
-					APIServerURL: gardencorev1alpha1.DeploymentNameKubeAPIServer,
+					APIServerURL: v1alpha1constants.DeploymentNameKubeAPIServer,
 				},
 			},
 			&secrets.ControlPlaneSecretConfig{
@@ -79,7 +79,7 @@ var controlPlaneSecrets = &secrets.Secrets{
 					CommonName: cloudControllerManagerDeploymentName,
 					DNSNames:   controlplane.DNSNamesForService(cloudControllerManagerDeploymentName, clusterName),
 					CertType:   secrets.ServerCert,
-					SigningCA:  cas[gardencorev1alpha1.SecretNameCACluster],
+					SigningCA:  cas[v1alpha1constants.SecretNameCACluster],
 				},
 			},
 		}
@@ -300,7 +300,7 @@ func getCCMChartValues(
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":                          checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server":                   checksums[cloudControllerManagerServerName],
-			"checksum/secret-cloudprovider":                                     checksums[gardencorev1alpha1.SecretNameCloudProvider],
+			"checksum/secret-cloudprovider":                                     checksums[v1alpha1constants.SecretNameCloudProvider],
 			"checksum/configmap-cloud-provider-config-cloud-controller-manager": checksums[openstacktypes.CloudProviderConfigCloudControllerManagerName],
 		},
 	}

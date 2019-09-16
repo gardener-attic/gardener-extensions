@@ -17,7 +17,7 @@ package common
 import (
 	"path/filepath"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -34,6 +34,7 @@ const (
 	BackupSecretName = "etcd-backup"
 
 	// BackupInfrastructureForceDeletion is a constant for an annotation on a Backupinfrastructure indicating that it should be force deleted.
+	// TOREMOVE: remove this with backupinfra controller.
 	BackupInfrastructureForceDeletion = "backupinfrastructure.garden.sapcloud.io/force-deletion"
 
 	// BackupInfrastructureOperation is a constant for an annotation on a Backupinfrastructure indicating that an operation shall be performed.
@@ -165,6 +166,9 @@ const (
 	// GardenRoleMonitoring is the value of the GardenRole key indicating type 'monitoring'.
 	GardenRoleMonitoring = "monitoring"
 
+	// GardenRoleGlobalMonitoring is the vlaue of the GardenRole key indicating type 'global-monitoring'
+	GardenRoleGlobalMonitoring = "global-monitoring"
+
 	// GardenRoleOptionalAddon is the value of the GardenRole key indicating type 'optional-addon'.
 	GardenRoleOptionalAddon = "optional-addon"
 
@@ -205,10 +209,10 @@ const (
 	GardenIgnoreAlerts = "shoot.garden.sapcloud.io/ignore-alerts"
 
 	// GrafanaOperatorsPrefix is a constant for a prefix used for the operators Grafana instance.
-	GrafanaOperatorsPrefix = "g-operators"
+	GrafanaOperatorsPrefix = "go"
 
 	// GrafanaUsersPrefix is a constant for a prefix used for the users Grafana instance.
-	GrafanaUsersPrefix = "g-users"
+	GrafanaUsersPrefix = "gu"
 
 	// IngressPrefix is the part of a FQDN which will be used to construct the domain name for an ingress controller of
 	// a Shoot cluster. For example, when a Shoot specifies domain 'cluster.example.com', the ingress domain would be
@@ -288,6 +292,9 @@ const (
 
 	// NamespaceProject is they key of a label on namespace whose value holds the project uid.
 	NamespaceProject = "namespace.garden.sapcloud.io/project"
+
+	// SecretRefChecksumAnnotation is the annotation key for checksum of referred secret in resource spec.
+	SecretRefChecksumAnnotation = "checksum/secret.data"
 
 	// TerraformerConfigSuffix is the suffix used for the ConfigMap which stores the Terraform configuration and variables declaration.
 	TerraformerConfigSuffix = ".tf-config"
@@ -539,19 +546,19 @@ var (
 	// RequiredControlPlaneDeployments is a set of the required shoot control plane deployments
 	// running in the seed.
 	RequiredControlPlaneDeployments = sets.NewString(
-		gardencorev1alpha1.DeploymentNameGardenerResourceManager,
-		gardencorev1alpha1.DeploymentNameKubeAPIServer,
-		gardencorev1alpha1.DeploymentNameKubeControllerManager,
-		gardencorev1alpha1.DeploymentNameKubeScheduler,
-		gardencorev1alpha1.DeploymentNameDependencyWatchdog,
+		v1alpha1constants.DeploymentNameGardenerResourceManager,
+		v1alpha1constants.DeploymentNameKubeAPIServer,
+		v1alpha1constants.DeploymentNameKubeControllerManager,
+		v1alpha1constants.DeploymentNameKubeScheduler,
+		v1alpha1constants.DeploymentNameDependencyWatchdog,
 		MachineControllerManagerDeploymentName,
 	)
 
 	// RequiredControlPlaneStatefulSets is a set of the required shoot control plane stateful
 	// sets running in the seed.
 	RequiredControlPlaneStatefulSets = sets.NewString(
-		gardencorev1alpha1.StatefulSetNameETCDMain,
-		gardencorev1alpha1.StatefulSetNameETCDEvents,
+		v1alpha1constants.StatefulSetNameETCDMain,
+		v1alpha1constants.StatefulSetNameETCDEvents,
 	)
 
 	// RequiredSystemComponentDeployments is a set of the required system components.
@@ -571,10 +578,10 @@ var (
 
 	// RequiredMonitoringSeedDeployments is a set of the required seed monitoring deployments.
 	RequiredMonitoringSeedDeployments = sets.NewString(
-		gardencorev1alpha1.DeploymentNameGrafanaOperators,
-		gardencorev1alpha1.DeploymentNameGrafanaUsers,
-		gardencorev1alpha1.DeploymentNameKubeStateMetricsSeed,
-		gardencorev1alpha1.DeploymentNameKubeStateMetricsShoot,
+		v1alpha1constants.DeploymentNameGrafanaOperators,
+		v1alpha1constants.DeploymentNameGrafanaUsers,
+		v1alpha1constants.DeploymentNameKubeStateMetricsSeed,
+		v1alpha1constants.DeploymentNameKubeStateMetricsShoot,
 	)
 
 	// RequiredMonitoringShootDaemonSets is a set of the required shoot monitoring daemon sets.
@@ -584,11 +591,11 @@ var (
 
 	// RequiredLoggingStatefulSets is a set of the required logging stateful sets.
 	RequiredLoggingStatefulSets = sets.NewString(
-		gardencorev1alpha1.StatefulSetNameElasticSearch,
+		v1alpha1constants.StatefulSetNameElasticSearch,
 	)
 
 	// RequiredLoggingDeployments is a set of the required logging deployments.
 	RequiredLoggingDeployments = sets.NewString(
-		gardencorev1alpha1.DeploymentNameKibana,
+		v1alpha1constants.DeploymentNameKibana,
 	)
 )

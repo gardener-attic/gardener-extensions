@@ -25,7 +25,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -65,9 +65,9 @@ var _ = Describe("Ensurer", func() {
 		}
 
 		kubeControllerManagerLabels = map[string]string{
-			gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks:  gardencorev1alpha1.LabelNetworkPolicyAllowed,
-			gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks: gardencorev1alpha1.LabelNetworkPolicyAllowed,
-			gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs:    gardencorev1alpha1.LabelNetworkPolicyAllowed,
+			v1alpha1constants.LabelNetworkPolicyToPublicNetworks:  v1alpha1constants.LabelNetworkPolicyAllowed,
+			v1alpha1constants.LabelNetworkPolicyToPrivateNetworks: v1alpha1constants.LabelNetworkPolicyAllowed,
+			v1alpha1constants.LabelNetworkPolicyToBlockedCIDRs:    v1alpha1constants.LabelNetworkPolicyAllowed,
 		}
 	)
 
@@ -83,7 +83,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -116,7 +116,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -163,7 +163,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -196,7 +196,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{

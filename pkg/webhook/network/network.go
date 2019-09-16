@@ -17,7 +17,7 @@ package network
 import (
 	"github.com/gardener/gardener-extensions/pkg/webhook"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -85,8 +85,8 @@ func buildSelector(networkProvider, cloudProvider string) (*metav1.LabelSelector
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: gardencorev1alpha1.LabelShootProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{cloudProvider}},
-			{Key: gardencorev1alpha1.LabelNetworkingProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{networkProvider}},
+			{Key: v1alpha1constants.LabelShootProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{cloudProvider}},
+			{Key: v1alpha1constants.LabelNetworkingProvider, Operator: metav1.LabelSelectorOpIn, Values: []string{networkProvider}},
 		},
 	}, nil
 }

@@ -21,6 +21,7 @@ import (
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/option"
 )
 
 type client struct {
@@ -59,7 +60,7 @@ func NewFromServiceAccount(ctx context.Context, serviceAccount []byte) (Interfac
 	}
 
 	httpClient := oauth2.NewClient(ctx, jwt.TokenSource(ctx))
-	service, err := compute.New(httpClient)
+	service, err := compute.NewService(context.TODO(), option.WithHTTPClient(httpClient))
 	if err != nil {
 		return nil, err
 	}

@@ -18,20 +18,18 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strings"
-
-	"github.com/Masterminds/semver"
-
 	"strconv"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
+	"strings"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils"
+
+	"github.com/Masterminds/semver"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // Now determines the current metav1.Time.
@@ -618,6 +616,8 @@ type ShootedSeed struct {
 	MinimumVolumeSize *string
 	APIServer         *ShootedSeedAPIServer
 	BlockCIDRs        []gardencorev1alpha1.CIDR
+	ShootDefaults     *gardenv1beta1.ShootNetworks
+	Backup            *gardenv1beta1.BackupProfile
 }
 
 type ShootedSeedAPIServer struct {
@@ -675,6 +675,18 @@ func parseShootedSeed(annotation string) (*ShootedSeed, error) {
 	}
 	shootedSeed.BlockCIDRs = blockCIDRs
 
+	shootDefaults, err := parseShootedSeedShootDefaults(settings)
+	if err != nil {
+		return nil, err
+	}
+	shootedSeed.ShootDefaults = shootDefaults
+
+	backup, err := parseShootedSeedBackup(settings)
+	if err != nil {
+		return nil, err
+	}
+	shootedSeed.Backup = backup
+
 	if size, ok := settings["minimumVolumeSize"]; ok {
 		shootedSeed.MinimumVolumeSize = &size
 	}
@@ -707,6 +719,61 @@ func parseShootedSeedBlockCIDRs(settings map[string]string) ([]gardencorev1alpha
 	}
 
 	return addresses, nil
+}
+
+func parseShootedSeedShootDefaults(settings map[string]string) (*gardenv1beta1.ShootNetworks, error) {
+	var (
+		podCIDR, ok1     = settings["shootDefaults.pods"]
+		serviceCIDR, ok2 = settings["shootDefaults.services"]
+	)
+
+	if !ok1 && !ok2 {
+		return nil, nil
+	}
+
+	shootNetworks := &gardenv1beta1.ShootNetworks{}
+
+	if ok1 {
+		cidr := gardencorev1alpha1.CIDR(podCIDR)
+		shootNetworks.Pods = &cidr
+	}
+
+	if ok2 {
+		cidr := gardencorev1alpha1.CIDR(serviceCIDR)
+		shootNetworks.Services = &cidr
+	}
+
+	return shootNetworks, nil
+}
+
+func parseShootedSeedBackup(settings map[string]string) (*gardenv1beta1.BackupProfile, error) {
+	var (
+		provider, ok1           = settings["backup.provider"]
+		region, ok2             = settings["backup.region"]
+		secretRefName, ok3      = settings["backup.secretRef.name"]
+		secretRefNamespace, ok4 = settings["backup.secretRef.namespace"]
+	)
+
+	if ok1 && provider == "none" {
+		return nil, nil
+	}
+
+	backup := &gardenv1beta1.BackupProfile{}
+
+	if ok1 {
+		backup.Provider = gardenv1beta1.CloudProvider(provider)
+	}
+	if ok2 {
+		backup.Region = &region
+	}
+	if ok3 {
+		backup.SecretRef.Name = secretRefName
+	}
+	if ok4 {
+		backup.SecretRef.Namespace = secretRefNamespace
+	}
+
+	return backup, nil
 }
 
 func parseShootedSeedAPIServer(settings map[string]string) (*ShootedSeedAPIServer, error) {

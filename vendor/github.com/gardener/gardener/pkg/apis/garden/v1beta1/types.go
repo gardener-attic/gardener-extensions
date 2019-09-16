@@ -94,7 +94,8 @@ type AWSProfile struct {
 // AWSConstraints is an object containing constraints for certain values in the Shoot specification.
 type AWSConstraints struct {
 	// DNSProviders contains constraints regarding allowed values of the 'dns.provider' block in the Shoot specification.
-	DNSProviders []DNSProviderConstraint `json:"dnsProviders"`
+	// +optional
+	DNSProviders []DNSProviderConstraint `json:"dnsProviders,omitempty"`
 	// Kubernetes contains constraints regarding allowed values of the 'kubernetes' block in the Shoot specification.
 	Kubernetes KubernetesConstraints `json:"kubernetes"`
 	// MachineImages contains constraints regarding allowed values for machine images in the Shoot specification.
@@ -143,7 +144,8 @@ type AzureProfile struct {
 // AzureConstraints is an object containing constraints for certain values in the Shoot specification.
 type AzureConstraints struct {
 	// DNSProviders contains constraints regarding allowed values of the 'dns.provider' block in the Shoot specification.
-	DNSProviders []DNSProviderConstraint `json:"dnsProviders"`
+	// +optional
+	DNSProviders []DNSProviderConstraint `json:"dnsProviders,omitempty"`
 	// Kubernetes contains constraints regarding allowed values of the 'kubernetes' block in the Shoot specification.
 	Kubernetes KubernetesConstraints `json:"kubernetes"`
 	// MachineImages contains constraints regarding allowed values for machine images in the Shoot specification.
@@ -171,7 +173,8 @@ type GCPProfile struct {
 // GCPConstraints is an object containing constraints for certain values in the Shoot specification.
 type GCPConstraints struct {
 	// DNSProviders contains constraints regarding allowed values of the 'dns.provider' block in the Shoot specification.
-	DNSProviders []DNSProviderConstraint `json:"dnsProviders"`
+	// +optional
+	DNSProviders []DNSProviderConstraint `json:"dnsProviders,omitempty"`
 	// Kubernetes contains constraints regarding allowed values of the 'kubernetes' block in the Shoot specification.
 	Kubernetes KubernetesConstraints `json:"kubernetes"`
 	// MachineImages contains constraints regarding allowed values for machine images in the Shoot specification.
@@ -205,7 +208,8 @@ type OpenStackProfile struct {
 // OpenStackConstraints is an object containing constraints for certain values in the Shoot specification.
 type OpenStackConstraints struct {
 	// DNSProviders contains constraints regarding allowed values of the 'dns.provider' block in the Shoot specification.
-	DNSProviders []DNSProviderConstraint `json:"dnsProviders"`
+	// +optional
+	DNSProviders []DNSProviderConstraint `json:"dnsProviders,omitempty"`
 	// FloatingPools contains constraints regarding allowed values of the 'floatingPoolName' block in the Shoot specification.
 	FloatingPools []OpenStackFloatingPool `json:"floatingPools"`
 	// Kubernetes contains constraints regarding allowed values of the 'kubernetes' block in the Shoot specification.
@@ -244,7 +248,8 @@ type AlicloudProfile struct {
 // AlicloudConstraints is an object containing constraints for certain values in the Shoot specification
 type AlicloudConstraints struct {
 	// DNSProviders contains constraints regarding allowed values of the 'dns.provider' block in the Shoot specification.
-	DNSProviders []DNSProviderConstraint `json:"dnsProviders"`
+	// +optional
+	DNSProviders []DNSProviderConstraint `json:"dnsProviders,omitempty"`
 	// Kubernetes contains constraints regarding allowed values of the 'kubernetes' block in the Shoot specification.
 	Kubernetes KubernetesConstraints `json:"kubernetes"`
 	// MachineImages contains constraints regarding allowed values for machine images in the Shoot specification.
@@ -278,7 +283,8 @@ type PacketProfile struct {
 // PacketConstraints is an object containing constraints for certain values in the Shoot specification
 type PacketConstraints struct {
 	// DNSProviders contains constraints regarding allowed values of the 'dns.provider' block in the Shoot specification.
-	DNSProviders []DNSProviderConstraint `json:"dnsProviders"`
+	// +optional
+	DNSProviders []DNSProviderConstraint `json:"dnsProviders,omitempty"`
 	// Kubernetes contains constraints regarding allowed values of the 'kubernetes' block in the Shoot specification.
 	Kubernetes KubernetesConstraints `json:"kubernetes"`
 	// MachineImages contains constraints regarding allowed values for machine images in the Shoot specification.
@@ -329,8 +335,19 @@ type MachineType struct {
 	CPU resource.Quantity `json:"cpu"`
 	// GPU is the number of GPUs for this machine type.
 	GPU resource.Quantity `json:"gpu"`
+	// Storage is the amount of storage associated with the root volume of this machine type.
+	// +optional
+	Storage *MachineTypeStorage `json:"storage,omitempty"`
 	// Memory is the amount of memory for this machine type.
 	Memory resource.Quantity `json:"memory"`
+}
+
+// MachineTypeStorage is the amount of storage associated with the root volume of this machine type.
+type MachineTypeStorage struct {
+	// Size is the storage size.
+	Size resource.Quantity `json:"size"`
+	// Type is the type of the storage.
+	Type string `json:"type"`
 }
 
 // OpenStackMachineType contains certain properties of a machine type in OpenStack
@@ -556,6 +573,19 @@ type SeedNetworks struct {
 	Pods gardencorev1alpha1.CIDR `json:"pods"`
 	// Services is the CIDR of the service network.
 	Services gardencorev1alpha1.CIDR `json:"services"`
+	// ShootDefaults contains the default networks CIDRs for shoots.
+	// +optional
+	ShootDefaults *ShootNetworks `json:"shootDefaults,omitempty"`
+}
+
+// ShootNetworks contains the default networks CIDRs for shoots.
+type ShootNetworks struct {
+	// Pods is the CIDR of the pod network.
+	// +optional
+	Pods *gardencorev1alpha1.CIDR `json:"pods,omitempty"`
+	// Services is the CIDR of the service network.
+	// +optional
+	Services *gardencorev1alpha1.CIDR `json:"services,omitempty"`
 }
 
 ////////////////////////////////////////////////////
@@ -1407,7 +1437,7 @@ type AuditPolicy struct {
 	// ConfigMapRef is a reference to a ConfigMap object in the same namespace,
 	// which contains the audit policy for the kube-apiserver.
 	// +optional
-	ConfigMapRef *corev1.LocalObjectReference `json:"configMapRef,omitempty"`
+	ConfigMapRef *corev1.ObjectReference `json:"configMapRef,omitempty"`
 }
 
 // OIDCConfig contains configuration settings for the OIDC provider.
@@ -1870,3 +1900,14 @@ type BackupInfrastructureStatus struct {
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
+
+const (
+	// DefaultPodNetworkCIDR is a constant for the default pod network CIDR of a Shoot cluster.
+	DefaultPodNetworkCIDR = gardencorev1alpha1.CIDR("100.96.0.0/11")
+	// DefaultServiceNetworkCIDR is a constant for the default service network CIDR of a Shoot cluster.
+	DefaultServiceNetworkCIDR = gardencorev1alpha1.CIDR("100.64.0.0/13")
+	// DefaultPodNetworkCIDRAlicloud is a constant for the default pod network CIDR of a Alicloud Shoot cluster.
+	DefaultPodNetworkCIDRAlicloud = gardencorev1alpha1.CIDR("100.64.0.0/11")
+	// DefaultServiceNetworkCIDRAlicloud is a constant for the default service network CIDR of a Alicloud Shoot cluster.
+	DefaultServiceNetworkCIDRAlicloud = gardencorev1alpha1.CIDR("100.104.0.0/13")
+)

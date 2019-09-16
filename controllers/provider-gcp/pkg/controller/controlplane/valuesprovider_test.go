@@ -25,6 +25,7 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
@@ -57,7 +58,7 @@ var _ = Describe("ValuesProvider", func() {
 			},
 			Spec: extensionsv1alpha1.ControlPlaneSpec{
 				SecretRef: corev1.SecretReference{
-					Name:      gardencorev1alpha1.SecretNameCloudProvider,
+					Name:      v1alpha1constants.SecretNameCloudProvider,
 					Namespace: namespace,
 				},
 				ProviderConfig: &runtime.RawExtension{
@@ -108,10 +109,10 @@ var _ = Describe("ValuesProvider", func() {
 			},
 		}
 
-		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
+		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}
 		cpSecret    = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      gardencorev1alpha1.SecretNameCloudProvider,
+				Name:      v1alpha1constants.SecretNameCloudProvider,
 				Namespace: namespace,
 			},
 			Type: corev1.SecretTypeOpaque,
@@ -121,10 +122,10 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		checksums = map[string]string{
-			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			internal.CloudProviderConfigName:           "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
-			"cloud-controller-manager-server":          "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
+			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			internal.CloudProviderConfigName:          "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			"cloud-controller-manager-server":         "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
 		}
 
 		configChartValues = map[string]interface{}{

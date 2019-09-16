@@ -24,7 +24,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
 	"github.com/coreos/go-systemd/unit"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -116,25 +116,25 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	switch x := obj.(type) {
 	case *corev1.Service:
 		switch x.Name {
-		case gardencorev1alpha1.DeploymentNameKubeAPIServer:
+		case v1alpha1constants.DeploymentNameKubeAPIServer:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeAPIServerService(ctx, x)
 		}
 	case *appsv1.Deployment:
 		switch x.Name {
-		case gardencorev1alpha1.DeploymentNameKubeAPIServer:
+		case v1alpha1constants.DeploymentNameKubeAPIServer:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeAPIServerDeployment(ctx, x)
-		case gardencorev1alpha1.DeploymentNameKubeControllerManager:
+		case v1alpha1constants.DeploymentNameKubeControllerManager:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeControllerManagerDeployment(ctx, x)
-		case gardencorev1alpha1.DeploymentNameKubeScheduler:
+		case v1alpha1constants.DeploymentNameKubeScheduler:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeSchedulerDeployment(ctx, x)
 		}
 	case *appsv1.StatefulSet:
 		switch x.Name {
-		case gardencorev1alpha1.StatefulSetNameETCDMain, gardencorev1alpha1.StatefulSetNameETCDEvents:
+		case v1alpha1constants.StatefulSetNameETCDMain, v1alpha1constants.StatefulSetNameETCDEvents:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			// Get cluster info
 			cluster, err := extensionscontroller.GetCluster(ctx, m.client, x.Namespace)
@@ -156,21 +156,21 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 
 func (m *mutator) mutateOperatingSystemConfig(ctx context.Context, osc *extensionsv1alpha1.OperatingSystemConfig) error {
 	// Mutate kubelet.service unit, if present
-	if u := extensionswebhook.UnitWithName(osc.Spec.Units, gardencorev1alpha1.OperatingSystemConfigUnitNameKubeletService); u != nil && u.Content != nil {
+	if u := extensionswebhook.UnitWithName(osc.Spec.Units, v1alpha1constants.OperatingSystemConfigUnitNameKubeletService); u != nil && u.Content != nil {
 		if err := m.ensureKubeletServiceUnitContent(ctx, u.Content); err != nil {
 			return err
 		}
 	}
 
 	// Mutate kubelet configuration file, if present
-	if f := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKubeletConfig); f != nil && f.Content.Inline != nil {
+	if f := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKubeletConfig); f != nil && f.Content.Inline != nil {
 		if err := m.ensureKubeletConfigFileContent(ctx, f.Content.Inline); err != nil {
 			return err
 		}
 	}
 
 	// Mutate 99 kubernetes general configuration file, if present
-	if f := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKernelSettings); f != nil && f.Content.Inline != nil {
+	if f := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKernelSettings); f != nil && f.Content.Inline != nil {
 		if err := m.ensureKubernetesGeneralConfiguration(ctx, f.Content.Inline); err != nil {
 			return err
 		}

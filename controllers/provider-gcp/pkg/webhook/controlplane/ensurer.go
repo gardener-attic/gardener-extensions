@@ -27,7 +27,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -99,9 +99,9 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 }
 
 func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
-	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPublicNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
-	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToPrivateNetworks, gardencorev1alpha1.LabelNetworkPolicyAllowed)
-	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, gardencorev1alpha1.LabelNetworkPolicyToBlockedCIDRs, gardencorev1alpha1.LabelNetworkPolicyAllowed)
+	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, v1alpha1constants.LabelNetworkPolicyToPublicNetworks, v1alpha1constants.LabelNetworkPolicyAllowed)
+	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, v1alpha1constants.LabelNetworkPolicyToPrivateNetworks, v1alpha1constants.LabelNetworkPolicyAllowed)
+	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, v1alpha1constants.LabelNetworkPolicyToBlockedCIDRs, v1alpha1constants.LabelNetworkPolicyAllowed)
 }
 
 var (
@@ -121,7 +121,7 @@ var (
 		MountPath: "/etc/kubernetes/cloudprovider",
 	}
 	cloudProviderSecretVolumeMount = corev1.VolumeMount{
-		Name:      gardencorev1alpha1.SecretNameCloudProvider,
+		Name:      v1alpha1constants.SecretNameCloudProvider,
 		MountPath: "/srv/cloudprovider",
 	}
 
@@ -134,10 +134,10 @@ var (
 		},
 	}
 	cloudProviderSecretVolume = corev1.Volume{
-		Name: gardencorev1alpha1.SecretNameCloudProvider,
+		Name: v1alpha1constants.SecretNameCloudProvider,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: gardencorev1alpha1.SecretNameCloudProvider,
+				SecretName: v1alpha1constants.SecretNameCloudProvider,
 			},
 		},
 	}
@@ -154,7 +154,7 @@ func ensureVolumes(ps *corev1.PodSpec) {
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
-	if err := controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, gardencorev1alpha1.SecretNameCloudProvider); err != nil {
+	if err := controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, v1alpha1constants.SecretNameCloudProvider); err != nil {
 		return err
 	}
 	return controlplane.EnsureConfigMapChecksumAnnotation(ctx, template, e.client, namespace, internal.CloudProviderConfigName)

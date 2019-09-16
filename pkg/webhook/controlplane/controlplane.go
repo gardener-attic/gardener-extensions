@@ -19,7 +19,7 @@ import (
 
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -35,11 +35,11 @@ const (
 	// BackupWebhookName is the backup webhook name.
 	BackupWebhookName = "controlplanebackup"
 
-	// A controlplane seed webhook is applied only to those shoot namespaces that have the correct Seed provider label.
+	// KindSeed - A controlplane seed webhook is applied only to those shoot namespaces that have the correct Seed provider label.
 	KindSeed = "seed"
-	// A controlplane shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
+	// KindShoot - A controlplane shoot webhook is applied only to those shoot namespaces that have the correct Shoot provider label.
 	KindShoot = "shoot"
-	// A controlplane backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
+	// KindBackup - A controlplane backup webhook is applied only to those shoot namespaces that have the correct Backup provider label.
 	KindBackup = "backup"
 )
 
@@ -105,11 +105,11 @@ func buildSelector(kind, provider string) (*metav1.LabelSelector, error) {
 	var key string
 	switch kind {
 	case KindSeed:
-		key = gardencorev1alpha1.LabelSeedProvider
+		key = v1alpha1constants.LabelSeedProvider
 	case KindShoot:
-		key = gardencorev1alpha1.LabelShootProvider
+		key = v1alpha1constants.LabelShootProvider
 	case KindBackup:
-		key = gardencorev1alpha1.LabelBackupProvider
+		key = v1alpha1constants.LabelBackupProvider
 	default:
 		return nil, fmt.Errorf("invalid webhook kind '%s'", kind)
 	}

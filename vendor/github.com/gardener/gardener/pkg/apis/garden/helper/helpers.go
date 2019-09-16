@@ -18,9 +18,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Masterminds/semver"
 	"github.com/gardener/gardener/pkg/apis/garden"
 	"github.com/gardener/gardener/pkg/utils"
+
+	"github.com/Masterminds/semver"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // DetermineCloudProviderInProfile takes a CloudProfile specification and returns the cloud provider this profile is used for.
@@ -135,6 +137,40 @@ func DetermineLatestMachineImageVersion(image garden.MachineImage) (garden.Machi
 	return latestMachineImageVersion, nil
 }
 
+// DetermineLatestCloudProfileMachineImageVersions determines the latest versions (semVer) of the given machine images from a slice of machine images
+func DetermineLatestCloudProfileMachineImageVersions(images []garden.CloudProfileMachineImage) (map[string]garden.ExpirableVersion, error) {
+	resultMapVersions := make(map[string]garden.ExpirableVersion)
+
+	for _, image := range images {
+		latestMachineImageVersion, err := DetermineLatestCloudProfileMachineImageVersion(image)
+		if err != nil {
+			return nil, err
+		}
+		resultMapVersions[image.Name] = latestMachineImageVersion
+	}
+	return resultMapVersions, nil
+}
+
+// DetermineLatestCloudProfileMachineImageVersion determines the latest MachineImageVersion from a MachineImage
+func DetermineLatestCloudProfileMachineImageVersion(image garden.CloudProfileMachineImage) (garden.ExpirableVersion, error) {
+	var (
+		latestSemVerVersion       *semver.Version
+		latestMachineImageVersion garden.ExpirableVersion
+	)
+
+	for _, imageVersion := range image.Versions {
+		v, err := semver.NewVersion(imageVersion.Version)
+		if err != nil {
+			return garden.ExpirableVersion{}, fmt.Errorf("error while parsing machine image version '%s' of machine image '%s': version not valid: %s", imageVersion.Version, image.Name, err.Error())
+		}
+		if latestSemVerVersion == nil || v.GreaterThan(latestSemVerVersion) {
+			latestSemVerVersion = v
+			latestMachineImageVersion = imageVersion
+		}
+	}
+	return latestMachineImageVersion, nil
+}
+
 // DetermineLatestKubernetesVersion determines the latest KubernetesVersion from a slice of KubernetesVersions
 func DetermineLatestKubernetesVersion(offeredVersions []garden.KubernetesVersion) (garden.KubernetesVersion, error) {
 	var latestKubernetesVersion garden.KubernetesVersion
@@ -153,6 +189,26 @@ func DetermineLatestKubernetesVersion(offeredVersions []garden.KubernetesVersion
 		}
 	}
 	return latestKubernetesVersion, nil
+}
+
+// DetermineLatestExpirableVersion determines the latest ExpirableVersion from a slice of ExpirableVersions
+func DetermineLatestExpirableVersion(offeredVersions []garden.ExpirableVersion) (garden.ExpirableVersion, error) {
+	var latestExpirableVersion garden.ExpirableVersion
+
+	for _, version := range offeredVersions {
+		if len(latestExpirableVersion.Version) == 0 {
+			latestExpirableVersion = version
+			continue
+		}
+		isGreater, err := utils.CompareVersions(version.Version, ">", latestExpirableVersion.Version)
+		if err != nil {
+			return garden.ExpirableVersion{}, fmt.Errorf("error while comparing versions: %s", err.Error())
+		}
+		if isGreater {
+			latestExpirableVersion = version
+		}
+	}
+	return latestExpirableVersion, nil
 }
 
 // ShootWantsBasicAuthentication returns true if basic authentication is not configured or
@@ -195,4 +251,15 @@ func TaintsHave(taints []garden.SeedTaint, key string) bool {
 		}
 	}
 	return false
+}
+
+// QuotaScope returns the scope of a quota scope reference.
+func QuotaScope(scopeRef corev1.ObjectReference) (string, error) {
+	if scopeRef.APIVersion == "core.gardener.cloud/v1alpha1" && scopeRef.Kind == "Project" {
+		return "project", nil
+	}
+	if scopeRef.APIVersion == "v1" && scopeRef.Kind == "Secret" {
+		return "secret", nil
+	}
+	return "", fmt.Errorf("unknown quota scope")
 }

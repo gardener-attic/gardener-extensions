@@ -25,7 +25,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	"k8s.io/api/admission/v1beta1"
@@ -95,8 +95,8 @@ func (h *handlerShootClient) HandleWithRequest(ctx context.Context, req admissio
 
 		podList := &corev1.PodList{}
 		if err := h.client.List(ctx, podList, client.MatchingLabels(map[string]string{
-			gardencorev1alpha1.LabelApp:  gardencorev1alpha1.LabelKubernetes,
-			gardencorev1alpha1.LabelRole: gardencorev1alpha1.LabelAPIServer,
+			v1alpha1constants.LabelApp:  v1alpha1constants.LabelKubernetes,
+			v1alpha1constants.LabelRole: v1alpha1constants.LabelAPIServer,
 		})); err != nil {
 			return errors.Wrapf(err, "error while listing all pods")
 		}

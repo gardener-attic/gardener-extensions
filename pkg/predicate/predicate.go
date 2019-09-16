@@ -27,6 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/equality"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -204,7 +205,7 @@ func HasName(name string) predicate.Predicate {
 // HasOperationAnnotation is a predicate for the operation annotation.
 func HasOperationAnnotation() predicate.Predicate {
 	return FromMapper(MapperFunc(func(e event.GenericEvent) bool {
-		return e.Meta.GetAnnotations()[gardencorev1alpha1.GardenerOperation] == gardencorev1alpha1.GardenerOperationReconcile
+		return e.Meta.GetAnnotations()[v1alpha1constants.GardenerOperation] == v1alpha1constants.GardenerOperationReconcile
 	}), CreateTrigger, UpdateNewTrigger, GenericTrigger)
 }
 

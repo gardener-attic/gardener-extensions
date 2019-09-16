@@ -19,7 +19,7 @@ import (
 
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -30,7 +30,7 @@ import (
 const (
 	// WebhookName is the name of the shoot webhook.
 	WebhookName = "shoot"
-	// A shoot system webhook is applied only to the kube-system namespace in the shoot cluster.
+	// KindSystem is used for webhooks which should only apply to the to the kube-system namespace.
 	KindSystem = "system"
 )
 
@@ -100,7 +100,7 @@ func buildSelector() (*metav1.LabelSelector, error) {
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: gardencorev1alpha1.GardenerPurpose, Operator: metav1.LabelSelectorOpIn, Values: []string{metav1.NamespaceSystem}},
+			{Key: v1alpha1constants.GardenerPurpose, Operator: metav1.LabelSelectorOpIn, Values: []string{metav1.NamespaceSystem}},
 		},
 	}, nil
 }
