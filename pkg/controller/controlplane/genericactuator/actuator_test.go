@@ -30,7 +30,7 @@ import (
 
 	resourcemanagerv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 	resourcesv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -113,10 +113,10 @@ var _ = Describe("Actuator", func() {
 			},
 		}
 
-		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
+		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}
 		cpConfigMapKey = client.ObjectKey{Namespace: namespace, Name: cloudProviderConfigName}
 		cpSecret       = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.SecretNameCloudProvider, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.SecretNameCloudProvider, Namespace: namespace},
 			Data:       map[string][]byte{"foo": []byte("bar")},
 		}
 		cpConfigMap = &corev1.ConfigMap{
@@ -187,8 +187,8 @@ var _ = Describe("Actuator", func() {
 							{
 								NamespaceSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
-										gardencorev1alpha1.LabelControllerRegistrationName: providerName,
-										gardencorev1alpha1.GardenRole:                      gardencorev1alpha1.GardenRoleExtension,
+										v1alpha1constants.LabelControllerRegistrationName: providerName,
+										v1alpha1constants.GardenRole:                      v1alpha1constants.GardenRoleExtension,
 									},
 								},
 								PodSelector: &metav1.LabelSelector{
@@ -202,8 +202,8 @@ var _ = Describe("Actuator", func() {
 				},
 				PodSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						gardencorev1alpha1.LabelApp:  gardencorev1alpha1.LabelKubernetes,
-						gardencorev1alpha1.LabelRole: gardencorev1alpha1.LabelAPIServer,
+						v1alpha1constants.LabelApp:  v1alpha1constants.LabelKubernetes,
+						v1alpha1constants.LabelRole: v1alpha1constants.LabelAPIServer,
 					},
 				},
 			},
@@ -231,13 +231,13 @@ var _ = Describe("Actuator", func() {
 		imageVector = imagevector.ImageVector([]*imagevector.ImageSource{})
 
 		checksums = map[string]string{
-			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			cloudProviderConfigName:                    "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			cloudProviderConfigName:                   "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
 		checksumsNoConfig = map[string]string{
-			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
 		exposureChecksums = map[string]string{
 			"lb-readvertiser": "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",

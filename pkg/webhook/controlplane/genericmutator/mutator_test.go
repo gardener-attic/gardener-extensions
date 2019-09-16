@@ -27,7 +27,7 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
 	"github.com/coreos/go-systemd/unit"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
@@ -98,7 +98,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeAPIServerService with a kube-apiserver service", func() {
 			var (
 				svc = &corev1.Service{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
 				}
 			)
 
@@ -132,7 +132,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeAPIServerDeployment with a kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
 				}
 			)
 
@@ -151,7 +151,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeControllerManagerDeployment with a kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeControllerManager},
 				}
 			)
 
@@ -170,7 +170,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureKubeSchedulerDeployment with a kube-scheduler deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeScheduler},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeScheduler},
 				}
 			)
 
@@ -204,7 +204,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-main stateful set", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDMain, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDMain, Namespace: namespace},
 				}
 			)
 
@@ -229,7 +229,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-events stateful set", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDEvents, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDEvents, Namespace: namespace},
 				}
 			)
 
@@ -274,13 +274,13 @@ var _ = Describe("Mutator", func() {
 						Purpose: extensionsv1alpha1.OperatingSystemConfigPurposeReconcile,
 						Units: []extensionsv1alpha1.Unit{
 							{
-								Name:    gardencorev1alpha1.OperatingSystemConfigUnitNameKubeletService,
+								Name:    v1alpha1constants.OperatingSystemConfigUnitNameKubeletService,
 								Content: util.StringPtr(oldServiceContent),
 							},
 						},
 						Files: []extensionsv1alpha1.File{
 							{
-								Path: gardencorev1alpha1.OperatingSystemConfigFilePathKubeletConfig,
+								Path: v1alpha1constants.OperatingSystemConfigFilePathKubeletConfig,
 								Content: extensionsv1alpha1.FileContent{
 									Inline: &extensionsv1alpha1.FileContentInline{
 										Data: oldKubeletConfigData,
@@ -288,7 +288,7 @@ var _ = Describe("Mutator", func() {
 								},
 							},
 							{
-								Path: gardencorev1alpha1.OperatingSystemConfigFilePathKernelSettings,
+								Path: v1alpha1constants.OperatingSystemConfigFilePathKernelSettings,
 								Content: extensionsv1alpha1.FileContent{
 									Inline: &extensionsv1alpha1.FileContentInline{
 										Data: oldKubernetesGeneralConfigData,
@@ -391,7 +391,7 @@ var _ = Describe("Mutator", func() {
 })
 
 func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
-	kubeletUnit := extensionswebhook.UnitWithName(osc.Spec.Units, gardencorev1alpha1.OperatingSystemConfigUnitNameKubeletService)
+	kubeletUnit := extensionswebhook.UnitWithName(osc.Spec.Units, v1alpha1constants.OperatingSystemConfigUnitNameKubeletService)
 	Expect(kubeletUnit).To(Not(BeNil()))
 	Expect(kubeletUnit.Content).To(Equal(util.StringPtr(newServiceContent)))
 
@@ -401,11 +401,11 @@ func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
 	customFile := extensionswebhook.FileWithPath(osc.Spec.Files, "/test/path")
 	Expect(customFile).To(Not(BeNil()))
 
-	kubeletFile := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKubeletConfig)
+	kubeletFile := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKubeletConfig)
 	Expect(kubeletFile).To(Not(BeNil()))
 	Expect(kubeletFile.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
 
-	general := extensionswebhook.FileWithPath(osc.Spec.Files, gardencorev1alpha1.OperatingSystemConfigFilePathKernelSettings)
+	general := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKernelSettings)
 	Expect(general).To(Not(BeNil()))
 	Expect(general.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
 

@@ -22,7 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 	. "github.com/gardener/gardener-extensions/pkg/util"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 
@@ -73,7 +73,7 @@ var _ = Describe("Shoot", func() {
 			ctx = context.TODO()
 			namespace = "shoot--foo--bar"
 
-			caName = gardencorev1alpha1.SecretNameCACluster
+			caName = v1alpha1constants.SecretNameCACluster
 			caSecret = createNewCA(caName)
 
 			certificateConfig = &secrets.CertificateSecretConfig{

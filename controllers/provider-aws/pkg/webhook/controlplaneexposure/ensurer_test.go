@@ -23,7 +23,7 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
@@ -74,7 +74,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -101,7 +101,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -131,7 +131,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDMain},
 				}
 			)
 
@@ -147,7 +147,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDMain},
 					Spec: appsv1.StatefulSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 							{
@@ -178,7 +178,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDEvents},
 				}
 			)
 
@@ -194,7 +194,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: gardencorev1alpha1.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDEvents},
 					Spec: appsv1.StatefulSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 							{
@@ -238,6 +238,6 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
-	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, gardencorev1alpha1.StatefulSetNameETCDEvents)
-	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(gardencorev1alpha1.StatefulSetNameETCDEvents, nil, nil)))
+	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, v1alpha1constants.StatefulSetNameETCDEvents)
+	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(v1alpha1constants.StatefulSetNameETCDEvents, nil, nil)))
 }

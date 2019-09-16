@@ -17,7 +17,7 @@ package shoot
 import (
 	"context"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -55,8 +55,8 @@ func EnsureNetworkPolicy(ctx context.Context, c client.Client, namespace, provid
 						{
 							NamespaceSelector: &metav1.LabelSelector{
 								MatchLabels: map[string]string{
-									gardencorev1alpha1.LabelControllerRegistrationName: providerName,
-									gardencorev1alpha1.GardenRole:                      gardencorev1alpha1.GardenRoleExtension,
+									v1alpha1constants.LabelControllerRegistrationName: providerName,
+									v1alpha1constants.GardenRole:                      v1alpha1constants.GardenRoleExtension,
 								},
 							},
 							PodSelector: &metav1.LabelSelector{
@@ -70,8 +70,8 @@ func EnsureNetworkPolicy(ctx context.Context, c client.Client, namespace, provid
 			},
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					gardencorev1alpha1.LabelApp:  gardencorev1alpha1.LabelKubernetes,
-					gardencorev1alpha1.LabelRole: gardencorev1alpha1.LabelAPIServer,
+					v1alpha1constants.LabelApp:  v1alpha1constants.LabelKubernetes,
+					v1alpha1constants.LabelRole: v1alpha1constants.LabelAPIServer,
 				},
 			},
 		}

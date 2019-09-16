@@ -7,15 +7,13 @@ require (
 	github.com/Azure/azure-sdk-for-go v32.6.0+incompatible
 	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
-	github.com/Azure/go-autorest/autorest/to v0.3.0 // indirect
-	github.com/Azure/go-autorest/autorest/validation v0.2.0 // indirect
 	github.com/Masterminds/semver v1.4.2
 	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20190723075400-e63e3f9dd712
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/appscode/jsonpatch v0.0.0-20190108182946-7c0e3b262f30
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.0.0-20190906111529-f9ad04069615
+	github.com/gardener/gardener v0.0.0-20190913144920-5b4adb9f114d
 	github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
@@ -37,7 +35,6 @@ require (
 	go.uber.org/zap v1.10.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0
-	gopkg.in/ini.v1 v1.44.0 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
 	k8s.io/apiextensions-apiserver v0.0.0-20190409022649-727a075fdec8

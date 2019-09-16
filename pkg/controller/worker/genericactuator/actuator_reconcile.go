@@ -24,8 +24,8 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1alpha1constantshelper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
@@ -102,7 +102,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		// with Gardeners modifications on the machine deployment's replicas fields.
 		if controller.IsHibernated(cluster.Shoot) || rollingUpdate {
 			deployment := &appsv1.Deployment{}
-			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, gardencorev1alpha1.DeploymentNameClusterAutoscaler), deployment); err != nil {
+			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, v1alpha1constants.DeploymentNameClusterAutoscaler), deployment); err != nil {
 				if !apierrors.IsNotFound(err) {
 					return err
 				}
@@ -146,7 +146,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	defer cancel()
 
 	if err := a.waitUntilMachineDeploymentsAvailable(timeoutCtx, cluster, worker, wantedMachineDeployments); err != nil {
-		return gardencorev1alpha1helper.DetermineError(fmt.Sprintf("Failed while waiting for all machine deployments to be ready: '%s'", err.Error()))
+		return v1alpha1constantshelper.DetermineError(fmt.Sprintf("Failed while waiting for all machine deployments to be ready: '%s'", err.Error()))
 	}
 
 	// Delete all old machine deployments (i.e. those which were not previously computed but exist in the cluster).
@@ -177,7 +177,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 
 	if rollingUpdate {
 		deployment := &appsv1.Deployment{}
-		if err := a.client.Get(ctx, kutil.Key(worker.Namespace, gardencorev1alpha1.DeploymentNameClusterAutoscaler), deployment); err != nil {
+		if err := a.client.Get(ctx, kutil.Key(worker.Namespace, v1alpha1constants.DeploymentNameClusterAutoscaler), deployment); err != nil {
 			if !apierrors.IsNotFound(err) {
 				return err
 			}

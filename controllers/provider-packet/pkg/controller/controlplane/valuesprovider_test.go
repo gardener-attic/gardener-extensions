@@ -24,6 +24,7 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
@@ -57,7 +58,7 @@ var _ = Describe("ValuesProvider", func() {
 			Spec: extensionsv1alpha1.ControlPlaneSpec{
 				Region: "WER1",
 				SecretRef: corev1.SecretReference{
-					Name:      gardencorev1alpha1.SecretNameCloudProvider,
+					Name:      v1alpha1constants.SecretNameCloudProvider,
 					Namespace: namespace,
 				},
 				ProviderConfig: &runtime.RawExtension{
@@ -89,10 +90,10 @@ var _ = Describe("ValuesProvider", func() {
 			},
 		}
 
-		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: gardencorev1alpha1.SecretNameCloudProvider}
+		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}
 		cpSecret    = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      gardencorev1alpha1.SecretNameCloudProvider,
+				Name:      v1alpha1constants.SecretNameCloudProvider,
 				Namespace: namespace,
 			},
 			Type: corev1.SecretTypeOpaque,
@@ -103,10 +104,10 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		checksums = map[string]string{
-			gardencorev1alpha1.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"cloud-controller-manager":                 "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
-			"csi-attacher":                             "2da58ad61c401a2af779a909d22fb42eed93a1524cbfdab974ceedb413fcb914",
-			"csi-provisioner":                          "f75b42d40ab501428c383dfb2336cb1fc892bbee1fc1d739675171e4acc4d911",
+			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			"csi-attacher":                            "2da58ad61c401a2af779a909d22fb42eed93a1524cbfdab974ceedb413fcb914",
+			"csi-provisioner":                         "f75b42d40ab501428c383dfb2336cb1fc892bbee1fc1d739675171e4acc4d911",
 		}
 
 		controlPlaneChartValues = map[string]interface{}{

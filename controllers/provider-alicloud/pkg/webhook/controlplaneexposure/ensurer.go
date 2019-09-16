@@ -24,7 +24,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -58,7 +58,7 @@ func (e *ensurer) InjectClient(client client.Client) error {
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
 	// Get load balancer address of the kube-apiserver service
-	address, err := kutil.GetLoadBalancerIngress(ctx, e.client, dep.Namespace, gardencorev1alpha1.DeploymentNameKubeAPIServer)
+	address, err := kutil.GetLoadBalancerIngress(ctx, e.client, dep.Namespace, v1alpha1constants.DeploymentNameKubeAPIServer)
 	if err != nil {
 		return errors.Wrap(err, "could not get kube-apiserver service load balancer address")
 	}
@@ -82,7 +82,7 @@ func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name 
 }
 
 func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {
-	if name == gardencorev1alpha1.StatefulSetNameETCDMain {
+	if name == v1alpha1constants.StatefulSetNameETCDMain {
 		return controlplane.GetETCDVolumeClaimTemplate(controlplane.EtcdMainVolumeClaimTemplateName, e.etcdStorage.ClassName, e.etcdStorage.Capacity)
 	} else {
 		return controlplane.GetETCDVolumeClaimTemplate(name, nil, util.QuantityPtr(resource.MustParse("20Gi")))
