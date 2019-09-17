@@ -9,7 +9,14 @@ clientConnection:
 machineImages:
 - name: coreos-alicloud
   version: 2023.4.0
-  id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
+  regions:
+  - imageID: coreos_2023_4_0_64_30G_alibase_20190319.vhd
+    region: ap-southeast-1
+- name: coreos
+  version: 2191.4.1  
+  regions:
+  - imageID: m-t4n09r2ooaf9a9gzq18f
+    region: ap-southeast-1
 etcd:
   storage:
     className: gardener.cloud-fast

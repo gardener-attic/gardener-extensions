@@ -42,8 +42,16 @@ type MachineImage struct {
 	Name string
 	// Version is the logical version of the machine image.
 	Version string
-	// ID is the id of the image.
-	ID string
+	// Regions is a mapping to the correct IDs for the machine image in the supported regions.
+	Regions []RegionImageMapping
+}
+
+// RegionImageMapping is a mapping from Region name to supported machine image id for a specific OS version.
+type RegionImageMapping struct {
+	// Region is the ID of the region.
+	Region string
+	// ImageID is the ID for the machine image.
+	ImageID string
 }
 
 // ETCD is an etcd configuration.

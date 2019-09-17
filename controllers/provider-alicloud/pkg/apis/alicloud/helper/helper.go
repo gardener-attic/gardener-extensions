@@ -45,7 +45,7 @@ func FindSecurityGroupByPurpose(securityGroups []alicloud.SecurityGroup, purpose
 }
 
 // FindMachineImage takes a list of machine images and tries to find the first entry
-// whose name, version, and zone matches with the given name, version, and zone. If no such entry is
+// whose name and version matches with the given name and version. If no such entry is
 // found then an error will be returned.
 func FindMachineImage(machineImages []alicloud.MachineImage, name, version string) (*alicloud.MachineImage, error) {
 	for _, machineImage := range machineImages {
@@ -53,5 +53,5 @@ func FindMachineImage(machineImages []alicloud.MachineImage, name, version strin
 			return &machineImage, nil
 		}
 	}
-	return nil, fmt.Errorf("no machine image with name %q, version %q found", name, version)
+	return nil, fmt.Errorf("no machine image name %q in version %q found", name, version)
 }

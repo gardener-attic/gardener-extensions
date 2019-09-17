@@ -178,7 +178,12 @@ var _ = Describe("Machines", func() {
 					{
 						Name:    machineImageName,
 						Version: machineImageVersion,
-						ID:      machineImageID,
+						Regions: []config.RegionImageMapping{
+							{
+								Region:  region,
+								ImageID: machineImageID,
+							},
+						},
 					},
 				}
 

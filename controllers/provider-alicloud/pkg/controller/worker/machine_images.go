@@ -61,8 +61,8 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	return workerStatusV1alpha1, nil
 }
 
-func (w *workerDelegate) findMachineImage(name, version string) (string, error) {
-	machineImageID, err := confighelper.FindImage(w.machineImageMapping, name, version)
+func (w *workerDelegate) findMachineImageForRegion(name, version, region string) (string, error) {
+	machineImageID, err := confighelper.FindImageForRegion(w.machineImageMapping, name, version, region)
 	if err == nil {
 		return machineImageID, nil
 	}
