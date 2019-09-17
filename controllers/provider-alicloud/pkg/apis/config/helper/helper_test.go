@@ -24,11 +24,12 @@ import (
 )
 
 const imageID = "id-1234"
+const regionID = "cn_shanghai"
 
 var _ = Describe("Helper", func() {
-	DescribeTable("#FindImage",
-		func(machineImages []config.MachineImage, imageName, version string, expectedImage string) {
-			image, err := FindImage(machineImages, imageName, version)
+	DescribeTable("#FindImageForRegion",
+		func(machineImages []config.MachineImage, imageName, version, regionID string, expectedImage string) {
+			image, err := FindImageForRegion(machineImages, imageName, version, regionID)
 
 			Expect(image).To(Equal(expectedImage))
 			if expectedImage != "" {
@@ -38,11 +39,12 @@ var _ = Describe("Helper", func() {
 			}
 		},
 
-		Entry("list is nil", nil, "ubuntu", "1", ""),
-		Entry("empty list", []config.MachineImage{}, "ubuntu", "1", ""),
-		Entry("entry not found (image does not exist)", makeMachineImages("debian", "1"), "ubuntu", "1", ""),
-		Entry("entry not found (version does not exist)", makeMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
-		Entry("entry", makeMachineImages("ubuntu", "1"), "ubuntu", "1", imageID),
+		Entry("list is nil", nil, "ubuntu", "1", "cn_shanghai", ""),
+		Entry("empty list", []config.MachineImage{}, "ubuntu", "1", "cn_shanghai", ""),
+		Entry("entry not found (image does not exist)", makeMachineImages("debian", "1"), "ubuntu", "1", "cn_shanghai", ""),
+		Entry("entry not found (version does not exist)", makeMachineImages("ubuntu", "2"), "ubuntu", "1", "cn_shanghai", ""),
+		Entry("entry not found (region does not exist)", makeMachineImages("ubuntu", "2"), "ubuntu", "2", "cn_beijing", ""),
+		Entry("entry", makeMachineImages("ubuntu", "1"), "ubuntu", "1", "cn_shanghai", imageID),
 	)
 })
 
@@ -51,7 +53,12 @@ func makeMachineImages(name, version string) []config.MachineImage {
 		{
 			Name:    name,
 			Version: version,
-			ID:      imageID,
+			Regions: []config.RegionImageMapping{
+				{
+					Region:  regionID,
+					ImageID: imageID,
+				},
+			},
 		},
 	}
 }

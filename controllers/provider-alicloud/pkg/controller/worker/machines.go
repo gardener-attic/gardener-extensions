@@ -102,7 +102,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		machineImageID, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
+		machineImageID, err := w.findMachineImageForRegion(pool.MachineImage.Name, pool.MachineImage.Version, w.worker.Spec.Region)
 		if err != nil {
 			return err
 		}
