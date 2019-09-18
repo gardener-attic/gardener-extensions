@@ -96,8 +96,8 @@ start-os-coreos:
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION)
 
-.PHONY: start-os-jeos
-start-os-jeos:
+.PHONY: start-os-suse-jeos
+start-os-suse-jeos:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
 		-mod=vendor \
 		-ldflags $(LD_FLAGS) \

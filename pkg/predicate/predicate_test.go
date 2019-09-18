@@ -15,16 +15,11 @@
 package predicate_test
 
 import (
-	"encoding/json"
-
 	"github.com/gardener/gardener-extensions/pkg/predicate"
 
 	"github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/types"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
@@ -130,54 +125,4 @@ var _ = Describe("Predicate", func() {
 			Expect(predicate.Generic(genericEvent)).To(BeFalse())
 		})
 	})
-
-	DescribeTable("#ClusterCloudProfileGenerationChanged",
-		func(oldMachine, newMachine string, conditionMatcher types.GomegaMatcher) {
-			oldCloudProfile := &v1beta1.CloudProfile{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "CloudProfile",
-					APIVersion: "garden.sapcloud.io/v1beta1",
-				},
-				Spec: v1beta1.CloudProfileSpec{
-					AWS: &v1beta1.AWSProfile{
-						Constraints: v1beta1.AWSConstraints{
-							MachineTypes: []v1beta1.MachineType{
-								{
-									Name: oldMachine,
-								},
-							},
-						},
-					},
-				},
-			}
-			newCloudProfile := oldCloudProfile.DeepCopy()
-			newCloudProfile.Spec.AWS.Constraints.MachineTypes = []v1beta1.MachineType{{Name: newMachine}}
-
-			updateEvent := event.UpdateEvent{
-				ObjectNew: &v1alpha1.Cluster{
-					Spec: v1alpha1.ClusterSpec{
-						CloudProfile: runtime.RawExtension{
-							Raw: encode(newCloudProfile),
-						},
-					},
-				},
-				ObjectOld: &v1alpha1.Cluster{
-					Spec: v1alpha1.ClusterSpec{
-						CloudProfile: runtime.RawExtension{
-							Raw: encode(oldCloudProfile),
-						},
-					},
-				},
-			}
-
-			Expect(predicate.ClusterCloudProfileGenerationChanged().Update(updateEvent)).To(conditionMatcher)
-		},
-		Entry("no update", "machineFoo", "machineFoo", BeFalse()),
-		Entry("generation update", "machineFoo", "machineBar", BeTrue()),
-	)
 })
-
-func encode(obj runtime.Object) []byte {
-	data, _ := json.Marshal(obj)
-	return data
-}

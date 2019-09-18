@@ -62,7 +62,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.Stateful
 	if err := e.ensureContainers(&ss.Spec.Template.Spec, ss.Name, cluster); err != nil {
 		return err
 	}
-	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, cluster.Seed.Spec.Backup != nil)
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, !extensionscontroller.IsSeedBackupNil(cluster))
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
@@ -84,7 +84,7 @@ func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev
 func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscontroller.Cluster) (*corev1.Container, error) {
 	// Find etcd-backup-restore image
 	// TODO Get seed version from clientset when it's possible to inject it
-	image, err := e.imageVector.FindImage(openstack.ETCDBackupRestoreImageName, imagevector.TargetVersion(cluster.Shoot.Spec.Kubernetes.Version))
+	image, err := e.imageVector.FindImage(openstack.ETCDBackupRestoreImageName, imagevector.TargetVersion(extensionscontroller.GetKubernetesVersion(cluster)))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find image %s", openstack.ETCDBackupRestoreImageName)
 	}
@@ -102,10 +102,10 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 		volumeClaimTemplateName = name
 	)
 	if name == v1alpha1constants.StatefulSetNameETCDMain {
-		if cluster.Seed.Spec.Backup == nil {
-			e.logger.Info("Backup profile is not configured;  backup will not be taken for etcd-main")
+		if extensionscontroller.IsSeedBackupNil(cluster) {
+			e.logger.Info("Backup profile is not configured; backup will not be taken for etcd-main")
 		} else {
-			prefix = common.GenerateBackupEntryName(cluster.Shoot.Status.TechnicalID, cluster.Shoot.Status.UID)
+			prefix = common.GenerateBackupEntryName(extensionscontroller.GetTechnicalID(cluster), extensionscontroller.GetUID(cluster))
 
 			provider = openstack.StorageProviderName
 			env = []corev1.EnvVar{

@@ -55,6 +55,7 @@ func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predic
 		return []predicate.Predicate{
 			extensionspredicate.HasType(typeName),
 			extensionspredicate.GenerationChanged(),
+			extensionspredicate.ShootNotFailed(),
 		}
 	}
 

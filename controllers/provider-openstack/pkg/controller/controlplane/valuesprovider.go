@@ -153,16 +153,22 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
-	// Decode providerConfig
 	cpConfig := &apisopenstack.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 	}
 
-	// Decode infrastructureProviderStatus
 	infraStatus := &apisopenstack.InfrastructureStatus{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
 		return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
+	}
+
+	var cloudProfileConfig *apisopenstack.CloudProfileConfig
+	if cluster.CoreCloudProfile != nil && cluster.CoreCloudProfile.Spec.ProviderConfig != nil && cluster.CoreCloudProfile.Spec.ProviderConfig.Raw != nil {
+		cloudProfileConfig = &apisopenstack.CloudProfileConfig{}
+		if _, _, err := vp.decoder.Decode(cluster.CoreCloudProfile.Spec.ProviderConfig.Raw, nil, cloudProfileConfig); err != nil {
+			return nil, errors.Wrapf(err, "could not decode providerConfig of cloudProfile for '%s'", util.ObjectName(cp))
+		}
 	}
 
 	// Get credentials
@@ -172,7 +178,7 @@ func (vp *valuesProvider) GetConfigChartValues(
 	}
 
 	// Get config chart values
-	return getConfigChartValues(cpConfig, infraStatus, cp, credentials, cluster)
+	return getConfigChartValues(cpConfig, infraStatus, cloudProfileConfig, cp, credentials, cluster)
 }
 
 // GetControlPlaneChartValues returns the values for the control plane chart applied by the generic actuator.
@@ -214,6 +220,7 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 func getConfigChartValues(
 	cpConfig *apisopenstack.ControlPlaneConfig,
 	infraStatus *apisopenstack.InfrastructureStatus,
+	cloudProfileConfig *apisopenstack.CloudProfileConfig,
 	cp *extensionsv1alpha1.ControlPlane,
 	c *internal.Credentials,
 	cluster *extensionscontroller.Cluster,
@@ -224,9 +231,24 @@ func getConfigChartValues(
 		return nil, errors.Wrapf(err, "could not determine subnet from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
+	var (
+		keyStoneURL    string
+		dhcpDomain     *string
+		requestTimeout *string
+	)
+	if cluster.CloudProfile != nil {
+		keyStoneURL = cluster.CloudProfile.Spec.OpenStack.KeyStoneURL
+		dhcpDomain = cluster.CloudProfile.Spec.OpenStack.DHCPDomain
+		requestTimeout = cluster.CloudProfile.Spec.OpenStack.RequestTimeout
+	} else if cluster.CoreCloudProfile != nil && cloudProfileConfig != nil {
+		keyStoneURL = cloudProfileConfig.KeyStoneURL
+		dhcpDomain = cloudProfileConfig.DHCPDomain
+		requestTimeout = cloudProfileConfig.RequestTimeout
+	}
+
 	// Collect config chart values
 	values := map[string]interface{}{
-		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
+		"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
 		"domainName":        c.DomainName,
 		"tenantName":        c.TenantName,
 		"username":          c.Username,
@@ -234,16 +256,25 @@ func getConfigChartValues(
 		"lbProvider":        cpConfig.LoadBalancerProvider,
 		"floatingNetworkID": infraStatus.Networks.FloatingPool.ID,
 		"subnetID":          subnet.ID,
-		"authUrl":           cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
-		"dhcpDomain":        cluster.CloudProfile.Spec.OpenStack.DHCPDomain,
-		"requestTimeout":    cluster.CloudProfile.Spec.OpenStack.RequestTimeout,
+		"authUrl":           keyStoneURL,
+		"dhcpDomain":        dhcpDomain,
+		"requestTimeout":    requestTimeout,
 	}
 
 	if cpConfig.LoadBalancerClasses == nil {
-		for _, pool := range cluster.CloudProfile.Spec.OpenStack.Constraints.FloatingPools {
-			if pool.Name == cluster.Shoot.Spec.Cloud.OpenStack.FloatingPoolName {
-				cpConfig.LoadBalancerClasses = gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(pool.LoadBalancerClasses)
-				break
+		if cluster.CloudProfile != nil && cluster.Shoot != nil {
+			for _, pool := range cluster.CloudProfile.Spec.OpenStack.Constraints.FloatingPools {
+				if pool.Name == cluster.Shoot.Spec.Cloud.OpenStack.FloatingPoolName {
+					cpConfig.LoadBalancerClasses = gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(pool.LoadBalancerClasses)
+					break
+				}
+			}
+		} else if cluster.CoreCloudProfile != nil && cluster.CoreShoot != nil && cloudProfileConfig != nil {
+			for _, pool := range cloudProfileConfig.Constraints.FloatingPools {
+				if pool.Name == infraStatus.Networks.FloatingPool.Name {
+					cpConfig.LoadBalancerClasses = pool.LoadBalancerClasses
+					break
+				}
 			}
 		}
 	}
@@ -293,10 +324,10 @@ func getCCMChartValues(
 	scaledDown bool,
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
-		"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
+		"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
 		"clusterName":       cp.Namespace,
-		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
-		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
+		"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+		"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":                          checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server":                   checksums[cloudControllerManagerServerName],

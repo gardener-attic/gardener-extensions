@@ -67,18 +67,36 @@ func ComputeTerraformerChartValues(
 	credentials *internal.Credentials,
 	config *openstackv1alpha1.InfrastructureConfig,
 	cluster *controller.Cluster,
-) map[string]interface{} {
+) (map[string]interface{}, error) {
 	var (
 		routerID     = DefaultRouterID
 		createRouter = true
 	)
+
 	if router := config.Networks.Router; router != nil {
 		createRouter = false
 		routerID = router.ID
 	}
+
+	var (
+		keyStoneURL string
+		dnsServers  []string
+	)
+	if cluster.CloudProfile != nil {
+		keyStoneURL = cluster.CloudProfile.Spec.OpenStack.KeyStoneURL
+		dnsServers = cluster.CloudProfile.Spec.OpenStack.DNSServers
+	} else if cluster.CoreCloudProfile != nil {
+		cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(cluster.CoreCloudProfile)
+		if err != nil {
+			return nil, err
+		}
+		keyStoneURL = cloudProfileConfig.KeyStoneURL
+		dnsServers = cloudProfileConfig.DNSServers
+	}
+
 	return map[string]interface{}{
 		"openstack": map[string]interface{}{
-			"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
+			"authURL":          keyStoneURL,
 			"domainName":       credentials.DomainName,
 			"tenantName":       credentials.TenantName,
 			"region":           infra.Spec.Region,
@@ -87,7 +105,7 @@ func ComputeTerraformerChartValues(
 		"create": map[string]interface{}{
 			"router": createRouter,
 		},
-		"dnsServers":   cluster.CloudProfile.Spec.OpenStack.DNSServers,
+		"dnsServers":   dnsServers,
 		"sshPublicKey": string(infra.Spec.SSHPublicKey),
 		"router": map[string]interface{}{
 			"id": routerID,
@@ -105,7 +123,7 @@ func ComputeTerraformerChartValues(
 			"floatingNetworkID": TerraformOutputKeyFloatingNetworkID,
 			"subnetID":          TerraformOutputKeySubnetID,
 		},
-	}
+	}, nil
 }
 
 // RenderTerraformerChart renders the gcp-infra chart with the given values.
@@ -116,7 +134,10 @@ func RenderTerraformerChart(
 	config *openstackv1alpha1.InfrastructureConfig,
 	cluster *controller.Cluster,
 ) (*TerraformFiles, error) {
-	values := ComputeTerraformerChartValues(infra, credentials, config, cluster)
+	values, err := ComputeTerraformerChartValues(infra, credentials, config, cluster)
+	if err != nil {
+		return nil, err
+	}
 
 	release, err := renderer.Render(filepath.Join(InternalChartsPath, "openstack-infra"), "openstack-infra", infra.Namespace, values)
 	if err != nil {
@@ -231,5 +252,7 @@ func ComputeStatus(tf *terraformer.Terraformer, config *openstackv1alpha1.Infras
 		return nil, err
 	}
 
-	return StatusFromTerraformState(state), nil
+	status := StatusFromTerraformState(state)
+	status.Networks.FloatingPool.Name = config.FloatingPoolName
+	return status, nil
 }

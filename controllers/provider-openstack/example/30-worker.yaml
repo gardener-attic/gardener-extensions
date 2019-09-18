@@ -17,16 +17,18 @@ metadata:
   name: shoot--foobar--openstack
 spec:
   cloudProfile:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
     spec:
-      openstack:
+      providerConfig:
+        apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
         keystoneURL: https://localhost
   seed:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
   shoot:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: Shoot
     spec:
       kubernetes:

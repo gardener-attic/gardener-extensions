@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 
 	"github.com/Masterminds/semver"
@@ -103,14 +102,6 @@ func GetOrCreateShootKubeconfig(ctx context.Context, c client.Client, certificat
 // e.g. kube-apiserver.shoot--project--prod.svc.cluster.local.
 func kubeAPIServerServiceDNS(namespace string) string {
 	return fmt.Sprintf("%s.%s", v1alpha1constants.DeploymentNameKubeAPIServer, namespace)
-}
-
-// GetReplicaCount returns the given replica count base on the hibernation status of the shoot.
-func GetReplicaCount(shoot *gardenv1beta1.Shoot, count int) int {
-	if shoot.Spec.Hibernation != nil && shoot.Spec.Hibernation.Enabled != nil && *shoot.Spec.Hibernation.Enabled {
-		return 0
-	}
-	return count
 }
 
 // VersionMajorMinor extracts and returns the major and the minor part of the given version (input must be a semantic version).

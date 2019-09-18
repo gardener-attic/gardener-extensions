@@ -15,12 +15,14 @@
 package infrastructure
 
 import (
+	"encoding/json"
+
 	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -28,30 +30,30 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func makeCluster(pods, services string, region string) *controller.Cluster {
+func makeCluster(pods, services string, region string, countFaultDomain, countUpdateDomain int) *controller.Cluster {
 	var (
-		shoot = gardenv1beta1.Shoot{
-			Spec: gardenv1beta1.ShootSpec{
-				Cloud: gardenv1beta1.Cloud{
-					Azure: &gardenv1beta1.AzureCloud{
-						Networks: gardenv1beta1.AzureNetworks{
-							K8SNetworks: gardenv1beta1.K8SNetworks{
-								Pods:     &pods,
-								Services: &services,
-							},
-						},
-					},
+		shoot = gardencorev1alpha1.Shoot{
+			Spec: gardencorev1alpha1.ShootSpec{
+				Networking: gardencorev1alpha1.Networking{
+					Pods:     &pods,
+					Services: &services,
 				},
 			},
 		}
-		cloudProfile = gardenv1beta1.CloudProfile{
-			Spec: gardenv1beta1.CloudProfileSpec{
-				Azure: &gardenv1beta1.AzureProfile{
-					CountFaultDomains: []gardenv1beta1.AzureDomainCount{
-						{Region: region, Count: 1},
-					},
-					CountUpdateDomains: []gardenv1beta1.AzureDomainCount{
-						{Region: region, Count: 1},
+		cloudProfileConfig = azurev1alpha1.CloudProfileConfig{
+			CountFaultDomains: []azurev1alpha1.DomainCount{
+				{Region: region, Count: countFaultDomain},
+			},
+			CountUpdateDomains: []azurev1alpha1.DomainCount{
+				{Region: region, Count: countUpdateDomain},
+			},
+		}
+		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
+		cloudProfile              = gardencorev1alpha1.CloudProfile{
+			Spec: gardencorev1alpha1.CloudProfileSpec{
+				ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+					RawExtension: runtime.RawExtension{
+						Raw: cloudProfileConfigJSON,
 					},
 				},
 			},
@@ -59,8 +61,8 @@ func makeCluster(pods, services string, region string) *controller.Cluster {
 	)
 
 	return &controller.Cluster{
-		Shoot:        &shoot,
-		CloudProfile: &cloudProfile,
+		CoreShoot:        &shoot,
+		CoreCloudProfile: &cloudProfile,
 	}
 }
 
@@ -72,6 +74,8 @@ var _ = Describe("Terraform", func() {
 		clientAuth *internal.ClientAuth
 
 		testServiceEndpoint = "Microsoft.Test"
+		countFaultDomain    = 1
+		countUpdateDomain   = 2
 	)
 
 	BeforeEach(func() {
@@ -110,7 +114,7 @@ var _ = Describe("Terraform", func() {
 			},
 		}
 
-		cluster = makeCluster("11.0.0.0/16", "12.0.0.0/16", infra.Spec.Region)
+		cluster = makeCluster("11.0.0.0/16", "12.0.0.0/16", infra.Spec.Region, countFaultDomain, countUpdateDomain)
 		clientAuth = &internal.ClientAuth{
 			TenantID:       "tenant_id",
 			ClientSecret:   "client_secret",
@@ -168,8 +172,8 @@ var _ = Describe("Terraform", func() {
 					"subscriptionID":     clientAuth.SubscriptionID,
 					"tenantID":           clientAuth.TenantID,
 					"region":             infra.Spec.Region,
-					"countUpdateDomains": cluster.CloudProfile.Spec.Azure.CountUpdateDomains[0].Count,
-					"countFaultDomains":  cluster.CloudProfile.Spec.Azure.CountFaultDomains[0].Count,
+					"countUpdateDomains": countUpdateDomain,
+					"countFaultDomains":  countFaultDomain,
 				},
 				"create": map[string]interface{}{
 					"resourceGroup":   true,

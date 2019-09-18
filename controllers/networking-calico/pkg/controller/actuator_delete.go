@@ -26,12 +26,14 @@ import (
 
 // Delete implements Network.Actuator.
 func (a *actuator) Delete(ctx context.Context, network *extensionsv1alpha1.Network, cluster *extensionscontroller.Cluster) error {
-	if err := resourcemanager.NewSecret(a.client).
+	if err := resourcemanager.
+		NewSecret(a.client).
 		WithNamespacedName(network.Namespace, calicoConfigSecretName).
 		Delete(ctx); err != nil {
 		return err
 	}
-	if err := resourcemanager.NewManagedResource(a.client).
+	if err := resourcemanager.
+		NewManagedResource(a.client).
 		WithNamespacedName(network.Namespace, calicoConfigSecretName).
 		Delete(ctx); err != nil {
 		return err

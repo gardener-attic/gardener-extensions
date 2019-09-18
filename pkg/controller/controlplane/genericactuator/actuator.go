@@ -198,7 +198,8 @@ func (a *actuator) reconcileControlPlaneExposure(
 
 	// Apply control plane exposure chart
 	a.logger.Info("Applying control plane exposure chart", "controlplaneexposure", util.ObjectName(cp), "values", values)
-	if err := a.controlPlaneExposureChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), cluster.Shoot.Spec.Kubernetes.Version, values); err != nil {
+	version := extensionscontroller.GetKubernetesVersion(cluster)
+	if err := a.controlPlaneExposureChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), version, values); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane exposure chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
@@ -273,7 +274,7 @@ func (a *actuator) reconcileControlPlane(
 		scaledDown = false
 	)
 
-	if extensionscontroller.IsHibernated(cluster.Shoot) {
+	if extensionscontroller.IsHibernated(cluster) {
 		dep := &appsv1.Deployment{}
 		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer}, dep); client.IgnoreNotFound(err) != nil {
 			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, v1alpha1constants.DeploymentNameKubeAPIServer)
@@ -283,7 +284,14 @@ func (a *actuator) reconcileControlPlane(
 		// then we requeue the `ControlPlane` CRD in order to give the provider-specific control plane components time to
 		// properly prepare the cluster for hibernation (whatever needs to be done). If the kube-apiserver is already scaled down
 		// then we allow continuing the reconciliation.
-		if cluster.Shoot.DeletionTimestamp == nil {
+		var deletionTimestamp *metav1.Time
+		if cluster.Shoot != nil {
+			deletionTimestamp = cluster.Shoot.DeletionTimestamp
+		} else if cluster.CoreShoot != nil {
+			deletionTimestamp = cluster.CoreShoot.DeletionTimestamp
+		}
+
+		if deletionTimestamp == nil {
 			if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 0 {
 				requeue = true
 			} else {
@@ -305,13 +313,14 @@ func (a *actuator) reconcileControlPlane(
 	}
 
 	// Apply control plane chart
+	version := extensionscontroller.GetKubernetesVersion(cluster)
 	a.logger.Info("Applying control plane chart", "controlplane", util.ObjectName(cp))
-	if err := a.controlPlaneChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), cluster.Shoot.Spec.Kubernetes.Version, values); err != nil {
+	if err := a.controlPlaneChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), version, values); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
 	// Create shoot chart renderer
-	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
+	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(version)
 	if err != nil {
 		return false, errors.Wrapf(err, "could not create chart renderer for shoot '%s'", cp.Namespace)
 	}
@@ -322,7 +331,7 @@ func (a *actuator) reconcileControlPlane(
 		return false, err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, controlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, controlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, version, true); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
@@ -332,7 +341,7 @@ func (a *actuator) reconcileControlPlane(
 		return false, err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, version, true); err != nil {
 		return false, errors.Wrapf(err, "could not apply storage classes chart for controlplane '%s'", util.ObjectName(cp))
 	}
 

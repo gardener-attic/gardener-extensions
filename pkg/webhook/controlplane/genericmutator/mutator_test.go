@@ -27,9 +27,9 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
 	"github.com/coreos/go-systemd/unit"
+	gardencorevalpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -74,11 +74,25 @@ var _ = Describe("Mutator", func() {
 
 		clusterKey = client.ObjectKey{Name: namespace}
 		cluster    = &extensionscontroller.Cluster{
-			CloudProfile: &gardenv1beta1.CloudProfile{},
-			Seed:         &gardenv1beta1.Seed{},
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Kubernetes: gardenv1beta1.Kubernetes{
+			CoreCloudProfile: &gardencorevalpha1.CloudProfile{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: gardencorevalpha1.SchemeGroupVersion.String(),
+					Kind:       "CloudProfile",
+				},
+			},
+			CoreSeed: &gardencorevalpha1.Seed{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: gardencorevalpha1.SchemeGroupVersion.String(),
+					Kind:       "Seed",
+				},
+			},
+			CoreShoot: &gardencorevalpha1.Shoot{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: gardencorevalpha1.SchemeGroupVersion.String(),
+					Kind:       "Shoot",
+				},
+				Spec: gardencorevalpha1.ShootSpec{
+					Kubernetes: gardencorevalpha1.Kubernetes{
 						Version: "1.13.4",
 					},
 				},
@@ -430,13 +444,13 @@ func clusterObject(cluster *extensionscontroller.Cluster) *extensionsv1alpha1.Cl
 	return &extensionsv1alpha1.Cluster{
 		Spec: extensionsv1alpha1.ClusterSpec{
 			CloudProfile: runtime.RawExtension{
-				Raw: encode(cluster.CloudProfile),
+				Raw: encode(cluster.CoreCloudProfile),
 			},
 			Seed: runtime.RawExtension{
-				Raw: encode(cluster.Seed),
+				Raw: encode(cluster.CoreSeed),
 			},
 			Shoot: runtime.RawExtension{
-				Raw: encode(cluster.Shoot),
+				Raw: encode(cluster.CoreShoot),
 			},
 		},
 	}

@@ -17,22 +17,25 @@ package controller
 import (
 	"context"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Cluster contains the decoded resources of Gardener's extension Cluster resource.
-// TODO: Change from `gardenv1beta1` to `gardencorev1alpha1` once we have moved the resources there.
+// TODO: Remove `gardenv1beta1` after one release.
 type Cluster struct {
 	CloudProfile *gardenv1beta1.CloudProfile
 	Seed         *gardenv1beta1.Seed
 	Shoot        *gardenv1beta1.Shoot
+
+	CoreCloudProfile *gardencorev1alpha1.CloudProfile
+	CoreSeed         *gardencorev1alpha1.Seed
+	CoreShoot        *gardencorev1alpha1.Shoot
 }
 
 // GetCluster tries to read Gardener's Cluster extension resource in the given namespace.
@@ -42,60 +45,145 @@ func GetCluster(ctx context.Context, c client.Client, namespace string) (*Cluste
 		return nil, err
 	}
 
-	cloudProfile, err := CloudProfileFromCluster(cluster)
-	if err != nil {
-		return nil, err
-	}
-	seed, err := SeedFromCluster(cluster)
-	if err != nil {
-		return nil, err
-	}
-	shoot, err := ShootFromCluster(cluster)
+	decoder, err := NewGardenDecoder()
 	if err != nil {
 		return nil, err
 	}
 
-	return &Cluster{cloudProfile, seed, shoot}, nil
+	cloudProfile, err := CloudProfileFromCluster(decoder, cluster)
+	if err != nil {
+		return nil, err
+	}
+	seed, err := SeedFromCluster(decoder, cluster)
+	if err != nil {
+		return nil, err
+	}
+	shoot, err := ShootFromCluster(decoder, cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	coreCloudProfile, err := CoreCloudProfileFromCluster(decoder, cluster)
+	if err != nil {
+		return nil, err
+	}
+	coreSeed, err := CoreSeedFromCluster(decoder, cluster)
+	if err != nil {
+		return nil, err
+	}
+	coreShoot, err := CoreShootFromCluster(decoder, cluster)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Cluster{cloudProfile, seed, shoot, coreCloudProfile, coreSeed, coreShoot}, nil
 }
 
 // CloudProfileFromCluster returns the CloudProfile resource inside the Cluster resource.
-func CloudProfileFromCluster(cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.CloudProfile, error) {
-	decoder, err := newGardenDecoder()
-	if err != nil {
-		return nil, err
+func CloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.CloudProfile, error) {
+	cloudProfile := &gardenv1beta1.CloudProfile{}
+
+	if cluster.Spec.CloudProfile.Raw == nil {
+		return nil, nil
+	}
+	if _, _, err := decoder.Decode(cluster.Spec.CloudProfile.Raw, nil, cloudProfile); err != nil {
+		// If cluster.Spec.CloudProfile.Raw is not of type gardenv1beta1.CloudProfile then it is probably
+		// of type gardencorev1alpha1.CloudProfile. We don't want to return an error in this case.
+		return nil, nil
 	}
 
-	cloudProfile := &gardenv1beta1.CloudProfile{}
-	_, _, err = decoder.Decode(cluster.Spec.CloudProfile.Raw, nil, cloudProfile)
-	return cloudProfile, err
+	return cloudProfile, nil
 }
 
 // SeedFromCluster returns the Seed resource inside the Cluster resource.
-func SeedFromCluster(cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.Seed, error) {
-	decoder, err := newGardenDecoder()
-	if err != nil {
-		return nil, err
+func SeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.Seed, error) {
+	seed := &gardenv1beta1.Seed{}
+
+	if cluster.Spec.Seed.Raw == nil {
+		return nil, nil
+	}
+	if _, _, err := decoder.Decode(cluster.Spec.Seed.Raw, nil, seed); err != nil {
+		// If cluster.Spec.Seed.Raw is not of type gardenv1beta1.Seed then it is probably
+		// of type gardencorev1alpha1.Seed. We don't want to return an error in this case.
+		return nil, nil
 	}
 
-	seed := &gardenv1beta1.Seed{}
-	_, _, err = decoder.Decode(cluster.Spec.Seed.Raw, nil, seed)
-	return seed, err
+	return seed, nil
 }
 
 // ShootFromCluster returns the Shoot resource inside the Cluster resource.
-func ShootFromCluster(cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.Shoot, error) {
-	decoder, err := newGardenDecoder()
-	if err != nil {
+func ShootFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardenv1beta1.Shoot, error) {
+	shoot := &gardenv1beta1.Shoot{}
+
+	if cluster.Spec.Shoot.Raw == nil {
+		return nil, nil
+	}
+	if _, _, err := decoder.Decode(cluster.Spec.Shoot.Raw, nil, shoot); err != nil {
+		// If cluster.Spec.Shoot.Raw is not of type gardenv1beta1.Shoot then it is probably
+		// of type gardencorev1alpha1.Shoot. We don't want to return an error in this case.
+		return nil, nil
+	}
+
+	return shoot, nil
+}
+
+// CoreCloudProfileFromCluster returns the CloudProfile resource inside the Cluster resource.
+func CoreCloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1alpha1.CloudProfile, error) {
+	cloudProfile := &gardencorev1alpha1.CloudProfile{}
+
+	if cluster.Spec.CloudProfile.Raw == nil {
+		return nil, nil
+	}
+	if _, _, err := decoder.Decode(cluster.Spec.CloudProfile.Raw, nil, cloudProfile); err != nil {
+		// If cluster.Spec.CloudProfile.Raw is not of type gardencorev1alpha1.CloudProfile then it is probably
+		// of type gardenv1beta1.CloudProfile. We don't want to return an error in this case.
+		return nil, nil
+	}
+
+	return cloudProfile, nil
+}
+
+// CoreSeedFromCluster returns the Seed resource inside the Cluster resource.
+func CoreSeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1alpha1.Seed, error) {
+	seed := &gardencorev1alpha1.Seed{}
+
+	if cluster.Spec.Seed.Raw == nil {
+		return nil, nil
+	}
+	if _, _, err := decoder.Decode(cluster.Spec.Seed.Raw, nil, seed); err != nil {
+		// If cluster.Spec.Seed.Raw is not of type gardencorev1alpha1.Seed then it is probably
+		// of type gardenv1beta1.Seed. We don't want to return an error in this case.
+		return nil, nil
+	}
+
+	return seed, nil
+}
+
+// CoreShootFromCluster returns the Shoot resource inside the Cluster resource.
+func CoreShootFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1alpha1.Shoot, error) {
+	shoot := &gardencorev1alpha1.Shoot{}
+
+	if cluster.Spec.Shoot.Raw == nil {
+		return nil, nil
+	}
+	if _, _, err := decoder.Decode(cluster.Spec.Shoot.Raw, nil, shoot); err != nil {
+		// If cluster.Spec.Shoot.Raw is not of type gardencorev1alpha1.Shoot then it is probably
+		// of type gardenv1beta1.Shoot. We don't want to return an error in this case.
+		return nil, nil
+	}
+
+	return shoot, nil
+}
+
+// NewGardenDecoder returns a new Garden API decoder.
+func NewGardenDecoder() (runtime.Decoder, error) {
+	scheme := runtime.NewScheme()
+	if err := gardenv1beta1.AddToScheme(scheme); err != nil {
+		return nil, err
+	}
+	if err := gardencorev1alpha1.AddToScheme(scheme); err != nil {
 		return nil, err
 	}
 
-	shoot := &gardenv1beta1.Shoot{}
-	_, _, err = decoder.Decode(cluster.Spec.Shoot.Raw, nil, shoot)
-	return shoot, err
-}
-
-func newGardenDecoder() (runtime.Decoder, error) {
-	scheme := runtime.NewScheme()
-	decoder := serializer.NewCodecFactory(scheme).UniversalDecoder()
-	return decoder, gardenv1beta1.AddToScheme(scheme)
+	return serializer.NewCodecFactory(scheme).UniversalDecoder(), nil
 }

@@ -28,7 +28,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/chart"
@@ -108,17 +107,12 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 	if err := a.createShootResources(ctx, cluster, ex.Namespace); err != nil {
 		return err
 	}
-	return a.createSeedResources(ctx, cluster.Shoot, ex.Namespace)
+	return a.createSeedResources(ctx, cluster, ex.Namespace)
 }
 
 // Delete the Extension resource.
 func (a *actuator) Delete(ctx context.Context, ex *extensionsv1alpha1.Extension) error {
-	cluster, err := controller.GetCluster(ctx, a.client, ex.Namespace)
-	if err != nil {
-		return err
-	}
-
-	if err := a.deleteSeedResources(ctx, cluster.Shoot, ex.Namespace); err != nil {
+	if err := a.deleteSeedResources(ctx, ex.Namespace); err != nil {
 		return err
 	}
 	return a.deleteShootResources(ctx, ex.Namespace)
@@ -128,7 +122,7 @@ func (a *actuator) shootId(namespace string) string {
 	return fmt.Sprintf("%s.gardener.cloud/%s", a.controllerConfig.GardenID, namespace)
 }
 
-func (a *actuator) createSeedResources(ctx context.Context, shoot *gardenv1beta1.Shoot, namespace string) error {
+func (a *actuator) createSeedResources(ctx context.Context, cluster *controller.Cluster, namespace string) error {
 	shootKubeconfig, err := a.createKubeconfig(ctx, namespace)
 	if err != nil {
 		return err
@@ -136,7 +130,7 @@ func (a *actuator) createSeedResources(ctx context.Context, shoot *gardenv1beta1
 
 	chartValues := map[string]interface{}{
 		"serviceName":         service.ServiceName,
-		"replicas":            util.GetReplicaCount(shoot, 1),
+		"replicas":            controller.GetReplicas(cluster, 1),
 		"targetClusterSecret": shootKubeconfig.GetName(),
 		"gardenId":            a.controllerConfig.GardenID,
 		"shootId":             a.shootId(namespace),
@@ -156,7 +150,7 @@ func (a *actuator) createSeedResources(ctx context.Context, shoot *gardenv1beta1
 	return a.createManagedResource(ctx, namespace, SeedResourcesName, "seed", a.renderer, service.SeedChartName, chartValues, nil)
 }
 
-func (a *actuator) deleteSeedResources(ctx context.Context, shoot *gardenv1beta1.Shoot, namespace string) error {
+func (a *actuator) deleteSeedResources(ctx context.Context, namespace string) error {
 	a.logger.Info("Component is being deleted", "component", service.ExtensionServiceName, "namespace", namespace)
 
 	if err := controller.DeleteManagedResource(ctx, a.client, namespace, SeedResourcesName); err != nil {
@@ -207,7 +201,7 @@ func (a *actuator) createShootResources(ctx context.Context, cluster *controller
 		return errors.Wrapf(err, "could not create managed resource %s", KeptShootResourcesName)
 	}
 
-	renderer, err := util.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
+	renderer, err := util.NewChartRendererForShoot(controller.GetKubernetesVersion(cluster))
 	if err != nil {
 		return errors.Wrap(err, "could not create chart renderer")
 	}

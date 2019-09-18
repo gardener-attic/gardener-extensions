@@ -27,8 +27,8 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -69,20 +69,20 @@ var _ = Describe("Ensurer", func() {
 			}
 
 			cluster = &extensionscontroller.Cluster{
-				Shoot: &gardenv1beta1.Shoot{
-					Spec: gardenv1beta1.ShootSpec{
-						Kubernetes: gardenv1beta1.Kubernetes{
+				CoreShoot: &gardencorev1alpha1.Shoot{
+					Spec: gardencorev1alpha1.ShootSpec{
+						Kubernetes: gardencorev1alpha1.Kubernetes{
 							Version: "1.13.4",
 						},
 					},
-					Status: gardenv1beta1.ShootStatus{
+					Status: gardencorev1alpha1.ShootStatus{
 						TechnicalID: "shoot--test--sample",
 						UID:         types.UID("test-uid"),
 					},
 				},
-				Seed: &gardenv1beta1.Seed{
-					Spec: gardenv1beta1.SeedSpec{
-						Backup: &gardenv1beta1.BackupProfile{},
+				CoreSeed: &gardencorev1alpha1.Seed{
+					Spec: gardencorev1alpha1.SeedSpec{
+						Backup: &gardencorev1alpha1.SeedBackup{},
 					},
 				},
 			}
@@ -165,7 +165,7 @@ var _ = Describe("Ensurer", func() {
 			ss := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDMain},
 			}
-			cluster.Seed.Spec.Backup = nil
+			cluster.CoreSeed.Spec.Backup = nil
 
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)

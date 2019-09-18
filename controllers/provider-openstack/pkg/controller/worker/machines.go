@@ -68,8 +68,13 @@ func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (ma
 		return nil, err
 	}
 
+	cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(w.cluster.CoreCloudProfile)
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string][]byte{
-		machinev1alpha1.OpenStackAuthURL:    []byte(w.cluster.CloudProfile.Spec.OpenStack.KeyStoneURL),
+		machinev1alpha1.OpenStackAuthURL:    []byte(cloudProfileConfig.KeyStoneURL),
 		machinev1alpha1.OpenStackInsecure:   []byte("true"),
 		machinev1alpha1.OpenStackDomainName: []byte(credentials.DomainName),
 		machinev1alpha1.OpenStackTenantName: []byte(credentials.TenantName),
@@ -90,7 +95,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	shootVersionMajorMinor, err := util.VersionMajorMinor(w.cluster.Shoot.Spec.Kubernetes.Version)
+	shootVersionMajorMinor, err := util.VersionMajorMinor(extensionscontroller.GetKubernetesVersion(w.cluster))
 	if err != nil {
 		return err
 	}
@@ -105,10 +110,17 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
+	var cloudProfileName string
+	if w.cluster.CloudProfile != nil {
+		cloudProfileName = w.cluster.CloudProfile.Name
+	} else if w.cluster.CoreCloudProfile != nil {
+		cloudProfileName = w.cluster.CoreCloudProfile.Name
+	}
+
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, w.cluster.CloudProfile.Name)
+		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, cloudProfileName)
 		if err != nil {
 			return err
 		}
@@ -126,7 +138,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"keyName":          infrastructureStatus.Node.KeyName,
 				"imageName":        machineImage,
 				"networkID":        infrastructureStatus.Networks.ID,
-				"podNetworkCidr":   extensionscontroller.GetPodNetwork(w.cluster.Shoot),
+				"podNetworkCidr":   extensionscontroller.GetPodNetwork(w.cluster),
 				"securityGroups":   []string{nodesSecurityGroup.Name},
 				"tags": map[string]string{
 					fmt.Sprintf("kubernetes.io-cluster-%s", w.worker.Namespace): "1",

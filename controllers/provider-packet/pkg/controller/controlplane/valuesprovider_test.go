@@ -23,9 +23,9 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -55,7 +55,7 @@ var _ = Describe("ValuesProvider", func() {
 				Namespace: namespace,
 			},
 			Spec: extensionsv1alpha1.ControlPlaneSpec{
-				Region: "WER1",
+				Region: "EWR1",
 				SecretRef: corev1.SecretReference{
 					Name:      v1alpha1constants.SecretNameCloudProvider,
 					Namespace: namespace,
@@ -71,18 +71,12 @@ var _ = Describe("ValuesProvider", func() {
 
 		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						Packet: &gardenv1beta1.PacketCloud{
-							Networks: gardenv1beta1.PacketNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{
-									Pods: &cidr,
-								},
-							},
-						},
+			CoreShoot: &gardencorev1alpha1.Shoot{
+				Spec: gardencorev1alpha1.ShootSpec{
+					Networking: gardencorev1alpha1.Networking{
+						Pods: &cidr,
 					},
-					Kubernetes: gardenv1beta1.Kubernetes{
+					Kubernetes: gardencorev1alpha1.Kubernetes{
 						Version: "1.13.4",
 					},
 				},
@@ -123,7 +117,7 @@ var _ = Describe("ValuesProvider", func() {
 			"csi-packet": map[string]interface{}{
 				"replicas":          1,
 				"kubernetesVersion": "1.13.4",
-				"regionID":          "WER1",
+				"regionID":          "EWR1",
 				"podAnnotations": map[string]interface{}{
 					"checksum/secret-csi-attacher":    "2da58ad61c401a2af779a909d22fb42eed93a1524cbfdab974ceedb413fcb914",
 					"checksum/secret-csi-provisioner": "f75b42d40ab501428c383dfb2336cb1fc892bbee1fc1d739675171e4acc4d911",

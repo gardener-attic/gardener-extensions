@@ -22,28 +22,28 @@ metadata:
   name: shoot--foobar--azure
 spec:
   cloudProfile:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
     spec:
-      azure:
+      providerConfig:
+        apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
         countFaultDomains:
-        - count: 2
-          region: westeurope
+        - region: westeurope
+          count: 2
         countUpdateDomains:
-        - count: 5
-          region: westeurope
+        - region: westeurope
+          count: 5
   seed:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
   shoot:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: Shoot
     spec:
-      cloud:
-        azure:
-          networks:
-            pods: 10.243.128.0/17
-            services: 10.243.0.0/17
+      networking:
+        pods: 10.243.128.0/17
+        services: 10.243.0.0/17
     status:
       lastOperation:
         state: Succeeded

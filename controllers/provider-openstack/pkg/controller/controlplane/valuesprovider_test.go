@@ -24,9 +24,9 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -58,7 +58,7 @@ func defaultControlPlane() *extensionsv1alpha1.ControlPlane {
 			},
 		})
 }
-func controlPlane(fnid string, cfg *openstack.ControlPlaneConfig) *extensionsv1alpha1.ControlPlane {
+func controlPlane(floatingPoolID string, cfg *openstack.ControlPlaneConfig) *extensionsv1alpha1.ControlPlane {
 	return &extensionsv1alpha1.ControlPlane{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "control-plane",
@@ -76,7 +76,7 @@ func controlPlane(fnid string, cfg *openstack.ControlPlaneConfig) *extensionsv1a
 				Raw: encode(&openstack.InfrastructureStatus{
 					Networks: openstack.NetworkStatus{
 						FloatingPool: openstack.FloatingPoolStatus{
-							ID: fnid,
+							ID: floatingPoolID,
 						},
 						Subnets: []openstack.Subnet{
 							{
@@ -101,29 +101,29 @@ var _ = Describe("ValuesProvider", func() {
 
 		cp = defaultControlPlane()
 
-		cidr    = "10.250.0.0/19"
-		cluster = &extensionscontroller.Cluster{
-			CloudProfile: &gardenv1beta1.CloudProfile{
-				Spec: gardenv1beta1.CloudProfileSpec{
-					OpenStack: &gardenv1beta1.OpenStackProfile{
-						KeyStoneURL:    authURL,
-						DHCPDomain:     dhcpDomain,
-						RequestTimeout: requestTimeout,
+		cidr               = "10.250.0.0/19"
+		cloudProfileConfig = &openstack.CloudProfileConfig{
+			KeyStoneURL:    authURL,
+			DHCPDomain:     dhcpDomain,
+			RequestTimeout: requestTimeout,
+		}
+		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
+		cluster                   = &extensionscontroller.Cluster{
+			CoreCloudProfile: &gardencorev1alpha1.CloudProfile{
+				Spec: gardencorev1alpha1.CloudProfileSpec{
+					ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+						RawExtension: runtime.RawExtension{
+							Raw: cloudProfileConfigJSON,
+						},
 					},
 				},
 			},
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						OpenStack: &gardenv1beta1.OpenStackCloud{
-							Networks: gardenv1beta1.OpenStackNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{
-									Pods: &cidr,
-								},
-							},
-						},
+			CoreShoot: &gardencorev1alpha1.Shoot{
+				Spec: gardencorev1alpha1.ShootSpec{
+					Networking: gardencorev1alpha1.Networking{
+						Pods: &cidr,
 					},
-					Kubernetes: gardenv1beta1.Kubernetes{
+					Kubernetes: gardencorev1alpha1.Kubernetes{
 						Version: "1.13.4",
 					},
 				},

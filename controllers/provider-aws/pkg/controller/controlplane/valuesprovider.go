@@ -238,7 +238,7 @@ func (vp *valuesProvider) GetControlPlaneExposureChartValues(
 
 	return map[string]interface{}{
 		"domain":   address,
-		"replicas": extensionscontroller.GetReplicas(cluster.Shoot, 1),
+		"replicas": extensionscontroller.GetReplicas(cluster, 1),
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-aws-lb-readvertiser": checksums[awsLBReadvertiserDeploymentName],
 		},
@@ -274,10 +274,10 @@ func getCCMChartValues(
 	scaledDown bool,
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
-		"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
+		"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
 		"clusterName":       cp.Namespace,
-		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
-		"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
+		"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+		"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
 			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],

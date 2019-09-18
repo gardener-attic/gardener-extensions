@@ -84,18 +84,25 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 		return err
 	}
 
-	dns := cluster.Shoot.Spec.DNS
-	if dns.Domain == nil && dns.Provider != nil && *dns.Provider == gardenv1beta1.DNSUnmanaged {
-		return nil
+	if cluster.Shoot != nil {
+		dns := cluster.Shoot.Spec.DNS
+		if dns.Domain == nil && dns.Provider != nil && *dns.Provider == gardenv1beta1.DNSUnmanaged {
+			return nil
+		}
+	} else if cluster.CoreShoot != nil {
+		dns := cluster.CoreShoot.Spec.DNS
+		if dns == nil || (dns.Domain == nil && len(dns.Providers) > 0 && dns.Providers[0].Type != nil && *dns.Providers[0].Type == "unmanaged") {
+			return nil
+		}
 	}
 
-	if !controller.IsHibernated(cluster.Shoot) {
+	if !controller.IsHibernated(cluster) {
 		if err := a.createRBAC(ctx, cluster, ex.Namespace); err != nil {
 			return err
 		}
 	}
 
-	return a.createCertBroker(ctx, cluster.Shoot, namespace)
+	return a.createCertBroker(ctx, cluster, namespace)
 }
 
 // Delete the Extension resource.
@@ -156,10 +163,25 @@ func (a *actuator) InjectClient(client client.Client) error {
 	return nil
 }
 
-func (a *actuator) createCertBroker(ctx context.Context, shoot *gardenv1beta1.Shoot, namespace string) error {
-	shootDomain := shoot.Spec.DNS.Domain
+func (a *actuator) createCertBroker(ctx context.Context, cluster *controller.Cluster, namespace string) error {
+	var (
+		shootName      string
+		shootNamespace string
+		shootDomain    *string
+	)
+
+	if cluster.Shoot != nil {
+		shootName = cluster.Shoot.Name
+		shootNamespace = cluster.Shoot.Namespace
+		shootDomain = cluster.Shoot.Spec.DNS.Domain
+	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.DNS != nil {
+		shootName = cluster.CoreShoot.Name
+		shootNamespace = cluster.CoreShoot.Namespace
+		shootDomain = cluster.CoreShoot.Spec.DNS.Domain
+	}
+
 	if shootDomain == nil {
-		return fmt.Errorf("no domain given for shoot %s/%s", shoot.GetName(), shoot.GetNamespace())
+		return fmt.Errorf("no domain given for shoot %s/%s", shootName, shootNamespace)
 	}
 
 	var (
@@ -186,7 +208,7 @@ func (a *actuator) createCertBroker(ctx context.Context, shoot *gardenv1beta1.Sh
 	shootKubeconfigChecksum := util.ComputeChecksum(shootKubeconfig.Data)
 
 	certBrokerConfig := map[string]interface{}{
-		"replicas": util.GetReplicaCount(shoot, 1),
+		"replicas": controller.GetReplicas(cluster, 1),
 		"certbroker": map[string]interface{}{
 			"targetClusterSecret": shootKubeconfig.GetName(),
 		},
@@ -252,7 +274,7 @@ func (a *actuator) deleteCertBroker(ctx context.Context, namespace string) error
 func (a *actuator) createRBAC(ctx context.Context, cluster *controller.Cluster, namespace string) error {
 	chartName := "cert-broker-rbac"
 
-	renderer, err := util.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
+	renderer, err := util.NewChartRendererForShoot(controller.GetKubernetesVersion(cluster))
 	if err != nil {
 		return errors.Wrap(err, "could not create chart renderer")
 	}

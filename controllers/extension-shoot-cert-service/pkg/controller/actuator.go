@@ -28,14 +28,13 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/extension"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	"github.com/pkg/errors"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -74,13 +73,13 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 		return err
 	}
 
-	if !controller.IsHibernated(cluster.Shoot) {
-		if err := a.createShootResources(ctx, cluster.Shoot, namespace); err != nil {
+	if !controller.IsHibernated(cluster) {
+		if err := a.createShootResources(ctx, cluster, namespace); err != nil {
 			return err
 		}
 	}
 
-	return a.createSeedResources(ctx, ex, cluster.Shoot, namespace)
+	return a.createSeedResources(ctx, ex, cluster, namespace)
 }
 
 // Delete the Extension resource.
@@ -140,7 +139,7 @@ func (a *actuator) createIssuerValues(issuers ...service.IssuerConfig) ([]map[st
 	return issuerVal, nil
 }
 
-func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alpha1.Extension, shoot *gardenv1beta1.Shoot, namespace string) error {
+func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alpha1.Extension, cluster *controller.Cluster, namespace string) error {
 	var issuerConfig []service.IssuerConfig
 	if ex.Spec.ProviderConfig != nil {
 		certConfig := &service.CertConfig{}
@@ -158,9 +157,24 @@ func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alph
 		return err
 	}
 
-	shootDomain := shoot.Spec.DNS.Domain
+	var (
+		shootName      string
+		shootNamespace string
+		shootDomain    *string
+	)
+
+	if cluster.Shoot != nil {
+		shootName = cluster.Shoot.Name
+		shootNamespace = cluster.Shoot.Namespace
+		shootDomain = cluster.Shoot.Spec.DNS.Domain
+	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.DNS != nil {
+		shootName = cluster.CoreShoot.Name
+		shootNamespace = cluster.CoreShoot.Namespace
+		shootDomain = cluster.CoreShoot.Spec.DNS.Domain
+	}
+
 	if shootDomain == nil {
-		return fmt.Errorf("no domain given for shoot %s/%s", shoot.GetName(), shoot.GetNamespace())
+		return fmt.Errorf("no domain given for shoot %s/%s", shootName, shootNamespace)
 	}
 
 	shootKubeconfig, err := a.createKubeconfigForCertManagement(ctx, namespace)
@@ -169,7 +183,7 @@ func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alph
 	}
 
 	certManagementConfig := map[string]interface{}{
-		"replicaCount": util.GetReplicaCount(shoot, 1),
+		"replicaCount": controller.GetReplicas(cluster, 1),
 		"defaultProvider": map[string]interface{}{
 			"name":    a.serviceConfig.IssuerName,
 			"domains": shootDomain,
@@ -196,12 +210,12 @@ func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alph
 	return a.createManagedResource(ctx, namespace, v1alpha1.CertManagementResourceNameSeed, "seed", renderer, v1alpha1.CertManagementChartNameSeed, certManagementConfig, nil)
 }
 
-func (a *actuator) createShootResources(ctx context.Context, shoot *gardenv1beta1.Shoot, namespace string) error {
+func (a *actuator) createShootResources(ctx context.Context, cluster *controller.Cluster, namespace string) error {
 	values := map[string]interface{}{
 		"shootUserName": v1alpha1.CertManagementUserName,
 	}
 
-	renderer, err := util.NewChartRendererForShoot(shoot.Spec.Kubernetes.Version)
+	renderer, err := util.NewChartRendererForShoot(controller.GetKubernetesVersion(cluster))
 	if err != nil {
 		return errors.Wrap(err, "could not create chart renderer")
 	}

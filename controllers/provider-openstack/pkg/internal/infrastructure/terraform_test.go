@@ -15,13 +15,14 @@
 package infrastructure
 
 import (
+	"encoding/json"
+
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -31,12 +32,15 @@ import (
 
 var _ = Describe("Terraform", func() {
 	var (
-		infra       *extensionsv1alpha1.Infrastructure
-		config      *openstackv1alpha1.InfrastructureConfig
-		cluster     *controller.Cluster
-		credentials *internal.Credentials
+		infra                  *extensionsv1alpha1.Infrastructure
+		cloudProfileConfig     *openstackv1alpha1.CloudProfileConfig
+		cloudProfileConfigJSON []byte
+		config                 *openstackv1alpha1.InfrastructureConfig
+		cluster                *controller.Cluster
+		credentials            *internal.Credentials
 
 		keystoneURL = "foo-bar.com"
+		dnsServers  = []string{"a", "b"}
 	)
 
 	BeforeEach(func() {
@@ -69,25 +73,27 @@ var _ = Describe("Terraform", func() {
 
 		podsCIDR := "11.0.0.0/16"
 		servicesCIDR := "12.0.0.0/16"
+
+		cloudProfileConfig = &openstackv1alpha1.CloudProfileConfig{
+			DNSServers:  dnsServers,
+			KeyStoneURL: keystoneURL,
+		}
+		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 		cluster = &controller.Cluster{
-			CloudProfile: &gardenv1beta1.CloudProfile{
-				Spec: gardenv1beta1.CloudProfileSpec{
-					OpenStack: &gardenv1beta1.OpenStackProfile{
-						KeyStoneURL: keystoneURL,
+			CoreCloudProfile: &gardencorev1alpha1.CloudProfile{
+				Spec: gardencorev1alpha1.CloudProfileSpec{
+					ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+						RawExtension: runtime.RawExtension{
+							Raw: cloudProfileConfigJSON,
+						},
 					},
 				},
 			},
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						GCP: &gardenv1beta1.GCPCloud{
-							Networks: gardenv1beta1.GCPNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{
-									Pods:     &podsCIDR,
-									Services: &servicesCIDR,
-								},
-							},
-						},
+			CoreShoot: &gardencorev1alpha1.Shoot{
+				Spec: gardencorev1alpha1.ShootSpec{
+					Networking: gardencorev1alpha1.Networking{
+						Pods:     &podsCIDR,
+						Services: &servicesCIDR,
 					},
 				},
 			},
@@ -98,11 +104,12 @@ var _ = Describe("Terraform", func() {
 
 	Describe("#ComputeTerraformerChartValues", func() {
 		It("should correctly compute the terraformer chart values", func() {
-			values := ComputeTerraformerChartValues(infra, credentials, config, cluster)
+			values, err := ComputeTerraformerChartValues(infra, credentials, config, cluster)
+			Expect(err).To(BeNil())
 
 			Expect(values).To(Equal(map[string]interface{}{
 				"openstack": map[string]interface{}{
-					"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
+					"authURL":          keystoneURL,
 					"domainName":       credentials.DomainName,
 					"tenantName":       credentials.TenantName,
 					"region":           infra.Spec.Region,
@@ -111,7 +118,7 @@ var _ = Describe("Terraform", func() {
 				"create": map[string]interface{}{
 					"router": false,
 				},
-				"dnsServers":   cluster.CloudProfile.Spec.OpenStack.DNSServers,
+				"dnsServers":   dnsServers,
 				"sshPublicKey": string(infra.Spec.SSHPublicKey),
 				"router": map[string]interface{}{
 					"id": "1",
@@ -134,11 +141,13 @@ var _ = Describe("Terraform", func() {
 
 		It("should correctly compute the terraformer chart values with vpc creation", func() {
 			config.Networks.Router = nil
-			values := ComputeTerraformerChartValues(infra, credentials, config, cluster)
+
+			values, err := ComputeTerraformerChartValues(infra, credentials, config, cluster)
+			Expect(err).To(BeNil())
 
 			Expect(values).To(Equal(map[string]interface{}{
 				"openstack": map[string]interface{}{
-					"authURL":          cluster.CloudProfile.Spec.OpenStack.KeyStoneURL,
+					"authURL":          keystoneURL,
 					"domainName":       credentials.DomainName,
 					"tenantName":       credentials.TenantName,
 					"region":           infra.Spec.Region,
@@ -147,7 +156,7 @@ var _ = Describe("Terraform", func() {
 				"create": map[string]interface{}{
 					"router": true,
 				},
-				"dnsServers":   cluster.CloudProfile.Spec.OpenStack.DNSServers,
+				"dnsServers":   dnsServers,
 				"sshPublicKey": string(infra.Spec.SSHPublicKey),
 				"router": map[string]interface{}{
 					"id": DefaultRouterID,

@@ -52,7 +52,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	// If the shoot is hibernated then we want to scale down the machine-controller-manager. However, we want to first allow it to delete
 	// all remaining worker nodes. Hence, we cannot set the replicas=0 here (otherwise it would be offline and not able to delete the nodes).
 	var replicaFunc = func() (int32, error) {
-		if extensionscontroller.IsHibernated(cluster.Shoot) {
+		if extensionscontroller.IsHibernated(cluster) {
 			deployment := &appsv1.Deployment{}
 			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, a.mcmName), deployment); err != nil && !apierrors.IsNotFound(err) {
 				return 0, err
@@ -100,7 +100,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 
 		// When the Shoot gets hibernated we want to remove the cluster auto scaler so that it does not interfer
 		// with Gardeners modifications on the machine deployment's replicas fields.
-		if controller.IsHibernated(cluster.Shoot) || rollingUpdate {
+		if controller.IsHibernated(cluster) || rollingUpdate {
 			deployment := &appsv1.Deployment{}
 			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, v1alpha1constants.DeploymentNameClusterAutoscaler), deployment); err != nil {
 				if !apierrors.IsNotFound(err) {
@@ -165,7 +165,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	}
 
 	// Scale down machine-controller-manager if shoot is hibernated.
-	if controller.IsHibernated(cluster.Shoot) {
+	if controller.IsHibernated(cluster) {
 		deployment := &appsv1.Deployment{}
 		if err := a.client.Get(ctx, kutil.Key(worker.Namespace, a.mcmName), deployment); err != nil {
 			return err
@@ -205,7 +205,7 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 
 		switch {
 		// If the Shoot is hibernated then the machine deployment's replicas should be zero.
-		case controller.IsHibernated(cluster.Shoot):
+		case controller.IsHibernated(cluster):
 			replicas = 0
 		// If the cluster autoscaler is not enabled then min=max (as per API validation), hence
 		// we can use either min or max.
@@ -217,7 +217,7 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 			replicas = deployment.Minimum
 		// If the Shoot was hibernated and is now woken up we set replicas to min so that the cluster
 		// autoscaler can scale them as required.
-		case shootIsAwake(controller.IsHibernated(cluster.Shoot), existingMachineDeployments):
+		case shootIsAwake(controller.IsHibernated(cluster), existingMachineDeployments):
 			replicas = deployment.Minimum
 		// If the shoot worker pool minimum was updated and if the current machine deployment replica
 		// count is less than minimum, we update the machine deployment replica count to updated minimum.
@@ -304,7 +304,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 		// Collect the numbers of ready and desired replicas.
 		for _, existingMachineDeployment := range existingMachineDeployments.Items {
 			// If the shoot get hibernated we want to wait until all machine deployments have been deleted entirely.
-			if controller.IsHibernated(cluster.Shoot) {
+			if controller.IsHibernated(cluster) {
 				numberOfAwakeMachines += existingMachineDeployment.Status.Replicas
 				continue
 			}
@@ -330,7 +330,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 		}
 
 		switch {
-		case !controller.IsHibernated(cluster.Shoot):
+		case !controller.IsHibernated(cluster):
 			a.logger.Info(fmt.Sprintf("Waiting until all desired machines are ready (%d/%d machine objects up-to-date, %d/%d machinedeployments available)...", numUpdated, numDesired, numHealthyDeployments, len(wantedMachineDeployments)), "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
 			if numUpdated >= numDesired && int(numHealthyDeployments) == len(wantedMachineDeployments) {
 				return true, nil

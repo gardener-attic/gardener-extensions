@@ -23,9 +23,9 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -89,18 +89,12 @@ var _ = Describe("ValuesProvider", func() {
 
 		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						Alicloud: &gardenv1beta1.Alicloud{
-							Networks: gardenv1beta1.AlicloudNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{
-									Pods: &cidr,
-								},
-							},
-						},
+			CoreShoot: &gardencorev1alpha1.Shoot{
+				Spec: gardencorev1alpha1.ShootSpec{
+					Networking: gardencorev1alpha1.Networking{
+						Pods: &cidr,
 					},
-					Kubernetes: gardenv1beta1.Kubernetes{
+					Kubernetes: gardencorev1alpha1.Kubernetes{
 						Version: "1.14.0",
 					},
 				},
