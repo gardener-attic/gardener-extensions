@@ -73,3 +73,24 @@ func CalicoKubeControllersImage() string {
 	runtime.Must(err)
 	return image.String()
 }
+
+// CalicoFlexVolumeDriverImage returns the Calico flexvol image.
+func CalicoFlexVolumeDriverImage() string {
+	image, err := imageVector.FindImage(calico.PodToDaemonFlexVolumeDriverImageName)
+	runtime.Must(err)
+	return image.String()
+}
+
+// TyphaClusterProportionalAutoscalerImage returns the Calico cluster-proportional-autoscaler image.
+func TyphaClusterProportionalAutoscalerImage() string {
+	image, err := imageVector.FindImage(calico.TyphaClusterProportionalAutoscalerImageName)
+	runtime.Must(err)
+	return image.String()
+}
+
+// TyphaClusterProportionalVerticalAutoscalerImage returns the Calico cluster-proportional-vertical-autoscaler image.
+func TyphaClusterProportionalVerticalAutoscalerImage() string {
+	image, err := imageVector.FindImage(calico.TyphaClusterProportionalVerticalAutoscalerImageName)
+	runtime.Must(err)
+	return image.String()
+}

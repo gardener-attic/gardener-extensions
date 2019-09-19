@@ -69,6 +69,9 @@ var _ = Describe("Chart package test", func() {
 					"calico-typha":            imagevector.CalicoTyphaImage(),
 					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
 					"calico-node":             imagevector.CalicoNodeImage(),
+					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
+					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
+					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
 				},
 				"global": map[string]string{
 					"podCIDR": network.Spec.PodCIDR,
@@ -105,5 +108,4 @@ var _ = Describe("Chart package test", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
-
 })

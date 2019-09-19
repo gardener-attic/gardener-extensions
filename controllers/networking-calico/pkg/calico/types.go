@@ -20,10 +20,13 @@ const (
 	Name = "networking-calico"
 
 	// ImageNames
-	CNIImageName             = "calico-cni"
-	NodeImageName            = "calico-node"
-	TyphaImageName           = "calico-typha"
-	KubeControllersImageName = "calico-kube-controllers"
+	CNIImageName                                        = "calico-cni"
+	NodeImageName                                       = "calico-node"
+	KubeControllersImageName                            = "calico-kube-controllers"
+	PodToDaemonFlexVolumeDriverImageName                = "calico-podtodaemon-flex"
+	TyphaImageName                                      = "calico-typha"
+	TyphaClusterProportionalAutoscalerImageName         = "typha-cpa"
+	TyphaClusterProportionalVerticalAutoscalerImageName = "typha-cpva"
 
 	// ReleaseName is the name of the Calico Release
 	ReleaseName = "calico"

@@ -9,16 +9,16 @@ data:
   # To enable Typha, set this to "calico-typha" *and* set a non-zero value for Typha replicas
   # below.  We recommend using Typha if you have more than 50 nodes. Above 100 nodes it is
   # essential.
-  typha_service_name: "none"
+  typha_service_name: "calico-typha"
   # Configure the Calico backend to use.
-  calico_backend: {{ .Values.config.backend }}
+  calico_backend: "{{ .Values.config.backend }}"
   # Configure the MTU to use
   veth_mtu: "1440"
   # The CNI network configuration to install on each node.
   cni_network_config: |-
     {
       "name": "k8s-pod-network",
-      "cniVersion": "0.3.0",
+      "cniVersion": "0.3.1",
       "plugins": [
         {
           "type": "calico",

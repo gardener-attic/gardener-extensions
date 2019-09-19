@@ -208,3 +208,89 @@ subjects:
 - kind: ServiceAccount
   name: calico-kube-controllers
   namespace: kube-system
+---
+apiVersion: {{ include "rbacversion" . }}
+kind: ClusterRole
+metadata:
+  name: typha-cpha
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list"]
+---
+apiVersion: {{ include "rbacversion" . }}
+kind: ClusterRoleBinding
+metadata:
+  name: typha-cpha
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: typha-cpha
+subjects:
+  - kind: ServiceAccount
+    name: typha-cpha
+    namespace: kube-system
+---
+apiVersion: {{ include "rbacversion" . }}
+kind: Role
+metadata:
+  name: typha-cpha
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update"]
+---
+apiVersion: {{ include "rbacversion" . }}
+kind: RoleBinding
+metadata:
+  name: typha-cpha
+  namespace: kube-system
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: typha-cpha
+subjects:
+  - kind: ServiceAccount
+    name: typha-cpha
+    namespace: kube-system
+---
+apiVersion: {{ include "rbacversion" . }}
+kind: ClusterRole
+metadata:
+  name: typha-cpva
+  labels:
+    kubernetes.io/cluster-service: "true"
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list"]
+  - apiGroups: ["apps", "extensions"]
+    resources: ["deployments"]
+    verbs: ["patch"]
+---
+apiVersion: {{ include "rbacversion" . }}
+kind: ClusterRoleBinding
+metadata:
+  name: typha-cpva
+  labels:
+    kubernetes.io/cluster-service: "true"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: typha-cpva
+subjects:
+  - kind: ServiceAccount
+    name: typha-cpva
+    namespace: kube-system
