@@ -174,6 +174,7 @@ github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a
 github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a/go.mod h1:kIPm1DlE5jChb4moAseumj1qr+IITKXPJcqyIKJp14Y=
 github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993 h1:HoOo1rfm4n/T23886/Yj2yCVC81cVuXMbzdMo6PzTOs=
 github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993/go.mod h1:l18ykpXeMDrrrtiA99YTdvZPW2TOaHIR/LrtbVELIiU=
+github.com/gardener/gardener-resource-manager v0.0.0-20190912084358-b926d0903974 h1:CE0XLALKGUYdsbyUXkoyAi4qnn7MAq8N95k2MaDemiQ=
 github.com/gardener/machine-controller-manager v0.0.0-20190228095106-36a42c48af0a/go.mod h1:/ZDmMugbfkBfOO6/nrdnqV+OMSEuF75wrF9KFIuqndM=
 github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd h1:PrtJshi9rSN6V5w6FDFh9u1arfplk7ufxLKXFsasqzs=
 github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd/go.mod h1:/ZDmMugbfkBfOO6/nrdnqV+OMSEuF75wrF9KFIuqndM=
