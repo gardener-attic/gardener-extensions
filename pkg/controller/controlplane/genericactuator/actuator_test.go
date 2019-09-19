@@ -44,6 +44,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -378,6 +379,9 @@ var _ = Describe("Actuator", func() {
 			client.EXPECT().Delete(ctx, deleteMRForCPShootChart).Return(nil)
 			client.EXPECT().Delete(ctx, deletedMRSecretForCPShootChart).Return(nil)
 
+			client.EXPECT().Get(gomock.Any(), resourceKeyStorageClassesChart, gomock.AssignableToTypeOf(&resourcesv1alpha1.ManagedResource{})).Return(errors.NewNotFound(schema.GroupResource{}, deleteMRForStorageClassesChart.Name))
+			client.EXPECT().Get(gomock.Any(), resourceKeyCPShootChart, gomock.AssignableToTypeOf(&resourcesv1alpha1.ManagedResource{})).Return(errors.NewNotFound(schema.GroupResource{}, deleteMRForCPShootChart.Name))
+
 			// Create mock secrets and charts
 			secrets := mockutil.NewMockSecrets(ctrl)
 			secrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
@@ -394,6 +398,7 @@ var _ = Describe("Actuator", func() {
 				client.EXPECT().Delete(ctx, deletedNetworkPolicyForShootWebhooks).Return(nil)
 				client.EXPECT().Delete(ctx, deletedMRForShootWebhooks).Return(nil)
 				client.EXPECT().Delete(ctx, deletedMRSecretForShootWebhooks).Return(nil)
+				client.EXPECT().Get(gomock.Any(), resourceKeyShootWebhooks, gomock.AssignableToTypeOf(&resourcesv1alpha1.ManagedResource{})).Return(errors.NewNotFound(schema.GroupResource{}, deletedMRForShootWebhooks.Name))
 			}
 
 			// Create actuator
@@ -453,11 +458,11 @@ var _ = Describe("Actuator", func() {
 			exposureSecrets := mockutil.NewMockSecrets(ctrl)
 			exposureSecrets.EXPECT().Delete(gomock.Any(), namespace).Return(nil)
 
-			cpExplosureChart := mockutil.NewMockChart(ctrl)
-			cpExplosureChart.EXPECT().Delete(ctx, client, namespace).Return(nil)
+			cpExposureChart := mockutil.NewMockChart(ctrl)
+			cpExposureChart.EXPECT().Delete(ctx, client, namespace).Return(nil)
 
 			// Create actuator
-			a := NewActuator(providerName, nil, exposureSecrets, nil, nil, nil, nil, cpExplosureChart, nil, nil, nil, "", nil, 0, logger)
+			a := NewActuator(providerName, nil, exposureSecrets, nil, nil, nil, nil, cpExposureChart, nil, nil, nil, "", nil, 0, logger)
 			err := a.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 

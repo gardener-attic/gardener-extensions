@@ -16,15 +16,17 @@ package controller
 
 import (
 	"context"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"time"
 
 	"github.com/gardener/gardener-extensions/pkg/util"
 
+	resourcesv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 	"github.com/gardener/gardener-resource-manager/pkg/manager"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -122,4 +124,15 @@ func DeleteManagedResource(ctx context.Context, client client.Client, namespace 
 	}
 
 	return nil
+}
+
+// WaitUntilManagedResourceDeleted waits until the given managed resource is deleted.
+func WaitUntilManagedResourceDeleted(ctx context.Context, client client.Client, namespace, name string) error {
+	mr := &resourcesv1alpha1.ManagedResource{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+	return WaitUntilResourceDeleted(ctx, client, mr, 2*time.Second)
 }

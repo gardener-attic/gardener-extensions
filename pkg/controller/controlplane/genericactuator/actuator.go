@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
@@ -388,9 +389,20 @@ func (a *actuator) deleteControlPlane(
 	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, storageClassesChartResourceName); err != nil {
 		return errors.Wrapf(err, "could not delete managed resource containing storage classes chart for controlplane '%s'", util.ObjectName(cp))
 	}
-
 	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, controlPlaneShootChartResourceName); err != nil {
 		return errors.Wrapf(err, "could not delete managed resource containing shoot chart for controlplane '%s'", util.ObjectName(cp))
+	}
+
+	timeoutCtx1, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx1, a.client, cp.Namespace, storageClassesChartResourceName); err != nil {
+		return errors.Wrapf(err, "error while waiting for managed resource containing storage classes chart for controlplane '%s' to be deleted", util.ObjectName(cp))
+	}
+
+	timeoutCtx2, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx2, a.client, cp.Namespace, controlPlaneShootChartResourceName); err != nil {
+		return errors.Wrapf(err, "error while waiting for managed resource containing shoot chart for controlplane '%s' to be deleted", util.ObjectName(cp))
 	}
 
 	// Delete control plane objects
@@ -421,6 +433,12 @@ func (a *actuator) deleteControlPlane(
 
 		if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, shootWebhooksResourceName); err != nil {
 			return errors.Wrapf(err, "could not delete managed resource containing shoot webhooks for controlplane '%s'", util.ObjectName(cp))
+		}
+
+		timeoutCtx3, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+		if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx3, a.client, cp.Namespace, shootWebhooksResourceName); err != nil {
+			return errors.Wrapf(err, "error while waiting for managed resource containing shoot webhooks for controlplane '%s' to be deleted", util.ObjectName(cp))
 		}
 	}
 
