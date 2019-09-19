@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 
 	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
@@ -153,6 +154,10 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
+
 	// Decode providerConfig
 	cpConfig := &apisgcp.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
@@ -183,6 +188,9 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	checksums map[string]string,
 	scaledDown bool,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
 	// Decode providerConfig
 	cpConfig := &apisgcp.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {

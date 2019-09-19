@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -162,6 +163,9 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
 	// Decode providerConfig
 	cpConfig := &apisazure.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
@@ -198,6 +202,9 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	checksums map[string]string,
 	scaledDown bool,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
 	// Decode providerConfig
 	cpConfig := &apisazure.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {

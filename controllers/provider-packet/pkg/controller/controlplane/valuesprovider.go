@@ -17,6 +17,7 @@ package controlplane
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 	"path/filepath"
 
 	apispacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
@@ -194,6 +195,9 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	checksums map[string]string,
 	scaledDown bool,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
 	// Decode providerConfig
 	cpConfig := &apispacket.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {

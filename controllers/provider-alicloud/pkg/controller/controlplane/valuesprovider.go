@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
@@ -218,6 +219,9 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
 	// Decode providerConfig
 	cpConfig := &apisalicloud.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
@@ -248,6 +252,9 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	checksums map[string]string,
 	scaledDown bool,
 ) (map[string]interface{}, error) {
+	if cp.Spec.ProviderConfig == nil {
+		return nil, fmt.Errorf("cannot decode nil providerConfig of ControlePlane '%s'", util.ObjectName(cp))
+	}
 	// Decode providerConfig
 	cpConfig := &apisalicloud.ControlPlaneConfig{}
 	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
