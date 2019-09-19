@@ -72,6 +72,10 @@ func (a *actuator) deployEtcdBackupSecret(ctx context.Context, be *extensionsv1a
 		a.logger.Error(err, "failed to get seed namespace")
 		return err
 	}
+	if namespace.DeletionTimestamp != nil {
+		a.logger.Info("SeedNamespace for shoot is being terminated. Avoiding etcd backup secret deployment")
+		return nil
+	}
 
 	backupSecret, err := extensionscontroller.GetSecretByReference(ctx, a.client, &be.Spec.SecretRef)
 	if err != nil {
