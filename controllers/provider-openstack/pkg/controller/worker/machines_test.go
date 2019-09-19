@@ -30,7 +30,6 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
@@ -98,7 +97,7 @@ var _ = Describe("Machines", func() {
 				machineType       string
 				userData          []byte
 				networkID         string
-				podCIDR           gardencorev1alpha1.CIDR
+				podCIDR           string
 				securityGroupName string
 
 				namePool1           string
@@ -144,7 +143,7 @@ var _ = Describe("Machines", func() {
 				machineType = "large"
 				userData = []byte("some-user-data")
 				networkID = "network-id"
-				podCIDR = gardencorev1alpha1.CIDR("1.2.3.4/5")
+				podCIDR = "1.2.3.4/5"
 				securityGroupName = "nodes-sec-group"
 
 				namePool1 = "pool-1"
@@ -194,7 +193,7 @@ var _ = Describe("Machines", func() {
 							Cloud: gardenv1beta1.Cloud{
 								OpenStack: &gardenv1beta1.OpenStackCloud{
 									Networks: gardenv1beta1.OpenStackNetworks{
-										K8SNetworks: gardencorev1alpha1.K8SNetworks{
+										K8SNetworks: gardenv1beta1.K8SNetworks{
 											Pods: &podCIDR,
 										},
 									},

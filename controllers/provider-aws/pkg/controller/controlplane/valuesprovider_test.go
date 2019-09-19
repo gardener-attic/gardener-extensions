@@ -23,7 +23,6 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -82,14 +81,14 @@ var _ = Describe("ValuesProvider", func() {
 			},
 		}
 
-		cidr    = gardencorev1alpha1.CIDR("10.250.0.0/19")
+		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
 			Shoot: &gardenv1beta1.Shoot{
 				Spec: gardenv1beta1.ShootSpec{
 					Cloud: gardenv1beta1.Cloud{
 						AWS: &gardenv1beta1.AWSCloud{
 							Networks: gardenv1beta1.AWSNetworks{
-								K8SNetworks: gardencorev1alpha1.K8SNetworks{
+								K8SNetworks: gardenv1beta1.K8SNetworks{
 									Pods: &cidr,
 								},
 							},

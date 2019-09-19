@@ -21,8 +21,8 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
 
@@ -55,7 +55,7 @@ var (
 )
 
 // getK8SNetworks gets the K8SNetworks from the given controller.Cluster.
-func getK8SNetworks(cluster *controller.Cluster) *gardencorev1alpha1.K8SNetworks {
+func getK8SNetworks(cluster *controller.Cluster) *gardenv1beta1.K8SNetworks {
 	return &cluster.Shoot.Spec.Cloud.GCP.Networks.K8SNetworks
 }
 

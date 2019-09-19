@@ -7,9 +7,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/gardener/gardener/pkg/client/garden/clientset/versioned"
-	garden "github.com/gardener/gardener/pkg/client/garden/informers/externalversions/garden"
-	internalinterfaces "github.com/gardener/gardener/pkg/client/garden/informers/externalversions/internalinterfaces"
+	versioned "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
+	core "github.com/gardener/gardener/pkg/client/core/informers/externalversions/core"
+	internalinterfaces "github.com/gardener/gardener/pkg/client/core/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -156,9 +156,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Garden() garden.Interface
+	Core() core.Interface
 }
 
-func (f *sharedInformerFactory) Garden() garden.Interface {
-	return garden.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Core() core.Interface {
+	return core.New(f, f.namespace, f.tweakListOptions)
 }

@@ -19,7 +19,6 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	. "github.com/onsi/ginkgo"
@@ -29,14 +28,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func makeCluster(pods, services gardencorev1alpha1.CIDR, region string) *controller.Cluster {
+func makeCluster(pods, services string, region string) *controller.Cluster {
 	var (
 		shoot = gardenv1beta1.Shoot{
 			Spec: gardenv1beta1.ShootSpec{
 				Cloud: gardenv1beta1.Cloud{
 					Azure: &gardenv1beta1.AzureCloud{
 						Networks: gardenv1beta1.AzureNetworks{
-							K8SNetworks: gardencorev1alpha1.K8SNetworks{
+							K8SNetworks: gardenv1beta1.K8SNetworks{
 								Pods:     &pods,
 								Services: &services,
 							},
@@ -107,7 +106,7 @@ var _ = Describe("Terraform", func() {
 			},
 		}
 
-		cluster = makeCluster(gardencorev1alpha1.CIDR("11.0.0.0/16"), gardencorev1alpha1.CIDR("12.0.0.0/16"), infra.Spec.Region)
+		cluster = makeCluster("11.0.0.0/16", "12.0.0.0/16", infra.Spec.Region)
 		clientAuth = &internal.ClientAuth{
 			TenantID:       "tenant_id",
 			ClientSecret:   "client_secret",
