@@ -218,7 +218,6 @@ var _ = Describe("Ensurer", func() {
 						"VolumeSnapshotDataSource": true,
 						"CSINodeInfo":              true,
 						"CSIDriverRegistry":        true,
-						"KubeletPluginsWatcher":    true,
 					},
 				}
 			)
@@ -245,7 +244,6 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "VolumeSnapshotDataSource=true", ","))
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "CSINodeInfo=true", ","))
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "CSIDriverRegistry=true", ","))
-	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "KubeletPluginsWatcher=true", ","))
 }
 
 func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {

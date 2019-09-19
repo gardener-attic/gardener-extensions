@@ -79,8 +79,6 @@ func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
 		"CSINodeInfo=true", ",")
 	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSIDriverRegistry=true", ",")
-	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
-		"KubeletPluginsWatcher=true", ",")
 }
 
 func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
@@ -113,6 +111,5 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	kubeletConfig.FeatureGates["VolumeSnapshotDataSource"] = true
 	kubeletConfig.FeatureGates["CSINodeInfo"] = true
 	kubeletConfig.FeatureGates["CSIDriverRegistry"] = true
-	kubeletConfig.FeatureGates["KubeletPluginsWatcher"] = true
 	return nil
 }
