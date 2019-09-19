@@ -10,7 +10,7 @@ images:
 - name: machine-controller-manager
   sourceRepository: github.com/gardener/machine-controller-manager
   repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager
-  tag: "0.21.1"
+  tag: "0.22.0"
 - name: csi-attacher
   sourceRepository: https://github.com/kubernetes-csi/external-attacher
   repository: quay.io/k8scsi/csi-attacher
