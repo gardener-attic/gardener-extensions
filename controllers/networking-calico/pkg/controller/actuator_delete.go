@@ -16,6 +16,7 @@ package controller
 
 import (
 	"context"
+	"time"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	resourcemanager "github.com/gardener/gardener-resource-manager/pkg/manager"
@@ -30,7 +31,13 @@ func (a *actuator) Delete(ctx context.Context, network *extensionsv1alpha1.Netwo
 		Delete(ctx); err != nil {
 		return err
 	}
-	return resourcemanager.NewManagedResource(a.client).
+	if err := resourcemanager.NewManagedResource(a.client).
 		WithNamespacedName(network.Namespace, calicoConfigSecretName).
-		Delete(ctx)
+		Delete(ctx); err != nil {
+		return err
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	return extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, network.Namespace, calicoConfigSecretName)
 }

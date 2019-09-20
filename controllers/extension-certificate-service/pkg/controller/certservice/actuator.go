@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -101,7 +102,13 @@ func (a *actuator) Delete(ctx context.Context, ex *extensionsv1alpha1.Extension)
 		return err
 	}
 
-	return a.deleteRBAC(ctx, namespace)
+	if err := a.deleteRBAC(ctx, namespace); err != nil {
+		return err
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	return controller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, ex.Namespace, ShootResourcesName)
 }
 
 // InjectConfig injects the rest config to this actuator.
