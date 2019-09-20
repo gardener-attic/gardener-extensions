@@ -216,27 +216,37 @@ func getConfigChartValues(
 	ca *internal.ClientAuth,
 	loadBalancerType string,
 ) (map[string]interface{}, error) {
-	subnetName, availabilitySetName, routeTableName, securityGroupName, err := getInfraNames(infraStatus)
+	subnetName, routeTableName, securityGroupName, err := getInfraNames(infraStatus)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not determine subnet, availability set, route table or security group name from infrastructureStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
-	// Collect config chart values
-	return map[string]interface{}{
-		"kubernetesVersion":   cluster.Shoot.Spec.Kubernetes.Version,
-		"tenantId":            ca.TenantID,
-		"subscriptionId":      ca.SubscriptionID,
-		"aadClientId":         ca.ClientID,
-		"aadClientSecret":     ca.ClientSecret,
-		"resourceGroup":       infraStatus.ResourceGroup.Name,
-		"vnetName":            infraStatus.Networks.VNet.Name,
-		"subnetName":          subnetName,
-		"availabilitySetName": availabilitySetName,
-		"routeTableName":      routeTableName,
-		"securityGroupName":   securityGroupName,
-		"loadBalancerSku":     loadBalancerType,
-		"region":              cp.Spec.Region,
-	}, nil
+	// Collect config chart values.
+	values := map[string]interface{}{
+		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
+		"tenantId":          ca.TenantID,
+		"subscriptionId":    ca.SubscriptionID,
+		"aadClientId":       ca.ClientID,
+		"aadClientSecret":   ca.ClientSecret,
+		"resourceGroup":     infraStatus.ResourceGroup.Name,
+		"vnetName":          infraStatus.Networks.VNet.Name,
+		"subnetName":        subnetName,
+		"routeTableName":    routeTableName,
+		"securityGroupName": securityGroupName,
+		"loadBalancerSku":   loadBalancerType,
+		"region":            cp.Spec.Region,
+	}
+
+	// Add AvailabilitySet config if the cluster is not zoned.
+	if !infraStatus.Zoned {
+		nodesAvailabilitySet, err := azureapihelper.FindAvailabilitySetByPurpose(infraStatus.AvailabilitySets, apisazure.PurposeNodes)
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not determine availability set for purpose 'nodes'")
+		}
+		values["availabilitySetName"] = nodesAvailabilitySet.Name
+	}
+
+	return values, nil
 }
 
 // getCCMChartValues collects and returns the CCM chart values.
@@ -268,25 +278,21 @@ func getCCMChartValues(
 }
 
 // getInfraNames determines the subnet, availability set, route table and security group names from the given infrastructure status.
-func getInfraNames(infraStatus *apisazure.InfrastructureStatus) (string, string, string, string, error) {
+func getInfraNames(infraStatus *apisazure.InfrastructureStatus) (string, string, string, error) {
 	nodesSubnet, err := azureapihelper.FindSubnetByPurpose(infraStatus.Networks.Subnets, apisazure.PurposeNodes)
 	if err != nil {
-		return "", "", "", "", errors.Wrapf(err, "could not determine subnet for purpose 'nodes'")
-	}
-	nodesAvailabilitySet, err := azureapihelper.FindAvailabilitySetByPurpose(infraStatus.AvailabilitySets, apisazure.PurposeNodes)
-	if err != nil {
-		return "", "", "", "", errors.Wrapf(err, "could not determine availability set for purpose 'nodes'")
+		return "", "", "", errors.Wrapf(err, "could not determine subnet for purpose 'nodes'")
 	}
 	nodesRouteTable, err := azureapihelper.FindRouteTableByPurpose(infraStatus.RouteTables, apisazure.PurposeNodes)
 	if err != nil {
-		return "", "", "", "", errors.Wrapf(err, "could not determine route table for purpose 'nodes'")
+		return "", "", "", errors.Wrapf(err, "could not determine route table for purpose 'nodes'")
 	}
 	nodesSecurityGroup, err := azureapihelper.FindSecurityGroupByPurpose(infraStatus.SecurityGroups, apisazure.PurposeNodes)
 	if err != nil {
-		return "", "", "", "", errors.Wrapf(err, "could not determine security group for purpose 'nodes'")
+		return "", "", "", errors.Wrapf(err, "could not determine security group for purpose 'nodes'")
 	}
 
-	return nodesSubnet.Name, nodesAvailabilitySet.Name, nodesRouteTable.Name, nodesSecurityGroup.Name, nil
+	return nodesSubnet.Name, nodesRouteTable.Name, nodesSecurityGroup.Name, nil
 }
 
 func determineLoadBalancerType(ctx context.Context, c client.Client, namespace string) (string, error) {

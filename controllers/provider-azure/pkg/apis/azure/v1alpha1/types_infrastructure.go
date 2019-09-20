@@ -28,6 +28,9 @@ type InfrastructureConfig struct {
 	ResourceGroup *ResourceGroup `json:"resourceGroup,omitempty"`
 	// Networks is the network configuration (VNet, subnets, etc.)
 	Networks NetworkConfig `json:"networks"`
+	// Zoned indicates whether the cluster uses zones
+	// +optional
+	Zoned bool `json:"zoned,omitempty"`
 }
 
 // ResourceGroup is azure resource group
@@ -59,6 +62,9 @@ type InfrastructureStatus struct {
 	RouteTables []RouteTable `json:"routeTables"`
 	// SecurityGroups is a list of created security groups
 	SecurityGroups []SecurityGroup `json:"securityGroups"`
+	// Zoned indicates whether the cluster uses zones
+	// +optional
+	Zoned bool `json:"zoned,omitempty"`
 }
 
 // NetworkStatus is the current status of the infrastructure networks.

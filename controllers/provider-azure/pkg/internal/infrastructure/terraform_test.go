@@ -86,6 +86,7 @@ var _ = Describe("Terraform", func() {
 				},
 				Workers: TestCIDR,
 			},
+			Zoned: true,
 		}
 
 		infra = &extensionsv1alpha1.Infrastructure{
@@ -116,10 +117,46 @@ var _ = Describe("Terraform", func() {
 	})
 
 	Describe("#ComputeTerraformerChartValues", func() {
-		It("should correctly compute the terraformer chart values", func() {
+		It("should correctly compute the terraformer chart values for a zoned cluster", func() {
+			values, err := ComputeTerraformerChartValues(infra, clientAuth, config, cluster)
+			expectedValues := map[string]interface{}{
+				"azure": map[string]interface{}{
+					"subscriptionID": clientAuth.SubscriptionID,
+					"tenantID":       clientAuth.TenantID,
+					"region":         infra.Spec.Region,
+				},
+				"create": map[string]interface{}{
+					"resourceGroup":   true,
+					"vnet":            false,
+					"availabilitySet": false,
+				},
+				"resourceGroup": map[string]interface{}{
+					"name": infra.Namespace,
+					"vnet": map[string]interface{}{
+						"name": *config.Networks.VNet.Name,
+						"cidr": config.Networks.Workers,
+					},
+				},
+				"clusterName": infra.Namespace,
+				"networks": map[string]interface{}{
+					"worker": config.Networks.Workers,
+				},
+				"outputKeys": map[string]interface{}{
+					"resourceGroupName": TerraformerOutputKeyResourceGroupName,
+					"vnetName":          TerraformerOutputKeyVNetName,
+					"subnetName":        TerraformerOutputKeySubnetName,
+					"routeTableName":    TerraformerOutputKeyRouteTableName,
+					"securityGroupName": TerraformerOutputKeySecurityGroupName,
+				},
+			}
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(values).To(BeEquivalentTo(expectedValues))
+		})
+
+		It("should correctly compute the terraformer chart values for a non zoned cluster", func() {
+			config.Zoned = false
 			values, err := ComputeTerraformerChartValues(infra, clientAuth, config, cluster)
 			Expect(err).To(Not(HaveOccurred()))
-
 			expectedValues := map[string]interface{}{
 				"azure": map[string]interface{}{
 					"subscriptionID":     clientAuth.SubscriptionID,
@@ -129,8 +166,9 @@ var _ = Describe("Terraform", func() {
 					"countFaultDomains":  cluster.CloudProfile.Spec.Azure.CountFaultDomains[0].Count,
 				},
 				"create": map[string]interface{}{
-					"resourceGroup": true,
-					"vnet":          false,
+					"resourceGroup":   true,
+					"vnet":            false,
+					"availabilitySet": true,
 				},
 				"resourceGroup": map[string]interface{}{
 					"name": infra.Namespace,
@@ -147,10 +185,10 @@ var _ = Describe("Terraform", func() {
 					"resourceGroupName":   TerraformerOutputKeyResourceGroupName,
 					"vnetName":            TerraformerOutputKeyVNetName,
 					"subnetName":          TerraformerOutputKeySubnetName,
-					"availabilitySetID":   TerraformerOutputKeyAvailabilitySetID,
-					"availabilitySetName": TerraformerOutputKeyAvailabilitySetName,
 					"routeTableName":      TerraformerOutputKeyRouteTableName,
 					"securityGroupName":   TerraformerOutputKeySecurityGroupName,
+					"availabilitySetID":   TerraformerOutputKeyAvailabilitySetID,
+					"availabilitySetName": TerraformerOutputKeyAvailabilitySetName,
 				},
 			}
 			Expect(values).To(BeEquivalentTo(expectedValues))
@@ -174,14 +212,45 @@ var _ = Describe("Terraform", func() {
 				VNetName:            vnetName,
 				SubnetName:          subnetName,
 				RouteTableName:      routeTableName,
-				AvailabilitySetID:   availabilitySetID,
-				AvailabilitySetName: availabilitySetName,
+				AvailabilitySetID:   "",
+				AvailabilitySetName: "",
 				SecurityGroupName:   securityGroupName,
 				ResourceGroupName:   resourceGroupName,
 			}
 		})
 
-		It("should correctly compute the status", func() {
+		It("should correctly compute the status for zoned cluster", func() {
+			status := StatusFromTerraformState(state)
+			Expect(status).To(Equal(&azurev1alpha1.InfrastructureStatus{
+				TypeMeta: StatusTypeMeta,
+				ResourceGroup: azurev1alpha1.ResourceGroup{
+					Name: resourceGroupName,
+				},
+				RouteTables: []azurev1alpha1.RouteTable{
+					{Name: routeTableName, Purpose: azurev1alpha1.PurposeNodes},
+				},
+				SecurityGroups: []azurev1alpha1.SecurityGroup{
+					{Name: securityGroupName, Purpose: azurev1alpha1.PurposeNodes},
+				},
+				AvailabilitySets: []azurev1alpha1.AvailabilitySet{},
+				Networks: azurev1alpha1.NetworkStatus{
+					VNet: azurev1alpha1.VNetStatus{
+						Name: vnetName,
+					},
+					Subnets: []azurev1alpha1.Subnet{
+						{
+							Purpose: azurev1alpha1.PurposeNodes,
+							Name:    subnetName,
+						},
+					},
+				},
+				Zoned: true,
+			}))
+		})
+
+		It("should correctly compute the status for non zoned cluster", func() {
+			state.AvailabilitySetID = availabilitySetID
+			state.AvailabilitySetName = availabilitySetName
 			status := StatusFromTerraformState(state)
 			Expect(status).To(Equal(&azurev1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
@@ -208,7 +277,9 @@ var _ = Describe("Terraform", func() {
 						},
 					},
 				},
+				Zoned: false,
 			}))
 		})
+
 	})
 })

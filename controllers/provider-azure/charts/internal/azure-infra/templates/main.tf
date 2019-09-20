@@ -54,6 +54,7 @@ resource "azurerm_subnet_network_security_group_association" "workers-sg-associa
   network_security_group_id = "${azurerm_network_security_group.workers.id}"
 }
 
+{{ if .Values.create.availabilitySet -}}
 #=====================================================================
 #= Availability Set
 #=====================================================================
@@ -66,6 +67,7 @@ resource "azurerm_availability_set" "workers" {
   platform_fault_domain_count  = "{{ required "azure.countFaultDomains is required" .Values.azure.countFaultDomains }}"
   managed                      = true
 }
+{{- end}}
 
 //=====================================================================
 //= Output variables
@@ -83,14 +85,6 @@ output "{{ .Values.outputKeys.subnetName }}" {
   value = "${azurerm_subnet.workers.name}"
 }
 
-output "{{ .Values.outputKeys.availabilitySetID }}" {
-  value = "${azurerm_availability_set.workers.id}"
-}
-
-output "{{ .Values.outputKeys.availabilitySetName }}" {
-  value = "${azurerm_availability_set.workers.name}"
-}
-
 output "{{ .Values.outputKeys.routeTableName }}" {
   value = "${azurerm_route_table.workers.name}"
 }
@@ -98,3 +92,13 @@ output "{{ .Values.outputKeys.routeTableName }}" {
 output "{{ .Values.outputKeys.securityGroupName }}" {
   value = "${azurerm_network_security_group.workers.name}"
 }
+
+{{ if .Values.create.availabilitySet -}}
+output "{{ .Values.outputKeys.availabilitySetID }}" {
+  value = "${azurerm_availability_set.workers.id}"
+}
+
+output "{{ .Values.outputKeys.availabilitySetName }}" {
+  value = "${azurerm_availability_set.workers.name}"
+}
+{{- end}}

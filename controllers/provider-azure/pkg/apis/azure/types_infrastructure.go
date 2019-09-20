@@ -27,6 +27,8 @@ type InfrastructureConfig struct {
 	ResourceGroup *ResourceGroup
 	// Networks is the network configuration (VNets, subnets, etc.)
 	Networks NetworkConfig
+	// Zoned indicates whether the cluster uses zones
+	Zoned bool
 }
 
 // ResourceGroup is azure resource group
@@ -58,6 +60,8 @@ type InfrastructureStatus struct {
 	RouteTables []RouteTable
 	// SecurityGroups is a list of created security groups
 	SecurityGroups []SecurityGroup
+	// Zoned indicates whether the cluster uses zones
+	Zoned bool
 }
 
 // NetworkStatus is the current status of the infrastructure networks.

@@ -67,11 +67,12 @@ var (
 func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, clientAuth *internal.ClientAuth,
 	config *azurev1alpha1.InfrastructureConfig, cluster *controller.Cluster) (map[string]interface{}, error) {
 	var (
-		createResourceGroup = true
-		createVNet          = true
-		resourceGroupName   = infra.Namespace
-		vnetName            = infra.Namespace
-		vnetCIDR            = config.Networks.Workers
+		createResourceGroup   = true
+		createVNet            = true
+		createAvailabilitySet = false
+		resourceGroupName     = infra.Namespace
+		vnetName              = infra.Namespace
+		vnetCIDR              = config.Networks.Workers
 
 		findDomainCountByRegion = func(region string, domainCounts []v1beta1.AzureDomainCount) (v1beta1.AzureDomainCount, error) {
 			for _, domainCount := range domainCounts {
@@ -80,6 +81,19 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 				}
 			}
 			return v1beta1.AzureDomainCount{}, fmt.Errorf("could not find a domain count for region %s", region)
+		}
+
+		azure = map[string]interface{}{
+			"subscriptionID": clientAuth.SubscriptionID,
+			"tenantID":       clientAuth.TenantID,
+			"region":         infra.Spec.Region,
+		}
+		outputKeys = map[string]interface{}{
+			"resourceGroupName": TerraformerOutputKeyResourceGroupName,
+			"vnetName":          TerraformerOutputKeyVNetName,
+			"subnetName":        TerraformerOutputKeySubnetName,
+			"routeTableName":    TerraformerOutputKeyRouteTableName,
+			"securityGroupName": TerraformerOutputKeySecurityGroupName,
 		}
 	)
 	// check if we should use an existing ResourceGroup or create a new one
@@ -97,33 +111,31 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		vnetCIDR = *config.Networks.VNet.CIDR
 	}
 
-	var countUpdateDomainsCount, countFaultDomainsCount int
+	// If the cluster is zoned, then we don't need to create an AvailabilitySet.
+	if !config.Zoned && cluster.CloudProfile.Spec.Azure != nil {
+		createAvailabilitySet = true
+		outputKeys["availabilitySetID"] = TerraformerOutputKeyAvailabilitySetID
+		outputKeys["availabilitySetName"] = TerraformerOutputKeyAvailabilitySetName
 
-	if cluster.CloudProfile.Spec.Azure != nil {
 		countUpdateDomains, err := findDomainCountByRegion(infra.Spec.Region, cluster.CloudProfile.Spec.Azure.CountUpdateDomains)
 		if err != nil {
 			return nil, err
 		}
-		countUpdateDomainsCount = countUpdateDomains.Count
+		azure["countUpdateDomains"] = countUpdateDomains.Count
 
 		countFaultDomains, err := findDomainCountByRegion(infra.Spec.Region, cluster.CloudProfile.Spec.Azure.CountFaultDomains)
 		if err != nil {
 			return nil, err
 		}
-		countFaultDomainsCount = countFaultDomains.Count
+		azure["countFaultDomains"] = countFaultDomains.Count
 	}
 
 	return map[string]interface{}{
-		"azure": map[string]interface{}{
-			"subscriptionID":     clientAuth.SubscriptionID,
-			"tenantID":           clientAuth.TenantID,
-			"region":             infra.Spec.Region,
-			"countUpdateDomains": countUpdateDomainsCount,
-			"countFaultDomains":  countFaultDomainsCount,
-		},
+		"azure": azure,
 		"create": map[string]interface{}{
-			"resourceGroup": createResourceGroup,
-			"vnet":          createVNet,
+			"resourceGroup":   createResourceGroup,
+			"vnet":            createVNet,
+			"availabilitySet": createAvailabilitySet,
 		},
 		"resourceGroup": map[string]interface{}{
 			"name": resourceGroupName,
@@ -136,15 +148,7 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		"networks": map[string]interface{}{
 			"worker": config.Networks.Workers,
 		},
-		"outputKeys": map[string]interface{}{
-			"resourceGroupName":   TerraformerOutputKeyResourceGroupName,
-			"vnetName":            TerraformerOutputKeyVNetName,
-			"subnetName":          TerraformerOutputKeySubnetName,
-			"availabilitySetID":   TerraformerOutputKeyAvailabilitySetID,
-			"availabilitySetName": TerraformerOutputKeyAvailabilitySetName,
-			"routeTableName":      TerraformerOutputKeyRouteTableName,
-			"securityGroupName":   TerraformerOutputKeySecurityGroupName,
-		},
+		"outputKeys": outputKeys,
 	}, nil
 }
 
@@ -195,9 +199,7 @@ type TerraformState struct {
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
 func ExtractTerraformState(tf *terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*TerraformState, error) {
-	outputKeys := []string{
-		TerraformerOutputKeyAvailabilitySetID,
-		TerraformerOutputKeyAvailabilitySetName,
+	var outputKeys = []string{
 		TerraformerOutputKeyResourceGroupName,
 		TerraformerOutputKeyRouteTableName,
 		TerraformerOutputKeySecurityGroupName,
@@ -205,26 +207,34 @@ func ExtractTerraformState(tf *terraformer.Terraformer, config *azurev1alpha1.In
 		TerraformerOutputKeyVNetName,
 	}
 
+	if !config.Zoned {
+		outputKeys = append(outputKeys, TerraformerOutputKeyAvailabilitySetID, TerraformerOutputKeyAvailabilitySetName)
+	}
+
 	vars, err := tf.GetStateOutputVariables(outputKeys...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TerraformState{
-		AvailabilitySetID:   vars[TerraformerOutputKeyAvailabilitySetID],
-		AvailabilitySetName: vars[TerraformerOutputKeyAvailabilitySetName],
-		VNetName:            vars[TerraformerOutputKeyVNetName],
-		ResourceGroupName:   vars[TerraformerOutputKeyResourceGroupName],
-		RouteTableName:      vars[TerraformerOutputKeyRouteTableName],
-		SecurityGroupName:   vars[TerraformerOutputKeySecurityGroupName],
-		SubnetName:          vars[TerraformerOutputKeySubnetName],
-	}, nil
+	var tfState = TerraformState{
+		VNetName:          vars[TerraformerOutputKeyVNetName],
+		ResourceGroupName: vars[TerraformerOutputKeyResourceGroupName],
+		RouteTableName:    vars[TerraformerOutputKeyRouteTableName],
+		SecurityGroupName: vars[TerraformerOutputKeySecurityGroupName],
+		SubnetName:        vars[TerraformerOutputKeySubnetName],
+	}
+
+	if !config.Zoned {
+		tfState.AvailabilitySetID = vars[TerraformerOutputKeyAvailabilitySetID]
+		tfState.AvailabilitySetName = vars[TerraformerOutputKeyAvailabilitySetName]
+	}
+	return &tfState, nil
 }
 
 // StatusFromTerraformState computes an InfrastructureStatus from the given
 // Terraform variables.
 func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.InfrastructureStatus {
-	return &azurev1alpha1.InfrastructureStatus{
+	var tfState = azurev1alpha1.InfrastructureStatus{
 		TypeMeta: StatusTypeMeta,
 		ResourceGroup: azurev1alpha1.ResourceGroup{
 			Name: state.ResourceGroupName,
@@ -240,9 +250,7 @@ func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.Infrastructu
 				},
 			},
 		},
-		AvailabilitySets: []azurev1alpha1.AvailabilitySet{
-			{Name: state.AvailabilitySetName, ID: state.AvailabilitySetID, Purpose: azurev1alpha1.PurposeNodes},
-		},
+		AvailabilitySets: []azurev1alpha1.AvailabilitySet{},
 		RouteTables: []azurev1alpha1.RouteTable{
 			{Purpose: azurev1alpha1.PurposeNodes, Name: state.RouteTableName},
 		},
@@ -250,6 +258,19 @@ func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.Infrastructu
 			{Name: state.SecurityGroupName, Purpose: azurev1alpha1.PurposeNodes},
 		},
 	}
+
+	// If no AvailabilitySet was created then the Shoot uses zones.
+	if state.AvailabilitySetID == "" && state.AvailabilitySetName == "" {
+		tfState.Zoned = true
+	} else {
+		tfState.AvailabilitySets = append(tfState.AvailabilitySets, azurev1alpha1.AvailabilitySet{
+			Name:    state.AvailabilitySetName,
+			ID:      state.AvailabilitySetID,
+			Purpose: azurev1alpha1.PurposeNodes,
+		})
+	}
+
+	return &tfState
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
