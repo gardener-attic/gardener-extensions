@@ -19,13 +19,11 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -69,8 +67,8 @@ var _ = Describe("Terraform", func() {
 			},
 		}
 
-		podsCIDR := gardencorev1alpha1.CIDR("11.0.0.0/16")
-		servicesCIDR := gardencorev1alpha1.CIDR("12.0.0.0/16")
+		podsCIDR := "11.0.0.0/16"
+		servicesCIDR := "12.0.0.0/16"
 		cluster = &controller.Cluster{
 			CloudProfile: &gardenv1beta1.CloudProfile{
 				Spec: gardenv1beta1.CloudProfileSpec{
@@ -84,7 +82,7 @@ var _ = Describe("Terraform", func() {
 					Cloud: gardenv1beta1.Cloud{
 						GCP: &gardenv1beta1.GCPCloud{
 							Networks: gardenv1beta1.GCPNetworks{
-								K8SNetworks: gardencorev1alpha1.K8SNetworks{
+								K8SNetworks: gardenv1beta1.K8SNetworks{
 									Pods:     &podsCIDR,
 									Services: &servicesCIDR,
 								},

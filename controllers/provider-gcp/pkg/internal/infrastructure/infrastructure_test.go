@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	mockgcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/mock/client"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

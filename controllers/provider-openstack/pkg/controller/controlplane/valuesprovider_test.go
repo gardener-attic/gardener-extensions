@@ -24,7 +24,6 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
@@ -102,7 +101,7 @@ var _ = Describe("ValuesProvider", func() {
 
 		cp = defaultControlPlane()
 
-		cidr    = gardencorev1alpha1.CIDR("10.250.0.0/19")
+		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
 			CloudProfile: &gardenv1beta1.CloudProfile{
 				Spec: gardenv1beta1.CloudProfileSpec{
@@ -118,7 +117,7 @@ var _ = Describe("ValuesProvider", func() {
 					Cloud: gardenv1beta1.Cloud{
 						OpenStack: &gardenv1beta1.OpenStackCloud{
 							Networks: gardenv1beta1.OpenStackNetworks{
-								K8SNetworks: gardencorev1alpha1.K8SNetworks{
+								K8SNetworks: gardenv1beta1.K8SNetworks{
 									Pods: &cidr,
 								},
 							},

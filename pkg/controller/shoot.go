@@ -15,7 +15,6 @@
 package controller
 
 import (
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 )
@@ -41,7 +40,7 @@ func (f ChartRendererFactoryFunc) NewChartRendererForShoot(version string) (char
 }
 
 // GetPodNetwork returns the pod network CIDR of the given Shoot.
-func GetPodNetwork(shoot *gardenv1beta1.Shoot) gardencorev1alpha1.CIDR {
+func GetPodNetwork(shoot *gardenv1beta1.Shoot) string {
 	cloud := shoot.Spec.Cloud
 	switch {
 	case cloud.AWS != nil:

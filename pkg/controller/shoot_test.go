@@ -15,7 +15,6 @@
 package controller
 
 import (
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 
 	. "github.com/onsi/ginkgo"
@@ -26,10 +25,10 @@ import (
 var _ = Describe("Shoot", func() {
 	trueVar := true
 	falseVar := false
-	cidr := gardencorev1alpha1.CIDR("10.250.0.0/19")
+	cidr := "10.250.0.0/19"
 
 	DescribeTable("#GetPodNetwork",
-		func(cloud gardenv1beta1.Cloud, cidr gardencorev1alpha1.CIDR) {
+		func(cloud gardenv1beta1.Cloud, cidr string) {
 			shoot := &gardenv1beta1.Shoot{
 				Spec: gardenv1beta1.ShootSpec{
 					Cloud: cloud,
@@ -42,7 +41,7 @@ var _ = Describe("Shoot", func() {
 		Entry("cloud is AWS", gardenv1beta1.Cloud{
 			AWS: &gardenv1beta1.AWSCloud{
 				Networks: gardenv1beta1.AWSNetworks{
-					K8SNetworks: gardencorev1alpha1.K8SNetworks{Pods: &cidr},
+					K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
 				},
 			},
 		}, cidr),
@@ -50,7 +49,7 @@ var _ = Describe("Shoot", func() {
 		Entry("cloud is Azure", gardenv1beta1.Cloud{
 			Azure: &gardenv1beta1.AzureCloud{
 				Networks: gardenv1beta1.AzureNetworks{
-					K8SNetworks: gardencorev1alpha1.K8SNetworks{Pods: &cidr},
+					K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
 				},
 			},
 		}, cidr),
@@ -58,7 +57,7 @@ var _ = Describe("Shoot", func() {
 		Entry("cloud is GCP", gardenv1beta1.Cloud{
 			GCP: &gardenv1beta1.GCPCloud{
 				Networks: gardenv1beta1.GCPNetworks{
-					K8SNetworks: gardencorev1alpha1.K8SNetworks{Pods: &cidr},
+					K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
 				},
 			},
 		}, cidr),
@@ -66,7 +65,7 @@ var _ = Describe("Shoot", func() {
 		Entry("cloud is OpenStack", gardenv1beta1.Cloud{
 			OpenStack: &gardenv1beta1.OpenStackCloud{
 				Networks: gardenv1beta1.OpenStackNetworks{
-					K8SNetworks: gardencorev1alpha1.K8SNetworks{Pods: &cidr},
+					K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
 				},
 			},
 		}, cidr),
@@ -74,7 +73,7 @@ var _ = Describe("Shoot", func() {
 		Entry("cloud is Alicloud", gardenv1beta1.Cloud{
 			Alicloud: &gardenv1beta1.Alicloud{
 				Networks: gardenv1beta1.AlicloudNetworks{
-					K8SNetworks: gardencorev1alpha1.K8SNetworks{Pods: &cidr},
+					K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
 				},
 			},
 		}, cidr),
