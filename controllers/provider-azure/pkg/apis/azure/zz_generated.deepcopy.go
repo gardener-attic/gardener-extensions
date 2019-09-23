@@ -286,6 +286,11 @@ func (in *MachineImages) DeepCopy() *MachineImages {
 func (in *NetworkConfig) DeepCopyInto(out *NetworkConfig) {
 	*out = *in
 	in.VNet.DeepCopyInto(&out.VNet)
+	if in.ServiceEndpoints != nil {
+		in, out := &in.ServiceEndpoints, &out.ServiceEndpoints
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 

@@ -42,6 +42,9 @@ type NetworkConfig struct {
 	VNet VNet `json:"vnet"`
 	// Workers is the worker subnet range to create (used for the VMs).
 	Workers string `json:"workers"`
+	// ServiceEndpoints is a list of Azure ServiceEndpoints which should be associated with the worker subnet.
+	// +optional
+	ServiceEndpoints []string `json:"serviceEndpoints,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

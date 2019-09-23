@@ -70,6 +70,8 @@ var _ = Describe("Terraform", func() {
 		config     *azurev1alpha1.InfrastructureConfig
 		cluster    *controller.Cluster
 		clientAuth *internal.ClientAuth
+
+		testServiceEndpoint = "Microsoft.Test"
 	)
 
 	BeforeEach(func() {
@@ -84,7 +86,8 @@ var _ = Describe("Terraform", func() {
 					Name: &VNetName,
 					CIDR: &VNetCIDR,
 				},
-				Workers: TestCIDR,
+				Workers:          TestCIDR,
+				ServiceEndpoints: []string{testServiceEndpoint},
 			},
 		}
 
@@ -137,6 +140,9 @@ var _ = Describe("Terraform", func() {
 					"vnet": map[string]interface{}{
 						"name": *config.Networks.VNet.Name,
 						"cidr": config.Networks.Workers,
+					},
+					"subnet": map[string]interface{}{
+						"serviceEndpoints": []string{testServiceEndpoint},
 					},
 				},
 				"clusterName": infra.Namespace,

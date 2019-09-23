@@ -131,6 +131,9 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 				"name": vnetName,
 				"cidr": vnetCIDR,
 			},
+			"subnet": map[string]interface{}{
+				"serviceEndpoints": config.Networks.ServiceEndpoints,
+			},
 		},
 		"clusterName": infra.Namespace,
 		"networks": map[string]interface{}{

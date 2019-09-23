@@ -479,6 +479,7 @@ func autoConvert_v1alpha1_NetworkConfig_To_azure_NetworkConfig(in *NetworkConfig
 		return err
 	}
 	out.Workers = in.Workers
+	out.ServiceEndpoints = *(*[]string)(unsafe.Pointer(&in.ServiceEndpoints))
 	return nil
 }
 
@@ -492,6 +493,7 @@ func autoConvert_azure_NetworkConfig_To_v1alpha1_NetworkConfig(in *azure.Network
 		return err
 	}
 	out.Workers = in.Workers
+	out.ServiceEndpoints = *(*[]string)(unsafe.Pointer(&in.ServiceEndpoints))
 	return nil
 }
 
