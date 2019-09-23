@@ -17,7 +17,7 @@ resource "alicloud_vpc" "vpc" {
 }
 resource "alicloud_nat_gateway" "nat_gateway" {
   vpc_id = "{{ required "vpc.id is required" .Values.vpc.id }}"
-  spec   = "Small"
+  specification   = "Small"
   name   = "{{ required "clusterName is required" .Values.clusterName }}-natgw"
 }
 {{- end }}
