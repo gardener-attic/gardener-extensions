@@ -30,8 +30,6 @@ resource "azurerm_subnet" "workers" {
   resource_group_name       = "{{ required "resourceGroup.name is required" .Values.resourceGroup.name }}"
   virtual_network_name      = "{{ required "resourceGroup.vnet.name is required" .Values.resourceGroup.vnet.name }}"
   address_prefix            = "{{ required "networks.worker is required" .Values.networks.worker }}"
-  route_table_id            = "${azurerm_route_table.workers.id}"
-  network_security_group_id = "${azurerm_network_security_group.workers.id}"
 }
 
 resource "azurerm_route_table" "workers" {
@@ -40,10 +38,20 @@ resource "azurerm_route_table" "workers" {
   resource_group_name = "{{ required "resourceGroup.name is required" .Values.resourceGroup.name }}"
 }
 
+resource "azurerm_subnet_route_table_association" "workers-rt-association" {
+  subnet_id      = "${azurerm_subnet.workers.id}"
+  route_table_id = "${azurerm_route_table.workers.id}"
+}
+
 resource "azurerm_network_security_group" "workers" {
   name                = "{{ required "clusterName is required" .Values.clusterName }}-workers"
   location            = "{{ required "azure.region is required" .Values.azure.region }}"
   resource_group_name = "{{ required "resourceGroup.name is required" .Values.resourceGroup.name }}"
+}
+
+resource "azurerm_subnet_network_security_group_association" "workers-sg-association" {
+  subnet_id                 = "${azurerm_subnet.workers.id}"
+  network_security_group_id = "${azurerm_network_security_group.workers.id}"
 }
 
 #=====================================================================
