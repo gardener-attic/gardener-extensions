@@ -17,6 +17,7 @@ package genericactuator
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -71,6 +72,12 @@ func (a *genericActuator) deleteMachineControllerManager(ctx context.Context, wo
 
 	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, workerObj.Namespace, mcmShootResourceName); err != nil {
 		return errors.Wrapf(err, "could not delete managed resource containing mcm chart for worker '%s'", util.ObjectName(workerObj))
+	}
+
+	timeoutCtx3, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx3, a.client, workerObj.Namespace, mcmShootResourceName); err != nil {
+		return errors.Wrapf(err, "error while waiting for managed resource containing containing mcm for '%s' to be deleted", util.ObjectName(workerObj))
 	}
 
 	if err := a.mcmSeedChart.Delete(ctx, a.client, workerObj.Namespace); err != nil {

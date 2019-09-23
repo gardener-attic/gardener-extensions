@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	controllerconfig "github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/pkg/controller/config"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/pkg/imagevector"
@@ -162,6 +163,12 @@ func (a *actuator) deleteSeedResources(ctx context.Context, shoot *gardenv1beta1
 		return err
 	}
 
+	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	if err := controller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, namespace, SeedResourcesName); err != nil {
+		return err
+	}
+
 	secret := &corev1.Secret{}
 	secret.SetName(service.SecretName)
 	secret.SetNamespace(namespace)
@@ -218,7 +225,19 @@ func (a *actuator) deleteShootResources(ctx context.Context, namespace string) e
 	if err := controller.DeleteManagedResource(ctx, a.client, namespace, ShootResourcesName); err != nil {
 		return err
 	}
-	return controller.DeleteManagedResource(ctx, a.client, namespace, KeptShootResourcesName)
+	if err := controller.DeleteManagedResource(ctx, a.client, namespace, KeptShootResourcesName); err != nil {
+		return err
+	}
+
+	timeoutCtx1, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	if err := controller.WaitUntilManagedResourceDeleted(timeoutCtx1, a.client, namespace, ShootResourcesName); err != nil {
+		return err
+	}
+
+	timeoutCtx2, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	return controller.WaitUntilManagedResourceDeleted(timeoutCtx2, a.client, namespace, KeptShootResourcesName)
 }
 
 func (a *actuator) createKubeconfig(ctx context.Context, namespace string) (*corev1.Secret, error) {
