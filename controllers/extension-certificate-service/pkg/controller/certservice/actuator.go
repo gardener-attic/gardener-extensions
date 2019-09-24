@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -39,7 +40,9 @@ import (
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -102,13 +105,38 @@ func (a *actuator) Delete(ctx context.Context, ex *extensionsv1alpha1.Extension)
 		return err
 	}
 
+	if err := a.deleteIngressResources(ctx); err != nil {
+		return fmt.Errorf("failed to clean up ingress resources in seed: %v", err)
+	}
 	if err := a.deleteRBAC(ctx, namespace); err != nil {
 		return err
 	}
-
 	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	return controller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, ex.Namespace, ShootResourcesName)
+}
+
+const (
+	managedCertPrefix = "managed-cert-"
+	ingressClassKey   = "kubernetes.io/ingress.class"
+)
+
+func (a *actuator) deleteIngressResources(ctx context.Context) error {
+	ingressList := extensionsv1beta1.IngressList{}
+	if err := a.client.List(ctx, &ingressList); err != nil {
+		return err
+	}
+	return meta.EachListItem(&ingressList, func(obj runtime.Object) error {
+		accessor, err := meta.Accessor(obj)
+		if err != nil {
+			return err
+		}
+		annotations := accessor.GetAnnotations()
+		if ingressClass := annotations[ingressClassKey]; strings.HasPrefix(ingressClass, managedCertPrefix) {
+			return a.client.Delete(ctx, obj, kubernetes.DefaultDeleteOptionFuncs...)
+		}
+		return nil
+	})
 }
 
 // InjectConfig injects the rest config to this actuator.

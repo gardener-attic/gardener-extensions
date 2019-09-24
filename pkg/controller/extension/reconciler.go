@@ -25,7 +25,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	v1alpha1constantshelper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
+	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -189,7 +189,7 @@ func (r *reconciler) reconcile(ctx context.Context, ex *extensionsv1alpha1.Exten
 
 	msg := "Reconciling Extension resource"
 	r.logger.Info("Reconciling Extension resource", "extension", ex.Name, "namespace", ex.Namespace)
-	operationType := v1alpha1constantshelper.ComputeOperationType(ex.ObjectMeta, ex.Status.LastOperation)
+	operationType := gardencorev1alpha1helper.ComputeOperationType(ex.ObjectMeta, ex.Status.LastOperation)
 	if err := r.updateStatusProcessing(ctx, ex, operationType, msg); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -221,7 +221,7 @@ func (r *reconciler) delete(ctx context.Context, ex *extensionsv1alpha1.Extensio
 		return reconcile.Result{}, nil
 	}
 
-	operationType := v1alpha1constantshelper.ComputeOperationType(ex.ObjectMeta, ex.Status.LastOperation)
+	operationType := gardencorev1alpha1helper.ComputeOperationType(ex.ObjectMeta, ex.Status.LastOperation)
 	if err := r.updateStatusProcessing(ctx, ex, operationType, "Deleting Extension resource."); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -257,7 +257,7 @@ func (r *reconciler) updateStatusProcessing(ctx context.Context, ex *extensionsv
 func (r *reconciler) updateStatusError(ctx context.Context, err error, ex *extensionsv1alpha1.Extension, lastOperationType gardencorev1alpha1.LastOperationType, description string) error {
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, r.client, ex, func() error {
 		ex.Status.ObservedGeneration = ex.Generation
-		ex.Status.LastOperation, ex.Status.LastError = extensionscontroller.ReconcileError(lastOperationType, v1alpha1constantshelper.FormatLastErrDescription(fmt.Errorf("%s: %v", description, err)), 50, v1alpha1constantshelper.ExtractErrorCodes(err)...)
+		ex.Status.LastOperation, ex.Status.LastError = extensionscontroller.ReconcileError(lastOperationType, gardencorev1alpha1helper.FormatLastErrDescription(fmt.Errorf("%s: %v", description, err)), 50, gardencorev1alpha1helper.ExtractErrorCodes(err)...)
 		return nil
 	})
 }
