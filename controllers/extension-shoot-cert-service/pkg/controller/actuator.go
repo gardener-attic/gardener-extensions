@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service"
@@ -217,12 +218,24 @@ func (a *actuator) deleteSeedResources(ctx context.Context, namespace string) er
 	if err := a.client.Delete(ctx, secret); client.IgnoreNotFound(err) != nil {
 		return err
 	}
-	return controller.DeleteManagedResource(ctx, a.client, namespace, v1alpha1.CertManagementResourceNameSeed)
+	if err := controller.DeleteManagedResource(ctx, a.client, namespace, v1alpha1.CertManagementResourceNameSeed); err != nil {
+		return err
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	return controller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, namespace, v1alpha1.CertManagementResourceNameSeed)
 }
 
 func (a *actuator) deleteShootResources(ctx context.Context, namespace string) error {
 	a.logger.Info("Deleting managed resource for shoot", "namespace", namespace)
-	return controller.DeleteManagedResource(ctx, a.client, namespace, v1alpha1.CertManagementResourceNameShoot)
+	if err := controller.DeleteManagedResource(ctx, a.client, namespace, v1alpha1.CertManagementResourceNameShoot); err != nil {
+		return err
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	return controller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, namespace, v1alpha1.CertManagementResourceNameShoot)
 }
 
 func (a *actuator) createKubeconfigForCertManagement(ctx context.Context, namespace string) (*corev1.Secret, error) {
