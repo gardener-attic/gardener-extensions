@@ -218,7 +218,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["list"]
+    verbs: ["list", "watch", "get"]
 ---
 apiVersion: {{ include "rbacversion" . }}
 kind: ClusterRoleBinding
