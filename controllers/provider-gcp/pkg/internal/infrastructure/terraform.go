@@ -19,10 +19,9 @@ import (
 
 	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
-	"github.com/gardener/gardener-extensions/pkg/controller"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/gardener/gardener/pkg/operation/terraformer"
 
@@ -54,24 +53,17 @@ var (
 	}
 )
 
-// getK8SNetworks gets the K8SNetworks from the given controller.Cluster.
-func getK8SNetworks(cluster *controller.Cluster) *gardenv1beta1.K8SNetworks {
-	return &cluster.Shoot.Spec.Cloud.GCP.Networks.K8SNetworks
-}
-
 // ComputeTerraformerChartValues computes the values for the GCP Terraformer chart.
 func ComputeTerraformerChartValues(
 	infra *extensionsv1alpha1.Infrastructure,
 	account *internal.ServiceAccount,
 	config *gcpv1alpha1.InfrastructureConfig,
-	cluster *controller.Cluster,
+	cluster *extensionscontroller.Cluster,
 ) map[string]interface{} {
 	var (
 		vpcName   = DefaultVPCName
 		createVPC = true
 	)
-
-	networks := getK8SNetworks(cluster)
 
 	if config.Networks.VPC != nil {
 		createVPC = false
@@ -91,8 +83,8 @@ func ComputeTerraformerChartValues(
 		},
 		"clusterName": infra.Namespace,
 		"networks": map[string]interface{}{
-			"pods":     networks.Pods,
-			"services": networks.Services,
+			"pods":     extensionscontroller.GetPodNetwork(cluster),
+			"services": extensionscontroller.GetServiceNetwork(cluster),
 			"worker":   config.Networks.Worker,
 			"internal": config.Networks.Internal,
 		},
@@ -111,7 +103,7 @@ func RenderTerraformerChart(
 	infra *extensionsv1alpha1.Infrastructure,
 	account *internal.ServiceAccount,
 	config *gcpv1alpha1.InfrastructureConfig,
-	cluster *controller.Cluster,
+	cluster *extensionscontroller.Cluster,
 ) (*TerraformFiles, error) {
 	values := ComputeTerraformerChartValues(infra, account, config, cluster)
 

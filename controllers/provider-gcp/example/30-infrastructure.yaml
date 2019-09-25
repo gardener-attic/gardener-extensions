@@ -19,20 +19,18 @@ metadata:
   name: shoot--foobar--gcp
 spec:
   cloudProfile:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
   seed:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
   shoot:
-    apiVersion: garden.sapcloud.io/v1beta1
+    apiVersion: core.gardener.cloud/v1alpha1
     kind: Shoot
     spec:
-      cloud:
-        gcp:
-          networks:
-            pods: 10.243.128.0/17
-            services: 10.243.0.0/17
+      networking:
+        pods: 10.243.128.0/17
+        services: 10.243.0.0/17
     status:
       lastOperation:
         state: Succeeded

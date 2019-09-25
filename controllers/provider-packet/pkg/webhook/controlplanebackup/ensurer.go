@@ -62,7 +62,7 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscontroller.Cluster) (*corev1.Container, error) {
 	// Find etcd-backup-restore image
 	// TODO Get seed version from clientset when it's possible to inject it
-	image, err := e.imageVector.FindImage(packet.ETCDBackupRestoreImageName, imagevector.TargetVersion(cluster.Shoot.Spec.Kubernetes.Version))
+	image, err := e.imageVector.FindImage(packet.ETCDBackupRestoreImageName, imagevector.TargetVersion(extensionscontroller.GetKubernetesVersion(cluster)))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find image %s", packet.ETCDBackupRestoreImageName)
 	}

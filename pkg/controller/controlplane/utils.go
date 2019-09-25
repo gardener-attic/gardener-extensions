@@ -19,7 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -29,7 +29,7 @@ func DNSNamesForService(name, namespace string) []string {
 		name,
 		fmt.Sprintf("%s.%s", name, namespace),
 		fmt.Sprintf("%s.%s.svc", name, namespace),
-		fmt.Sprintf("%s.%s.svc.%s", name, namespace, gardenv1beta1.DefaultDomain),
+		fmt.Sprintf("%s.%s.svc.%s", name, namespace, gardencorev1alpha1.DefaultDomain),
 	}
 }
 

@@ -30,8 +30,8 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -120,6 +120,8 @@ var _ = Describe("Machines", func() {
 				machineImageToCloudProfilesMapping []config.MachineImage
 				scheme                             *runtime.Scheme
 				decoder                            runtime.Decoder
+				cloudProfileConfig                 *openstackv1alpha1.CloudProfileConfig
+				cloudProfileConfigJSON             []byte
 				cluster                            *extensionscontroller.Cluster
 				w                                  *extensionsv1alpha1.Worker
 			)
@@ -177,29 +179,29 @@ var _ = Describe("Machines", func() {
 					},
 				}
 
+				cloudProfileConfig = &openstackv1alpha1.CloudProfileConfig{
+					KeyStoneURL: openstackAuthURL,
+				}
+				cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 				cluster = &extensionscontroller.Cluster{
-					CloudProfile: &gardenv1beta1.CloudProfile{
+					CoreCloudProfile: &gardencorev1alpha1.CloudProfile{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: cloudProfileName,
 						},
-						Spec: gardenv1beta1.CloudProfileSpec{
-							OpenStack: &gardenv1beta1.OpenStackProfile{
-								KeyStoneURL: openstackAuthURL,
+						Spec: gardencorev1alpha1.CloudProfileSpec{
+							ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+								RawExtension: runtime.RawExtension{
+									Raw: cloudProfileConfigJSON,
+								},
 							},
 						},
 					},
-					Shoot: &gardenv1beta1.Shoot{
-						Spec: gardenv1beta1.ShootSpec{
-							Cloud: gardenv1beta1.Cloud{
-								OpenStack: &gardenv1beta1.OpenStackCloud{
-									Networks: gardenv1beta1.OpenStackNetworks{
-										K8SNetworks: gardenv1beta1.K8SNetworks{
-											Pods: &podCIDR,
-										},
-									},
-								},
+					CoreShoot: &gardencorev1alpha1.Shoot{
+						Spec: gardencorev1alpha1.ShootSpec{
+							Networking: gardencorev1alpha1.Networking{
+								Pods: &podCIDR,
 							},
-							Kubernetes: gardenv1beta1.Kubernetes{
+							Kubernetes: gardencorev1alpha1.Kubernetes{
 								Version: shootVersion,
 							},
 						},
@@ -422,7 +424,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
+				cluster.CoreShoot.Spec.Kubernetes.Version = "invalid"
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
@@ -459,7 +461,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image for this cloud profile cannot be found", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				cluster.CloudProfile.Name = "another-cloud-profile"
+				cluster.CoreCloudProfile.Name = "another-cloud-profile"
 
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 

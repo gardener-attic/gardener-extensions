@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 
 	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+	azurev1alpha1helper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
@@ -112,22 +113,41 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 	}
 
 	// If the cluster is zoned, then we don't need to create an AvailabilitySet.
-	if !config.Zoned && cluster.CloudProfile.Spec.Azure != nil {
+	if !config.Zoned {
 		createAvailabilitySet = true
 		outputKeys["availabilitySetID"] = TerraformerOutputKeyAvailabilitySetID
 		outputKeys["availabilitySetName"] = TerraformerOutputKeyAvailabilitySetName
 
-		countUpdateDomains, err := findDomainCountByRegion(infra.Spec.Region, cluster.CloudProfile.Spec.Azure.CountUpdateDomains)
-		if err != nil {
-			return nil, err
-		}
-		azure["countUpdateDomains"] = countUpdateDomains.Count
+		if cluster.CloudProfile != nil && cluster.CloudProfile.Spec.Azure != nil {
+			countUpdateDomains, err := findDomainCountByRegion(infra.Spec.Region, cluster.CloudProfile.Spec.Azure.CountUpdateDomains)
+			if err != nil {
+				return nil, err
+			}
+			azure["countUpdateDomains"] = countUpdateDomains.Count
 
-		countFaultDomains, err := findDomainCountByRegion(infra.Spec.Region, cluster.CloudProfile.Spec.Azure.CountFaultDomains)
-		if err != nil {
-			return nil, err
+			countFaultDomains, err := findDomainCountByRegion(infra.Spec.Region, cluster.CloudProfile.Spec.Azure.CountFaultDomains)
+			if err != nil {
+				return nil, err
+			}
+			azure["countFaultDomains"] = countFaultDomains.Count
+		} else if cluster.CoreCloudProfile != nil {
+			cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(cluster.CoreCloudProfile)
+			if err != nil {
+				return nil, err
+			}
+
+			updateDomainCount, err := azurev1alpha1helper.FindDomainCountByRegion(cloudProfileConfig.CountUpdateDomains, infra.Spec.Region)
+			if err != nil {
+				return nil, err
+			}
+			azure["countUpdateDomains"] = updateDomainCount
+
+			countFaultDomains, err := azurev1alpha1helper.FindDomainCountByRegion(cloudProfileConfig.CountFaultDomains, infra.Spec.Region)
+			if err != nil {
+				return nil, err
+			}
+			azure["countFaultDomains"] = countFaultDomains
 		}
-		azure["countFaultDomains"] = countFaultDomains.Count
 	}
 
 	return map[string]interface{}{

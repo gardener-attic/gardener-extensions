@@ -334,10 +334,10 @@ func getControlPlaneChartValues(
 ) (map[string]interface{}, error) {
 	values := map[string]interface{}{
 		"alicloud-cloud-controller-manager": map[string]interface{}{
-			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
+			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
 			"clusterName":       cp.Namespace,
-			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
-			"podNetwork":        extensionscontroller.GetPodNetwork(cluster.Shoot),
+			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+			"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-cloud-controller-manager": checksums["cloud-controller-manager"],
 				"checksum/secret-cloudprovider":            checksums[v1alpha1constants.SecretNameCloudProvider],
@@ -345,8 +345,8 @@ func getControlPlaneChartValues(
 			},
 		},
 		"csi-alicloud": map[string]interface{}{
-			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster.Shoot, scaledDown, 1),
-			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
+			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
+			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
 			"regionID":          cp.Spec.Region,
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-csi-attacher":    checksums["csi-attacher"],
@@ -375,7 +375,7 @@ func getControlPlaneShootChartValues(
 				"accessKeyID":     base64.StdEncoding.EncodeToString([]byte(credentials.AccessKeyID)),
 				"accessKeySecret": base64.StdEncoding.EncodeToString([]byte(credentials.AccessKeySecret)),
 			},
-			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
+			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
 		},
 	}
 

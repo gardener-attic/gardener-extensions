@@ -56,7 +56,7 @@ func (a *genericActuator) deployMachineControllerManager(ctx context.Context, wo
 	mcmValues["replicas"] = replicaCount
 
 	if err := a.mcmSeedChart.Apply(ctx, a.chartApplier, workerObj.Namespace,
-		a.imageVector, a.gardenerClientset.Version(), cluster.Shoot.Spec.Kubernetes.Version, mcmValues); err != nil {
+		a.imageVector, a.gardenerClientset.Version(), extensionscontroller.GetKubernetesVersion(cluster), mcmValues); err != nil {
 		return errors.Wrapf(err, "could not apply MCM chart in seed for worker '%s'", util.ObjectName(workerObj))
 	}
 
@@ -89,7 +89,7 @@ func (a *genericActuator) deleteMachineControllerManager(ctx context.Context, wo
 
 func (a *genericActuator) applyMachineControllerManagerShootChart(ctx context.Context, workerDelegate WorkerDelegate, workerObj *extensionsv1alpha1.Worker, cluster *controller.Cluster) error {
 	// Create shoot chart renderer
-	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
+	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(extensionscontroller.GetKubernetesVersion(cluster))
 	if err != nil {
 		return errors.Wrapf(err, "could not create chart renderer for shoot '%s'", workerObj.Namespace)
 	}
@@ -100,7 +100,7 @@ func (a *genericActuator) applyMachineControllerManagerShootChart(ctx context.Co
 		return err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, workerObj.Namespace, mcmShootResourceName, a.client, chartRenderer, a.mcmShootChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, workerObj.Namespace, mcmShootResourceName, a.client, chartRenderer, a.mcmShootChart, values, a.imageVector, metav1.NamespaceSystem, extensionscontroller.GetKubernetesVersion(cluster), true); err != nil {
 		return errors.Wrapf(err, "could not apply control plane shoot chart for worker '%s'", util.ObjectName(workerObj))
 	}
 

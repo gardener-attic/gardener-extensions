@@ -24,8 +24,8 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -58,9 +58,9 @@ var _ = Describe("Ensurer", func() {
 			}
 
 			cluster = &extensionscontroller.Cluster{
-				Shoot: &gardenv1beta1.Shoot{
-					Spec: gardenv1beta1.ShootSpec{
-						Kubernetes: gardenv1beta1.Kubernetes{
+				CoreShoot: &gardencorev1alpha1.Shoot{
+					Spec: gardencorev1alpha1.ShootSpec{
+						Kubernetes: gardencorev1alpha1.Kubernetes{
 							Version: "1.13.4",
 						},
 					},

@@ -31,8 +31,8 @@ import (
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -181,9 +181,9 @@ var _ = Describe("Machines", func() {
 				}
 
 				cluster = &extensionscontroller.Cluster{
-					Shoot: &gardenv1beta1.Shoot{
-						Spec: gardenv1beta1.ShootSpec{
-							Kubernetes: gardenv1beta1.Kubernetes{
+					CoreShoot: &gardencorev1alpha1.Shoot{
+						Spec: gardencorev1alpha1.ShootSpec{
+							Kubernetes: gardencorev1alpha1.Kubernetes{
 								Version: shootVersion,
 							},
 						},
@@ -460,7 +460,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
-				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
+				cluster.CoreShoot.Spec.Kubernetes.Version = "invalid"
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())

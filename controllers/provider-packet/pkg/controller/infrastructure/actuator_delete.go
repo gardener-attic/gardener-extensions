@@ -23,7 +23,6 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
 	corev1 "k8s.io/api/core/v1"
 )
 

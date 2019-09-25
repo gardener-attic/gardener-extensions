@@ -24,11 +24,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/api/equality"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
@@ -77,52 +75,25 @@ func (s *shootNotFailedMapper) Map(e event.GenericEvent) bool {
 		return false
 	}
 
-	lastOperation := cluster.Shoot.Status.LastOperation
-	return lastOperation != nil &&
-		lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
-		cluster.Shoot.Generation == cluster.Shoot.Status.ObservedGeneration
+	if cluster.Shoot != nil {
+		lastOperation := cluster.Shoot.Status.LastOperation
+		return lastOperation != nil &&
+			lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
+			cluster.Shoot.Generation == cluster.Shoot.Status.ObservedGeneration
+	} else if cluster.CoreShoot != nil {
+		lastOperation := cluster.CoreShoot.Status.LastOperation
+		return lastOperation != nil &&
+			lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
+			cluster.CoreShoot.Generation == cluster.CoreShoot.Status.ObservedGeneration
+	}
+
+	return true
 }
 
 // ShootNotFailed is a predicate for failed shoots.
 func ShootNotFailed() predicate.Predicate {
 	return FromMapper(&shootNotFailedMapper{log: Log.WithName("shoot-not-failed")},
 		CreateTrigger, UpdateNewTrigger, DeleteTrigger, GenericTrigger)
-}
-
-// ClusterCloudProfileGenerationChanged is a predicate for generation updates of cloud profiles.
-func ClusterCloudProfileGenerationChanged() predicate.Predicate {
-	log := Log.WithName("cluster-cloudprofile-failed")
-
-	generationChanged := func(log logr.Logger, objectNew, objectOld runtime.Object) bool {
-		newCluster, ok := objectNew.(*extensionsv1alpha1.Cluster)
-		if !ok {
-			return false
-		}
-		oldCluster, ok := objectOld.(*extensionsv1alpha1.Cluster)
-		if !ok {
-			return false
-		}
-
-		newProfile, err := controller.CloudProfileFromCluster(newCluster)
-		if err != nil {
-			log.Error(err, "Could not retrieve cloud profile from corresponding cluster")
-			return false
-		}
-
-		oldProfile, err := controller.CloudProfileFromCluster(oldCluster)
-		if err != nil {
-			log.Error(err, "Could not retrieve cloud profile from corresponding cluster")
-			return false
-		}
-
-		return !equality.Semantic.DeepEqual(oldProfile.Spec, newProfile.Spec)
-	}
-
-	return predicate.Funcs{
-		UpdateFunc: func(event event.UpdateEvent) bool {
-			return generationChanged(controller.UpdateEventLogger(log, event), event.ObjectNew, event.ObjectOld)
-		},
-	}
 }
 
 // GenerationChanged is a predicate for generation changes.
