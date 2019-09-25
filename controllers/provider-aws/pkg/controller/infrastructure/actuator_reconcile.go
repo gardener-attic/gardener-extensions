@@ -104,15 +104,14 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 		dhcpDomainName = fmt.Sprintf("%s.compute.internal", infrastructure.Spec.Region)
 	}
 
-	awsClient, err := client.NewClient(string(providerSecret.Data[aws.AccessKeyID]), string(providerSecret.Data[aws.SecretAccessKey]), infrastructure.Spec.Region)
-	if err != nil {
-		return nil, err
-	}
-
 	switch {
 	case infrastructureConfig.Networks.VPC.ID != nil:
 		createVPC = false
 		vpcID = *infrastructureConfig.Networks.VPC.ID
+		awsClient, err := client.NewClient(string(providerSecret.Data[aws.AccessKeyID]), string(providerSecret.Data[aws.SecretAccessKey]), infrastructure.Spec.Region)
+		if err != nil {
+			return nil, err
+		}
 		igwID, err := awsClient.GetInternetGateway(ctx, vpcID)
 		if err != nil {
 			return nil, err
