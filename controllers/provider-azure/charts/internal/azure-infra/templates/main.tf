@@ -30,6 +30,7 @@ resource "azurerm_subnet" "workers" {
   resource_group_name       = "{{ required "resourceGroup.name is required" .Values.resourceGroup.name }}"
   virtual_network_name      = "{{ required "resourceGroup.vnet.name is required" .Values.resourceGroup.vnet.name }}"
   address_prefix            = "{{ required "networks.worker is required" .Values.networks.worker }}"
+  service_endpoints         = [{{range $index, $serviceEndpoint := .Values.resourceGroup.subnet.serviceEndpoints}}{{if $index}},{{end}}"{{$serviceEndpoint}}"{{end}}]
 }
 
 resource "azurerm_route_table" "workers" {
