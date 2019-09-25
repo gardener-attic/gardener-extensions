@@ -321,6 +321,9 @@ metadata:
     k8s-app: calico-typha
     garden.sapcloud.io/role: system-component
 spec:
+  revisionHistoryLimit: 0
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       k8s-app: calico-typha
@@ -330,7 +333,6 @@ spec:
   # We recommend using Typha if you have more than 50 nodes.  Above 100 nodes it is essential
   # (when using the Kubernetes datastore).  Use one replica for every 100-200 nodes.  In
   # production, we recommend running at least 3 replicas to reduce the impact of rolling upgrade.
-  revisionHistoryLimit: 0
   template:
     metadata:
       labels:
@@ -410,6 +412,7 @@ metadata:
     k8s-app: calico-typha-autoscaler
     kubernetes.io/cluster-service: "true"
 spec:
+  revisionHistoryLimit: 0
   replicas: 1
   selector:
     matchLabels:
@@ -449,6 +452,7 @@ metadata:
     k8s-app: calico-typha-autoscaler
     kubernetes.io/cluster-service: "true"
 spec:
+  revisionHistoryLimit: 0
   replicas: 1
   selector:
     matchLabels:
