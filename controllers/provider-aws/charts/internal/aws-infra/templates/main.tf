@@ -79,7 +79,7 @@ resource "aws_security_group" "nodes" {
   description = "Security group for nodes"
   vpc_id      = "{{ required "vpc.id is required" .Values.vpc.id }}"
 
-{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" "nodes") }}
+{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" "nodes") | indent 2 }}
 }
 
 resource "aws_security_group_rule" "nodes_self" {
@@ -133,7 +133,7 @@ resource "aws_subnet" "nodes_z{{ $index }}" {
   cidr_block        = "{{ required "zone.worker is required" $zone.worker }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 
-{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" (print "nodes-z" $index)) }}
+{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" (print "nodes-z" $index)) | indent 2 }}
 }
 
 output "{{ $.Values.outputKeys.subnetsNodesPrefix }}{{ $index }}" {
@@ -145,7 +145,7 @@ resource "aws_subnet" "private_utility_z{{ $index }}" {
   cidr_block        = "{{ required "zone.internal is required" $zone.internal }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 
-  tags {
+  tags = {
     Name = "{{ required "clusterName is required" $.Values.clusterName }}-private-utility-z{{ $index }}"
     "kubernetes.io/cluster/{{ required "clusterName is required" $.Values.clusterName }}"  = "1"
     "kubernetes.io/role/internal-elb" = "use"
@@ -175,7 +175,7 @@ resource "aws_subnet" "public_utility_z{{ $index }}" {
   cidr_block        = "{{ required "zone.public is required" $zone.public }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 
-  tags {
+  tags = {
     Name = "{{ required "clusterName is required" $.Values.clusterName }}-public-utility-z{{ $index }}"
     "kubernetes.io/cluster/{{ required "clusterName is required" $.Values.clusterName }}"  = "1"
     "kubernetes.io/role/elb" = "use"
@@ -207,7 +207,7 @@ resource "aws_security_group_rule" "nodes_udp_public_z{{ $index }}" {
 resource "aws_eip" "eip_natgw_z{{ $index }}" {
   vpc = true
 
-  tags {
+  tags = {
     Name = "{{ required "clusterName is required" $.Values.clusterName }}-eip-natgw-z{{ $index }}"
     "kubernetes.io/cluster/{{ required "clusterName is required" $.Values.clusterName }}"  = "1"
   }
@@ -217,7 +217,7 @@ resource "aws_nat_gateway" "natgw_z{{ $index }}" {
   allocation_id = "${aws_eip.eip_natgw_z{{ $index }}.id}"
   subnet_id     = "${aws_subnet.public_utility_z{{ $index }}.id}"
 
-  tags {
+  tags = {
     Name = "{{ required "clusterName is required" $.Values.clusterName }}-natgw-z{{ $index }}"
     "kubernetes.io/cluster/{{ required "clusterName is required" $.Values.clusterName }}"  = "1"
   }
@@ -226,7 +226,7 @@ resource "aws_nat_gateway" "natgw_z{{ $index }}" {
 resource "aws_route_table" "routetable_private_utility_z{{ $index }}" {
   vpc_id = "{{ required "vpc.id is required" $.Values.vpc.id }}"
 
-{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" (print "private-" $zone.name)) }}
+{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" (print "private-" $zone.name)) | indent 2 }}
 }
 
 resource "aws_route" "private_utility_z{{ $index }}_nat" {
@@ -399,13 +399,13 @@ output "{{ .Values.outputKeys.nodesRole }}" {
 
 
 {{- define "aws-infra.common-tags" -}}
-tags {
+tags = {
   Name = "{{ required "clusterName is required" .clusterName }}"
   "kubernetes.io/cluster/{{ required "clusterName is required" .clusterName }}" = "1"
 }
 {{- end -}}
 {{- define "aws-infra.tags-with-suffix" -}}
-tags {
+tags = {
   Name = "{{ required "clusterName is required" .clusterName }}-{{ required "suffix is required" .suffix }}"
   "kubernetes.io/cluster/{{ required "clusterName is required" .clusterName }}" = "1"
 }
