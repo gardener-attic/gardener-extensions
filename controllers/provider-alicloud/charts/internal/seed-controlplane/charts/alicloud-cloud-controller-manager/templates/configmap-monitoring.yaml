@@ -7,7 +7,6 @@ metadata:
     extensions.gardener.cloud/configuration: monitoring
 data:
   scrape_config: |
-    scrape_configs:
     - job_name: cloud-controller-manager
       honor_labels: false
       kubernetes_sd_configs:
@@ -47,5 +46,10 @@ data:
             description: All infrastruture specific operations cannot be completed (e.g. creating loadbalancers or persistent volumes).
             summary: Cloud controller manager is down.
 
+  dashboard_operators: |
+    cloud-controller-manager-dashboard.json: |-
+{{- .Files.Get "ccm-monitoring-dashboard.json" | nindent 6 }}
+
   dashboard_users: |
-{{- .Files.Get "ccm-monitoring-dashboard.json" | nindent 4}}
+    cloud-controller-manager-dashboard.json: |-
+{{- .Files.Get "ccm-monitoring-dashboard.json" | nindent 6 }}
