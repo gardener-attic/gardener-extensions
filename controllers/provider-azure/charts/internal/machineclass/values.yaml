@@ -1,6 +1,31 @@
 machineClasses:
-- name: class-1
-  region: northeurope
+- name: class-1-zone
+  region: westeurope
+  resourceGroup: my-resource-group
+  vnetName: my-vnet
+  subnetName: my-subnet-in-my-vnet
+  zone: 1
+  tags:
+    Name: shoot-crazy-botany
+    kubernetes.io-cluster-shoot-crazy-botany: "1"
+    kubernetes.io-role-node: "1"
+  secret:
+    clientID: ABCD
+    clientSecret: ABCD
+    subscriptionID: abc
+    tenantID: abc
+    cloudConfig: abc
+  machineType: Standard_DS1_V2
+  image:
+    publisher: CoreOS # TODO: remove these deprecated field after couple of releases
+    offer: CoreOS # TODO: remove these deprecated field after couple of releases
+    sku: Stable # TODO: remove these deprecated field after couple of releases
+    version: "1576.5.0" # TODO: remove these deprecated field after couple of releases
+    urn: "CoreOS:CoreOS:Stable:1576.5.0"
+  volumeSize: 50
+  sshPublicKey: ssh-rsa AAAAB3...
+- name: class-2-availability-set
+  region: westeurope
   resourceGroup: my-resource-group
   vnetName: my-vnet
   subnetName: my-subnet-in-my-vnet

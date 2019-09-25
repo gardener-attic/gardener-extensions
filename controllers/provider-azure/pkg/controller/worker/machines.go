@@ -41,7 +41,7 @@ func (w *workerDelegate) MachineClassList() runtime.Object {
 	return &machinev1alpha1.AzureMachineClassList{}
 }
 
-// DeployMachineClasses generates and creates the AWS specific machine classes.
+// DeployMachineClasses generates and creates the Azure specific machine classes.
 func (w *workerDelegate) DeployMachineClasses(ctx context.Context) error {
 	if w.machineClasses == nil {
 		if err := w.generateMachineConfig(ctx); err != nil {
@@ -75,11 +75,18 @@ func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (ma
 	}, nil
 }
 
+type zoneInfo struct {
+	name  string
+	index int
+	count int
+}
+
 func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
-		machineDeployments = worker.MachineDeployments{}
-		machineClasses     []map[string]interface{}
-		machineImages      []apisazure.MachineImage
+		machineDeployments   = worker.MachineDeployments{}
+		machineClasses       []map[string]interface{}
+		machineImages        []apisazure.MachineImage
+		nodesAvailabilitySet *azureapi.AvailabilitySet
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -101,9 +108,13 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	nodesAvailabilitySet, err := azureapihelper.FindAvailabilitySetByPurpose(infrastructureStatus.AvailabilitySets, azureapi.PurposeNodes)
-	if err != nil {
-		return err
+
+	// The AvailabilitySet will be only used for non zoned Shoots.
+	if !infrastructureStatus.Zoned {
+		nodesAvailabilitySet, err = azureapihelper.FindAvailabilitySetByPurpose(infrastructureStatus.AvailabilitySets, azureapi.PurposeNodes)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, pool := range w.worker.Spec.Pools {
@@ -135,52 +146,93 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			image["urn"] = *urn
 		}
 
-		machineClassSpec := map[string]interface{}{
-			"region":            w.worker.Spec.Region,
-			"resourceGroup":     infrastructureStatus.ResourceGroup.Name,
-			"vnetName":          infrastructureStatus.Networks.VNet.Name,
-			"subnetName":        nodesSubnet.Name,
-			"availabilitySetID": nodesAvailabilitySet.ID,
-			"tags": map[string]interface{}{
-				"Name": w.worker.Namespace,
-				fmt.Sprintf("kubernetes.io-cluster-%s", w.worker.Namespace): "1",
-				"kubernetes.io-role-node":                                   "1",
-			},
-			"secret": map[string]interface{}{
-				"cloudConfig": string(pool.UserData),
-			},
-			"machineType":  pool.MachineType,
-			"image":        image,
-			"volumeSize":   volumeSize,
-			"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
+		generateMachineClassAndDeployment := func(zone *zoneInfo, availabilitySetID *string) (worker.MachineDeployment, map[string]interface{}) {
+			var (
+				machineDeployment = worker.MachineDeployment{
+					Minimum:        pool.Minimum,
+					Maximum:        pool.Maximum,
+					MaxSurge:       pool.MaxSurge,
+					MaxUnavailable: pool.MaxUnavailable,
+					Labels:         pool.Labels,
+					Annotations:    pool.Annotations,
+					Taints:         pool.Taints,
+				}
+
+				machineClassSpec = map[string]interface{}{
+					"region":        w.worker.Spec.Region,
+					"resourceGroup": infrastructureStatus.ResourceGroup.Name,
+					"vnetName":      infrastructureStatus.Networks.VNet.Name,
+					"subnetName":    nodesSubnet.Name,
+					"tags": map[string]interface{}{
+						"Name": w.worker.Namespace,
+						fmt.Sprintf("kubernetes.io-cluster-%s", w.worker.Namespace): "1",
+						"kubernetes.io-role-node":                                   "1",
+					},
+					"secret": map[string]interface{}{
+						"cloudConfig": string(pool.UserData),
+					},
+					"machineType":  pool.MachineType,
+					"image":        image,
+					"volumeSize":   volumeSize,
+					"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
+				}
+			)
+			if zone != nil {
+				machineDeployment.Minimum = worker.DistributeOverZones(zone.index, pool.Minimum, zone.count)
+				machineDeployment.Maximum = worker.DistributeOverZones(zone.index, pool.Maximum, zone.count)
+				machineDeployment.MaxSurge = worker.DistributePositiveIntOrPercent(zone.index, pool.MaxSurge, zone.count, pool.Maximum)
+				machineDeployment.MaxUnavailable = worker.DistributePositiveIntOrPercent(zone.index, pool.MaxUnavailable, zone.count, pool.Minimum)
+
+				machineClassSpec["zone"] = zone.name
+			}
+			if availabilitySetID != nil {
+				machineClassSpec["availabilitySetID"] = *availabilitySetID
+			}
+
+			var (
+				machineClassSpecHash = worker.MachineClassHash(machineClassSpec, shootVersionMajorMinor)
+				deploymentName       = fmt.Sprintf("%s-%s", w.worker.Namespace, pool.Name)
+				className            = fmt.Sprintf("%s-%s", deploymentName, machineClassSpecHash)
+			)
+			if zone != nil {
+				deploymentName = fmt.Sprintf("%s-z%s", deploymentName, zone.name)
+				className = fmt.Sprintf("%s-z%s", className, zone.name)
+			}
+
+			machineDeployment.Name = deploymentName
+			machineDeployment.ClassName = className
+			machineDeployment.SecretName = className
+
+			machineClassSpec["name"] = className
+			machineClassSpec["secret"].(map[string]interface{})[azure.ClientIDKey] = string(machineClassSecretData[machinev1alpha1.AzureClientID])
+			machineClassSpec["secret"].(map[string]interface{})[azure.ClientSecretKey] = string(machineClassSecretData[machinev1alpha1.AzureClientSecret])
+			machineClassSpec["secret"].(map[string]interface{})[azure.SubscriptionIDKey] = string(machineClassSecretData[machinev1alpha1.AzureSubscriptionID])
+			machineClassSpec["secret"].(map[string]interface{})[azure.TenantIDKey] = string(machineClassSecretData[machinev1alpha1.AzureTenantID])
+
+			return machineDeployment, machineClassSpec
 		}
 
-		var (
-			machineClassSpecHash = worker.MachineClassHash(machineClassSpec, shootVersionMajorMinor)
-			deploymentName       = fmt.Sprintf("%s-%s", w.worker.Namespace, pool.Name)
-			className            = fmt.Sprintf("%s-%s", deploymentName, machineClassSpecHash)
-		)
+		// Availability Set
+		if !infrastructureStatus.Zoned {
+			machineDeployment, machineClassSpec := generateMachineClassAndDeployment(nil, &nodesAvailabilitySet.ID)
+			machineDeployments = append(machineDeployments, machineDeployment)
+			machineClasses = append(machineClasses, machineClassSpec)
+			continue
+		}
 
-		machineDeployments = append(machineDeployments, worker.MachineDeployment{
-			Name:           deploymentName,
-			ClassName:      className,
-			SecretName:     className,
-			Minimum:        pool.Minimum,
-			Maximum:        pool.Maximum,
-			MaxSurge:       pool.MaxSurge,
-			MaxUnavailable: pool.MaxUnavailable,
-			Labels:         pool.Labels,
-			Annotations:    pool.Annotations,
-			Taints:         pool.Taints,
-		})
+		// Availability Zones
+		zoneCount := len(pool.Zones)
+		for zoneIndex, zone := range pool.Zones {
+			info := &zoneInfo{
+				name:  zone,
+				index: zoneIndex,
+				count: zoneCount,
+			}
 
-		machineClassSpec["name"] = className
-		machineClassSpec["secret"].(map[string]interface{})[azure.ClientIDKey] = string(machineClassSecretData[machinev1alpha1.AzureClientID])
-		machineClassSpec["secret"].(map[string]interface{})[azure.ClientSecretKey] = string(machineClassSecretData[machinev1alpha1.AzureClientSecret])
-		machineClassSpec["secret"].(map[string]interface{})[azure.SubscriptionIDKey] = string(machineClassSecretData[machinev1alpha1.AzureSubscriptionID])
-		machineClassSpec["secret"].(map[string]interface{})[azure.TenantIDKey] = string(machineClassSecretData[machinev1alpha1.AzureTenantID])
-
-		machineClasses = append(machineClasses, machineClassSpec)
+			machineDeployment, machineClassSpec := generateMachineClassAndDeployment(info, nil)
+			machineDeployments = append(machineDeployments, machineDeployment)
+			machineClasses = append(machineClasses, machineClassSpec)
+		}
 	}
 
 	w.machineDeployments = machineDeployments

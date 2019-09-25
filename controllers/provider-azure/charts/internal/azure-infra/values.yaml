@@ -8,6 +8,7 @@ azure:
 create:
   resourceGroup: true
   vnet: true
+  availabilitySet: false
 
 resourceGroup:
   name: my-resource-group
