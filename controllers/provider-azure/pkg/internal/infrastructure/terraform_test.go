@@ -139,6 +139,9 @@ var _ = Describe("Terraform", func() {
 						"name": *config.Networks.VNet.Name,
 						"cidr": config.Networks.Workers,
 					},
+					"subnet": map[string]interface{}{
+						"serviceEndpoints": []string{testServiceEndpoint},
+					},
 				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
