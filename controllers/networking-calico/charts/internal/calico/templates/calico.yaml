@@ -309,7 +309,11 @@ spec:
 apiVersion: {{ include "deploymentversion" . }}
 kind: Deployment
 metadata:
-  name: calico-typha
+  # We changed the name of the default deployment name from "calico-typha" to "calico-typha-deploy" because
+  # Gardener deployed calico-typha with 0 replicas. Now, we don't specify `.spec.replicas` anymore (because we
+  # use the typha-HPA for auto-scaling), hence, for existing clusters the replicas will never get `1` (because
+  # the typha-HPA is a new pod that cannot start without typha to run).
+  name: calico-typha-deploy
   namespace: kube-system
   annotations:
     # This, along with the CriticalAddonsOnly toleration below, marks the pod as a critical
@@ -434,7 +438,7 @@ spec:
             - /cluster-proportional-autoscaler
             - --namespace=kube-system
             - --configmap=calico-typha-horizontal-autoscaler
-            - --target=deployment/calico-typha
+            - --target=deployment/calico-typha-deploy
             - --logtostderr=true
             - --v=2
           resources:
@@ -473,7 +477,7 @@ spec:
           name: autoscaler
           command:
             - /cpvpa
-            - --target=deployment/calico-typha
+            - --target=deployment/calico-typha-deploy
             - --namespace=kube-system
             - --logtostderr=true
             - --poll-period-seconds=30

@@ -9,7 +9,7 @@ metadata:
 data:
   typha-autoscaler: |-
     {
-      "calico-typha": {
+      "calico-typha-deploy": {
         "requests": {
           "cpu": {
             "base": "120m",

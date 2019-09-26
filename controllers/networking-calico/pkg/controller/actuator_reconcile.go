@@ -73,8 +73,7 @@ func (a *actuator) Reconcile(ctx context.Context, network *extensionsv1alpha1.Ne
 	}
 
 	secret, secretRefs := calicoSecret(a.client, calicoChart, network.Namespace)
-	err = secret.Reconcile(ctx)
-	if err != nil {
+	if err := secret.Reconcile(ctx); err != nil {
 		return err
 	}
 
