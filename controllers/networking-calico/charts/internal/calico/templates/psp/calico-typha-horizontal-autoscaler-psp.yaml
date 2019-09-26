@@ -5,6 +5,8 @@ metadata:
 spec:
   volumes:
   - secret
+  runAsUser:
+    rule: MustRunAsNonRoot
   seLinux:
     rule: RunAsAny
   supplementalGroups:

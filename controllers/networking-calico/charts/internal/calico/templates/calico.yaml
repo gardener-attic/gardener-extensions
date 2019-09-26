@@ -423,6 +423,7 @@ spec:
       securityContext:
         supplementalGroups: [ 65534 ]
         fsGroup: 65534
+        runAsUser: 65534
       containers:
         - image: {{ index .Values.images "typha-cpa" }}
           name: autoscaler
@@ -461,6 +462,8 @@ spec:
         k8s-app: calico-typha-autoscaler
     spec:
       priorityClassName: system-cluster-critical
+      securityContext:
+        runAsUser: 65534
       containers:
         - image:  {{ index .Values.images "typha-cpva" }}
           name: autoscaler
