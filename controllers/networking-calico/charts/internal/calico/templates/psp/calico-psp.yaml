@@ -17,6 +17,7 @@ spec:
   - pathPrefix: /run/xtables.lock
   - pathPrefix: /var/run/nodeagent
   - pathPrefix: /usr/libexec
+  - pathPrefix: /var/lib/kubelet/volumeplugins/nodeagent~uds
   runAsUser:
     rule: RunAsAny
   seLinux:
