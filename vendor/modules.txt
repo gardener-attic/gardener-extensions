@@ -888,7 +888,7 @@ k8s.io/code-generator/pkg/util
 # k8s.io/component-base v0.0.0-20190314000054-4a91899592f4
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
-# k8s.io/gengo v0.0.0-20190327210449-e17681d19d3a
+# k8s.io/gengo v0.0.0-20190826232639-a874a240740c
 k8s.io/gengo/args
 k8s.io/gengo/examples/deepcopy-gen/generators
 k8s.io/gengo/examples/defaulter-gen/generators

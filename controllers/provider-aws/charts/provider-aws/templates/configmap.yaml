@@ -25,5 +25,6 @@ data:
       storage:
         className: {{ .Values.config.etcd.storage.className }}
         capacity: {{ .Values.config.etcd.storage.capacity }}
-      backup:
-        schedule: {{ .Values.config.etcd.backup.schedule }}
+{{- if .Values.config.etcd.backup }}
+{{ toYaml .Values.config.etcd.backup | indent 6 }}
+{{- end }}
