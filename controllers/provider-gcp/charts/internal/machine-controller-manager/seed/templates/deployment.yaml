@@ -74,8 +74,8 @@ spec:
             cpu: 50m
             memory: 64Mi
           limits:
-            cpu: 350m
-            memory: 256Mi
+            cpu: "3"
+            memory: 3000Mi
         volumeMounts:
         - mountPath: /var/lib/machine-controller-manager
           name: machine-controller-manager
