@@ -51,7 +51,7 @@ const (
 	Region = "region"
 	// CloudYAML is a constant for the key in the backup or cloud provider secret that holds the access information for
 	// the etcd backup infrastructure.
-	CloudYAML = "cloudYAML"
+	CloudYAML = "clouds.yaml"
 	// CloudYAMLKey is a constant for the credential key inside the CloudYAML.
 	CloudYAMLKey = "cloudYAMLKey"
 	// CloudYAMLDefaultKey is a constant for the default credentials key inside the CloudYAML.

@@ -29,8 +29,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const ()
-
 type actuator struct {
 	client client.Client
 	logger logr.Logger
