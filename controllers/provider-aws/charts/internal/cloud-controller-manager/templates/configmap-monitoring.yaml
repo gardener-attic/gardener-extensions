@@ -23,7 +23,6 @@ data:
             description: All infrastruture specific operations cannot be completed (e.g. creating loadbalancers or persistent volumes).
             summary: Cloud controller manager is down.
   scrape_config: |
-    scrape_configs:
     - job_name: cloud-controller-manager
       {{- if semverCompare ">= 1.13" .Values.kubernetesVersion  }}
       scheme: https
@@ -53,5 +52,10 @@ data:
         regex: ^(rest_client_requests_total|process_max_fds|process_open_fds)$
         action: keep
 
+  dashboard_operators: |
+    cloud-controller-manager-dashboard.json: |-
+{{- .Files.Get "ccm-monitoring-dashboard.json" | nindent 6 }}
+
   dashboard_users: |
-{{- .Files.Get "ccm-monitoring-dashboard.json" | nindent 4}}
+    cloud-controller-manager-dashboard.json: |-
+ {{- .Files.Get "ccm-monitoring-dashboard.json" | nindent 6 }}

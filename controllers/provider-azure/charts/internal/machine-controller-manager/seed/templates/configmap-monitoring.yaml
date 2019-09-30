@@ -7,7 +7,6 @@ metadata:
     extensions.gardener.cloud/configuration: monitoring
 data:
   scrape_config: |
-    scrape_configs:
     - job_name: machine-controller-manager
       honor_labels: false
       kubernetes_sd_configs:
@@ -48,4 +47,5 @@ data:
             summary: Machine controller manager is down.
 
   dashboard_operators: |
-{{ .Files.Get "mcm-monitoring-dashboard.json" | indent 4 }}
+    machine-controller-manager-dashboard.json: |-
+{{ .Files.Get "mcm-monitoring-dashboard.json" | indent 6 }}
