@@ -51,6 +51,7 @@ require (
 	k8s.io/kube-aggregator v0.0.0-20190314000639-da8327669ac5
 	k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325
 	sigs.k8s.io/controller-runtime v0.2.0-beta.4
+	sigs.k8s.io/yaml v1.1.0
 )
 
 replace (
