@@ -27,7 +27,7 @@ spec:
       serviceAccountName: gardener-extension-networking-calico
       containers:
       - name: gardener-extension-networking-calico
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: {{ include "image" . }}
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command:
         - /gardener-extension-hyper
