@@ -3,6 +3,7 @@
 /dev
 /local
 **/dev
+/bin
 
 .vscode
 .idea

@@ -37,7 +37,7 @@ require (
 	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8 // indirect
 	golang.org/x/tools v0.0.0-20190912185636-87d9f09c5d89 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.0.1
-	google.golang.org/api v0.7.0
+	google.golang.org/api v0.9.0
 	google.golang.org/grpc v1.23.1 // indirect
 	gopkg.in/ini.v1 v1.51.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
@@ -60,8 +60,10 @@ require (
 
 replace (
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.2.0+incompatible
+	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
 	github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 	github.com/gardener/external-dns-management => github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13
+	github.com/gardener/machine-controller-manager => github.com/MartinWeindel/machine-controller-manager v0.0.0-20191216154448-3ec624a3ee6b
 	k8s.io/api => k8s.io/api v0.0.0-20190918155943-95b840bb6a1f // kubernetes-1.16.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783 // kubernetes-1.16.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655 // kubernetes-1.16.0

@@ -1,0 +1,61 @@
+images:
+- name: terraformer
+  sourceRepository: github.com/gardener/terraformer
+  repository: eu.gcr.io/gardener-project/gardener/terraformer
+  tag: "0.17.0"
+- name: etcd-backup-restore
+  sourceRepository: github.com/gardener/etcd-backup-restore
+  repository: eu.gcr.io/gardener-project/gardener/etcdbrctl
+  tag: "0.7.3"
+- name: csi-attacher
+  sourceRepository: https://github.com/kubernetes-csi/external-attacher
+  repository: quay.io/k8scsi/csi-attacher
+  tag: v1.2.1
+  targetVersion: ">= 1.14"
+- name: csi-node-driver-registrar
+  sourceRepository: https://github.com/kubernetes-csi/node-driver-registrar
+  repository: quay.io/k8scsi/csi-node-driver-registrar
+  tag: v1.1.0
+  targetVersion: ">= 1.14"
+- name: csi-provisioner
+  sourceRepository: https://github.com/kubernetes-csi/external-provisioner
+  repository: quay.io/k8scsi/csi-provisioner
+  tag: v1.3.1
+  targetVersion: ">= 1.14"
+- name: vsphere-cloud-controller-manager
+  sourceRepository: github.com/kubernetes/cloud-provider-vsphere
+  repository: gcr.io/cloud-provider-vsphere/cpi/release/manager
+  tag: v1.0.0
+- name: machine-controller-manager
+  sourceRepository: github.com/gardener/machine-controller-manager
+  repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager
+  # latest from cmi-client branch
+  tag: v0.26.0-dev-46ff955ddf33554472cefacbc8da7e74a549ac6c
+- name: machine-controller-manager-provider-vsphere
+  sourceRepository: github.com/gardener/machine-controller-manager-provider-vsphere
+  repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager-provider-vsphere
+  tag: "v0.2.0"
+- name: nsxt-lb-provider-manager
+  sourceRepository: github.com/gardener/nsxt-lb-provider
+  repository: eu.gcr.io/gardener-project/gardener/nsxt-lb-provider-manager
+  tag: v0.1.1
+- name: vsphere-csi-controller
+  #sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
+  sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
+  #repository: gcr.io/cloud-provider-vsphere/csi/release/driver
+  repository: eu.gcr.io/gardener-project/patches/vsphere-csi-driver/driver
+  tag: v1.0.1-gardener1
+- name: vsphere-csi-syncer
+  #sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
+  sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
+  #repository: gcr.io/cloud-provider-vsphere/csi/release/syncer
+  repository: eu.gcr.io/gardener-project/patches/vsphere-csi-driver/syncer
+  tag: v1.0.1-gardener1
+- name: vsphere-csi-node
+  sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
+  repository: gcr.io/cloud-provider-vsphere/csi/release/driver
+  tag: v1.0.1
+- name: liveness-probe
+  sourceRepository: github.com/kubernetes-csi/livenessprobe
+  repository: quay.io/k8scsi/livenessprobe
+  tag: v1.1.0

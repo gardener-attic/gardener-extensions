@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shoot--foobar--vsphere
+  labels:
+#    backup.gardener.cloud/provider: vsphere
+#    seed.gardener.cloud/provider: vsphere
+    shoot.gardener.cloud/provider: vsphere
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudprovider
+  namespace: shoot--foobar--vsphere
+type: Opaque
+data:
+  apiToken: YXBpVG9rZW4K # apiToken
+  projectID: cHJvamVjdElkCg== # projectId
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: Cluster
+metadata:
+  name: shoot--foobar--vsphere
+spec:
+  cloudProfile:
+    apiVersion: core.gardener.cloud/v1alpha1
+    kind: CloudProfile
+  seed:
+    apiVersion: core.gardener.cloud/v1alpha1
+    kind: Seed
+  shoot:
+    apiVersion: core.gardener.cloud/v1alpha1
+    kind: Shoot
+    spec:
+      networking:
+        pods: 10.250.0.0/19
+      kubernetes:
+        version: 1.13.4
+      hibernation:
+        enabled: false
+    status:
+      lastOperation:
+        state: Succeeded
+---
+apiVersion: extensions.gardener.cloud/v1alpha1
+kind: ControlPlane
+metadata:
+  name: control-plane
+  namespace: shoot--foobar--vsphere
+spec:
+  type: vsphere
+  region: WER1
+  secretRef:
+    name: cloudprovider
+    namespace: shoot--foobar--vsphere
+  providerConfig:
+    apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
+    kind: ControlPlaneConfig
+  infrastructureProviderStatus:
+    apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
+    kind: InfrastructureStatus
