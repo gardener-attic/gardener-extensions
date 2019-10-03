@@ -16,7 +16,7 @@ package controlplane
 
 import (
 	"fmt"
-	"math/rand"
+	"hash/crc32"
 	"path"
 	"strings"
 
@@ -27,6 +27,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
@@ -151,13 +152,18 @@ func DetermineBackupSchedule(c *corev1.Container, cluster *extensionscontroller.
 		return schedule, nil
 	}
 
-	var begin, end string
+	var (
+		begin, end string
+		shootUID   types.UID
+	)
 	if cluster.Shoot != nil && cluster.Shoot.Spec.Maintenance != nil && cluster.Shoot.Spec.Maintenance.TimeWindow != nil {
 		begin = cluster.Shoot.Spec.Maintenance.TimeWindow.Begin
 		end = cluster.Shoot.Spec.Maintenance.TimeWindow.End
+		shootUID = cluster.Shoot.Status.UID
 	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.Maintenance != nil && cluster.CoreShoot.Spec.Maintenance.TimeWindow != nil {
 		begin = cluster.CoreShoot.Spec.Maintenance.TimeWindow.Begin
 		end = cluster.CoreShoot.Spec.Maintenance.TimeWindow.End
+		shootUID = cluster.CoreShoot.Status.UID
 	}
 
 	if len(begin) != 0 && len(end) != 0 {
@@ -170,7 +176,7 @@ func DetermineBackupSchedule(c *corev1.Container, cluster *extensionscontroller.
 			// Randomize the snapshot timing daily but within last hour.
 			// The 15 minutes buffer is set to snapshot upload time before actual maintainance window start.
 			snapshotWindowBegin := maintenanceTimeWindow.Begin().Add(-1, -15, 0)
-			randomMinutes := rand.Intn(59)
+			randomMinutes := int(crc32.ChecksumIEEE([]byte(shootUID)) % 60)
 			snapshotTime := snapshotWindowBegin.Add(0, randomMinutes, 0)
 			return fmt.Sprintf("%d %d * * *", snapshotTime.Minute(), snapshotTime.Hour()), nil
 		}

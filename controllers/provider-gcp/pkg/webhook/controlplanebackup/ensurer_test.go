@@ -190,7 +190,6 @@ var _ = Describe("Ensurer", func() {
 
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
-			//client.EXPECT().Get(context.TODO(), secretKey, &corev1.Secret{}).DoAndReturn(clientGet(secret))
 
 			// Create ensurer
 			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
@@ -202,8 +201,17 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 			oldSS := ss.DeepCopy()
 
-			// Re-ensure
+			// Re-ensure on existing statefulset
 			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(ss).Should(Equal(oldSS))
+
+			// Re-ensure on new statefulset request
+			newSS := &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDEvents},
+			}
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), newSS, cluster)
 
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(ss).Should(Equal(oldSS))
@@ -250,6 +258,42 @@ var _ = Describe("Ensurer", func() {
 			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDEventsStatefulSet(ss)
+		})
+
+		It("should not modify elements to same etcd-events statefulset", func() {
+			var (
+				ss = &appsv1.StatefulSet{
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDEvents},
+				}
+			)
+
+			// Create mock client
+			client := mockclient.NewMockClient(ctrl)
+
+			// Create ensurer
+			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
+			err := ensurer.(inject.Client).InjectClient(client)
+			Expect(err).To(Not(HaveOccurred()))
+
+			// Call EnsureETCDStatefulSet method and check the result
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+			Expect(err).To(Not(HaveOccurred()))
+			oldSS := ss.DeepCopy()
+
+			// Re-ensure on existing statefulset
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), ss, cluster)
+
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(ss).Should(Equal(oldSS))
+
+			// Re-ensure on new statefulset request
+			newSS := &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDEvents},
+			}
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), newSS, cluster)
+
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(ss).Should(Equal(oldSS))
 		})
 	})
 })
