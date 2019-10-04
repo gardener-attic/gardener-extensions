@@ -19,8 +19,8 @@ import (
 
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
+	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/operation/common"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -89,7 +89,7 @@ func (m *namespaceToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Re
 		return nil
 	}
 
-	shootUID := namespace.Annotations[common.ShootUID]
+	shootUID := namespace.Annotations[v1alpha1constants.DeprecatedShootUID]
 	var requests []reconcile.Request
 	for _, backupEntry := range backupEntryList.Items {
 		if !extensionspredicate.EvalGeneric(&backupEntry, m.predicates...) {

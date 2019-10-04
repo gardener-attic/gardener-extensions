@@ -21,7 +21,8 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/os-ubuntu/cmd/gardener-extension-os-ubuntu/app"
 	extcontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/log"
-	runtimelog "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func main() {

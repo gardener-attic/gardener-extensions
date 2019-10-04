@@ -17,13 +17,14 @@ package main
 import (
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/cmd/gardener-extension-networking-calico/app"
 	"github.com/gardener/gardener-extensions/pkg/controller"
-
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"github.com/gardener/gardener-extensions/pkg/log"
+
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func main() {
-	log.SetLogger(log.ZapLogger(false))
+	runtimelog.SetLogger(log.ZapLogger(false))
 	cmd := app.NewControllerManagerCommand(controller.SetupSignalHandlerContext())
 
 	if err := cmd.Execute(); err != nil {
