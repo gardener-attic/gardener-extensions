@@ -9,7 +9,9 @@
 <p>Package v1alpha1 contains the Certificate Shoot Service extension.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#service.cert.extensions.gardener.cloud/v1alpha1.CertConfig">CertConfig</a>
+</li></ul>
 <h3 id="service.cert.extensions.gardener.cloud/v1alpha1.CertConfig">CertConfig
 </h3>
 <p>
@@ -23,6 +25,23 @@ Resource Types:
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+service.cert.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>CertConfig</code></td>
+</tr>
 <tr>
 <td>
 <code>issuers</code></br>
@@ -90,5 +109,5 @@ string
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

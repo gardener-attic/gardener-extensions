@@ -9,48 +9,9 @@
 <p>Package v1alpha1 contains the OpenStack provider configuration API resources.</p>
 </p>
 Resource Types:
-<ul></ul>
-<h3 id="openstack.provider.extensions.config.gardener.cloud/v1alpha1.CloudProfileMapping">CloudProfileMapping
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">MachineImage</a>)
-</p>
-<p>
-<p>CloudProfileMapping is a mapping to the correct image for the given cloudprofile.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the name of the CloudProfile.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>image</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Image is the name of the image.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<ul><li>
+<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.ControllerConfiguration">ControllerConfiguration</a>
+</li></ul>
 <h3 id="openstack.provider.extensions.config.gardener.cloud/v1alpha1.ControllerConfiguration">ControllerConfiguration
 </h3>
 <p>
@@ -64,6 +25,23 @@ string
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+openstack.provider.extensions.config.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>ControllerConfiguration</code></td>
+</tr>
 <tr>
 <td>
 <code>clientConnection</code></br>
@@ -104,6 +82,47 @@ ETCD
 </td>
 <td>
 <p>ETCD is the etcd configuration.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="openstack.provider.extensions.config.gardener.cloud/v1alpha1.CloudProfileMapping">CloudProfileMapping
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">MachineImage</a>)
+</p>
+<p>
+<p>CloudProfileMapping is a mapping to the correct image for the given cloudprofile.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the CloudProfile.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>image</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Image is the name of the image.</p>
 </td>
 </tr>
 </tbody>
@@ -286,5 +305,5 @@ string
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

@@ -9,7 +9,255 @@
 <p>Package v1alpha1 contains the Azure provider API resources.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig</a>
+</li><li>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>
+</li><li>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig</a>
+</li><li>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus</a>
+</li></ul>
+<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig
+</h3>
+<p>
+<p>CloudProfileConfig contains provider-specific configuration that is embedded into Gardener&rsquo;s <code>CloudProfile</code>
+resource.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+azure.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>CloudProfileConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>countUpdateDomains</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.DomainCount">
+[]DomainCount
+</a>
+</em>
+</td>
+<td>
+<p>CountUpdateDomains is list of update domain counts for each region.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>countFaultDomains</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.DomainCount">
+[]DomainCount
+</a>
+</em>
+</td>
+<td>
+<p>CountFaultDomains is list of fault domain counts for each region.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>machineImages</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.MachineImages">
+[]MachineImages
+</a>
+</em>
+</td>
+<td>
+<p>MachineImages is the list of machine images that are understood by the controller. It maps
+logical names and versions to provider-specific identifiers.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig
+</h3>
+<p>
+<p>ControlPlaneConfig contains configuration settings for the control plane.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+azure.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>ControlPlaneConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>cloudControllerManager</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">
+CloudControllerManagerConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CloudControllerManager contains configuration settings for the cloud-controller-manager.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig
+</h3>
+<p>
+<p>InfrastructureConfig infrastructure configuration resource</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+azure.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>InfrastructureConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>resourceGroup</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.ResourceGroup">
+ResourceGroup
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceGroup is azure resource group</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>networks</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.NetworkConfig">
+NetworkConfig
+</a>
+</em>
+</td>
+<td>
+<p>Networks is the network configuration (VNet, subnets, etc.)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>zoned</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Zoned indicates whether the cluster uses zones</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus
+</h3>
+<p>
+<p>WorkerStatus contains information about created worker resources.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+azure.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>WorkerStatus</code></td>
+</tr>
+<tr>
+<td>
+<code>machineImages</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.MachineImage">
+[]MachineImage
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MachineImages is a list of machine images that have been used in this worker. Usually, the extension controller
+gets the mapping from name/version to the provider-specific machine image data in its componentconfig. However, if
+a version that is still in use gets removed from this componentconfig it cannot reconcile anymore existing <code>Worker</code>
+resources that are still using this version. Hence, it stores the used versions in the provider status to ensure
+reconciliation is possible.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.AvailabilitySet">AvailabilitySet
 </h3>
 <p>
@@ -95,91 +343,6 @@ map[string]bool
 </tr>
 </tbody>
 </table>
-<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig
-</h3>
-<p>
-<p>CloudProfileConfig contains provider-specific configuration that is embedded into Gardener&rsquo;s <code>CloudProfile</code>
-resource.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>countUpdateDomains</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.DomainCount">
-[]DomainCount
-</a>
-</em>
-</td>
-<td>
-<p>CountUpdateDomains is list of update domain counts for each region.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>countFaultDomains</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.DomainCount">
-[]DomainCount
-</a>
-</em>
-</td>
-<td>
-<p>CountFaultDomains is list of fault domain counts for each region.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>machineImages</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.MachineImages">
-[]MachineImages
-</a>
-</em>
-</td>
-<td>
-<p>MachineImages is the list of machine images that are understood by the controller. It maps
-logical names and versions to provider-specific identifiers.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig
-</h3>
-<p>
-<p>ControlPlaneConfig contains configuration settings for the control plane.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>cloudControllerManager</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">
-CloudControllerManagerConfig
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>CloudControllerManager contains configuration settings for the cloud-controller-manager.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.DomainCount">DomainCount
 </h3>
 <p>
@@ -217,60 +380,6 @@ int
 </td>
 <td>
 <p>Count is the count value for the respective domain count.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig
-</h3>
-<p>
-<p>InfrastructureConfig infrastructure configuration resource</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>resourceGroup</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.ResourceGroup">
-ResourceGroup
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>ResourceGroup is azure resource group</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>networks</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.NetworkConfig">
-NetworkConfig
-</a>
-</em>
-</td>
-<td>
-<p>Networks is the network configuration (VNet, subnets, etc.)</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>zoned</code></br>
-<em>
-bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Zoned indicates whether the cluster uses zones</p>
 </td>
 </tr>
 </tbody>
@@ -882,41 +991,8 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus
-</h3>
-<p>
-<p>WorkerStatus contains information about created worker resources.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>machineImages</code></br>
-<em>
-<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.MachineImage">
-[]MachineImage
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>MachineImages is a list of machine images that have been used in this worker. Usually, the extension controller
-gets the mapping from name/version to the provider-specific machine image data in its componentconfig. However, if
-a version that is still in use gets removed from this componentconfig it cannot reconcile anymore existing <code>Worker</code>
-resources that are still using this version. Hence, it stores the used versions in the provider status to ensure
-reconciliation is possible.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

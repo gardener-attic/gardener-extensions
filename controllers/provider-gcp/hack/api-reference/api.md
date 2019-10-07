@@ -9,38 +9,13 @@
 <p>Package v1alpha1 contains the GCP provider API resources.</p>
 </p>
 Resource Types:
-<ul></ul>
-<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">CloudControllerManagerConfig
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>)
-</p>
-<p>
-<p>CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>featureGates</code></br>
-<em>
-map[string]bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>FeatureGates contains information about enabled feature gates.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<ul><li>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig</a>
+</li><li>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>
+</li><li>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig</a>
+</li></ul>
 <h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig
 </h3>
 <p>
@@ -55,6 +30,23 @@ resource.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+gcp.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>CloudProfileConfig</code></td>
+</tr>
 <tr>
 <td>
 <code>machineImages</code></br>
@@ -84,6 +76,23 @@ logical names and versions to provider-specific identifiers.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+gcp.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>ControlPlaneConfig</code></td>
+</tr>
 <tr>
 <td>
 <code>zone</code></br>
@@ -126,6 +135,23 @@ CloudControllerManagerConfig
 <tbody>
 <tr>
 <td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+gcp.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>InfrastructureConfig</code></td>
+</tr>
+<tr>
+<td>
 <code>networks</code></br>
 <em>
 <a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.NetworkConfig">
@@ -135,6 +161,37 @@ NetworkConfig
 </td>
 <td>
 <p>Networks is the network configuration (VPC, subnets, etc.)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">CloudControllerManagerConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>)
+</p>
+<p>
+<p>CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>featureGates</code></br>
+<em>
+map[string]bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FeatureGates contains information about enabled feature gates.</p>
 </td>
 </tr>
 </tbody>
@@ -534,5 +591,5 @@ reconciliation is possible.</p>
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

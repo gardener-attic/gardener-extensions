@@ -9,7 +9,9 @@
 <p>Package v1alpha1 contains the AliCloud provider configuration API resources.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#alicloud.provider.extensions.config.gardener.cloud/v1alpha1.ControllerConfiguration">ControllerConfiguration</a>
+</li></ul>
 <h3 id="alicloud.provider.extensions.config.gardener.cloud/v1alpha1.ControllerConfiguration">ControllerConfiguration
 </h3>
 <p>
@@ -23,6 +25,23 @@ Resource Types:
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+alicloud.provider.extensions.config.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>ControllerConfiguration</code></td>
+</tr>
 <tr>
 <td>
 <code>clientConnection</code></br>
@@ -286,5 +305,5 @@ string
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

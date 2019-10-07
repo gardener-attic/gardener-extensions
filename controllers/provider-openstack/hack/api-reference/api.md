@@ -9,38 +9,15 @@
 <p>Package v1alpha1 contains the AliCloud provider API resources.</p>
 </p>
 Resource Types:
-<ul></ul>
-<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">CloudControllerManagerConfig
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>)
-</p>
-<p>
-<p>CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>featureGates</code></br>
-<em>
-map[string]bool
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>FeatureGates contains information about enabled feature gates.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<ul><li>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig</a>
+</li><li>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>
+</li><li>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig</a>
+</li><li>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus</a>
+</li></ul>
 <h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig
 </h3>
 <p>
@@ -55,6 +32,23 @@ resource.</p>
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+openstack.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>CloudProfileConfig</code></td>
+</tr>
 <tr>
 <td>
 <code>constraints</code></br>
@@ -132,51 +126,6 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.Constraints">Constraints
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig</a>)
-</p>
-<p>
-<p>Constraints is an object containing constraints for the shoots.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>floatingPools</code></br>
-<em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.FloatingPool">
-[]FloatingPool
-</a>
-</em>
-</td>
-<td>
-<p>FloatingPools contains constraints regarding allowed values of the &lsquo;floatingPoolName&rsquo; block in the control plane config.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>loadBalancerProviders</code></br>
-<em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.LoadBalancerProvider">
-[]LoadBalancerProvider
-</a>
-</em>
-</td>
-<td>
-<p>LoadBalancerProviders contains constraints regarding allowed values of the &lsquo;loadBalancerProvider&rsquo; block in the control plane config.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig
 </h3>
 <p>
@@ -190,6 +139,23 @@ string
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+openstack.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>ControlPlaneConfig</code></td>
+</tr>
 <tr>
 <td>
 <code>loadBalancerProvider</code></br>
@@ -238,6 +204,188 @@ CloudControllerManagerConfig
 <td>
 <em>(Optional)</em>
 <p>CloudControllerManager contains configuration settings for the cloud-controller-manager.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig
+</h3>
+<p>
+<p>InfrastructureConfig infrastructure configuration resource</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+openstack.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>InfrastructureConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>floatingPoolName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>FloatingPoolName contains the FloatingPoolName name in which LoadBalancer FIPs should be created.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>networks</code></br>
+<em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.Networks">
+Networks
+</a>
+</em>
+</td>
+<td>
+<p>Networks is the OpenStack specific network configuration</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus
+</h3>
+<p>
+<p>WorkerStatus contains information about created worker resources.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+openstack.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>WorkerStatus</code></td>
+</tr>
+<tr>
+<td>
+<code>machineImages</code></br>
+<em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.MachineImage">
+[]MachineImage
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MachineImages is a list of machine images that have been used in this worker. Usually, the extension controller
+gets the mapping from name/version to the provider-specific machine image data in its componentconfig. However, if
+a version that is still in use gets removed from this componentconfig it cannot reconcile anymore existing <code>Worker</code>
+resources that are still using this version. Hence, it stores the used versions in the provider status to ensure
+reconciliation is possible.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">CloudControllerManagerConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>)
+</p>
+<p>
+<p>CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>featureGates</code></br>
+<em>
+map[string]bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FeatureGates contains information about enabled feature gates.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.Constraints">Constraints
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig</a>)
+</p>
+<p>
+<p>Constraints is an object containing constraints for the shoots.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>floatingPools</code></br>
+<em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.FloatingPool">
+[]FloatingPool
+</a>
+</em>
+</td>
+<td>
+<p>FloatingPools contains constraints regarding allowed values of the &lsquo;floatingPoolName&rsquo; block in the control plane config.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>loadBalancerProviders</code></br>
+<em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.LoadBalancerProvider">
+[]LoadBalancerProvider
+</a>
+</em>
+</td>
+<td>
+<p>LoadBalancerProviders contains constraints regarding allowed values of the &lsquo;loadBalancerProvider&rsquo; block in the control plane config.</p>
 </td>
 </tr>
 </tbody>
@@ -323,45 +471,6 @@ string
 </td>
 <td>
 <p>Name is the floating pool name.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig
-</h3>
-<p>
-<p>InfrastructureConfig infrastructure configuration resource</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>floatingPoolName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>FloatingPoolName contains the FloatingPoolName name in which LoadBalancer FIPs should be created.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>networks</code></br>
-<em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.Networks">
-Networks
-</a>
-</em>
-</td>
-<td>
-<p>Networks is the OpenStack specific network configuration</p>
 </td>
 </tr>
 </tbody>
@@ -964,41 +1073,8 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus
-</h3>
-<p>
-<p>WorkerStatus contains information about created worker resources.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>machineImages</code></br>
-<em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.MachineImage">
-[]MachineImage
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>MachineImages is a list of machine images that have been used in this worker. Usually, the extension controller
-gets the mapping from name/version to the provider-specific machine image data in its componentconfig. However, if
-a version that is still in use gets removed from this componentconfig it cannot reconcile anymore existing <code>Worker</code>
-resources that are still using this version. Hence, it stores the used versions in the provider status to ensure
-reconciliation is possible.</p>
-</td>
-</tr>
-</tbody>
-</table>
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

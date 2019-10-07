@@ -9,7 +9,63 @@
 <p>Package v1alpha1 contains the Certificate Shoot Service extension configuration.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#shoot-cert-service.extensions.config.gardener.cloud/v1alpha1.Configuration">Configuration</a>
+</li></ul>
+<h3 id="shoot-cert-service.extensions.config.gardener.cloud/v1alpha1.Configuration">Configuration
+</h3>
+<p>
+<p>Configuration contains information about the certificate service configuration.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+shoot-cert-service.extensions.config.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>Configuration</code></td>
+</tr>
+<tr>
+<td>
+<code>issuerName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>acme</code></br>
+<em>
+<a href="#shoot-cert-service.extensions.config.gardener.cloud/v1alpha1.ACME">
+ACME
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="shoot-cert-service.extensions.config.gardener.cloud/v1alpha1.ACME">ACME
 </h3>
 <p>
@@ -60,45 +116,8 @@ string
 </tr>
 </tbody>
 </table>
-<h3 id="shoot-cert-service.extensions.config.gardener.cloud/v1alpha1.Configuration">Configuration
-</h3>
-<p>
-<p>Configuration contains information about the certificate service configuration.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>issuerName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>acme</code></br>
-<em>
-<a href="#shoot-cert-service.extensions.config.gardener.cloud/v1alpha1.ACME">
-ACME
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</tbody>
-</table>
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

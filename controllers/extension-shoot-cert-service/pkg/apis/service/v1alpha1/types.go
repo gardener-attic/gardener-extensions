@@ -44,6 +44,7 @@ const CertManagementChartNameSeed = "shoot-cert-management-seed"
 // CertManagementChartNameShoot is the name of the chart for Cert-Management in the shoot.
 const CertManagementChartNameShoot = "shoot-cert-management-shoot"
 
+// +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // CertConfig infrastructure configuration resource

@@ -9,7 +9,81 @@
 <p>Package v1alpha1 contains the configuration of the Calico Network Extension.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig</a>
+</li></ul>
+<h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig
+</h3>
+<p>
+<p>NetworkConfig configuration for the calico networking plugin</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+calico.networking.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>NetworkConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>backend</code></br>
+<em>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.Backend">
+Backend
+</a>
+</em>
+</td>
+<td>
+<p>Backend defines whether a backend should be used or not (e.g., bird or None)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ipam</code></br>
+<em>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.IPAM">
+IPAM
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IPAM to use for the Calico Plugin (e.g., host-local or Calico)</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ipAutodetectionMethod</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IPAutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
+<a href="https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods">https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods</a></p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.Backend">Backend
 (<code>string</code> alias)</p></h3>
 <p>
@@ -70,61 +144,6 @@ CIDR
 </tr>
 </tbody>
 </table>
-<h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig
-</h3>
-<p>
-<p>NetworkConfig configuration for the calico networking plugin</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>backend</code></br>
-<em>
-<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.Backend">
-Backend
-</a>
-</em>
-</td>
-<td>
-<p>Backend defines whether a backend should be used or not (e.g., bird or None)</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ipam</code></br>
-<em>
-<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.IPAM">
-IPAM
-</a>
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>IPAM to use for the Calico Plugin (e.g., host-local or Calico)</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ipAutodetectionMethod</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>IPAutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
-<a href="https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods">https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods</a></p>
-</td>
-</tr>
-</tbody>
-</table>
 <h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.NetworkStatus">NetworkStatus
 </h3>
 <p>
@@ -143,5 +162,5 @@ string
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>

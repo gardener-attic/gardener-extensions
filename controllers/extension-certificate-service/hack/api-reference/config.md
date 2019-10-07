@@ -9,7 +9,135 @@
 <p>Package v1alpha1 contains the Certificate Service extension API resources.</p>
 </p>
 Resource Types:
-<ul></ul>
+<ul><li>
+<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.Configuration">Configuration</a>
+</li></ul>
+<h3 id="certificate-service.extensions.config.gardener.cloud/v1alpha1.Configuration">Configuration
+</h3>
+<p>
+<p>Configuration contains information about the certificate service configuration.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+certificate-service.extensions.config.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>Configuration</code></td>
+</tr>
+<tr>
+<td>
+<code>spec</code></br>
+<em>
+<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.ConfigurationSpec">
+ConfigurationSpec
+</a>
+</em>
+</td>
+<td>
+<br/>
+<br/>
+<table>
+<tr>
+<td>
+<code>lifecycleSync</code></br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>serviceSync</code></br>
+<em>
+<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
+Kubernetes meta/v1.Duration
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>issuerName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>namespaceRef</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>resourceNamespace</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>acme</code></br>
+<em>
+<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.ACME">
+ACME
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>providers</code></br>
+<em>
+<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.DNSProviders">
+DNSProviders
+</a>
+</em>
+</td>
+<td>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="certificate-service.extensions.config.gardener.cloud/v1alpha1.ACME">ACME
 </h3>
 <p>
@@ -115,115 +243,6 @@ string
 </em>
 </td>
 <td>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="certificate-service.extensions.config.gardener.cloud/v1alpha1.Configuration">Configuration
-</h3>
-<p>
-<p>Configuration contains information about the certificate service configuration.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>spec</code></br>
-<em>
-<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.ConfigurationSpec">
-ConfigurationSpec
-</a>
-</em>
-</td>
-<td>
-<br/>
-<br/>
-<table>
-<tr>
-<td>
-<code>lifecycleSync</code></br>
-<em>
-<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
-Kubernetes meta/v1.Duration
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>serviceSync</code></br>
-<em>
-<a href="https://godoc.org/k8s.io/apimachinery/pkg/apis/meta/v1#Duration">
-Kubernetes meta/v1.Duration
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>issuerName</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>namespaceRef</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>resourceNamespace</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>acme</code></br>
-<em>
-<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.ACME">
-ACME
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-<tr>
-<td>
-<code>providers</code></br>
-<em>
-<a href="#certificate-service.extensions.config.gardener.cloud/v1alpha1.DNSProviders">
-DNSProviders
-</a>
-</em>
-</td>
-<td>
-</td>
-</tr>
-</table>
 </td>
 </tr>
 </tbody>
@@ -450,5 +469,5 @@ string
 <hr/>
 <p><em>
 Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <code>9f5e77de</code>.
+on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
 </em></p>
