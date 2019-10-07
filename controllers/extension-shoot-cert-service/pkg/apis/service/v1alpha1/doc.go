@@ -17,4 +17,8 @@
 // +k8s:openapi-gen=true
 // +k8s:defaulter-gen=TypeMeta
 
+//go:generate gen-crd-api-reference-docs -api-dir . -config ../../../../hack/api-reference/service.json -template-dir ../../../../../../hack/api-reference/template -out-file ../../../../hack/api-reference/service.md
+
+// Package v1alpha1 contains the Certificate Shoot Service extension.
+// +groupName=service.cert.extensions.gardener.cloud
 package v1alpha1 // import "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/v1alpha1"
