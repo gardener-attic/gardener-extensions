@@ -18,6 +18,7 @@ import (
 	calicov1alpha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/imagevector"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 
