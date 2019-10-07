@@ -49,5 +49,5 @@ systemctl daemon-reload
 systemctl restart docker
 {{ range $_, $unit := .Units -}}
 systemctl enable '{{ $unit.Name }}' && systemctl restart '{{ $unit.Name }}'
-{{- end -}}
+{{ end -}}
 {{- end -}}
