@@ -196,8 +196,10 @@ func (vp *valuesProvider) GetConfigChartValues(
 ) (map[string]interface{}, error) {
 	// Decode infrastructureProviderStatus
 	infraStatus := &apisaws.InfrastructureStatus{}
-	if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
-		return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
+	if cp.Spec.ProviderConfig != nil {
+		if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
+			return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
+		}
 	}
 
 	// Get config chart values
@@ -214,8 +216,10 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
 	cpConfig := &apisaws.ControlPlaneConfig{}
-	if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
-		return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
+	if cp.Spec.ProviderConfig != nil {
+		if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
+			return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
+		}
 	}
 
 	// Get CCM chart values
