@@ -17,7 +17,6 @@ package controlplane
 import (
 	"context"
 	"path/filepath"
-	"strings"
 
 	apisazure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	azureapihelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
@@ -27,7 +26,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -38,7 +36,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
@@ -182,14 +179,8 @@ func (vp *valuesProvider) GetConfigChartValues(
 		return nil, errors.Wrapf(err, "could not get service account from secret '%s/%s'", cp.Spec.SecretRef.Namespace, cp.Spec.SecretRef.Name)
 	}
 
-	// Determine which kind of LoadBalancer should be configured in the cloud-provider-config.
-	loadBalancerType, err := determineLoadBalancerType(ctx, vp.client, cp.Namespace)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not determine which type of loadbalancer should be used")
-	}
-
 	// Get config chart values
-	return getConfigChartValues(infraStatus, cp, cluster, auth, loadBalancerType)
+	return getConfigChartValues(infraStatus, cp, cluster, auth)
 }
 
 // GetControlPlaneChartValues returns the values for the control plane chart applied by the generic actuator.
@@ -218,7 +209,6 @@ func getConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	ca *internal.ClientAuth,
-	loadBalancerType string,
 ) (map[string]interface{}, error) {
 	subnetName, routeTableName, securityGroupName, err := getInfraNames(infraStatus)
 	if err != nil {
@@ -237,7 +227,6 @@ func getConfigChartValues(
 		"subnetName":        subnetName,
 		"routeTableName":    routeTableName,
 		"securityGroupName": securityGroupName,
-		"loadBalancerSku":   loadBalancerType,
 		"region":            cp.Spec.Region,
 	}
 
@@ -297,31 +286,4 @@ func getInfraNames(infraStatus *apisazure.InfrastructureStatus) (string, string,
 	}
 
 	return nodesSubnet.Name, nodesRouteTable.Name, nodesSecurityGroup.Name, nil
-}
-
-func determineLoadBalancerType(ctx context.Context, c client.Client, namespace string) (string, error) {
-	var (
-		cm    = &corev1.ConfigMap{}
-		cmRef = kutil.Key(namespace, cloudProviderConfigMapName)
-	)
-	// Check if a cloud-provider-config configmap already exists.
-	// If this is not the case it can assume this is a new cluster and use standard LoadBalancers.
-	if err := c.Get(ctx, cmRef, cm); err != nil {
-		if apierrors.IsNotFound(err) {
-			return "standard", nil
-		}
-		return "", errors.Wrapf(err, "could not fetch existing %s configmap", cloudProviderConfigMapName)
-	}
-	data, ok := cm.Data[cloudProviderConfigMapKey]
-	if !ok {
-		return "standard", nil
-	}
-	// If the cloud-provider-config does not contain a LoadBalancer type configuration
-	// then it choose the basic LoadBalancers as they were the former default and
-	// there is no automatic migration path implemented.
-	// Anyways it writes the usedLoadBalancer type now explictly to the cloud-privider-config.
-	if !strings.Contains(data, "loadBalancerSku") || strings.Contains(data, "loadBalancerSku: \"basic\"") {
-		return "basic", nil
-	}
-	return "standard", nil
 }
