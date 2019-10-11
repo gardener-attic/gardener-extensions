@@ -4,11 +4,13 @@ location: "{{ .Values.region }}"
 resourceGroup: "{{ .Values.resourceGroup }}"
 routeTableName: "{{ .Values.routeTableName }}"
 securityGroupName: "{{ .Values.securityGroupName }}"
-loadBalancerSku: "{{ .Values.loadBalancerSku }}"
 subnetName: "{{ .Values.subnetName }}"
 vnetName: "{{ .Values.vnetName }}"
 {{- if hasKey .Values "availabilitySetName" }}
 primaryAvailabilitySetName: "{{ .Values.availabilitySetName }}"
+loadBalancerSku: "basic"
+{{- else }}
+loadBalancerSku: "standard"
 {{- end }}
 cloudProviderBackoff: true
 cloudProviderBackoffRetries: 6
