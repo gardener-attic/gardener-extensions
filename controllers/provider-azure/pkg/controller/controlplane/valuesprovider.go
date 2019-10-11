@@ -46,8 +46,6 @@ import (
 const (
 	cloudControllerManagerDeploymentName = "cloud-controller-manager"
 	cloudControllerManagerServerName     = "cloud-controller-manager-server"
-	cloudProviderConfigMapName           = "cloud-provider-config"
-	cloudProviderConfigMapKey            = "cloudprovider.conf"
 )
 
 var controlPlaneSecrets = &secrets.Secrets{
