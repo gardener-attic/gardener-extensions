@@ -8,6 +8,7 @@ require (
 	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
 	github.com/Masterminds/semver v1.4.2
+	github.com/ahmetb/gen-crd-api-reference-docs v0.1.5
 	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20190723075400-e63e3f9dd712
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
