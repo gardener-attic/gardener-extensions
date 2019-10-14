@@ -294,7 +294,3 @@ string
 </tbody>
 </table>
 <hr/>
-<p><em>
-Generated with <code>gen-crd-api-reference-docs</code>
-on git commit <a href="https://github.com/gardener/gardener-extensions/commit/ab669902">ab669902</a>.
-</em></p>

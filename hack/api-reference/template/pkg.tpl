@@ -41,9 +41,4 @@
     <hr/>
 {{ end }}
 
-<p><em>
-    Generated with <code>gen-crd-api-reference-docs</code>
-    {{ with .gitCommit }} on git commit <a href="https://github.com/gardener/gardener-extensions/commit/{{ . }}">{{ . }}</a>{{end}}.
-</em></p>
-
 {{ end }}
