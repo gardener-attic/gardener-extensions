@@ -67,5 +67,8 @@ spec:
       # name: my-vnet
         cidr: 10.250.0.0/16
       workers: 10.250.0.0/19
+    # serviceEndpoints:
+    # - entry1
+    zoned: false
   # resourceGroup:
   #   name: mygroup
