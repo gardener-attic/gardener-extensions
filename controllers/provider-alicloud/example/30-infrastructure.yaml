@@ -55,7 +55,7 @@ spec:
     kind: InfrastructureConfig
     networks:
       vpc: # specify either 'id' or 'cidr'
-      # id: my-vnet
+      # id: my-vpc
         cidr: 10.250.0.0/16
       zones:
       - name: eu-central-1a
