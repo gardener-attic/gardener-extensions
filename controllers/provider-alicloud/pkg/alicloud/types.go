@@ -39,6 +39,9 @@ const (
 	CSIProvisionerImageName = "csi-provisioner"
 	// CSISnapshotterImageName is the name of the CSI snapshotter image.
 	CSISnapshotterImageName = "csi-snapshotter"
+	// CSIResizerImageName is the name of the CSI resizer image.
+	CSIResizerImageName = "csi-resizer"
+
 	// CSIPluginImageName is the name of the CSI plugin image.
 	CSIPluginImageName = "csi-plugin-alicloud"
 

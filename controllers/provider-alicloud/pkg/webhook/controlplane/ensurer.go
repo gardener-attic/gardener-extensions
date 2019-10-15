@@ -16,6 +16,11 @@ package controlplane
 
 import (
 	"context"
+	"fmt"
+
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+
+	"github.com/Masterminds/semver"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -42,7 +47,15 @@ type ensurer struct {
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	ps := &dep.Spec.Template.Spec
 	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
-		ensureKubeAPIServerCommandLineArgs(c)
+		cluster, err := ectx.GetCluster(ctx)
+		if err != nil {
+			return err
+		}
+		ver, err := semver.NewVersion(extensionscontroller.GetKubernetesVersion(cluster))
+		if err != nil {
+			return fmt.Errorf("Can not parse shoot k8s cluster version: %v", err)
+		}
+		ensureKubeAPIServerCommandLineArgs(c, ver)
 	}
 	return nil
 }
@@ -56,7 +69,7 @@ func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, ect
 	return nil
 }
 
-func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
+func ensureKubeAPIServerCommandLineArgs(c *corev1.Container, ver *semver.Version) {
 	// Ensure CSI-related admission plugins
 	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
@@ -65,19 +78,30 @@ func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
 
 	// Ensure CSI-related feature gates
 	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
-		"VolumeSnapshotDataSource=false", ",")
+		"ExpandInUsePersistentVolumes=false", ",")
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"ExpandCSIVolumes=false", ",")
 	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSINodeInfo=false", ",")
 	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
 		"CSIDriverRegistry=false", ",")
-	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
-		"KubeletPluginsWatcher=false", ",")
-	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
-		"VolumeSnapshotDataSource=true", ",")
-	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
-		"CSINodeInfo=true", ",")
-	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
-		"CSIDriverRegistry=true", ",")
+
+	kVersion14 := semver.MustParse("v1.14")
+	kVersion16 := semver.MustParse("v1.16")
+
+	if ver.LessThan(kVersion16) {
+		if ver.LessThan(kVersion14) {
+			c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+				"CSINodeInfo=true", ",")
+			c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+				"CSIDriverRegistry=true", ",")
+		} else {
+			c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+				"ExpandCSIVolumes=true", ",")
+			c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--feature-gates=",
+				"ExpandInUsePersistentVolumes=true", ",")
+		}
+	}
 }
 
 func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
@@ -107,8 +131,26 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, ectx genericmu
 	if kubeletConfig.FeatureGates == nil {
 		kubeletConfig.FeatureGates = make(map[string]bool)
 	}
-	kubeletConfig.FeatureGates["VolumeSnapshotDataSource"] = true
-	kubeletConfig.FeatureGates["CSINodeInfo"] = true
-	kubeletConfig.FeatureGates["CSIDriverRegistry"] = true
+	cluster, err := ectx.GetCluster(ctx)
+	if err != nil {
+		return err
+	}
+	ver, err := semver.NewVersion(extensionscontroller.GetKubernetesVersion(cluster))
+	if err != nil {
+		return fmt.Errorf("Can not parse shoot k8s cluster version: %v", err)
+	}
+
+	kVersion14 := semver.MustParse("v1.14")
+	kVersion16 := semver.MustParse("v1.16")
+
+	if ver.LessThan(kVersion16) {
+		if ver.LessThan(kVersion14) {
+			kubeletConfig.FeatureGates["CSINodeInfo"] = true
+			kubeletConfig.FeatureGates["CSIDriverRegistry"] = true
+		} else {
+			kubeletConfig.FeatureGates["ExpandCSIVolumes"] = true
+		}
+	}
+
 	return nil
 }

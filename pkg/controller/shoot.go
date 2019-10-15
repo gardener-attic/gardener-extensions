@@ -121,6 +121,16 @@ func GetTechnicalID(cluster *Cluster) string {
 	return ""
 }
 
+// GetShootName returns the shoot name.
+func GetShootName(cluster *Cluster) string {
+	if cluster.Shoot != nil {
+		return cluster.Shoot.Name
+	} else if cluster.CoreShoot != nil {
+		return cluster.CoreShoot.Name
+	}
+	return ""
+}
+
 // GetUID returns the shoot uid.
 func GetUID(cluster *Cluster) types.UID {
 	if cluster.Shoot != nil {

@@ -18,9 +18,11 @@ import (
 	"context"
 	"testing"
 
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 
 	"github.com/coreos/go-systemd/unit"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
@@ -40,8 +42,29 @@ func TestController(t *testing.T) {
 
 var _ = Describe("Ensurer", func() {
 	var (
-		ctrl         *gomock.Controller
-		dummyContext = genericmutator.NewEnsurerContext(nil, nil)
+		ctrl       *gomock.Controller
+		eContext13 = genericmutator.NewInternalEnsurerContext(
+			&extensionscontroller.Cluster{
+				CoreShoot: &gardencorev1alpha1.Shoot{
+					Spec: gardencorev1alpha1.ShootSpec{
+						Kubernetes: gardencorev1alpha1.Kubernetes{
+							Version: "1.13.0",
+						},
+					},
+				},
+			},
+		)
+		eContext14 = genericmutator.NewInternalEnsurerContext(
+			&extensionscontroller.Cluster{
+				CoreShoot: &gardencorev1alpha1.Shoot{
+					Spec: gardencorev1alpha1.ShootSpec{
+						Kubernetes: gardencorev1alpha1.Kubernetes{
+							Version: "1.14.0",
+						},
+					},
+				},
+			},
+		)
 	)
 
 	BeforeEach(func() {
@@ -55,51 +78,21 @@ var _ = Describe("Ensurer", func() {
 	Describe("#EnsureKubeAPIServerDeployment", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
-				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
-					Spec: appsv1.DeploymentSpec{
-						Template: corev1.PodTemplateSpec{
-							Spec: corev1.PodSpec{
-								Containers: []corev1.Container{
-									{
-										Name: "kube-apiserver",
-									},
-								},
-							},
-						},
-					},
-				}
-			)
-
-			// Create ensurer
-			ensurer := NewEnsurer(logger)
-
-			// Call EnsureKubeAPIServerDeployment method and check the result
-			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dummyContext, dep)
-			Expect(err).To(Not(HaveOccurred()))
-			checkKubeAPIServerDeployment(dep)
-		})
-
-		It("should modify existing elements of kube-apiserver deployment", func() {
-			var (
-				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
-					Spec: appsv1.DeploymentSpec{
-						Template: corev1.PodTemplateSpec{
-							Spec: corev1.PodSpec{
-								Containers: []corev1.Container{
-									{
-										Name: "kube-apiserver",
-										Command: []string{
-											"--enable-admission-plugins=Priority,PersistentVolumeLabel",
-											"--disable-admission-plugins=",
-											"--feature-gates=Foo=true",
+				apidep = func() *appsv1.Deployment {
+					return &appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
+						Spec: appsv1.DeploymentSpec{
+							Template: corev1.PodTemplateSpec{
+								Spec: corev1.PodSpec{
+									Containers: []corev1.Container{
+										{
+											Name: "kube-apiserver",
 										},
 									},
 								},
 							},
 						},
-					},
+					}
 				}
 			)
 
@@ -107,9 +100,58 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dummyContext, dep)
+			// 1.13
+			dep := apidep()
+			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), eContext13, dep)
 			Expect(err).To(Not(HaveOccurred()))
-			checkKubeAPIServerDeployment(dep)
+			checkKubeAPIServerDeployment(dep, []string{"CSINodeInfo=true", "CSIDriverRegistry=true"})
+			// 1.14
+			dep = apidep()
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), eContext14, dep)
+			Expect(err).To(Not(HaveOccurred()))
+			checkKubeAPIServerDeployment(dep, []string{"ExpandCSIVolumes=true", "ExpandInUsePersistentVolumes=true"})
+
+		})
+
+		It("should modify existing elements of kube-apiserver deployment", func() {
+			var (
+				apidep = func() *appsv1.Deployment {
+					return &appsv1.Deployment{
+						ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
+						Spec: appsv1.DeploymentSpec{
+							Template: corev1.PodTemplateSpec{
+								Spec: corev1.PodSpec{
+									Containers: []corev1.Container{
+										{
+											Name: "kube-apiserver",
+											Command: []string{
+												"--enable-admission-plugins=Priority,PersistentVolumeLabel",
+												"--disable-admission-plugins=",
+												"--feature-gates=Foo=true",
+											},
+										},
+									},
+								},
+							},
+						},
+					}
+				}
+			)
+
+			// Create ensurer
+			ensurer := NewEnsurer(logger)
+
+			// Call EnsureKubeAPIServerDeployment method and check the result
+			// 1.13
+			dep := apidep()
+			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), eContext13, dep)
+			Expect(err).To(Not(HaveOccurred()))
+			checkKubeAPIServerDeployment(dep, []string{"CSINodeInfo=true", "CSIDriverRegistry=true"})
+			// 1.14
+			dep = apidep()
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), eContext14, dep)
+			Expect(err).To(Not(HaveOccurred()))
+			checkKubeAPIServerDeployment(dep, []string{"ExpandCSIVolumes=true", "ExpandInUsePersistentVolumes=true"})
 		})
 	})
 
@@ -136,7 +178,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dummyContext, dep)
+			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), eContext13, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
 		})
@@ -166,7 +208,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dummyContext, dep)
+			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), eContext13, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
 		})
@@ -200,7 +242,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeletServiceUnitOptions method and check the result
-			opts, err := ensurer.EnsureKubeletServiceUnitOptions(context.TODO(), dummyContext, oldUnitOptions)
+			opts, err := ensurer.EnsureKubeletServiceUnitOptions(context.TODO(), eContext13, oldUnitOptions)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(opts).To(Equal(newUnitOptions))
 		})
@@ -209,17 +251,27 @@ var _ = Describe("Ensurer", func() {
 	Describe("#EnsureKubeletConfiguration", func() {
 		It("should modify existing elements of kubelet configuration", func() {
 			var (
-				oldKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
+				oldKubeletConfig13 = &kubeletconfigv1beta1.KubeletConfiguration{
 					FeatureGates: map[string]bool{
 						"Foo": true,
 					},
 				}
-				newKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
+				newKubeletConfig13 = &kubeletconfigv1beta1.KubeletConfiguration{
 					FeatureGates: map[string]bool{
-						"Foo":                      true,
-						"VolumeSnapshotDataSource": true,
-						"CSINodeInfo":              true,
-						"CSIDriverRegistry":        true,
+						"Foo":               true,
+						"CSINodeInfo":       true,
+						"CSIDriverRegistry": true,
+					},
+				}
+				oldKubeletConfig14 = &kubeletconfigv1beta1.KubeletConfiguration{
+					FeatureGates: map[string]bool{
+						"Foo": true,
+					},
+				}
+				newKubeletConfig14 = &kubeletconfigv1beta1.KubeletConfiguration{
+					FeatureGates: map[string]bool{
+						"Foo":              true,
+						"ExpandCSIVolumes": true,
 					},
 				}
 			)
@@ -228,24 +280,28 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeletConfiguration method and check the result
-			kubeletConfig := *oldKubeletConfig
-			err := ensurer.EnsureKubeletConfiguration(context.TODO(), dummyContext, &kubeletConfig)
+			// 13
+			err := ensurer.EnsureKubeletConfiguration(context.TODO(), eContext13, oldKubeletConfig13)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
+			Expect(oldKubeletConfig13).To(Equal(newKubeletConfig13))
+			// 14
+			err = ensurer.EnsureKubeletConfiguration(context.TODO(), eContext14, oldKubeletConfig14)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(oldKubeletConfig14).To(Equal(newKubeletConfig14))
 		})
 	})
 })
 
-func checkKubeAPIServerDeployment(dep *appsv1.Deployment) {
+func checkKubeAPIServerDeployment(dep *appsv1.Deployment, featureGates []string) {
 	// Check that the kube-apiserver container still exists and contains all needed command line args,
 	// env vars, and volume mounts
 	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
 	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ",")))
 	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ","))
-	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "VolumeSnapshotDataSource=true", ","))
-	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "CSINodeInfo=true", ","))
-	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", "CSIDriverRegistry=true", ","))
+	for _, fg := range featureGates {
+		Expect(c.Command).To(test.ContainElementWithPrefixContaining("--feature-gates=", fg, ","))
+	}
 }
 
 func checkKubeControllerManagerDeployment(dep *appsv1.Deployment) {

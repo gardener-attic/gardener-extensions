@@ -105,6 +105,19 @@ var controlPlaneSecrets = &secrets.Secrets{
 					APIServerURL: v1alpha1constants.DeploymentNameKubeAPIServer,
 				},
 			},
+			&secrets.ControlPlaneSecretConfig{
+				CertificateSecretConfig: &secrets.CertificateSecretConfig{
+					Name:         "csi-resizer",
+					CommonName:   "system:csi-resizer",
+					Organization: []string{user.SystemPrivilegedGroup},
+					CertType:     secrets.ClientCert,
+					SigningCA:    cas[v1alpha1constants.SecretNameCACluster],
+				},
+				KubeConfigRequest: &secrets.KubeConfigRequest{
+					ClusterName:  clusterName,
+					APIServerURL: v1alpha1constants.DeploymentNameKubeAPIServer,
+				},
+			},
 		}
 	},
 }
@@ -135,7 +148,7 @@ var controlPlaneChart = &chart.Chart{
 		},
 		{
 			Name:   "csi-alicloud",
-			Images: []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIPluginImageName},
+			Images: []string{alicloud.CSIAttacherImageName, alicloud.CSIProvisionerImageName, alicloud.CSISnapshotterImageName, alicloud.CSIResizerImageName, alicloud.CSIPluginImageName},
 			Objects: []*chart.Object{
 				{Type: &appsv1.Deployment{}, Name: "csi-plugin-controller"},
 			},
@@ -158,23 +171,37 @@ var controlPlaneShootChart = &chart.Chart{
 			Name:   "csi-alicloud",
 			Images: []string{alicloud.CSINodeDriverRegistrarImageName, alicloud.CSIPluginImageName},
 			Objects: []*chart.Object{
+				// csi-disk-plugin-alicloud
 				{Type: &appsv1.DaemonSet{}, Name: "csi-disk-plugin-alicloud"},
 				{Type: &corev1.Secret{}, Name: "csi-diskplugin-alicloud"},
 				{Type: &corev1.ServiceAccount{}, Name: "csi-disk-plugin-alicloud"},
 				{Type: &rbacv1.ClusterRole{}, Name: "garden.sapcloud.io:psp:kube-system:csi-disk-plugin-alicloud"},
 				{Type: &rbacv1.ClusterRoleBinding{}, Name: "garden.sapcloud.io:psp:csi-disk-plugin-alicloud"},
+				{Type: &policyv1beta1.PodSecurityPolicy{}, Name: "gardener.kube-system.csi-disk-plugin-alicloud"},
+				// csi-attacher
 				{Type: &corev1.ServiceAccount{}, Name: "csi-attacher"},
 				{Type: &rbacv1.ClusterRole{}, Name: "garden.sapcloud.io:kube-system:csi-attacher"},
 				{Type: &rbacv1.ClusterRoleBinding{}, Name: "garden.sapcloud.io:csi-attacher"},
 				{Type: &rbacv1.Role{}, Name: "csi-attacher"},
 				{Type: &rbacv1.RoleBinding{}, Name: "csi-attacher"},
+				// csi-provisioner
 				{Type: &corev1.ServiceAccount{}, Name: "csi-provisioner"},
 				{Type: &rbacv1.ClusterRole{}, Name: "garden.sapcloud.io:kube-system:csi-provisioner"},
 				{Type: &rbacv1.ClusterRoleBinding{}, Name: "garden.sapcloud.io:csi-provisioner"},
+				{Type: &rbacv1.Role{}, Name: "csi-provisioner"},
+				{Type: &rbacv1.RoleBinding{}, Name: "csi-provisioner"},
+				// csi-snapshotter
 				{Type: &corev1.ServiceAccount{}, Name: "csi-snapshotter"},
 				{Type: &rbacv1.ClusterRole{}, Name: "garden.sapcloud.io:kube-system:csi-snapshotter"},
 				{Type: &rbacv1.ClusterRoleBinding{}, Name: "garden.sapcloud.io:csi-snapshotter"},
-				{Type: &policyv1beta1.PodSecurityPolicy{}, Name: "gardener.kube-system.csi-disk-plugin-alicloud"},
+				{Type: &rbacv1.Role{}, Name: "csi-snapshotter"},
+				{Type: &rbacv1.RoleBinding{}, Name: "csi-snapshotter"},
+				// csi-resizer
+				{Type: &corev1.ServiceAccount{}, Name: "csi-resizer"},
+				{Type: &rbacv1.ClusterRole{}, Name: "garden.sapcloud.io:kube-system:csi-resizer"},
+				{Type: &rbacv1.ClusterRoleBinding{}, Name: "garden.sapcloud.io:csi-resizer"},
+				{Type: &rbacv1.Role{}, Name: "csi-resizer"},
+				{Type: &rbacv1.RoleBinding{}, Name: "csi-resizer"},
 			},
 		},
 	},
@@ -349,13 +376,16 @@ func getControlPlaneChartValues(
 			},
 		},
 		"csi-alicloud": map[string]interface{}{
-			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
-			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
-			"regionID":          cp.Spec.Region,
+			"replicas":               extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
+			"kubernetesVersion":      extensionscontroller.GetKubernetesVersion(cluster),
+			"regionID":               cp.Spec.Region,
+			"snapshotPrefix":         extensionscontroller.GetShootName(cluster),
+			"persistentVolumePrefix": extensionscontroller.GetShootName(cluster),
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-csi-attacher":    checksums["csi-attacher"],
 				"checksum/secret-csi-provisioner": checksums["csi-provisioner"],
 				"checksum/secret-csi-snapshotter": checksums["csi-snapshotter"],
+				"checksum/secret-csi-resizer":     checksums["csi-resizer"],
 				"checksum/secret-cloudprovider":   checksums[v1alpha1constants.SecretNameCloudProvider],
 			},
 		},

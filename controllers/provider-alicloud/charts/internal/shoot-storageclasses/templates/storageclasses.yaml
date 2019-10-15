@@ -6,6 +6,7 @@ metadata:
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
 provisioner: diskplugin.csi.alibabacloud.com
+allowVolumeExpansion: true
 parameters:
   csi.storage.k8s.io/fstype: ext4
   type: cloud_ssd
