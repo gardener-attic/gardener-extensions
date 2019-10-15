@@ -1,12 +1,17 @@
 # [Gardener Extension for GCP provider](https://gardener.cloud)
 
+[![CI Build status](https://concourse.ci.infra.gardener.cloud/api/v1/teams/gardener/pipelines/gardener-extensions-master/jobs/master-head-update-job/badge)](https://concourse.ci.infra.gardener.cloud/teams/gardener/pipelines/gardener-extensions-master/jobs/master-head-update-job)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gardener/gardener-extensions/controllers/provider-gcp)](https://goreportcard.com/report/github.com/gardener/gardener-extensions/controllers/provider-gcp)
 
-Project Gardener implements the automated management and operation of [Kubernetes](https://kubernetes.io/) clusters as a service. Its main principle is to leverage Kubernetes concepts for all of its tasks.
+Project Gardener implements the automated management and operation of [Kubernetes](https://kubernetes.io/) clusters as a service.
+Its main principle is to leverage Kubernetes concepts for all of its tasks.
 
-Recently, most of the vendor specific logic has been developed [in-tree](https://github.com/gardener/gardener). However, the project has grown to a size where it is very hard to extend, maintain, and test. With [GEP-1](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md) we have proposed how the architecture can be changed in a way to support external controllers that contain their very own vendor specifics. This way, we can keep Gardener core clean and independent.
+Recently, most of the vendor specific logic has been developed [in-tree](https://github.com/gardener/gardener).
+However, the project has grown to a size where it is very hard to extend, maintain, and test.
+With [GEP-1](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md) we have proposed how the architecture can be changed in a way to support external controllers that contain their very own vendor specifics.
+This way, we can keep Gardener core clean and independent.
 
-< needs-to-be-implemented >
+This controller implements Gardener's extension contract for the GCP provider.
 
 An example for a `ControllerRegistration` resource that can be used to register this controller to Gardener can be found [here](example/controller-registration.yaml).
 
@@ -31,3 +36,7 @@ Please find further resources about out project here:
 * [Our landing page gardener.cloud](https://gardener.cloud/)
 * ["Gardener, the Kubernetes Botanist" blog on kubernetes.io](https://kubernetes.io/blog/2018/05/17/gardener/)
 * [GEP-1 (Gardener Enhancement Proposal) on extensibility](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md)
+* [GEP-4 (New `core.gardener.cloud/v1alpha1` API)](https://github.com/gardener/gardener/blob/master/docs/proposals/04-new-core-gardener-cloud-apis.md)
+* [Extension contract documentation](https://github.com/gardener/gardener/tree/master/docs/extensions)
+* [Gardener Extensions Golang library](https://godoc.org/github.com/gardener/gardener-extensions/pkg)
+* [Gardener API Reference](https://gardener.cloud/api-reference/)

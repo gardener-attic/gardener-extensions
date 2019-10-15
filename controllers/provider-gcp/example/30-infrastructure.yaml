@@ -51,6 +51,8 @@ spec:
     apiVersion: gcp.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig
     networks:
+    # vpc:
+    #   name: my-vpc
       worker: 10.242.0.0/19
     # internal: 10.243.0.0/19
 
