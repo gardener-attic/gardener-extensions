@@ -23,7 +23,7 @@ import (
 )
 
 // ValidateInfrastructureConfig validates a InfrastructureConfig object.
-func ValidateInfrastructureConfig(infra *apisazure.InfrastructureConfig, nodesCIDR, podsCIDR, servicesCIDR *string) field.ErrorList {
+func ValidateInfrastructureConfig(infra *apisazure.InfrastructureConfig, resourceGroupName, nodesCIDR, podsCIDR, servicesCIDR *string) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	var (
@@ -61,12 +61,21 @@ func ValidateInfrastructureConfig(infra *apisazure.InfrastructureConfig, nodesCI
 	allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(workerCIDR)...)
 	allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("workers"), infra.Networks.Workers)...)
 
-	if infra.Networks.VNet.Name != nil {
-		allErrs = append(allErrs, field.Invalid(networksPath.Child("vnet", "name"), *(infra.Networks.VNet.Name), "specifying an existing vnet is not supported yet"))
+	if (infra.Networks.VNet.Name != nil && infra.Networks.VNet.ResourceGroup == nil) || (infra.Networks.VNet.Name == nil && infra.Networks.VNet.ResourceGroup != nil) {
+		allErrs = append(allErrs, field.Invalid(networksPath.Child("vnet"), infra.Networks.VNet, "specifying an existing vnet name require a vnet name and vnet resource group"))
+	} else if infra.Networks.VNet.Name != nil && infra.Networks.VNet.ResourceGroup != nil {
+		if infra.Networks.VNet.CIDR != nil {
+			allErrs = append(allErrs, field.Invalid(networksPath.Child("vnet", "cidr"), *infra.Networks.VNet.ResourceGroup, "specifying a cidr for an existing vnet is not possible"))
+		}
+		if *infra.Networks.VNet.ResourceGroup == *resourceGroupName {
+			allErrs = append(allErrs, field.Invalid(networksPath.Child("vnet", "resourceGroup"), *infra.Networks.VNet.ResourceGroup, "specifying an existing vnet is the cluster resource group is not supported"))
+		}
 	} else {
 		cidrPath := networksPath.Child("vnet", "cidr")
 		if infra.Networks.VNet.CIDR == nil {
-			allErrs = append(allErrs, field.Required(cidrPath, "must specify a vnet cidr"))
+			// Use worker/subnet cidr as cidr for the vnet.
+			allErrs = append(allErrs, workerCIDR.ValidateSubset(nodes)...)
+			allErrs = append(allErrs, workerCIDR.ValidateNotSubset(pods, services)...)
 		} else {
 			vpcCIDR := cidrvalidation.NewCIDR(*(infra.Networks.VNet.CIDR), cidrPath)
 			allErrs = append(allErrs, vpcCIDR.ValidateParse()...)

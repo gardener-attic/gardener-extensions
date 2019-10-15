@@ -228,6 +228,10 @@ func getConfigChartValues(
 		"region":            cp.Spec.Region,
 	}
 
+	if infraStatus.Networks.VNet.ResourceGroup != nil {
+		values["vnetResourceGroup"] = *infraStatus.Networks.VNet.ResourceGroup
+	}
+
 	// Add AvailabilitySet config if the cluster is not zoned.
 	if !infraStatus.Zoned {
 		nodesAvailabilitySet, err := azureapihelper.FindAvailabilitySetByPurpose(infraStatus.AvailabilitySets, apisazure.PurposeNodes)

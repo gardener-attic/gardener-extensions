@@ -14,6 +14,7 @@ resourceGroup:
   name: my-resource-group
   vnet:
     name: my-vnet
+    # resourceGroup: vnet-resource-group
     cidr: 10.10.10.10/6
   subnet:
     serviceEndpoints: []
@@ -26,6 +27,7 @@ networks:
 outputKeys:
   resourceGroupName: resourceGroupName
   vnetName: vnetName
+  # vnetResourceGroup: vnet-resource-group
   subnetName: subnetName
   availabilitySetID: availabilitySetID
   availabilitySetName: availabilitySetName

@@ -28,15 +28,17 @@ import (
 var _ = Describe("InfrastructureConfig validation", func() {
 	var (
 		infrastructureConfig *apisazure.InfrastructureConfig
+		nodes                string
+		resourceGroup        = "shoot--test--foo"
 
 		pods        = "100.96.0.0/11"
 		services    = "100.64.0.0/13"
-		nodes       = "10.250.0.0/16"
 		vnetCIDR    = "10.0.0.0/8"
 		invalidCIDR = "invalid-cidr"
 	)
 
 	BeforeEach(func() {
+		nodes = "10.250.0.0/16"
 		infrastructureConfig = &apisazure.InfrastructureConfig{
 			Networks: apisazure.NetworkConfig{
 				Workers: "10.250.3.0/24",
@@ -51,7 +53,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 		It("should forbid specifying a resource group configuration", func() {
 			infrastructureConfig.ResourceGroup = &apisazure.ResourceGroup{}
 
-			errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+			errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
 
 			Expect(errorList).To(ConsistOfFields(Fields{
 				"Type":  Equal(field.ErrorTypeInvalid),
@@ -59,26 +61,82 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			}))
 		})
 
-		It("should forbid specifying a vnet name", func() {
-			name := "existing-vnet"
+		Context("vnet", func() {
+			It("should forbid specifying a vnet name without resource group", func() {
+				vnetName := "existing-vnet"
+				infrastructureConfig.Networks.VNet = apisazure.VNet{
+					Name: &vnetName,
+				}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
 
-			infrastructureConfig.Networks.VNet = apisazure.VNet{
-				Name: &name,
-			}
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.vnet"),
+					"Detail": Equal("specifying an existing vnet name require a vnet name and vnet resource group"),
+				}))
+			})
 
-			errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+			It("should forbid specifying a vnet resource group without name", func() {
+				vnetGroup := "existing-vnet-rg"
+				infrastructureConfig.Networks.VNet = apisazure.VNet{
+					ResourceGroup: &vnetGroup,
+				}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
 
-			Expect(errorList).To(ConsistOfFields(Fields{
-				"Type":  Equal(field.ErrorTypeInvalid),
-				"Field": Equal("networks.vnet.name"),
-			}))
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.vnet"),
+					"Detail": Equal("specifying an existing vnet name require a vnet name and vnet resource group"),
+				}))
+			})
+
+			It("should forbid specifying existing vnet plus a vnet cidr", func() {
+				name := "existing-vnet"
+				vnetGroup := "existing-vnet-rg"
+				infrastructureConfig.Networks.VNet = apisazure.VNet{
+					Name:          &name,
+					ResourceGroup: &vnetGroup,
+					CIDR:          &vnetCIDR,
+				}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
+
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.vnet.cidr"),
+					"Detail": Equal("specifying a cidr for an existing vnet is not possible"),
+				}))
+			})
+
+			It("should forbid specifying existing vnet in same resource group", func() {
+				name := "existing-vnet"
+				infrastructureConfig.Networks.VNet = apisazure.VNet{
+					Name:          &name,
+					ResourceGroup: &resourceGroup,
+				}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
+
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.vnet.resourceGroup"),
+					"Detail": Equal("specifying an existing vnet is the cluster resource group is not supported"),
+				}))
+			})
+
+			It("should pass if no vnet cidr is specified and default is applied", func() {
+				nodes = "10.250.3.0/24"
+				infrastructureConfig.Networks = apisazure.NetworkConfig{
+					Workers: "10.250.3.0/24",
+				}
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
+				Expect(errorList).To(HaveLen(0))
+			})
 		})
 
 		Context("CIDR", func() {
 			It("should forbid invalid VNet CIDRs", func() {
 				infrastructureConfig.Networks.VNet.CIDR = &invalidCIDR
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -90,7 +148,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			It("should forbid invalid workers CIDR", func() {
 				infrastructureConfig.Networks.Workers = invalidCIDR
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -103,7 +161,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				notOverlappingCIDR := "1.1.1.1/32"
 				infrastructureConfig.Networks.Workers = notOverlappingCIDR
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &services)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -119,7 +177,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			It("should forbid Pod CIDR to overlap with VNet CIDR", func() {
 				podCIDR := "10.0.0.1/32"
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &podCIDR, &services)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &podCIDR, &services)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -131,7 +189,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			It("should forbid Services CIDR to overlap with VNet CIDR", func() {
 				servicesCIDR := "10.0.0.1/32"
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &servicesCIDR)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodes, &pods, &servicesCIDR)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -150,7 +208,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				infrastructureConfig.Networks.Workers = workers
 				infrastructureConfig.Networks.VNet = apisazure.VNet{CIDR: &vpcCIDR}
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodeCIDR, &podCIDR, &serviceCIDR)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &resourceGroup, &nodeCIDR, &podCIDR, &serviceCIDR)
 
 				Expect(errorList).To(HaveLen(2))
 				Expect(errorList).To(ConsistOfFields(Fields{
