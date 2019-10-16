@@ -13,7 +13,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.0.0-20191008182725-8493745aa2ee
+	github.com/gardener/gardener v0.0.0-20191015182839-ec484e3db76b
 	github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
@@ -25,14 +25,13 @@ require (
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/huandu/xstrings v1.2.0
 	github.com/jetstack/cert-manager v0.6.2
-	github.com/mattn/go-ieproxy v0.0.0-20190805055040-f9202b1cfdeb // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
 	github.com/packethost/packngo v0.0.0-20181217122008-b3b45f1b4979
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/pflag v1.0.3
+	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.10.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gomodules.xyz/jsonpatch/v2 v2.0.0
@@ -57,8 +56,10 @@ require (
 
 replace (
 	github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
+	github.com/gardener/external-dns-management => github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13
 	k8s.io/api => k8s.io/api v0.0.0-20190313235455-40a48860b5ab //kubernetes-1.14.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190315093550-53c4693659ed // kubernetes-1.14.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1 // kubernetes-1.14.0
 	k8s.io/client-go => k8s.io/client-go v11.0.0+incompatible // kubernetes-1.14.0
+	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2
 )

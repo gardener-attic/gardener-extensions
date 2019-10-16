@@ -132,11 +132,11 @@ github.com/gardener/controller-manager-library/pkg/kutil
 github.com/gardener/controller-manager-library/pkg/logger
 github.com/gardener/controller-manager-library/pkg/resources
 github.com/gardener/controller-manager-library/pkg/utils
-# github.com/gardener/external-dns-management v0.0.0-20190722114702-f6b12f6e4b43
+# github.com/gardener/external-dns-management v0.0.0-20190722114702-f6b12f6e4b43 => github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
-# github.com/gardener/gardener v0.0.0-20191008182725-8493745aa2ee
+# github.com/gardener/gardener v0.0.0-20191015182839-ec484e3db76b
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/v1alpha1
@@ -148,7 +148,6 @@ github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper
 github.com/gardener/gardener/pkg/apis/garden
 github.com/gardener/gardener/pkg/apis/garden/helper
 github.com/gardener/gardener/pkg/apis/garden/v1beta1
-github.com/gardener/gardener/pkg/apis/garden/v1beta1/helper
 github.com/gardener/gardener/pkg/chartrenderer
 github.com/gardener/gardener/pkg/client/core/clientset/versioned
 github.com/gardener/gardener/pkg/client/core/clientset/versioned/scheme
@@ -185,6 +184,8 @@ github.com/gardener/gardener/pkg/utils/kubernetes
 github.com/gardener/gardener/pkg/utils/kubernetes/health
 github.com/gardener/gardener/pkg/utils/retry
 github.com/gardener/gardener/pkg/utils/secrets
+github.com/gardener/gardener/pkg/utils/validation/cidr
+github.com/gardener/gardener/pkg/utils/validation/gomega
 github.com/gardener/gardener/pkg/version
 github.com/gardener/gardener/test/integration/framework
 github.com/gardener/gardener/test/integration/shoots
@@ -411,7 +412,7 @@ github.com/shurcooL/sanitized_anchor_name
 github.com/sirupsen/logrus
 # github.com/spf13/cobra v0.0.5
 github.com/spf13/cobra
-# github.com/spf13/pflag v1.0.3
+# github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
 # github.com/ulikunitz/xz v0.5.6
 github.com/ulikunitz/xz
@@ -656,9 +657,11 @@ k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/meta
 k8s.io/apimachinery/pkg/api/resource
+k8s.io/apimachinery/pkg/api/validation
 k8s.io/apimachinery/pkg/apis/meta/internalversion
 k8s.io/apimachinery/pkg/apis/meta/v1
 k8s.io/apimachinery/pkg/apis/meta/v1/unstructured
+k8s.io/apimachinery/pkg/apis/meta/v1/validation
 k8s.io/apimachinery/pkg/apis/meta/v1beta1
 k8s.io/apimachinery/pkg/conversion
 k8s.io/apimachinery/pkg/conversion/queryparams
