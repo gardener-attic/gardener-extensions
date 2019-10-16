@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var _ = Describe("ValidateCloudProfileConfig", func() {
+var _ = Describe("CloudProfileConfig validation", func() {
 	Describe("#ValidateCloudProfileConfig", func() {
 		var cloudProfileConfig *apisgcp.CloudProfileConfig
 
