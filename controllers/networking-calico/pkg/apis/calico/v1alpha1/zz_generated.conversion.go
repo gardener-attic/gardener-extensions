@@ -94,6 +94,7 @@ func autoConvert_v1alpha1_NetworkConfig_To_calico_NetworkConfig(in *NetworkConfi
 	out.Backend = calico.Backend(in.Backend)
 	out.IPAM = (*calico.IPAM)(unsafe.Pointer(in.IPAM))
 	out.IPAutoDetectionMethod = (*string)(unsafe.Pointer(in.IPAutoDetectionMethod))
+	out.IPIP = (*calico.IPIP)(unsafe.Pointer(in.IPIP))
 	return nil
 }
 
@@ -106,6 +107,7 @@ func autoConvert_calico_NetworkConfig_To_v1alpha1_NetworkConfig(in *calico.Netwo
 	out.Backend = Backend(in.Backend)
 	out.IPAM = (*IPAM)(unsafe.Pointer(in.IPAM))
 	out.IPAutoDetectionMethod = (*string)(unsafe.Pointer(in.IPAutoDetectionMethod))
+	out.IPIP = (*IPIP)(unsafe.Pointer(in.IPIP))
 	return nil
 }
 

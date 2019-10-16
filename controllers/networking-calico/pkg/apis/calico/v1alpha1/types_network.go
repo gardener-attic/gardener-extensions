@@ -25,6 +25,15 @@ const (
 	None Backend = "none"
 )
 
+type IPIP string
+
+const (
+	Always      IPIP = "Always"
+	Never       IPIP = "Never"
+	CrossSubnet IPIP = "CrossSubnet"
+	Off         IPIP = "Off"
+)
+
 type CIDR string
 
 // +genclient
@@ -34,7 +43,7 @@ type CIDR string
 type NetworkConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
-	// Backend defines whether a backend should be used or not (e.g., bird or None)
+	// Backend defines whether a backend should be used or not (e.g., bird or none)
 	Backend Backend `json:"backend"`
 	// IPAM to use for the Calico Plugin (e.g., host-local or Calico)
 	// +optional
@@ -43,6 +52,9 @@ type NetworkConfig struct {
 	// https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods
 	// +optional
 	IPAutoDetectionMethod *string `json:"ipAutodetectionMethod,omitempty"`
+	// IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)
+	// +optional
+	IPIP *IPIP `json:"ipip,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

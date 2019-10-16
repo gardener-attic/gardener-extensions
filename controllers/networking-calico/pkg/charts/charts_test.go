@@ -34,13 +34,21 @@ import (
 
 var _ = Describe("Chart package test", func() {
 	var (
-		network       *extensionsv1alpha1.Network
-		networkConfig *calicov1alpha1.NetworkConfig
-		objectMeta    = metav1.ObjectMeta{
+		crossSubnet                     = calicov1alpha1.CrossSubnet
+		invalid     calicov1alpha1.IPIP = "invalid"
+	)
+
+	var (
+		network              *extensionsv1alpha1.Network
+		networkConfig        *calicov1alpha1.NetworkConfig
+		networkConfigAll     *calicov1alpha1.NetworkConfig
+		networkConfigInvalid *calicov1alpha1.NetworkConfig
+		objectMeta           = metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
 		}
-		podCIDR = calicov1alpha1.CIDR("12.0.0.0/8")
+		podCIDR             = calicov1alpha1.CIDR("12.0.0.0/8")
+		autodetectionMethod = "interface=eth1"
 	)
 
 	BeforeEach(func() {
@@ -57,6 +65,24 @@ var _ = Describe("Chart package test", func() {
 				CIDR: &podCIDR,
 				Type: "host-local",
 			},
+		}
+		networkConfigAll = &calicov1alpha1.NetworkConfig{
+			Backend: calicov1alpha1.None,
+			IPAM: &calicov1alpha1.IPAM{
+				CIDR: &podCIDR,
+				Type: "host-local",
+			},
+			IPIP:                  &crossSubnet,
+			IPAutoDetectionMethod: &autodetectionMethod,
+		}
+		networkConfigInvalid = &calicov1alpha1.NetworkConfig{
+			Backend: "invalid",
+			IPAM: &calicov1alpha1.IPAM{
+				CIDR: &podCIDR,
+				Type: "host-local",
+			},
+			IPIP:                  &invalid,
+			IPAutoDetectionMethod: &autodetectionMethod,
 		}
 	})
 
@@ -83,6 +109,65 @@ var _ = Describe("Chart package test", func() {
 						"subnet": *networkConfig.IPAM.CIDR,
 					},
 				},
+				"ipip": calicov1alpha1.Always,
+			}))
+		})
+	})
+
+	Describe("#ComputeAllCalicoChartValues", func() {
+		It("should correctly compute all of the calico chart values", func() {
+			values := charts.ComputeCalicoChartValues(network, networkConfigAll)
+			Expect(values).To(Equal(map[string]interface{}{
+				"images": map[string]interface{}{
+					"calico-cni":              imagevector.CalicoCNIImage(),
+					"calico-typha":            imagevector.CalicoTyphaImage(),
+					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
+					"calico-node":             imagevector.CalicoNodeImage(),
+					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
+					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
+					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
+				},
+				"global": map[string]string{
+					"podCIDR": network.Spec.PodCIDR,
+				},
+				"config": map[string]interface{}{
+					"backend": networkConfigAll.Backend,
+					"ipam": map[string]interface{}{
+						"type":   networkConfigAll.IPAM.Type,
+						"subnet": *networkConfigAll.IPAM.CIDR,
+					},
+				},
+				"ipAutodetectionMethod": *networkConfigAll.IPAutoDetectionMethod,
+				"ipip":                  *networkConfigAll.IPIP,
+			}))
+		})
+	})
+
+	Describe("#ComputeInvalidCalicoChartValues", func() {
+		It("should replace invalid values for calico charts", func() {
+			values := charts.ComputeCalicoChartValues(network, networkConfigInvalid)
+			Expect(values).To(Equal(map[string]interface{}{
+				"images": map[string]interface{}{
+					"calico-cni":              imagevector.CalicoCNIImage(),
+					"calico-typha":            imagevector.CalicoTyphaImage(),
+					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
+					"calico-node":             imagevector.CalicoNodeImage(),
+					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
+					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
+					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
+				},
+				"global": map[string]string{
+					"podCIDR": network.Spec.PodCIDR,
+				},
+				"config": map[string]interface{}{
+					"backend": calicov1alpha1.Bird,
+					"ipam": map[string]interface{}{
+						"type":   networkConfigInvalid.IPAM.Type,
+						"subnet": *networkConfigInvalid.IPAM.CIDR,
+					},
+				},
+				"ipAutodetectionMethod": *networkConfigInvalid.IPAutoDetectionMethod,
+				"ipip":                  calicov1alpha1.Always,
 			}))
 		})
 	})

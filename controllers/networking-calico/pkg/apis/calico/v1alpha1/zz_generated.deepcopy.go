@@ -59,6 +59,11 @@ func (in *NetworkConfig) DeepCopyInto(out *NetworkConfig) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.IPIP != nil {
+		in, out := &in.IPIP, &out.IPIP
+		*out = new(IPIP)
+		**out = **in
+	}
 	return
 }
 
