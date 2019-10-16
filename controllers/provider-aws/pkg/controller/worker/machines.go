@@ -123,9 +123,23 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			AMI:     ami,
 		})
 
+		workerConfig := &awsapi.WorkerConfig{}
+		if pool.ProviderConfig != nil && pool.ProviderConfig.Raw != nil {
+			if _, _, err := w.decoder.Decode(pool.ProviderConfig.Raw, nil, workerConfig); err != nil {
+				return fmt.Errorf("could not decode provider config: %+v", err)
+			}
+		}
+
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
 		if err != nil {
 			return err
+		}
+		ebs := map[string]interface{}{
+			"volumeSize": volumeSize,
+			"volumeType": pool.Volume.Type,
+		}
+		if workerConfig.Volume != nil && workerConfig.Volume.IOPS != nil {
+			ebs["iops"] = *workerConfig.Volume.IOPS
 		}
 
 		for zoneIndex, zone := range pool.Zones {
@@ -155,10 +169,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				},
 				"blockDevices": []map[string]interface{}{
 					{
-						"ebs": map[string]interface{}{
-							"volumeSize": volumeSize,
-							"volumeType": pool.Volume.Type,
-						},
+						"ebs": ebs,
 					},
 				},
 			}

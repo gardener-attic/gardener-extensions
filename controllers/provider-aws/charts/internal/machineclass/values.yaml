@@ -21,3 +21,4 @@ machineClasses:
   - ebs:
       volumeSize: 50
       volumeType: gp2
+    # iops: 100

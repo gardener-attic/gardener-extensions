@@ -99,6 +99,7 @@ var _ = Describe("Machines", func() {
 
 				volumeType string
 				volumeSize int
+				iops       int64
 
 				namePool1           string
 				minPool1            int
@@ -146,6 +147,7 @@ var _ = Describe("Machines", func() {
 
 				volumeType = "normal"
 				volumeSize = 20
+				iops = 400
 
 				namePool1 = "pool-1"
 				minPool1 = 5
@@ -248,6 +250,13 @@ var _ = Describe("Machines", func() {
 									Name:    machineImageName,
 									Version: machineImageVersion,
 								},
+								ProviderConfig: &runtime.RawExtension{
+									Raw: encode(&apisaws.WorkerConfig{
+										Volume: &apisaws.Volume{
+											IOPS: &iops,
+										},
+									}),
+								},
 								UserData: userData,
 								Volume: &extensionsv1alpha1.Volume{
 									Type: volumeType,
@@ -344,6 +353,21 @@ var _ = Describe("Machines", func() {
 						},
 					})
 
+					machineClassPool1BlockDevices = []map[string]interface{}{
+						{
+							"ebs": map[string]interface{}{
+								"volumeSize": volumeSize,
+								"volumeType": volumeType,
+								"iops":       iops,
+							},
+						},
+					}
+				)
+
+				machineClassPool1Zone1["blockDevices"] = machineClassPool1BlockDevices
+				machineClassPool1Zone2["blockDevices"] = machineClassPool1BlockDevices
+
+				var (
 					machineClassNamePool1Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool1)
 					machineClassNamePool1Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool1)
 					machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
