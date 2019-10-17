@@ -16,6 +16,8 @@ Resource Types:
 </li><li>
 <a href="#aws.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig</a>
 </li><li>
+<a href="#aws.provider.extensions.gardener.cloud/v1alpha1.WorkerConfig">WorkerConfig</a>
+</li><li>
 <a href="#aws.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus</a>
 </li></ul>
 <h3 id="aws.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig
@@ -152,6 +154,52 @@ Networks
 </td>
 <td>
 <p>Networks is the AWS specific network configuration (VPC, subnets, etc.)</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="aws.provider.extensions.gardener.cloud/v1alpha1.WorkerConfig">WorkerConfig
+</h3>
+<p>
+<p>WorkerConfig contains configuration settings for the worker nodes.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>apiVersion</code></br>
+string</td>
+<td>
+<code>
+aws.provider.extensions.gardener.cloud/v1alpha1
+</code>
+</td>
+</tr>
+<tr>
+<td>
+<code>kind</code></br>
+string
+</td>
+<td><code>WorkerConfig</code></td>
+</tr>
+<tr>
+<td>
+<code>volume</code></br>
+<em>
+<a href="#aws.provider.extensions.gardener.cloud/v1alpha1.Volume">
+Volume
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Volume contains configuration for the root disks attached to VMs.</p>
 </td>
 </tr>
 </tbody>
@@ -860,6 +908,47 @@ string
 </td>
 <td>
 <p>SecurityGroups is a list of security groups that have been created.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="aws.provider.extensions.gardener.cloud/v1alpha1.Volume">Volume
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#aws.provider.extensions.gardener.cloud/v1alpha1.WorkerConfig">WorkerConfig</a>)
+</p>
+<p>
+<p>Volume contains configuration for the root disks attached to VMs.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>iops</code></br>
+<em>
+int64
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IOPS is the number of I/O operations per second (IOPS) that the volume supports.
+For io1 volume type, this represents the number of IOPS that are provisioned for the
+volume. For gp2 volume type, this represents the baseline performance of the volume and
+the rate at which the volume accumulates I/O credits for bursting. For more
+information about General Purpose SSD baseline performance, I/O credits,
+and bursting, see Amazon EBS Volume Types (<a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html">http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSVolumeTypes.html</a>)
+in the Amazon Elastic Compute Cloud User Guide.</p>
+<p>Constraint: Range is 100-20000 IOPS for io1 volumes and 100-10000 IOPS for
+gp2 volumes.</p>
+<p>Condition: This parameter is required for requests to create io1 volumes;
+it is not used in requests to create gp2, st1, sc1, or standard volumes.</p>
 </td>
 </tr>
 </tbody>

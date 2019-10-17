@@ -13,7 +13,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.0.0-20191015182839-ec484e3db76b
+	github.com/gardener/gardener v0.0.0-20191017105650-90c425422051
 	github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
@@ -37,18 +37,18 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.0.0
 	google.golang.org/api v0.7.0
 	gopkg.in/yaml.v2 v2.2.2
-	k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
+	k8s.io/api v0.0.0-20191004102349-159aefb8556b
 	k8s.io/apiextensions-apiserver v0.0.0-20190409022649-727a075fdec8
-	k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
-	k8s.io/apiserver v0.0.0-20190313205120-8b27c41bdbb1
+	k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689
+	k8s.io/apiserver v0.0.0-20191010014313-3893be10d307
 	k8s.io/autoscaler v0.0.0-20190805135949-100e91ba756e
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/code-generator v0.0.0-20190713022532-93d7507fc8ff
-	k8s.io/component-base v0.0.0-20190314000054-4a91899592f4
+	k8s.io/component-base v0.0.0-20190816222507-f3799749b6b7
 	k8s.io/gengo v0.0.0-20190826232639-a874a240740c
 	k8s.io/helm v2.14.2+incompatible
 	k8s.io/klog v0.3.3
-	k8s.io/kube-aggregator v0.0.0-20190314000639-da8327669ac5
+	k8s.io/kube-aggregator v0.0.0-20191004104030-d9d5f0cc7532
 	k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325
 	sigs.k8s.io/controller-runtime v0.2.0-beta.4
 	sigs.k8s.io/yaml v1.1.0

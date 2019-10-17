@@ -47,17 +47,12 @@ func ValidateInfrastructureConfig(infra *apisgcp.InfrastructureConfig, nodesCIDR
 		allErrs = append(allErrs, field.Required(networksPath.Child("worker"), "must specify the network range for the worker network"))
 	}
 
-	var (
-		workerCIDR = cidrvalidation.NewCIDR(infra.Networks.Worker, networksPath.Child("worker"))
-		cidrs      = []cidrvalidation.CIDR{workerCIDR}
-	)
-
+	workerCIDR := cidrvalidation.NewCIDR(infra.Networks.Worker, networksPath.Child("worker"))
 	allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(workerCIDR)...)
 	allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("worker"), infra.Networks.Worker)...)
 
 	if infra.Networks.Internal != nil {
 		internalCIDR := cidrvalidation.NewCIDR(*infra.Networks.Internal, networksPath.Child("internal"))
-		cidrs = append(cidrs, internalCIDR)
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(internalCIDR)...)
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("internal"), *infra.Networks.Internal)...)
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDROverlap([]cidrvalidation.CIDR{pods, services}, []cidrvalidation.CIDR{internalCIDR}, false)...)

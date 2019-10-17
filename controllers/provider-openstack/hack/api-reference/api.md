@@ -158,24 +158,16 @@ string
 </tr>
 <tr>
 <td>
-<code>loadBalancerProvider</code></br>
+<code>cloudControllerManager</code></br>
 <em>
-string
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">
+CloudControllerManagerConfig
+</a>
 </em>
 </td>
 <td>
-<p>LoadBalancerProvider is the name of the load balancer provider in the OpenStack environment.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>zone</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Zone is the OpenStack zone.</p>
+<em>(Optional)</em>
+<p>CloudControllerManager contains configuration settings for the cloud-controller-manager.</p>
 </td>
 </tr>
 <tr>
@@ -194,16 +186,24 @@ string
 </tr>
 <tr>
 <td>
-<code>cloudControllerManager</code></br>
+<code>loadBalancerProvider</code></br>
 <em>
-<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.CloudControllerManagerConfig">
-CloudControllerManagerConfig
-</a>
+string
 </em>
 </td>
 <td>
-<em>(Optional)</em>
-<p>CloudControllerManager contains configuration settings for the cloud-controller-manager.</p>
+<p>LoadBalancerProvider is the name of the load balancer provider in the OpenStack environment.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>zone</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Zone is the OpenStack zone.</p>
 </td>
 </tr>
 </tbody>

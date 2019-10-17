@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/test/e2e/netpol-gen/app"
 	"github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies/generators"
+
 	"k8s.io/gengo/args"
 	"k8s.io/klog"
 )
@@ -35,5 +36,4 @@ func main() {
 		os.Exit(1)
 	}
 	klog.V(2).Info("Completed successfully.")
-
 }

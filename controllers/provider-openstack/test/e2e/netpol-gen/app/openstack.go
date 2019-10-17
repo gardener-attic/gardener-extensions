@@ -16,7 +16,6 @@ package app
 
 import (
 	np "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -149,6 +148,6 @@ func (a *openStackNetworkPolicy) Sources() []*np.SourcePod {
 }
 
 // Provider returns OpenStack cloud provider.
-func (a *openStackNetworkPolicy) Provider() v1beta1.CloudProvider {
-	return v1beta1.CloudProviderOpenStack
+func (a *openStackNetworkPolicy) Provider() string {
+	return "openstack"
 }

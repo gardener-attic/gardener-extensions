@@ -16,7 +16,6 @@ package app
 
 import (
 	np "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 )
 
 // gcpNetworkPolicy holds GCP-specific network policy settings.
@@ -110,6 +109,6 @@ func (a *gcpNetworkPolicy) Sources() []*np.SourcePod {
 }
 
 // Provider returns GCP cloud provider.
-func (a *gcpNetworkPolicy) Provider() v1beta1.CloudProvider {
-	return v1beta1.CloudProviderGCP
+func (a *gcpNetworkPolicy) Provider() string {
+	return "gcp"
 }

@@ -15,7 +15,7 @@
 package networkpolicies
 
 import (
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+	"github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/labels"
@@ -80,9 +80,9 @@ var _ = Describe("Types", func() {
 
 			It("should panic when Shoot kubernetes version is invalid", func() {
 				Expect(func() {
-					shoot := &v1beta1.Shoot{
-						Spec: v1beta1.ShootSpec{
-							Kubernetes: v1beta1.Kubernetes{
+					shoot := &v1alpha1.Shoot{
+						Spec: v1alpha1.ShootSpec{
+							Kubernetes: v1alpha1.Kubernetes{
 								Version: "something invalid",
 							},
 						},
@@ -93,9 +93,9 @@ var _ = Describe("Types", func() {
 			})
 
 			It("should return false when Pod versions is greater than Shoot version", func() {
-				shoot := &v1beta1.Shoot{
-					Spec: v1beta1.ShootSpec{
-						Kubernetes: v1beta1.Kubernetes{
+				shoot := &v1alpha1.Shoot{
+					Spec: v1alpha1.ShootSpec{
+						Kubernetes: v1alpha1.Kubernetes{
 							Version: "0.9",
 						},
 					},
@@ -104,9 +104,9 @@ var _ = Describe("Types", func() {
 				Expect(p.CheckVersion(shoot)).To(BeFalse())
 			})
 			It("should return true when Pod versions matches than Shoot version", func() {
-				shoot := &v1beta1.Shoot{
-					Spec: v1beta1.ShootSpec{
-						Kubernetes: v1beta1.Kubernetes{
+				shoot := &v1alpha1.Shoot{
+					Spec: v1alpha1.ShootSpec{
+						Kubernetes: v1alpha1.Kubernetes{
 							Version: "1.1",
 						},
 					},
@@ -126,15 +126,15 @@ var _ = Describe("Types", func() {
 		})
 
 		Context("#CheckSeedCluster", func() {
-			It("shoud be true when no SeedClusterConstraints is set", func() {
+			It("should be true when no SeedClusterConstraints is set", func() {
 				p := Pod{}
 				Expect(p.CheckSeedCluster("dummy")).To(BeTrue())
 			})
-			It("shoud be false when no SeedClusterConstraints is matched", func() {
+			It("should be false when no SeedClusterConstraints is matched", func() {
 				p := Pod{SeedClusterConstraints: sets.NewString("foo", "bar")}
 				Expect(p.CheckSeedCluster("dummy")).To(BeFalse())
 			})
-			It("shoud be false when SeedClusterConstraints is matched", func() {
+			It("should be false when SeedClusterConstraints is matched", func() {
 				p := Pod{SeedClusterConstraints: sets.NewString("foo", "matched")}
 				Expect(p.CheckSeedCluster("matched")).To(BeTrue())
 			})

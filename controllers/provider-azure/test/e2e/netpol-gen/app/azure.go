@@ -16,7 +16,6 @@ package app
 
 import (
 	np "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 )
 
 // azureNetworkPolicy holds Azure-specific network policy settings.
@@ -111,6 +110,6 @@ func (a *azureNetworkPolicy) Sources() []*np.SourcePod {
 }
 
 // Provider returns Azure cloud provider.
-func (a *azureNetworkPolicy) Provider() v1beta1.CloudProvider {
-	return v1beta1.CloudProviderAzure
+func (a *azureNetworkPolicy) Provider() string {
+	return "azure"
 }

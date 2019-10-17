@@ -136,7 +136,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
-# github.com/gardener/gardener v0.0.0-20191015182839-ec484e3db76b
+# github.com/gardener/gardener v0.0.0-20191017105650-90c425422051
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/v1alpha1
@@ -558,7 +558,7 @@ google.golang.org/appengine/internal/modules
 google.golang.org/appengine/internal/remote_api
 google.golang.org/appengine/internal/urlfetch
 google.golang.org/appengine/urlfetch
-# google.golang.org/genproto v0.0.0-20190801165951-fa694d86fc64
+# google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/iam/v1
 google.golang.org/genproto/googleapis/rpc/code
@@ -608,7 +608,7 @@ gopkg.in/ini.v1
 gopkg.in/tomb.v1
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2
-# k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b => k8s.io/api v0.0.0-20190313235455-40a48860b5ab
+# k8s.io/api v0.0.0-20191004102349-159aefb8556b => k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 k8s.io/api/admission/v1beta1
 k8s.io/api/admissionregistration/v1beta1
 k8s.io/api/apps/v1
@@ -652,7 +652,7 @@ k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme
 k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1beta1
-# k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d => k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
+# k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689 => k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 k8s.io/apimachinery/pkg/api/equality
 k8s.io/apimachinery/pkg/api/errors
 k8s.io/apimachinery/pkg/api/meta
@@ -704,7 +704,7 @@ k8s.io/apimachinery/pkg/watch
 k8s.io/apimachinery/third_party/forked/golang/json
 k8s.io/apimachinery/third_party/forked/golang/netutil
 k8s.io/apimachinery/third_party/forked/golang/reflect
-# k8s.io/apiserver v0.0.0-20190313205120-8b27c41bdbb1
+# k8s.io/apiserver v0.0.0-20191010014313-3893be10d307
 k8s.io/apiserver/pkg/authentication/user
 # k8s.io/autoscaler v0.0.0-20190805135949-100e91ba756e
 k8s.io/autoscaler/vertical-pod-autoscaler/pkg/apis/autoscaling.k8s.io/v1beta2
@@ -808,7 +808,7 @@ k8s.io/code-generator/cmd/lister-gen/args
 k8s.io/code-generator/cmd/lister-gen/generators
 k8s.io/code-generator/pkg/namer
 k8s.io/code-generator/pkg/util
-# k8s.io/component-base v0.0.0-20190314000054-4a91899592f4
+# k8s.io/component-base v0.0.0-20190816222507-f3799749b6b7
 k8s.io/component-base/config
 k8s.io/component-base/config/v1alpha1
 # k8s.io/gengo v0.0.0-20190826232639-a874a240740c
@@ -844,7 +844,7 @@ k8s.io/helm/pkg/urlutil
 k8s.io/helm/pkg/version
 # k8s.io/klog v0.3.3
 k8s.io/klog
-# k8s.io/kube-aggregator v0.0.0-20190314000639-da8327669ac5
+# k8s.io/kube-aggregator v0.0.0-20191004104030-d9d5f0cc7532
 k8s.io/kube-aggregator/pkg/apis/apiregistration
 k8s.io/kube-aggregator/pkg/apis/apiregistration/v1
 k8s.io/kube-aggregator/pkg/apis/apiregistration/v1beta1
@@ -856,7 +856,7 @@ k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset/typed/apiregistr
 k8s.io/kube-openapi/pkg/util/proto
 # k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325
 k8s.io/kubelet/config/v1beta1
-# k8s.io/metrics v0.0.0-20190816224245-c61a0d549e17
+# k8s.io/metrics v0.0.0-20191004105854-2e8cf7d0888c
 k8s.io/metrics/pkg/apis/metrics
 k8s.io/metrics/pkg/apis/metrics/v1alpha1
 k8s.io/metrics/pkg/apis/metrics/v1beta1

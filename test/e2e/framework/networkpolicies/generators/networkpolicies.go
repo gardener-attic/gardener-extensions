@@ -120,7 +120,7 @@ func (g *genTest) Imports(c *generator.Context) (imports []string) {
 		`. "github.com/onsi/ginkgo"`,
 		`. "github.com/onsi/gomega"`,
 		`corev1 "k8s.io/api/core/v1"`,
-		`github.com/gardener/gardener/pkg/apis/garden/v1beta1`,
+		`github.com/gardener/gardener/pkg/apis/core/v1alpha1`,
 		`github.com/gardener/gardener/pkg/client/kubernetes`,
 		`github.com/gardener/gardener/pkg/logger`,
 		`github.com/gardener/gardener-extensions/test/e2e/framework/executor`,
@@ -192,10 +192,10 @@ Context("components are selected by correct policies", func() {
 		assertHasNetworkPolicy = func(sourcePod *networkpolicies.SourcePod) func(context.Context) {
 			return func(ctx context.Context) {
 				if !sourcePod.Pod.CheckVersion(shootTestOperations.Shoot) {
-					Skip("Component doesn't match Shoot version contstraints. Skipping.")
+					Skip("Component doesn't match Shoot version constraints. Skipping.")
 				}
 				if !sourcePod.Pod.CheckSeedCluster(sharedResources.SeedCloudProvider) {
-					Skip("Component doesn't match Seed Provider contstraints. Skipping.")
+					Skip("Component doesn't match Seed Provider constraints. Skipping.")
 				}
 
 				matched := sets.NewString()
@@ -454,7 +454,7 @@ var _ = Describe("Network Policy Testing", func() {
 				shootGardenerTest, err = gardenerframework.NewShootGardenerTest(*kubeconfig, nil, shootAppTestLogger)
 				Expect(err).NotTo(HaveOccurred())
 
-				shoot := &v1beta1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
+				shoot := &v1alpha1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
 				shootTestOperations, err = gardenerframework.NewGardenTestOperationWithShoot(ctx, shootGardenerTest.GardenClient, shootAppTestLogger, shoot)
 				Expect(err).NotTo(HaveOccurred())
 			}
@@ -462,10 +462,10 @@ var _ = Describe("Network Policy Testing", func() {
 
 		getTargetPod = func(ctx context.Context, targetPod *networkpolicies.NamespacedTargetPod) *corev1.Pod {
 			if !targetPod.Pod.CheckVersion(shootTestOperations.Shoot) {
-				Skip("Target pod doesn't match Shoot version contstraints. Skipping.")
+				Skip("Target pod doesn't match Shoot version constraints. Skipping.")
 			}
 			if !targetPod.Pod.CheckSeedCluster(sharedResources.SeedCloudProvider) {
-				Skip("Component doesn't match Seed Provider contstraints. Skipping.")
+				Skip("Component doesn't match Seed Provider constraints. Skipping.")
 			}
 			By(fmt.Sprintf("Checking that target Pod: %s is running", targetPod.Pod.Name))
 			err := shootTestOperations.WaitUntilPodIsRunningWithLabels(ctx, targetPod.Pod.Selector(), targetPod.Namespace, shootTestOperations.SeedClient)
@@ -481,10 +481,10 @@ var _ = Describe("Network Policy Testing", func() {
 
 		establishConnectionToHost = func(ctx context.Context, nsp *networkpolicies.NamespacedSourcePod, host string, port int32) (stdout, stderr string, err error) {
 			if !nsp.Pod.CheckVersion(shootTestOperations.Shoot) {
-				Skip("Source pod doesn't match Shoot version contstraints. Skipping.")
+				Skip("Source pod doesn't match Shoot version constraints. Skipping.")
 			}
 			if !nsp.Pod.CheckSeedCluster(sharedResources.SeedCloudProvider) {
-				Skip("Component doesn't match Seed Provider contstraints. Skipping.")
+				Skip("Component doesn't match Seed Provider constraints. Skipping.")
 			}
 			By(fmt.Sprintf("Checking for source Pod: %s is running", nsp.Pod.Name))
 			ExpectWithOffset(1, shootTestOperations.WaitUntilPodIsRunningWithLabels(ctx, nsp.Pod.Selector(), nsp.Namespace, shootTestOperations.SeedClient)).NotTo(HaveOccurred())
@@ -539,8 +539,7 @@ var setBody = `
 		var err error
 
 		By("Getting Seed Cloud Provider")
-		sharedResources.SeedCloudProvider, err = shootTestOperations.SeedCloudProvider()
-		Expect(err).NotTo(HaveOccurred())
+		sharedResources.SeedCloudProvider = shootTestOperations.Seed.Spec.Provider.Type
 
 		By("Creating namespace for Ingress testing")
 		ns := &corev1.Namespace{
@@ -588,8 +587,7 @@ var setBody = `
 		}
 
 		By("Getting the current CloudProvider")
-		currentProvider, err := shootTestOperations.GetCloudProvider()
-		Expect(err).NotTo(HaveOccurred())
+		currentProvider := shootTestOperations.Shoot.Spec.Provider.Type
 
 		getFirstNodeInternalIP := func(ctx context.Context, cl kubernetes.Interface) (string, error) {
 			nodes := &corev1.NodeList{}
@@ -614,8 +612,8 @@ var setBody = `
 		sharedResources.SeedNodeIP, err = getFirstNodeInternalIP(ctx, shootTestOperations.SeedClient)
 		Expect(err).NotTo(HaveOccurred())
 
-		if currentProvider != v1beta1.CloudProvider("$.providerName$") {
-			Fail(fmt.Sprintf("Not suported cloud provider %s", currentProvider))
+		if currentProvider != "$.providerName$" {
+			Fail(fmt.Sprintf("Not supported cloud provider %s", currentProvider))
 		}
 
 		createBusyBox := func(ctx context.Context, sourcePod *networkpolicies.NamespacedSourcePod, ports ...corev1.ContainerPort) {

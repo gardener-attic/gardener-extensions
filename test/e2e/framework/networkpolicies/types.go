@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/semver"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+	"github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -89,14 +89,14 @@ type CloudAware interface {
 	EgressFromOtherNamespaces(source *SourcePod) Rule
 
 	// Provider returns the CloudProvider.
-	Provider() v1beta1.CloudProvider
+	Provider() string
 }
 
 // NewPod creates a new instance of Pod.
-func NewPod(name string, labels labels.Set, shootVersionContstraints ...string) Pod {
+func NewPod(name string, labels labels.Set, shootVersionConstraints ...string) Pod {
 	constraint := ""
-	if len(shootVersionContstraints) > 0 {
-		constraint = shootVersionContstraints[0]
+	if len(shootVersionConstraints) > 0 {
+		constraint = shootVersionConstraints[0]
 	}
 	return Pod{name, labels, constraint, nil}
 }
@@ -125,13 +125,13 @@ func NewSinglePort(p int32) []Port {
 }
 
 // CheckVersion checks if shoot version is matched by ShootVersionConstraint.
-func (p *Pod) CheckVersion(shoot *v1beta1.Shoot) bool {
+func (p *Pod) CheckVersion(shoot *v1alpha1.Shoot) bool {
 	if len(p.ShootVersionConstraint) == 0 {
 		return true
 	}
 	c, err := semver.NewConstraint(p.ShootVersionConstraint)
 	if err != nil {
-		panic(fmt.Sprintf("Error parsing Pod Version contstraint for pod %v: %v", *p, err))
+		panic(fmt.Sprintf("Error parsing Pod Version constraint for pod %v: %v", *p, err))
 	}
 	v, err := semver.NewVersion(shoot.Spec.Kubernetes.Version)
 	if err != nil {
@@ -141,7 +141,7 @@ func (p *Pod) CheckVersion(shoot *v1beta1.Shoot) bool {
 }
 
 // CheckSeedCluster checks if Seed cluster is matched by ShootVersionConstraint.
-func (p *Pod) CheckSeedCluster(provider v1beta1.CloudProvider) bool {
+func (p *Pod) CheckSeedCluster(provider string) bool {
 	return p.SeedClusterConstraints.Len() == 0 || p.SeedClusterConstraints.Has(string(provider))
 }
 

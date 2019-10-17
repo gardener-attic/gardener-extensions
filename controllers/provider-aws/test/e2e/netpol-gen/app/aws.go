@@ -16,7 +16,7 @@ package app
 
 import (
 	np "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -41,7 +41,7 @@ func NewCloudAware() np.CloudAware {
 					"app":                     "aws-lb-readvertiser",
 					"garden.sapcloud.io/role": "controlplane",
 				},
-				SeedClusterConstraints: sets.NewString(string(v1beta1.CloudProviderAWS)),
+				SeedClusterConstraints: sets.NewString("aws"),
 			},
 			ExpectedPolicies: sets.NewString(
 				"allow-to-public-networks",
@@ -133,6 +133,6 @@ func (a *awsNetworkPolicy) newSource(sourcePod *np.SourcePod) *np.RuleBuilder {
 }
 
 // Provider returns AWS cloud provider.
-func (a *awsNetworkPolicy) Provider() v1beta1.CloudProvider {
-	return v1beta1.CloudProviderAWS
+func (a *awsNetworkPolicy) Provider() string {
+	return "aws"
 }

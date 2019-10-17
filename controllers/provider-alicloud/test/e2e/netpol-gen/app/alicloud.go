@@ -16,7 +16,7 @@ package app
 
 import (
 	np "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
-	"github.com/gardener/gardener/pkg/apis/garden/v1beta1"
+
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -190,6 +190,6 @@ func (a *alicloudNetworkPolicy) Sources() []*np.SourcePod {
 }
 
 // Provider returns Alicloud cloud provider.
-func (a *alicloudNetworkPolicy) Provider() v1beta1.CloudProvider {
-	return v1beta1.CloudProviderAlicloud
+func (a *alicloudNetworkPolicy) Provider() string {
+	return "alicloud"
 }

@@ -178,7 +178,7 @@ ResourceGroup
 </td>
 <td>
 <em>(Optional)</em>
-<p>ResourceGroup is azure resource group</p>
+<p>ResourceGroup is azure resource group.</p>
 </td>
 </tr>
 <tr>
@@ -191,7 +191,7 @@ NetworkConfig
 </em>
 </td>
 <td>
-<p>Networks is the network configuration (VNet, subnets, etc.)</p>
+<p>Networks is the network configuration (VNet, subnets, etc.).</p>
 </td>
 </tr>
 <tr>
@@ -203,7 +203,7 @@ bool
 </td>
 <td>
 <em>(Optional)</em>
-<p>Zoned indicates whether the cluster uses zones</p>
+<p>Zoned indicates whether the cluster uses availability zones.</p>
 </td>
 </tr>
 </tbody>
