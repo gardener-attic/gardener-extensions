@@ -25,19 +25,19 @@ import (
 type ControlPlaneConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
-	// LoadBalancerProvider is the name of the load balancer provider in the OpenStack environment.
-	LoadBalancerProvider string `json:"loadBalancerProvider"`
-
-	// Zone is the OpenStack zone.
-	Zone string `json:"zone"`
+	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
+	// +optional
+	CloudControllerManager *CloudControllerManagerConfig `json:"cloudControllerManager,omitempty"`
 
 	// LoadBalancerClasses available for a dedicated Shoot.
 	// +optional
 	LoadBalancerClasses []LoadBalancerClass `json:"loadBalancerClasses,omitempty"`
 
-	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
-	// +optional
-	CloudControllerManager *CloudControllerManagerConfig `json:"cloudControllerManager,omitempty"`
+	// LoadBalancerProvider is the name of the load balancer provider in the OpenStack environment.
+	LoadBalancerProvider string `json:"loadBalancerProvider"`
+
+	// Zone is the OpenStack zone.
+	Zone string `json:"zone"`
 }
 
 // CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.
