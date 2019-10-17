@@ -17,6 +17,22 @@ An example for a `ControllerRegistration` resource that can be used to register 
 
 Please find more information regarding the extensibility concepts and a detailed proposal [here](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md).
 
+## Supported Kubernetes versions
+
+This extension controller supports the following Kubernetes versions:
+
+| Version         | Support     | Conformance test results |
+| --------------- | ----------- | ------------------------ |
+| Kubernetes 1.16 | 1.16.0+     | N/A                      |
+| Kubernetes 1.15 | 1.15.0+     | N/A                      |
+| Kubernetes 1.14 | 1.14.0+     | N/A                      |
+| Kubernetes 1.13 | 1.13.0+     | N/A                      |
+| Kubernetes 1.12 | unsupported | N/A                      |
+| Kubernetes 1.11 | unsupported | N/A                      |
+| Kubernetes 1.10 | unsupported | N/A                      |
+
+Please take a look [here](https://github.com/gardener/gardener/blob/master/docs/usage/supported_k8s_versions.md) to see which versions are supported by Gardener in general.
+
 ----
 
 ## How to start using or developing this extension controller locally

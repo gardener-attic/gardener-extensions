@@ -17,6 +17,22 @@ An example for a `ControllerRegistration` resource that can be used to register 
 
 Please find more information regarding the extensibility concepts and a detailed proposal [here](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md).
 
+## Supported Kubernetes versions
+
+This extension controller supports the following Kubernetes versions:
+
+| Version         | Support     | Conformance test results |
+| --------------- | ----------- | ------------------------ |
+| Kubernetes 1.16 | 1.16.0+     | [![Gardener v1.16 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.16%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.16%20AWS) |
+| Kubernetes 1.15 | 1.15.0+     | [![Gardener v1.15 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.15%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.15%20AWS) |
+| Kubernetes 1.14 | 1.14.0+, except 1.14.7 | [![Gardener v1.14 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.14%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.14%20AWS) |
+| Kubernetes 1.13 | 1.13.0+     | [![Gardener v1.13 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.13%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.13%20AWS) |
+| Kubernetes 1.12 | 1.12.1+     | [![Gardener v1.12 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.12%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.12%20AWS) |
+| Kubernetes 1.11 | 1.11.0+     | [![Gardener v1.11 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.11%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.11%20AWS) |
+| Kubernetes 1.10 | 1.10.0+     | [![Gardener v1.10 Conformance Tests](https://testgrid.k8s.io/q/summary/conformance-gardener/Gardener,%20v1.10%20AWS/tests_status?style=svg)](https://testgrid.k8s.io/conformance-gardener#Gardener,%20v1.10%20AWS) |
+
+Please take a look [here](https://github.com/gardener/gardener/blob/master/docs/usage/supported_k8s_versions.md) to see which versions are supported by Gardener in general.
+
 ----
 
 ## How to start using or developing this extension controller locally
