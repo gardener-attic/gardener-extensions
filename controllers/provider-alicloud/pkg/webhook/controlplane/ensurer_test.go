@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
@@ -39,7 +40,8 @@ func TestController(t *testing.T) {
 
 var _ = Describe("Ensurer", func() {
 	var (
-		ctrl *gomock.Controller
+		ctrl         *gomock.Controller
+		dummyContext = genericmutator.NewEnsurerContext(context.TODO(), nil, nil)
 	)
 
 	BeforeEach(func() {
@@ -73,7 +75,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err := ensurer.EnsureKubeAPIServerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -105,7 +107,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err := ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err := ensurer.EnsureKubeAPIServerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -134,7 +136,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
+			err := ensurer.EnsureKubeControllerManagerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
 		})
@@ -164,7 +166,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err := ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
+			err := ensurer.EnsureKubeControllerManagerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep)
 		})
@@ -198,7 +200,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeletServiceUnitOptions method and check the result
-			opts, err := ensurer.EnsureKubeletServiceUnitOptions(context.TODO(), oldUnitOptions)
+			opts, err := ensurer.EnsureKubeletServiceUnitOptions(dummyContext, oldUnitOptions)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(opts).To(Equal(newUnitOptions))
 		})
@@ -227,7 +229,7 @@ var _ = Describe("Ensurer", func() {
 
 			// Call EnsureKubeletConfiguration method and check the result
 			kubeletConfig := *oldKubeletConfig
-			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
+			err := ensurer.EnsureKubeletConfiguration(dummyContext, &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
 		})

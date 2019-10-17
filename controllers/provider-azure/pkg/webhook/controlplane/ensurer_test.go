@@ -22,6 +22,7 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
@@ -52,7 +53,8 @@ func TestController(t *testing.T) {
 
 var _ = Describe("Ensurer", func() {
 	var (
-		ctrl *gomock.Controller
+		ctrl         *gomock.Controller
+		dummyContext = genericmutator.NewEnsurerContext(context.TODO(), nil, nil)
 
 		cmKey = client.ObjectKey{Namespace: namespace, Name: azure.CloudProviderConfigName}
 		cm    = &corev1.ConfigMap{
@@ -108,7 +110,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeAPIServerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep, annotations)
 		})
@@ -153,7 +155,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeAPIServerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep, annotations)
 		})
@@ -188,7 +190,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeControllerManagerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep, annotations, kubeControllerManagerLabels)
 		})
@@ -232,7 +234,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeControllerManagerDeployment method and check the result
-			err = ensurer.EnsureKubeControllerManagerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeControllerManagerDeployment(dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeControllerManagerDeployment(dep, annotations, kubeControllerManagerLabels)
 		})
@@ -265,7 +267,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(logger)
 
 			// Call EnsureKubeletServiceUnitOptions method and check the result
-			opts, err := ensurer.EnsureKubeletServiceUnitOptions(context.TODO(), oldUnitOptions)
+			opts, err := ensurer.EnsureKubeletServiceUnitOptions(dummyContext, oldUnitOptions)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(opts).To(Equal(newUnitOptions))
 		})
@@ -293,7 +295,7 @@ var _ = Describe("Ensurer", func() {
 
 			// Call EnsureKubeletConfiguration method and check the result
 			kubeletConfig := *oldKubeletConfig
-			err := ensurer.EnsureKubeletConfiguration(context.TODO(), &kubeletConfig)
+			err := ensurer.EnsureKubeletConfiguration(dummyContext, &kubeletConfig)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(&kubeletConfig).To(Equal(newKubeletConfig))
 		})
@@ -321,7 +323,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call EnsureKubeletConfiguration method and check the result
-			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), emptydata, namespace)
+			err = ensurer.EnsureKubeletCloudProviderConfig(dummyContext, emptydata, namespace)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(*emptydata).To(Equal(""))
 		})
@@ -336,7 +338,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call EnsureKubeletConfiguration method and check the result
-			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), emptydata, namespace)
+			err = ensurer.EnsureKubeletCloudProviderConfig(dummyContext, emptydata, namespace)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(*emptydata).To(Equal(cloudProviderConfigContent))
 		})
@@ -351,7 +353,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			// Call EnsureKubeletConfiguration method and check the result
-			err = ensurer.EnsureKubeletCloudProviderConfig(context.TODO(), existingData, namespace)
+			err = ensurer.EnsureKubeletCloudProviderConfig(dummyContext, existingData, namespace)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(*existingData).To(Equal(cloudProviderConfigContent))
 		})
