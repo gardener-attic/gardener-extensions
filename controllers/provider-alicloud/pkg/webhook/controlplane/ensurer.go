@@ -15,6 +15,7 @@
 package controlplane
 
 import (
+	"context"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
@@ -38,7 +39,7 @@ type ensurer struct {
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
-func (e *ensurer) EnsureKubeAPIServerDeployment(ctx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
+func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	ps := &dep.Spec.Template.Spec
 	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
@@ -47,7 +48,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx genericmutator.EnsurerContex
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
-func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
+func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	ps := &dep.Spec.Template.Spec
 	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
 		ensureKubeControllerManagerCommandLineArgs(c)
@@ -84,7 +85,7 @@ func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
-func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx genericmutator.EnsurerContext, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
+func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, ectx genericmutator.EnsurerContext, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
 	if opt := extensionswebhook.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
 		command := extensionswebhook.DeserializeCommandLine(opt.Value)
 		command = ensureKubeletCommandLineArgs(command)
@@ -101,7 +102,7 @@ func ensureKubeletCommandLineArgs(command []string) []string {
 }
 
 // EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
-func (e *ensurer) EnsureKubeletConfiguration(ctx genericmutator.EnsurerContext, kubeletConfig *kubeletconfigv1beta1.KubeletConfiguration) error {
+func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, ectx genericmutator.EnsurerContext, kubeletConfig *kubeletconfigv1beta1.KubeletConfiguration) error {
 	// Ensure CSI-related feature gates
 	if kubeletConfig.FeatureGates == nil {
 		kubeletConfig.FeatureGates = make(map[string]bool)

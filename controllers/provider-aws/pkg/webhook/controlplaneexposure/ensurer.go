@@ -15,6 +15,7 @@
 package controlplaneexposure
 
 import (
+	"context"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
@@ -41,7 +42,7 @@ type ensurer struct {
 }
 
 // EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
-func (e *ensurer) EnsureKubeAPIServerService(ctx genericmutator.EnsurerContext, svc *corev1.Service) error {
+func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, ectx genericmutator.EnsurerContext, svc *corev1.Service) error {
 	if svc.Annotations == nil {
 		svc.Annotations = make(map[string]string)
 	}
@@ -57,7 +58,7 @@ func (e *ensurer) EnsureKubeAPIServerService(ctx genericmutator.EnsurerContext, 
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
-func (e *ensurer) EnsureKubeAPIServerDeployment(ctx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
+func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	if c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
 		c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
 	}
@@ -65,7 +66,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx genericmutator.EnsurerContex
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *ensurer) EnsureETCDStatefulSet(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
 	e.ensureVolumeClaimTemplates(&ss.Spec, ss.Name)
 	return nil
 }

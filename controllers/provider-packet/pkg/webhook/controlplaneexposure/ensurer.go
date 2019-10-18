@@ -15,6 +15,7 @@
 package controlplaneexposure
 
 import (
+	"context"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
@@ -41,7 +42,7 @@ type ensurer struct {
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *ensurer) EnsureETCDStatefulSet(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
 	e.ensureVolumeClaimTemplates(&ss.Spec, ss.Name)
 	return nil
 }

@@ -15,6 +15,7 @@
 package controlplanebackup
 
 import (
+	"context"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
@@ -44,8 +45,8 @@ type ensurer struct {
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *ensurer) EnsureETCDStatefulSet(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
-	cluster, err := ctx.GetCluster()
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
+	cluster, err := ectx.GetCluster(ctx)
 	if err != nil {
 		return err
 	}

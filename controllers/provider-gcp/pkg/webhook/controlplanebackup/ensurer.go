@@ -59,8 +59,8 @@ func (e *ensurer) InjectClient(client client.Client) error {
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *ensurer) EnsureETCDStatefulSet(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
-	cluster, err := ctx.GetCluster()
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
+	cluster, err := ectx.GetCluster(ctx)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx genericmutator.EnsurerContext, ss *a
 
 	backupConfigured := !extensionscontroller.IsSeedBackupNil(cluster)
 	e.ensureVolumes(&ss.Spec.Template.Spec, ss.Name, backupConfigured)
-	return e.ensureChecksumAnnotations(ctx.GetContext(), &ss.Spec.Template, ss.Namespace, ss.Name, backupConfigured)
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, backupConfigured)
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {

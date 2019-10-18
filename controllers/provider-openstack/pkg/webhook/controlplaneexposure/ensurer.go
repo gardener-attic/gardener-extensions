@@ -15,6 +15,7 @@
 package controlplaneexposure
 
 import (
+	"context"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
@@ -51,9 +52,9 @@ func (e *ensurer) InjectClient(client client.Client) error {
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
-func (e *ensurer) EnsureKubeAPIServerDeployment(ctx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
+func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	// Get load balancer address of the kube-apiserver service
-	address, err := kutil.GetLoadBalancerIngress(ctx.GetContext(), e.client, dep.Namespace, v1alpha1constants.DeploymentNameKubeAPIServer)
+	address, err := kutil.GetLoadBalancerIngress(ctx, e.client, dep.Namespace, v1alpha1constants.DeploymentNameKubeAPIServer)
 	if err != nil {
 		return errors.Wrap(err, "could not get kube-apiserver service load balancer address")
 	}
@@ -66,7 +67,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx genericmutator.EnsurerContex
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *ensurer) EnsureETCDStatefulSet(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
 	e.ensureVolumeClaimTemplates(&ss.Spec, ss.Name)
 	return nil
 }

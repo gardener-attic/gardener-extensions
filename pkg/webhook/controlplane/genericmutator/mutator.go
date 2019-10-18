@@ -40,37 +40,36 @@ import (
 
 // EnsurerContext wraps the actual context and cluster object.
 type EnsurerContext interface {
-	GetContext() context.Context
-	GetCluster() (*extensionscontroller.Cluster, error)
+	GetCluster(ctx context.Context) (*extensionscontroller.Cluster, error)
 }
 
 // Ensurer ensures that various standard Kubernets controlplane objects conform to the provider requirements.
 // If they don't initially, they are mutated accordingly.
 type Ensurer interface {
 	// EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
-	EnsureKubeAPIServerService(EnsurerContext, *corev1.Service) error
+	EnsureKubeAPIServerService(context.Context, EnsurerContext, *corev1.Service) error
 	// EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
-	EnsureKubeAPIServerDeployment(EnsurerContext, *appsv1.Deployment) error
+	EnsureKubeAPIServerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error
 	// EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
-	EnsureKubeControllerManagerDeployment(EnsurerContext, *appsv1.Deployment) error
+	EnsureKubeControllerManagerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error
 	// EnsureKubeSchedulerDeployment ensures that the kube-scheduler deployment conforms to the provider requirements.
-	EnsureKubeSchedulerDeployment(EnsurerContext, *appsv1.Deployment) error
+	EnsureKubeSchedulerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error
 	// EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-	EnsureETCDStatefulSet(EnsurerContext, *appsv1.StatefulSet) error
+	EnsureETCDStatefulSet(context.Context, EnsurerContext, *appsv1.StatefulSet) error
 	// EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
-	EnsureKubeletServiceUnitOptions(EnsurerContext, []*unit.UnitOption) ([]*unit.UnitOption, error)
+	EnsureKubeletServiceUnitOptions(context.Context, EnsurerContext, []*unit.UnitOption) ([]*unit.UnitOption, error)
 	// EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
-	EnsureKubeletConfiguration(EnsurerContext, *kubeletconfigv1beta1.KubeletConfiguration) error
+	EnsureKubeletConfiguration(context.Context, EnsurerContext, *kubeletconfigv1beta1.KubeletConfiguration) error
 	// EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
-	EnsureKubernetesGeneralConfiguration(EnsurerContext, *string) error
+	EnsureKubernetesGeneralConfiguration(context.Context, EnsurerContext, *string) error
 	// ShouldProvisionKubeletCloudProviderConfig returns true if the cloud provider config file should be added to the kubelet configuration.
 	ShouldProvisionKubeletCloudProviderConfig() bool
 	// EnsureKubeletCloudProviderConfig ensures that the cloud provider config file content conforms to the provider requirements.
-	EnsureKubeletCloudProviderConfig(EnsurerContext, *string, string) error
+	EnsureKubeletCloudProviderConfig(context.Context, EnsurerContext, *string, string) error
 	// EnsureAdditionalUnits ensures additional systemd units
-	EnsureAdditionalUnits(EnsurerContext, *[]extensionsv1alpha1.Unit) error
+	EnsureAdditionalUnits(context.Context, EnsurerContext, *[]extensionsv1alpha1.Unit) error
 	// EnsureAdditionalFile ensures additional systemd files
-	EnsureAdditionalFiles(EnsurerContext, *[]extensionsv1alpha1.File) error
+	EnsureAdditionalFiles(context.Context, EnsurerContext, *[]extensionsv1alpha1.File) error
 }
 
 // NewMutator creates a new controlplane mutator.
@@ -110,38 +109,30 @@ func (m *mutator) InjectClient(client client.Client) error {
 }
 
 type ensurerContext struct {
-	context context.Context
 	client  client.Client
 	object  metav1.Object
 	cluster *extensionscontroller.Cluster
 }
 
-// NewEnsurerContext creates a ensurer context object.
-func NewEnsurerContext(ctx context.Context, client client.Client, object metav1.Object) EnsurerContext {
+// NewEnsurerContext creates an ensurer context object.
+func NewEnsurerContext(client client.Client, object metav1.Object) EnsurerContext {
 	return &ensurerContext{
-		context: ctx,
-		client:  client,
-		object:  object,
+		client: client,
+		object: object,
 	}
 }
 
-// NewInternalEnsurerContext creates a ensurer context object.
-func NewInternalEnsurerContext(ctx context.Context, cluster *extensionscontroller.Cluster) EnsurerContext {
+// NewInternalEnsurerContext creates an ensurer context object.
+func NewInternalEnsurerContext(cluster *extensionscontroller.Cluster) EnsurerContext {
 	return &ensurerContext{
-		context: ctx,
 		cluster: cluster,
 	}
 }
 
-// GetContext returns the context.
-func (c *ensurerContext) GetContext() context.Context {
-	return c.context
-}
-
 // GetCluster returns the cluster object.
-func (c *ensurerContext) GetCluster() (*extensionscontroller.Cluster, error) {
+func (c *ensurerContext) GetCluster(ctx context.Context) (*extensionscontroller.Cluster, error) {
 	if c.cluster == nil {
-		cluster, err := extensionscontroller.GetCluster(c.context, c.client, c.object.GetNamespace())
+		cluster, err := extensionscontroller.GetCluster(ctx, c.client, c.object.GetNamespace())
 		if err != nil {
 			return nil, errors.Wrapf(err, "could not get cluster for namespace '%s'", c.object.GetNamespace())
 		}
@@ -164,84 +155,84 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 	if !ok {
 		return errors.Wrapf(err, "could not cast runtime object to metav1 object")
 	}
-	ectx := NewEnsurerContext(ctx, m.client, o)
+	ectx := NewEnsurerContext(m.client, o)
 
 	switch x := obj.(type) {
 	case *corev1.Service:
 		switch x.Name {
 		case v1alpha1constants.DeploymentNameKubeAPIServer:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.ensurer.EnsureKubeAPIServerService(ectx, x)
+			return m.ensurer.EnsureKubeAPIServerService(ctx, ectx, x)
 		}
 	case *appsv1.Deployment:
 		switch x.Name {
 		case v1alpha1constants.DeploymentNameKubeAPIServer:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.ensurer.EnsureKubeAPIServerDeployment(ectx, x)
+			return m.ensurer.EnsureKubeAPIServerDeployment(ctx, ectx, x)
 		case v1alpha1constants.DeploymentNameKubeControllerManager:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.ensurer.EnsureKubeControllerManagerDeployment(ectx, x)
+			return m.ensurer.EnsureKubeControllerManagerDeployment(ctx, ectx, x)
 		case v1alpha1constants.DeploymentNameKubeScheduler:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.ensurer.EnsureKubeSchedulerDeployment(ectx, x)
+			return m.ensurer.EnsureKubeSchedulerDeployment(ctx, ectx, x)
 		}
 	case *appsv1.StatefulSet:
 		switch x.Name {
 		case v1alpha1constants.StatefulSetNameETCDMain, v1alpha1constants.StatefulSetNameETCDEvents:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.ensurer.EnsureETCDStatefulSet(ectx, x)
+			return m.ensurer.EnsureETCDStatefulSet(ctx, ectx, x)
 		}
 	case *extensionsv1alpha1.OperatingSystemConfig:
 		if x.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.mutateOperatingSystemConfig(ectx, x)
+			return m.mutateOperatingSystemConfig(ctx, ectx, x)
 		}
 		return nil
 	}
 	return nil
 }
 
-func (m *mutator) mutateOperatingSystemConfig(ectx EnsurerContext, osc *extensionsv1alpha1.OperatingSystemConfig) error {
+func (m *mutator) mutateOperatingSystemConfig(ctx context.Context, ectx EnsurerContext, osc *extensionsv1alpha1.OperatingSystemConfig) error {
 	// Mutate kubelet.service unit, if present
 	if u := extensionswebhook.UnitWithName(osc.Spec.Units, v1alpha1constants.OperatingSystemConfigUnitNameKubeletService); u != nil && u.Content != nil {
-		if err := m.ensureKubeletServiceUnitContent(ectx, u.Content); err != nil {
+		if err := m.ensureKubeletServiceUnitContent(ctx, ectx, u.Content); err != nil {
 			return err
 		}
 	}
 
 	// Mutate kubelet configuration file, if present
 	if f := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKubeletConfig); f != nil && f.Content.Inline != nil {
-		if err := m.ensureKubeletConfigFileContent(ectx, f.Content.Inline); err != nil {
+		if err := m.ensureKubeletConfigFileContent(ctx, ectx, f.Content.Inline); err != nil {
 			return err
 		}
 	}
 
 	// Mutate 99 kubernetes general configuration file, if present
 	if f := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKernelSettings); f != nil && f.Content.Inline != nil {
-		if err := m.ensureKubernetesGeneralConfiguration(ectx, f.Content.Inline); err != nil {
+		if err := m.ensureKubernetesGeneralConfiguration(ctx, ectx, f.Content.Inline); err != nil {
 			return err
 		}
 	}
 
 	// Check if cloud provider config needs to be ensured
 	if m.ensurer.ShouldProvisionKubeletCloudProviderConfig() {
-		if err := m.ensureKubeletCloudProviderConfig(ectx, osc); err != nil {
+		if err := m.ensureKubeletCloudProviderConfig(ctx, ectx, osc); err != nil {
 			return err
 		}
 	}
 
-	if err := m.ensurer.EnsureAdditionalFiles(ectx, &osc.Spec.Files); err != nil {
+	if err := m.ensurer.EnsureAdditionalFiles(ctx, ectx, &osc.Spec.Files); err != nil {
 		return err
 	}
 
-	if err := m.ensurer.EnsureAdditionalUnits(ectx, &osc.Spec.Units); err != nil {
+	if err := m.ensurer.EnsureAdditionalUnits(ctx, ectx, &osc.Spec.Units); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (m *mutator) ensureKubeletServiceUnitContent(ectx EnsurerContext, content *string) error {
+func (m *mutator) ensureKubeletServiceUnitContent(ctx context.Context, ectx EnsurerContext, content *string) error {
 	var opts []*unit.UnitOption
 	var err error
 
@@ -250,7 +241,7 @@ func (m *mutator) ensureKubeletServiceUnitContent(ectx EnsurerContext, content *
 		return errors.Wrap(err, "could not deserialize kubelet.service unit content")
 	}
 
-	if opts, err = m.ensurer.EnsureKubeletServiceUnitOptions(ectx, opts); err != nil {
+	if opts, err = m.ensurer.EnsureKubeletServiceUnitOptions(ctx, ectx, opts); err != nil {
 		return err
 	}
 
@@ -262,7 +253,7 @@ func (m *mutator) ensureKubeletServiceUnitContent(ectx EnsurerContext, content *
 	return nil
 }
 
-func (m *mutator) ensureKubeletConfigFileContent(ectx EnsurerContext, fci *extensionsv1alpha1.FileContentInline) error {
+func (m *mutator) ensureKubeletConfigFileContent(ctx context.Context, ectx EnsurerContext, fci *extensionsv1alpha1.FileContentInline) error {
 	var kubeletConfig *kubeletconfigv1beta1.KubeletConfiguration
 	var err error
 
@@ -271,7 +262,7 @@ func (m *mutator) ensureKubeletConfigFileContent(ectx EnsurerContext, fci *exten
 		return errors.Wrap(err, "could not decode kubelet configuration")
 	}
 
-	if err = m.ensurer.EnsureKubeletConfiguration(ectx, kubeletConfig); err != nil {
+	if err = m.ensurer.EnsureKubeletConfiguration(ctx, ectx, kubeletConfig); err != nil {
 		return err
 	}
 
@@ -285,7 +276,7 @@ func (m *mutator) ensureKubeletConfigFileContent(ectx EnsurerContext, fci *exten
 	return nil
 }
 
-func (m *mutator) ensureKubernetesGeneralConfiguration(ectx EnsurerContext, fci *extensionsv1alpha1.FileContentInline) error {
+func (m *mutator) ensureKubernetesGeneralConfiguration(ctx context.Context, ectx EnsurerContext, fci *extensionsv1alpha1.FileContentInline) error {
 	var data []byte
 	var err error
 
@@ -295,7 +286,7 @@ func (m *mutator) ensureKubernetesGeneralConfiguration(ectx EnsurerContext, fci 
 	}
 
 	s := string(data)
-	if err = m.ensurer.EnsureKubernetesGeneralConfiguration(ectx, &s); err != nil {
+	if err = m.ensurer.EnsureKubernetesGeneralConfiguration(ctx, ectx, &s); err != nil {
 		return err
 	}
 
@@ -311,12 +302,12 @@ func (m *mutator) ensureKubernetesGeneralConfiguration(ectx EnsurerContext, fci 
 
 const CloudProviderConfigPath = "/var/lib/kubelet/cloudprovider.conf"
 
-func (m *mutator) ensureKubeletCloudProviderConfig(ectx EnsurerContext, osc *extensionsv1alpha1.OperatingSystemConfig) error {
+func (m *mutator) ensureKubeletCloudProviderConfig(ctx context.Context, ectx EnsurerContext, osc *extensionsv1alpha1.OperatingSystemConfig) error {
 	var err error
 
 	// Ensure kubelet cloud provider config
 	var s string
-	if err = m.ensurer.EnsureKubeletCloudProviderConfig(ectx, &s, osc.Namespace); err != nil {
+	if err = m.ensurer.EnsureKubeletCloudProviderConfig(ctx, ectx, &s, osc.Namespace); err != nil {
 		return err
 	}
 

@@ -15,6 +15,7 @@
 package genericmutator
 
 import (
+	"context"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/coreos/go-systemd/unit"
@@ -27,42 +28,42 @@ import (
 type NoopEnsurer struct{}
 
 // EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeAPIServerService(EnsurerContext, *corev1.Service) error {
+func (e *NoopEnsurer) EnsureKubeAPIServerService(context.Context, EnsurerContext, *corev1.Service) error {
 	return nil
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeAPIServerDeployment(EnsurerContext, *appsv1.Deployment) error {
+func (e *NoopEnsurer) EnsureKubeAPIServerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error {
 	return nil
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeControllerManagerDeployment(EnsurerContext, *appsv1.Deployment) error {
+func (e *NoopEnsurer) EnsureKubeControllerManagerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error {
 	return nil
 }
 
 // EnsureKubeSchedulerDeployment ensures that the kube-scheduler deployment conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeSchedulerDeployment(EnsurerContext, *appsv1.Deployment) error {
+func (e *NoopEnsurer) EnsureKubeSchedulerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error {
 	return nil
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *NoopEnsurer) EnsureETCDStatefulSet(EnsurerContext, *appsv1.StatefulSet) error {
+func (e *NoopEnsurer) EnsureETCDStatefulSet(context.Context, EnsurerContext, *appsv1.StatefulSet) error {
 	return nil
 }
 
 // EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeletServiceUnitOptions(_ EnsurerContext, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
+func (e *NoopEnsurer) EnsureKubeletServiceUnitOptions(ctx context.Context, ectx EnsurerContext, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
 	return opts, nil
 }
 
 // EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeletConfiguration(EnsurerContext, *kubeletconfigv1beta1.KubeletConfiguration) error {
+func (e *NoopEnsurer) EnsureKubeletConfiguration(context.Context, EnsurerContext, *kubeletconfigv1beta1.KubeletConfiguration) error {
 	return nil
 }
 
 // EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubernetesGeneralConfiguration(EnsurerContext, *string) error {
+func (e *NoopEnsurer) EnsureKubernetesGeneralConfiguration(context.Context, EnsurerContext, *string) error {
 	return nil
 }
 
@@ -72,16 +73,16 @@ func (e *NoopEnsurer) ShouldProvisionKubeletCloudProviderConfig() bool {
 }
 
 // EnsureKubeletCloudProviderConfig ensures that the cloud provider config file conforms to the provider requirements.
-func (e *NoopEnsurer) EnsureKubeletCloudProviderConfig(EnsurerContext, *string, string) error {
+func (e *NoopEnsurer) EnsureKubeletCloudProviderConfig(context.Context, EnsurerContext, *string, string) error {
 	return nil
 }
 
 // EnsureAdditionalUnits ensures that additional required system units are added.
-func (e *NoopEnsurer) EnsureAdditionalUnits(ctx EnsurerContext, units *[]extensionsv1alpha1.Unit) error {
+func (e *NoopEnsurer) EnsureAdditionalUnits(ctx context.Context, ectx EnsurerContext, units *[]extensionsv1alpha1.Unit) error {
 	return nil
 }
 
 // EnsureAdditionalFiles ensures that additional required system files are added.
-func (e *NoopEnsurer) EnsureAdditionalFiles(ctx EnsurerContext, files *[]extensionsv1alpha1.File) error {
+func (e *NoopEnsurer) EnsureAdditionalFiles(ctx context.Context, ectx EnsurerContext, files *[]extensionsv1alpha1.File) error {
 	return nil
 }

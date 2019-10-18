@@ -87,7 +87,7 @@ var _ = Describe("Ensurer", func() {
 				},
 			}
 
-			dummyContext = genericmutator.NewInternalEnsurerContext(context.TODO(), cluster)
+			dummyContext = genericmutator.NewInternalEnsurerContext(cluster)
 
 			secretKey = client.ObjectKey{Namespace: namespace, Name: alicloud.BackupSecretName}
 			secret    = &corev1.Secret{
@@ -125,7 +125,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDMainStatefulSet(ss, annotations)
 		})
@@ -158,7 +158,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDMainStatefulSet(ss, annotations)
 		})
@@ -178,7 +178,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDMainStatefulSetWithoutBackup(ss, annotations)
 		})
@@ -199,12 +199,12 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			oldSS := ss.DeepCopy()
 
 			// Re-ensure on existing statefulset
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(ss).Should(Equal(oldSS))
@@ -213,7 +213,7 @@ var _ = Describe("Ensurer", func() {
 			newSS := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDEvents},
 			}
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, newSS)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, newSS)
 
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(ss).Should(Equal(oldSS))
@@ -230,7 +230,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDEventsStatefulSet(ss)
 		})
@@ -257,7 +257,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(etcdBackup, imageVector, logger)
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDEventsStatefulSet(ss)
 		})
@@ -278,12 +278,12 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			oldSS := ss.DeepCopy()
 
 			// Re-ensure on existing statefulset
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, ss)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(ss).Should(Equal(oldSS))
@@ -292,7 +292,7 @@ var _ = Describe("Ensurer", func() {
 			newSS := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDEvents},
 			}
-			err = ensurer.EnsureETCDStatefulSet(dummyContext, newSS)
+			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, newSS)
 
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(ss).Should(Equal(oldSS))

@@ -119,7 +119,7 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeAPIServerService(gomock.Any(), svc).Return(nil)
+			ensurer.EXPECT().EnsureKubeAPIServerService(context.TODO(), gomock.Any(), svc).Return(nil)
 
 			// Create mutator
 			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
@@ -153,7 +153,7 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeAPIServerDeployment(gomock.Any(), dep).Return(nil)
+			ensurer.EXPECT().EnsureKubeAPIServerDeployment(context.TODO(), gomock.Any(), dep).Return(nil)
 
 			// Create mutator
 			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
@@ -172,7 +172,7 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeControllerManagerDeployment(gomock.Any(), dep).Return(nil)
+			ensurer.EXPECT().EnsureKubeControllerManagerDeployment(context.TODO(), gomock.Any(), dep).Return(nil)
 
 			// Create mutator
 			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
@@ -191,7 +191,7 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeSchedulerDeployment(gomock.Any(), dep).Return(nil)
+			ensurer.EXPECT().EnsureKubeSchedulerDeployment(context.TODO(), gomock.Any(), dep).Return(nil)
 
 			// Create mutator
 			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
@@ -229,8 +229,8 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureETCDStatefulSet(gomock.Any(), ss).Return(nil).Do(func(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) {
-				_, err := ctx.GetCluster()
+			ensurer.EXPECT().EnsureETCDStatefulSet(context.TODO(), gomock.Any(), ss).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) {
+				_, err := ectx.GetCluster(ctx)
 				if err != nil {
 					logger.Error(err, "failed to get cluster object")
 				}
@@ -259,8 +259,8 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureETCDStatefulSet(gomock.Any(), ss).Return(nil).Do(func(ctx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) {
-				_, err := ctx.GetCluster()
+			ensurer.EXPECT().EnsureETCDStatefulSet(context.TODO(), gomock.Any(), ss).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) {
+				_, err := ectx.GetCluster(ctx)
 				if err != nil {
 					logger.Error(err, "failed to get cluster object")
 				}
@@ -356,33 +356,33 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeletServiceUnitOptions(gomock.Any(), oldUnitOptions).Return(newUnitOptions, nil)
-			ensurer.EXPECT().EnsureKubeletConfiguration(gomock.Any(), oldKubeletConfig).DoAndReturn(
-				func(ctx genericmutator.EnsurerContext, kubeletConfig *kubeletconfigv1beta1.KubeletConfiguration) error {
+			ensurer.EXPECT().EnsureKubeletServiceUnitOptions(context.TODO(), gomock.Any(), oldUnitOptions).Return(newUnitOptions, nil)
+			ensurer.EXPECT().EnsureKubeletConfiguration(context.TODO(), gomock.Any(), oldKubeletConfig).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, kubeletConfig *kubeletconfigv1beta1.KubeletConfiguration) error {
 					*kubeletConfig = *newKubeletConfig
 					return nil
 				},
 			)
-			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(gomock.Any(), util.StringPtr(oldKubernetesGeneralConfigData)).DoAndReturn(
-				func(ctx genericmutator.EnsurerContext, data *string) error {
+			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(context.TODO(), gomock.Any(), util.StringPtr(oldKubernetesGeneralConfigData)).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, data *string) error {
 					*data = newKubernetesGeneralConfigData
 					return nil
 				},
 			)
-			ensurer.EXPECT().EnsureAdditionalUnits(gomock.Any(), &osc.Spec.Units).DoAndReturn(
-				func(ctx genericmutator.EnsurerContext, oscUnits *[]extensionsv1alpha1.Unit) error {
+			ensurer.EXPECT().EnsureAdditionalUnits(context.TODO(), gomock.Any(), &osc.Spec.Units).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, oscUnits *[]extensionsv1alpha1.Unit) error {
 					*oscUnits = append(*oscUnits, additionalUnit)
 					return nil
 				})
-			ensurer.EXPECT().EnsureAdditionalFiles(gomock.Any(), &osc.Spec.Files).DoAndReturn(
-				func(ctx genericmutator.EnsurerContext, oscFiles *[]extensionsv1alpha1.File) error {
+			ensurer.EXPECT().EnsureAdditionalFiles(context.TODO(), gomock.Any(), &osc.Spec.Files).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, oscFiles *[]extensionsv1alpha1.File) error {
 					*oscFiles = append(*oscFiles, additionalFile)
 					return nil
 				})
 
 			ensurer.EXPECT().ShouldProvisionKubeletCloudProviderConfig().Return(true)
-			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(gomock.Any(), util.StringPtr(""), osc.Namespace).DoAndReturn(
-				func(ctx genericmutator.EnsurerContext, data *string, _ string) error {
+			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), gomock.Any(), util.StringPtr(""), osc.Namespace).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, data *string, _ string) error {
 					*data = cloudproviderconf
 					return nil
 				},
