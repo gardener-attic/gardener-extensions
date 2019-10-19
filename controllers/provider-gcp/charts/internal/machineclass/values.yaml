@@ -3,6 +3,7 @@ machineClasses:
   region: europe-west1
   zone: europe-west1-b
   canIpForward: true
+  disableExternalIP: true
   deletionProtection: false
   description: An optional description for machines created by that class.
   disks:

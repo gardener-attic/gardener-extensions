@@ -19,6 +19,7 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 spec:
   canIpForward: {{ $machineClass.canIpForward }}
+  disableExternalIP: {{ $machineClass.disableExternalIP }}
   deletionProtection: {{ $machineClass.deletionProtection }}
   description: {{ $machineClass.description }}
   disks:
