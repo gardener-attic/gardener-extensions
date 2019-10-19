@@ -81,6 +81,21 @@ func (mr *MockEnsurerMockRecorder) EnsureETCDStatefulSet(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureETCDStatefulSet", reflect.TypeOf((*MockEnsurer)(nil).EnsureETCDStatefulSet), arg0, arg1, arg2)
 }
 
+// EnsureGardenerUserServiceUnitOptions mocks base method
+func (m *MockEnsurer) EnsureGardenerUserServiceUnitOptions(arg0 context.Context, arg1 []*unit.UnitOption) ([]*unit.UnitOption, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnsureGardenerUserServiceUnitOptions", arg0, arg1)
+	ret0, _ := ret[0].([]*unit.UnitOption)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnsureGardenerUserServiceUnitOptions indicates an expected call of EnsureGardenerUserServiceUnitOptions
+func (mr *MockEnsurerMockRecorder) EnsureGardenerUserServiceUnitOptions(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureGardenerUserServiceUnitOptions", reflect.TypeOf((*MockEnsurer)(nil).EnsureGardenerUserServiceUnitOptions), arg0, arg1)
+}
+
 // EnsureKubeAPIServerDeployment mocks base method
 func (m *MockEnsurer) EnsureKubeAPIServerDeployment(arg0 context.Context, arg1 *v1.Deployment) error {
 	m.ctrl.T.Helper()

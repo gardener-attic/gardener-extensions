@@ -211,6 +211,16 @@ func (e *ensurer) EnsureKubernetesGeneralConfiguration(ctx context.Context, data
 	return nil
 }
 
+// EnsureGardenerUserServiceUnitOptions ensures that the gardener-user.service unit options conform to the provider requirements.
+func (e *ensurer) EnsureGardenerUserServiceUnitOptions(ctx context.Context, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
+	opts = extensionswebhook.EnsureUnitOption(opts, &unit.UnitOption{
+		Section: "Service",
+		Name:    "ExecStartPre",
+		Value:   `/bin/sh -c 'wget http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key -O /var/lib/gardener-user-ssh.key'`,
+	})
+	return opts, nil
+}
+
 // EnsureAdditionalUnits ensures that additional required system units are added.
 func (e *ensurer) EnsureAdditionalUnits(ctx context.Context, units *[]extensionsv1alpha1.Unit) error {
 	var (

@@ -64,6 +64,11 @@ func (e *NoopEnsurer) EnsureKubeletConfiguration(context.Context, *kubeletconfig
 	return nil
 }
 
+// EnsureGardenerUserServiceUnitOptions ensures that the gardener-user.service unit options conform to the provider requirements.
+func (e *NoopEnsurer) EnsureGardenerUserServiceUnitOptions(_ context.Context, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
+	return opts, nil
+}
+
 // EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
 func (e *NoopEnsurer) EnsureKubernetesGeneralConfiguration(context.Context, *string) error {
 	return nil

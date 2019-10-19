@@ -113,3 +113,13 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	kubeletConfig.FeatureGates["CSIDriverRegistry"] = true
 	return nil
 }
+
+// EnsureGardenerUserServiceUnitOptions ensures that the gardener-user.service unit options conform to the provider requirements.
+func (e *ensurer) EnsureGardenerUserServiceUnitOptions(ctx context.Context, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
+	opts = extensionswebhook.EnsureUnitOption(opts, &unit.UnitOption{
+		Section: "Service",
+		Name:    "ExecStartPre",
+		Value:   `/bin/sh -c 'wget http://100.100.100.200/latest/meta-data/public-keys/0/openssh-key -O /var/lib/gardener-user-ssh.key'`,
+	})
+	return opts, nil
+}

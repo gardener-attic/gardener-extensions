@@ -52,6 +52,8 @@ type Ensurer interface {
 	EnsureETCDStatefulSet(context.Context, *appsv1.StatefulSet, *extensionscontroller.Cluster) error
 	// EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
 	EnsureKubeletServiceUnitOptions(context.Context, []*unit.UnitOption) ([]*unit.UnitOption, error)
+	// EnsureGardenerUserServiceUnitOptions ensures that the gardener-user.service unit options conform to the provider requirements.
+	EnsureGardenerUserServiceUnitOptions(context.Context, []*unit.UnitOption) ([]*unit.UnitOption, error)
 	// EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
 	EnsureKubeletConfiguration(context.Context, *kubeletconfigv1beta1.KubeletConfiguration) error
 	// EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
@@ -162,6 +164,13 @@ func (m *mutator) mutateOperatingSystemConfig(ctx context.Context, osc *extensio
 		}
 	}
 
+	// Mutate gardener-user.service unit, if present
+	if u := extensionswebhook.UnitWithName(osc.Spec.Units, v1alpha1constants.OperatingSystemConfigUnitNameGardenerUserService); u != nil && u.Content != nil {
+		if err := m.ensureGardenerUserServiceUnitContent(ctx, u.Content); err != nil {
+			return err
+		}
+	}
+
 	// Mutate kubelet configuration file, if present
 	if f := extensionswebhook.FileWithPath(osc.Spec.Files, v1alpha1constants.OperatingSystemConfigFilePathKubeletConfig); f != nil && f.Content.Inline != nil {
 		if err := m.ensureKubeletConfigFileContent(ctx, f.Content.Inline); err != nil {
@@ -210,6 +219,27 @@ func (m *mutator) ensureKubeletServiceUnitContent(ctx context.Context, content *
 	// Serialize unit options
 	if *content, err = m.unitSerializer.Serialize(opts); err != nil {
 		return errors.Wrap(err, "could not serialize kubelet.service unit options")
+	}
+
+	return nil
+}
+
+func (m *mutator) ensureGardenerUserServiceUnitContent(ctx context.Context, content *string) error {
+	var opts []*unit.UnitOption
+	var err error
+
+	// Deserialize unit options
+	if opts, err = m.unitSerializer.Deserialize(*content); err != nil {
+		return errors.Wrap(err, "could not deserialize gardener-user.service unit content")
+	}
+
+	if opts, err = m.ensurer.EnsureGardenerUserServiceUnitOptions(ctx, opts); err != nil {
+		return err
+	}
+
+	// Serialize unit options
+	if *content, err = m.unitSerializer.Serialize(opts); err != nil {
+		return errors.Wrap(err, "could not serialize gardener-user.service unit options")
 	}
 
 	return nil

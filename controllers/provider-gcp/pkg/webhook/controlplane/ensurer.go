@@ -190,6 +190,16 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, kubeletConfig 
 	return nil
 }
 
+// EnsureGardenerUserServiceUnitOptions ensures that the gardener-user.service unit options conform to the provider requirements.
+func (e *ensurer) EnsureGardenerUserServiceUnitOptions(ctx context.Context, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
+	opts = extensionswebhook.EnsureUnitOption(opts, &unit.UnitOption{
+		Section: "Service",
+		Name:    "ExecStartPre",
+		Value:   `/bin/sh -c 'wget --header "Metadata-Flavor: Google" http://169.254.169.254/computeMetadata/v1/project/attributes/ssh-keys -O /var/lib/gardener-user-ssh.key'`,
+	})
+	return opts, nil
+}
+
 var regexFindProperty = regexp.MustCompile("net.ipv4.ip_forward[[:space:]]*=[[:space:]]*([[:alnum:]]+)")
 
 // EnsureKubernetesGeneralConfiguration ensures that the kubernetes general configuration conforms to the provider requirements.
