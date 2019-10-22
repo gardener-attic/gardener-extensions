@@ -5,6 +5,8 @@ config:
   ipam:
     type: "host-local"
 #    subnet: "usePodCidr"
+#ipip: "Always"
+#ipAutodetectionMethod: "first-found"
 images:
   calico-node: "image-repository:image-tag"
   calico-cni: "image-repository:image-tag"

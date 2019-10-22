@@ -52,7 +52,7 @@ Backend
 </em>
 </td>
 <td>
-<p>Backend defines whether a backend should be used or not (e.g., bird or None)</p>
+<p>Backend defines whether a backend should be used or not (e.g., bird or none)</p>
 </td>
 </tr>
 <tr>
@@ -80,6 +80,20 @@ string
 <em>(Optional)</em>
 <p>IPAutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
 <a href="https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods">https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods</a></p>
+</td>
+</tr>
+<tr>
+<td>
+<code>ipip</code></br>
+<em>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.IPIP">
+IPIP
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)</p>
 </td>
 </tr>
 </tbody>
@@ -144,6 +158,14 @@ CIDR
 </tr>
 </tbody>
 </table>
+<h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.IPIP">IPIP
+(<code>string</code> alias)</p></h3>
+<p>
+(<em>Appears on:</em>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<p>
+</p>
 <h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.NetworkStatus">NetworkStatus
 </h3>
 <p>

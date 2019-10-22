@@ -47,7 +47,8 @@ spec:
     apiVersion: calico.networking.extensions.gardener.cloud/v1alpha1
     kind: NetworkConfig
     backend: bird
-#   ipam:
-#     type: host-local
-#     cidr: usePodCIDR
-#   ipAutoDetectionMethod: first-found
+    ipam:
+      type: host-local
+      cidr: usePodCIDR
+#    ipAutodetectionMethod: interface=eth0
+#    ipip: CrossSubnet

@@ -43,6 +43,7 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 			"global": map[string]string{
 				"podCIDR": network.Spec.PodCIDR,
 			},
+			"ipip": calicov1alpha1.Always,
 		}
 		calicoConfigValues = map[string]interface{}{
 			"backend": calicov1alpha1.Bird,
@@ -54,7 +55,10 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 	)
 
 	if config != nil {
-		calicoConfigValues["backend"] = config.Backend
+		switch config.Backend {
+		case calicov1alpha1.Bird, calicov1alpha1.None:
+			calicoConfigValues["backend"] = config.Backend
+		}
 
 		if config.IPAM != nil {
 			if len(config.IPAM.Type) > 0 {
@@ -62,6 +66,16 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 			}
 			if config.IPAM.Type == hostLocal && config.IPAM.CIDR != nil {
 				ipamConfig["subnet"] = *config.IPAM.CIDR
+			}
+		}
+
+		if config.IPAutoDetectionMethod != nil {
+			calicoChartValues["ipAutodetectionMethod"] = *config.IPAutoDetectionMethod
+		}
+		if config.IPIP != nil {
+			switch *config.IPIP {
+			case calicov1alpha1.Always, calicov1alpha1.Never, calicov1alpha1.Off, calicov1alpha1.CrossSubnet:
+				calicoChartValues["ipip"] = *config.IPIP
 			}
 		}
 	}

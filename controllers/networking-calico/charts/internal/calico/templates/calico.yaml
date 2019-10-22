@@ -184,17 +184,16 @@ spec:
             - name: CALICO_IPV4POOL_CIDR
               value: "{{ .Values.global.podCIDR }}"
             # Enable IPIP
-            {{- if ne .Values.config.backend "none"}}
-            # Enable IP-in-IP within Felix.
-            - name: FELIX_IPINIPENABLED
-              value: "true"
-            - name: CALICO_IPV4POOL_IPIP
-              value: "Always"
-            {{- else }}
+            {{- if eq .Values.config.backend "none"}}
             - name: FELIX_IPINIPENABLED
               value: "false"
             - name: CALICO_IPV4POOL_IPIP
               value: "Never"
+            {{- else }}
+            - name: FELIX_IPINIPENABLED
+              value: "true"
+            - name: CALICO_IPV4POOL_IPIP
+              value: "{{.Values.ipip}}"
             {{- end }}
             # Choose the backend to use.
             - name: CALICO_NETWORKING_BACKEND
