@@ -16,9 +16,7 @@ package controlplaneexposure
 
 import (
 	"context"
-
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
@@ -44,7 +42,7 @@ type ensurer struct {
 }
 
 // EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
-func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, svc *corev1.Service) error {
+func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, ectx genericmutator.EnsurerContext, svc *corev1.Service) error {
 	if svc.Annotations == nil {
 		svc.Annotations = make(map[string]string)
 	}
@@ -60,7 +58,7 @@ func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, svc *corev1.Se
 }
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
-func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1.Deployment) error {
+func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	if c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver"); c != nil {
 		c.Command = extensionswebhook.EnsureStringWithPrefix(c.Command, "--endpoint-reconciler-type=", "none")
 	}
@@ -68,7 +66,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, dep *appsv1
 }
 
 // EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ss *appsv1.StatefulSet, cluster *extensionscontroller.Cluster) error {
+func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) error {
 	e.ensureVolumeClaimTemplates(&ss.Spec, ss.Name)
 	return nil
 }

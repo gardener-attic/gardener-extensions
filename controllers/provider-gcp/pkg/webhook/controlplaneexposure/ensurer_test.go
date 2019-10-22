@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
+	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"github.com/golang/mock/gomock"
@@ -54,6 +55,8 @@ var _ = Describe("Ensurer", func() {
 		}
 
 		ctrl *gomock.Controller
+
+		dummyContext = genericmutator.NewEnsurerContext(nil, nil)
 
 		svcKey = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer}
 		svc    = &corev1.Service{
@@ -105,7 +108,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -139,7 +142,7 @@ var _ = Describe("Ensurer", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
-			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dep)
+			err = ensurer.EnsureKubeAPIServerDeployment(context.TODO(), dummyContext, dep)
 			Expect(err).To(Not(HaveOccurred()))
 			checkKubeAPIServerDeployment(dep)
 		})
@@ -157,7 +160,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(etcdStorage, logger)
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDMainStatefulSet(ss)
 		})
@@ -188,7 +191,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(etcdStorage, logger)
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDMainStatefulSet(ss)
 		})
@@ -204,7 +207,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(etcdStorage, logger)
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDEventsStatefulSet(ss)
 		})
@@ -235,7 +238,7 @@ var _ = Describe("Ensurer", func() {
 			ensurer := NewEnsurer(etcdStorage, logger)
 
 			// Call EnsureETCDStatefulSet method and check the result
-			err := ensurer.EnsureETCDStatefulSet(context.TODO(), ss, nil)
+			err := ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, ss)
 			Expect(err).To(Not(HaveOccurred()))
 			checkETCDEventsStatefulSet(ss)
 		})
