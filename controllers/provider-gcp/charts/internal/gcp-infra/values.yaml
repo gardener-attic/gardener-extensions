@@ -18,6 +18,8 @@ networks:
 
 outputKeys:
   vpcName: vpc_name
+  cloudNAT: cloud_nat
+  cloudRouter: cloud_router
   subnetNodes: subnet_nodes
   serviceAccountEmail: service_account_email
   subnetInternal: subnet_internal

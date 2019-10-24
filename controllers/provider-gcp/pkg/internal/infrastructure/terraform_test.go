@@ -114,6 +114,8 @@ var _ = Describe("Terraform", func() {
 				},
 				"outputKeys": map[string]interface{}{
 					"vpcName":             TerraformerOutputKeyVPCName,
+					"cloudNAT":            TerraformOutputKeyCloudNAT,
+					"cloudRouter":         TerraformOutputKeyCloudRouter,
 					"serviceAccountEmail": TerraformerOutputKeyServiceAccountEmail,
 					"subnetNodes":         TerraformerOutputKeySubnetNodes,
 					"subnetInternal":      TerraformerOutputKeySubnetInternal,
@@ -145,6 +147,8 @@ var _ = Describe("Terraform", func() {
 				},
 				"outputKeys": map[string]interface{}{
 					"vpcName":             TerraformerOutputKeyVPCName,
+					"cloudNAT":            TerraformOutputKeyCloudNAT,
+					"cloudRouter":         TerraformOutputKeyCloudRouter,
 					"serviceAccountEmail": TerraformerOutputKeyServiceAccountEmail,
 					"subnetNodes":         TerraformerOutputKeySubnetNodes,
 					"subnetInternal":      TerraformerOutputKeySubnetInternal,

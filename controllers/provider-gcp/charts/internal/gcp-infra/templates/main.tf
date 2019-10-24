@@ -31,6 +31,29 @@ resource "google_compute_subnetwork" "subnetwork-nodes" {
   region        = "{{ required "google.region is required" .Values.google.region }}"
 }
 
+resource "google_compute_router" "router"{
+  name    = "{{ required "clusterName is required" .Values.clusterName }}-cloud-router"
+  region  = "{{ required "google.region is required" .Values.google.region }}"
+  network = "{{ required "vpc.name is required" .Values.vpc.name }}"
+
+  bgp {
+    asn = 64514
+  }
+}
+
+resource "google_compute_router_nat" "nat" {
+  name                               = "{{ required "clusterName is required" .Values.clusterName }}-cloud-nat"
+  router                             = "${google_compute_router.router.name}"
+  region                             = "{{ required "google.region is required" .Values.google.region }}"
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
+
 {{ if .Values.networks.internal -}}
 resource "google_compute_subnetwork" "subnetwork-internal" {
   name          = "{{ required "clusterName is required" .Values.clusterName }}-internal"
@@ -39,6 +62,8 @@ resource "google_compute_subnetwork" "subnetwork-internal" {
   region        = "{{ required "google.region is required" .Values.google.region }}"
 }
 {{- end}}
+
+
 //=====================================================================
 //= Firewall
 //=====================================================================
@@ -119,6 +144,14 @@ resource "null_resource" "outputs" {
 
 output "{{ .Values.outputKeys.vpcName }}" {
   value = "{{ required "vpc.name is required" .Values.vpc.name }}"
+}
+
+output "{{ .Values.outputKeys.cloudRouter }}" {
+  value = "${google_compute_router.router.name}"
+}
+
+output "{{ .Values.outputKeys.cloudNAT }}" {
+  value = "${google_compute_router_nat.nat.name}"
 }
 
 output "{{ .Values.outputKeys.serviceAccountEmail }}" {
