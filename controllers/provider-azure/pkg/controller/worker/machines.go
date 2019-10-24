@@ -178,6 +178,10 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 					"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
 				}
 			)
+			if infrastructureStatus.Networks.VNet.ResourceGroup != nil {
+				machineClassSpec["vnetResourceGroup"] = *infrastructureStatus.Networks.VNet.ResourceGroup
+			}
+
 			if zone != nil {
 				machineDeployment.Minimum = worker.DistributeOverZones(zone.index, pool.Minimum, zone.count)
 				machineDeployment.Maximum = worker.DistributeOverZones(zone.index, pool.Maximum, zone.count)

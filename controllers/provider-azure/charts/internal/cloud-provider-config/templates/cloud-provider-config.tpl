@@ -6,6 +6,9 @@ routeTableName: "{{ .Values.routeTableName }}"
 securityGroupName: "{{ .Values.securityGroupName }}"
 subnetName: "{{ .Values.subnetName }}"
 vnetName: "{{ .Values.vnetName }}"
+{{- if hasKey .Values "vnetResourceGroup" }}
+vnetResourceGroup: "{{ .Values.vnetResourceGroup }}"
+{{- end }}
 {{- if hasKey .Values "availabilitySetName" }}
 primaryAvailabilitySetName: "{{ .Values.availabilitySetName }}"
 loadBalancerSku: "basic"

@@ -39,6 +39,8 @@ const (
 	TerraformerOutputKeyResourceGroupName = "resourceGroupName"
 	// TerraformerOutputKeyVNetName is the key for the vnetName output
 	TerraformerOutputKeyVNetName = "vnetName"
+	// TerraformerOutputKeyVNetResourceGroup is the key for the vnetResourceGroup output
+	TerraformerOutputKeyVNetResourceGroup = "vnetResourceGroup"
 	// TerraformerOutputKeySubnetName is the key for the subnetName output
 	TerraformerOutputKeySubnetName = "subnetName"
 	// TerraformerOutputKeyAvailabilitySetID is the key for the availabilitySetID output
@@ -72,8 +74,6 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		createVNet            = true
 		createAvailabilitySet = false
 		resourceGroupName     = infra.Namespace
-		vnetName              = infra.Namespace
-		vnetCIDR              = config.Networks.Workers
 
 		findDomainCountByRegion = func(region string, domainCounts []v1beta1.AzureDomainCount) (v1beta1.AzureDomainCount, error) {
 			for _, domainCount := range domainCounts {
@@ -89,6 +89,9 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 			"tenantID":       clientAuth.TenantID,
 			"region":         infra.Spec.Region,
 		}
+		vnetConfig = map[string]interface{}{
+			"name": infra.Namespace,
+		}
 		outputKeys = map[string]interface{}{
 			"resourceGroupName": TerraformerOutputKeyResourceGroupName,
 			"vnetName":          TerraformerOutputKeyVNetName,
@@ -103,13 +106,19 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		resourceGroupName = config.ResourceGroup.Name
 	}
 
-	// check if we should use an existing ResourceGroup or create a new one
-	if config.Networks.VNet.Name != nil {
+	// VNet settings.
+	if config.Networks.VNet.Name != nil && config.Networks.VNet.ResourceGroup != nil {
+		// Deploy in existing vNet.
 		createVNet = false
-		vnetName = *config.Networks.VNet.Name
-	}
-	if config.Networks.VNet.CIDR != nil {
-		vnetCIDR = *config.Networks.VNet.CIDR
+		vnetConfig["name"] = *config.Networks.VNet.Name
+		vnetConfig["resourceGroup"] = *config.Networks.VNet.ResourceGroup
+		outputKeys["vnetResourceGroup"] = TerraformerOutputKeyVNetResourceGroup
+	} else if config.Networks.VNet.CIDR != nil {
+		// Apply a custom cidr for the vNet.
+		vnetConfig["cidr"] = *config.Networks.VNet.CIDR
+	} else {
+		// Use worker cidr as default for the vNet.
+		vnetConfig["cidr"] = config.Networks.Workers
 	}
 
 	// If the cluster is zoned, then we don't need to create an AvailabilitySet.
@@ -159,10 +168,7 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		},
 		"resourceGroup": map[string]interface{}{
 			"name": resourceGroupName,
-			"vnet": map[string]interface{}{
-				"name": vnetName,
-				"cidr": vnetCIDR,
-			},
+			"vnet": vnetConfig,
 			"subnet": map[string]interface{}{
 				"serviceEndpoints": config.Networks.ServiceEndpoints,
 			},
@@ -206,6 +212,8 @@ type TerraformFiles struct {
 type TerraformState struct {
 	// VPCName is the name of the VNet created for an infrastructure.
 	VNetName string
+	// VNetResourceGroupName is the name of the resource group where the vnet is deployed to.
+	VNetResourceGroupName string
 	// ResourceGroupName is the name of the resource group.
 	ResourceGroupName string
 	// AvailabilitySetID is the ID for the created availability set.
@@ -230,6 +238,10 @@ func ExtractTerraformState(tf *terraformer.Terraformer, config *azurev1alpha1.In
 		TerraformerOutputKeyVNetName,
 	}
 
+	if config.Networks.VNet.Name != nil && config.Networks.VNet.ResourceGroup != nil {
+		outputKeys = append(outputKeys, TerraformerOutputKeyVNetResourceGroup)
+	}
+
 	if !config.Zoned {
 		outputKeys = append(outputKeys, TerraformerOutputKeyAvailabilitySetID, TerraformerOutputKeyAvailabilitySetName)
 	}
@@ -245,6 +257,10 @@ func ExtractTerraformState(tf *terraformer.Terraformer, config *azurev1alpha1.In
 		RouteTableName:    vars[TerraformerOutputKeyRouteTableName],
 		SecurityGroupName: vars[TerraformerOutputKeySecurityGroupName],
 		SubnetName:        vars[TerraformerOutputKeySubnetName],
+	}
+
+	if config.Networks.VNet.Name != nil && config.Networks.VNet.ResourceGroup != nil {
+		tfState.VNetResourceGroupName = vars[TerraformerOutputKeyVNetResourceGroup]
 	}
 
 	if !config.Zoned {
@@ -280,6 +296,10 @@ func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.Infrastructu
 		SecurityGroups: []azurev1alpha1.SecurityGroup{
 			{Name: state.SecurityGroupName, Purpose: azurev1alpha1.PurposeNodes},
 		},
+	}
+
+	if state.VNetResourceGroupName != "" {
+		tfState.Networks.VNet.ResourceGroup = &state.VNetResourceGroupName
 	}
 
 	// If no AvailabilitySet was created then the Shoot uses zones.

@@ -23,11 +23,15 @@ resource "azurerm_virtual_network" "vnet" {
   location            = "{{ required "azure.region is required" .Values.azure.region }}"
   address_space       = ["{{ required "resourceGroup.vnet.cidr is required" .Values.resourceGroup.vnet.cidr }}"]
 }
-{{- end}}
+{{- end }}
 
 resource "azurerm_subnet" "workers" {
   name                      = "{{ required "clusterName is required" .Values.clusterName }}-nodes"
+  {{ if .Values.create.vnet -}}
   resource_group_name       = "{{ required "resourceGroup.name is required" .Values.resourceGroup.name }}"
+  {{ else -}}
+  resource_group_name       = "{{ required "resourceGroup.vnet.resourceGroup is required" .Values.resourceGroup.vnet.resourceGroup }}"
+  {{ end -}}
   virtual_network_name      = "{{ required "resourceGroup.vnet.name is required" .Values.resourceGroup.vnet.name }}"
   address_prefix            = "{{ required "networks.worker is required" .Values.networks.worker }}"
   service_endpoints         = [{{range $index, $serviceEndpoint := .Values.resourceGroup.subnet.serviceEndpoints}}{{if $index}},{{end}}"{{$serviceEndpoint}}"{{end}}]
@@ -73,6 +77,12 @@ output "{{ .Values.outputKeys.resourceGroupName }}" {
 output "{{ .Values.outputKeys.vnetName }}" {
   value = "{{ required "resourceGroup.vnet.name is required" .Values.resourceGroup.vnet.name }}"
 }
+
+{{ if not .Values.create.vnet -}}
+output "{{ .Values.outputKeys.vnetResourceGroup }}" {
+  value = "{{ required "resourceGroup.vnet.resourceGroup is required" .Values.resourceGroup.vnet.resourceGroup }}"
+}
+{{- end}}
 
 output "{{ .Values.outputKeys.subnetName }}" {
   value = "${azurerm_subnet.workers.name}"

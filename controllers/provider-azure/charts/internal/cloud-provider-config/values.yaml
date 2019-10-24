@@ -5,6 +5,7 @@ aadClientId: fooClient
 aadClientSecret: barSecret
 resourceGroup: foobarGroup
 vnetName: name
+# vnetResourceGroup: vnetResourceGroup
 subnetName: sname
 routeTableName: rtname
 securityGroupName: sgname

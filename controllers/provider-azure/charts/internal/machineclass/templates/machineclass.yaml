@@ -57,6 +57,9 @@ spec:
     namespace: {{ $.Release.Namespace }}
   subnetInfo:
     vnetName: {{ $machineClass.vnetName }}
+    {{- if hasKey $machineClass "vnetResourceGroup" }}
+    vnetResourceGroup: {{ $machineClass.vnetResourceGroup}}
+    {{- end }}
     subnetName: {{ $machineClass.subnetName }}
 {{- if $machineClass.tags }}
   tags:

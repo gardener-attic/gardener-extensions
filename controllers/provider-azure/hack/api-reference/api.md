@@ -944,7 +944,19 @@ string
 </td>
 <td>
 <em>(Optional)</em>
-<p>Name is the VNet name.</p>
+<p>Name is the name of an existing vNet which should be used.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resourceGroup</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceGroup is the resource group where the existing vNet blongs to.</p>
 </td>
 </tr>
 <tr>
@@ -987,6 +999,18 @@ string
 </td>
 <td>
 <p>Name is the VNet name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>resourceGroup</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>ResourceGroup is the resource group where the existing vNet belongs to.</p>
 </td>
 </tr>
 </tbody>

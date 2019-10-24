@@ -126,9 +126,12 @@ type SecurityGroup struct {
 
 // VNet contains information about the VNet and some related resources.
 type VNet struct {
-	// Name is the VNet name.
+	// Name is the name of an existing vNet which should be used.
 	// +optional
 	Name *string `json:"name,omitempty"`
+	// ResourceGroup is the resource group where the existing vNet blongs to.
+	// +optional
+	ResourceGroup *string `json:"resourceGroup,omitempty"`
 	// CIDR is the VNet CIDR
 	// +optional
 	CIDR *string `json:"cidr,omitempty"`
@@ -138,4 +141,7 @@ type VNet struct {
 type VNetStatus struct {
 	// Name is the VNet name.
 	Name string `json:"name"`
+	// ResourceGroup is the resource group where the existing vNet belongs to.
+	// +optional
+	ResourceGroup *string `json:"resourceGroup,omitempty"`
 }

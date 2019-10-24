@@ -134,13 +134,13 @@ var _ = Describe("Terraform", func() {
 				},
 				"create": map[string]interface{}{
 					"resourceGroup":   true,
-					"vnet":            false,
+					"vnet":            true,
 					"availabilitySet": false,
 				},
 				"resourceGroup": map[string]interface{}{
 					"name": infra.Namespace,
 					"vnet": map[string]interface{}{
-						"name": *config.Networks.VNet.Name,
+						"name": infra.Namespace,
 						"cidr": config.Networks.Workers,
 					},
 					"subnet": map[string]interface{}{
@@ -177,13 +177,13 @@ var _ = Describe("Terraform", func() {
 				},
 				"create": map[string]interface{}{
 					"resourceGroup":   true,
-					"vnet":            false,
+					"vnet":            true,
 					"availabilitySet": true,
 				},
 				"resourceGroup": map[string]interface{}{
 					"name": infra.Namespace,
 					"vnet": map[string]interface{}{
-						"name": *config.Networks.VNet.Name,
+						"name": infra.Namespace,
 						"cidr": config.Networks.Workers,
 					},
 					"subnet": map[string]interface{}{
@@ -204,6 +204,55 @@ var _ = Describe("Terraform", func() {
 					"availabilitySetName": TerraformerOutputKeyAvailabilitySetName,
 				},
 			}
+			Expect(values).To(BeEquivalentTo(expectedValues))
+		})
+
+		It("should correctly compute the terraformer chart values for a cluster deployed in an existing vnet", func() {
+			var (
+				existingVnetName          = "test"
+				existingVnetResourceGroup = "test-rg"
+			)
+
+			config.Networks.VNet = azurev1alpha1.VNet{
+				Name:          &existingVnetName,
+				ResourceGroup: &existingVnetResourceGroup,
+			}
+			values, err := ComputeTerraformerChartValues(infra, clientAuth, config, cluster)
+			expectedValues := map[string]interface{}{
+				"azure": map[string]interface{}{
+					"subscriptionID": clientAuth.SubscriptionID,
+					"tenantID":       clientAuth.TenantID,
+					"region":         infra.Spec.Region,
+				},
+				"create": map[string]interface{}{
+					"resourceGroup":   true,
+					"vnet":            false,
+					"availabilitySet": false,
+				},
+				"resourceGroup": map[string]interface{}{
+					"name": infra.Namespace,
+					"vnet": map[string]interface{}{
+						"name":          existingVnetName,
+						"resourceGroup": existingVnetResourceGroup,
+					},
+					"subnet": map[string]interface{}{
+						"serviceEndpoints": []string{testServiceEndpoint},
+					},
+				},
+				"clusterName": infra.Namespace,
+				"networks": map[string]interface{}{
+					"worker": config.Networks.Workers,
+				},
+				"outputKeys": map[string]interface{}{
+					"resourceGroupName": TerraformerOutputKeyResourceGroupName,
+					"vnetName":          TerraformerOutputKeyVNetName,
+					"vnetResourceGroup": TerraformerOutputKeyVNetResourceGroup,
+					"subnetName":        TerraformerOutputKeySubnetName,
+					"routeTableName":    TerraformerOutputKeyRouteTableName,
+					"securityGroupName": TerraformerOutputKeySecurityGroupName,
+				},
+			}
+			Expect(err).To(Not(HaveOccurred()))
 			Expect(values).To(BeEquivalentTo(expectedValues))
 		})
 	})
