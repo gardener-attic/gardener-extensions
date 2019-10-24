@@ -11,3 +11,7 @@
 10253
 {{- end -}}
 {{- end -}}
+
+{{- define "deploymentversion" -}}
+apps/v1
+{{- end -}}
