@@ -118,6 +118,20 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 
+		disk := map[string]interface{}{
+			"autoDelete": true,
+			"boot":       true,
+			"sizeGb":     volumeSize,
+			"type":       pool.Volume.Type,
+			"image":      machineImage,
+			"labels": map[string]interface{}{
+				"name": w.worker.Name,
+			},
+		}
+		if pool.Volume.Type != nil {
+			disk["type"] = *pool.Volume.Type
+		}
+
 		for zoneIndex, zone := range pool.Zones {
 			machineClassSpec := map[string]interface{}{
 				"region":             w.worker.Spec.Region,
@@ -126,18 +140,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"disableExternalIP":  true,
 				"deletionProtection": false,
 				"description":        fmt.Sprintf("Machine of Shoot %s created by machine-controller-manager.", w.worker.Name),
-				"disks": []map[string]interface{}{
-					{
-						"autoDelete": true,
-						"boot":       true,
-						"sizeGb":     volumeSize,
-						"type":       pool.Volume.Type,
-						"image":      machineImage,
-						"labels": map[string]interface{}{
-							"name": w.worker.Name,
-						},
-					},
-				},
+				"disks":              []map[string]interface{}{disk},
 				"labels": map[string]interface{}{
 					"name": w.worker.Name,
 				},

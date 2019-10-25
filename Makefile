@@ -86,6 +86,7 @@ revendor:
 	@rm -f vendor/github.com/gardener/gardener/pkg/apis/core/v1alpha1/conversions.go
 	@rm -f vendor/github.com/gardener/gardener/pkg/apis/garden/v1beta1/zz_generated.conversion.go
 	@rm -f vendor/github.com/gardener/gardener/pkg/apis/garden/v1beta1/conversions.go
+	sed -i 's/, addConversionFuncs)/\)/g' vendor/github.com/gardener/gardener/pkg/apis/core/v1alpha1/register.go
 
 .PHONY: start-os-coreos
 start-os-coreos:

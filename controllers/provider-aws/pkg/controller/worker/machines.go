@@ -136,7 +136,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		}
 		ebs := map[string]interface{}{
 			"volumeSize": volumeSize,
-			"volumeType": pool.Volume.Type,
+		}
+		if pool.Volume.Type != nil {
+			ebs["volumeType"] = *pool.Volume.Type
 		}
 		if workerConfig.Volume != nil && workerConfig.Volume.IOPS != nil {
 			ebs["iops"] = *workerConfig.Volume.IOPS

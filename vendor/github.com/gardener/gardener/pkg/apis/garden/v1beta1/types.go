@@ -347,6 +347,8 @@ type MachineType struct {
 
 // MachineTypeStorage is the amount of storage associated with the root volume of this machine type.
 type MachineTypeStorage struct {
+	// Class is the class of the storage type.
+	Class string `json:"class"`
 	// Size is the storage size.
 	Size resource.Quantity `json:"size"`
 	// Type is the type of the storage.
@@ -728,6 +730,9 @@ type ShootSpec struct {
 	// operations should be performed.
 	// +optional
 	Maintenance *Maintenance `json:"maintenance,omitempty"`
+	// Monitoring contains information about custom monitoring configurations for the shoot.
+	// +optional
+	Monitoring *Monitoring `json:"monitoring,omitempty"`
 }
 
 // ShootStatus holds the most recently observed status of the Shoot cluster.
@@ -1775,6 +1780,20 @@ type MaintenanceTimeWindow struct {
 	End string `json:"end"`
 }
 
+// Monitoring contains information about the monitoring configuration for the shoot.
+type Monitoring struct {
+	// Alerting contains information about the alerting configuration for the shoot cluster.
+	// +optional
+	Alerting *Alerting `json:"alerting,omitempty"`
+}
+
+// Alerting contains information about how alerting will be done (i.e. who will receive alerts and how).
+type Alerting struct {
+	// MonitoringEmailReceivers is a list of recipients for alerts
+	// +optional
+	EmailReceivers []string `json:"emailReceivers,omitempty"`
+}
+
 // MachineImage defines the name and the version of the shoot's machine image in any environment. Has to be defined in the respective CloudProfile.
 type ShootMachineImage struct {
 	// Name is the name of the image.
@@ -1859,8 +1878,6 @@ const (
 	ShootEveryNodeReady gardencorev1alpha1.ConditionType = "EveryNodeReady"
 	// ShootSystemComponentsHealthy is a constant for a condition type indicating the system components health.
 	ShootSystemComponentsHealthy gardencorev1alpha1.ConditionType = "SystemComponentsHealthy"
-	// ShootAlertsInactive is a constant for a condition type indicating the Shoot cluster alert states.
-	ShootAlertsInactive gardencorev1alpha1.ConditionType = "AlertsInactive"
 	// ShootAPIServerAvailable is a constant for a condition type indicating that the Shoot clusters API server is available.
 	ShootAPIServerAvailable gardencorev1alpha1.ConditionType = "APIServerAvailable"
 )

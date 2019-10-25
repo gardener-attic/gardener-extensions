@@ -246,7 +246,7 @@ var _ = Describe("Machines", func() {
 								},
 								UserData: userData,
 								Volume: &extensionsv1alpha1.Volume{
-									Type: volumeType,
+									Type: &volumeType,
 									Size: fmt.Sprintf("%dGi", volumeSize),
 								},
 								Zones: []string{
@@ -267,7 +267,7 @@ var _ = Describe("Machines", func() {
 								},
 								UserData: userData,
 								Volume: &extensionsv1alpha1.Volume{
-									Type: volumeType,
+									Type: &volumeType,
 									Size: fmt.Sprintf("%dGi", volumeSize),
 								},
 								Zones: []string{

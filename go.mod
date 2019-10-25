@@ -13,8 +13,8 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.0.0-20191017105650-90c425422051
-	github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993
+	github.com/gardener/gardener v0.0.0-20191025063857-c27ebd04a82b
+	github.com/gardener/gardener-resource-manager v0.0.0-20191025075317-09173887c1a7
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1
@@ -36,7 +36,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gomodules.xyz/jsonpatch/v2 v2.0.0
 	google.golang.org/api v0.7.0
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b
 	k8s.io/apiextensions-apiserver v0.0.0-20190409022649-727a075fdec8
 	k8s.io/apimachinery v0.0.0-20191004074956-c5d2f014d689

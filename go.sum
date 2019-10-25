@@ -9,6 +9,7 @@ cloud.google.com/go v0.43.0/go.mod h1:BOSR3VbTLkk6FDC/TcffxP4NF/FFBGA5ku+jvKOP7p
 contrib.go.opencensus.io/exporter/ocagent v0.4.6/go.mod h1:YuG83h+XWwqWjvCqn7vK4KSyLKhThY3+gNGQ37iS2V0=
 contrib.go.opencensus.io/exporter/ocagent v0.4.10 h1:Trr4zF3bbDxrde1svPSW0PkGwCzoHY7f3JL8g5Gl+hM=
 contrib.go.opencensus.io/exporter/ocagent v0.4.10/go.mod h1:ueLzZcP7LPhPulEBukGn4aLh7Mx9YJwpVJ9nL2FYltw=
+contrib.go.opencensus.io/exporter/ocagent v0.4.12/go.mod h1:450APlNTSR6FrvC3CTRqYosuDstRB9un7SOx2k/9ckA=
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 git.apache.org/thrift.git v0.12.0/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/Azure/azure-pipeline-go v0.2.1 h1:OLBdZJ3yvOn2MezlWvbrBMTEUQC72zAftRZOMdj5HYo=
@@ -21,6 +22,7 @@ github.com/Azure/azure-storage-blob-go v0.7.0 h1:MuueVOYkufCxJw5YZzF842DY2MBsp+h
 github.com/Azure/azure-storage-blob-go v0.7.0/go.mod h1:f9YQKtsG1nMisotuTPpO0tjNuEjKRYAcJU8/ydDI++4=
 github.com/Azure/go-autorest/autorest v0.9.0 h1:MRvx8gncNaXJqOoLmhNjUAKh33JJF8LyxPhomEtOsjs=
 github.com/Azure/go-autorest/autorest v0.9.0/go.mod h1:xyHB1BMZT0cuDHU7I0+g046+BFDTQ8rEZB0s4Yfa6bI=
+github.com/Azure/go-autorest/autorest/adal v0.2.0/go.mod h1:MeS4XhScH55IST095THyTxElntu7WqB7pNbZo8Q5G3E=
 github.com/Azure/go-autorest/autorest/adal v0.4.0 h1:e4yveyEm5WvJDtmxJCY8fW1d3MY7vlQw/dVgL7kEmAg=
 github.com/Azure/go-autorest/autorest/adal v0.4.0/go.mod h1:n1iM1u+ZMYni6IIY+FB82IT/DbSdC3T3gO1qFQ/3jEw=
 github.com/Azure/go-autorest/autorest/adal v0.5.0/go.mod h1:8Z9fGy2MpX0PvDjB1pEgQTmVqjGhiHBW7RJJEciWzS0=
@@ -45,6 +47,7 @@ github.com/Azure/go-autorest/autorest/validation v0.2.0 h1:15vMO4y76dehZSq7pAaOL
 github.com/Azure/go-autorest/autorest/validation v0.2.0/go.mod h1:3EEqHnBxQGHXRYq3HT1WyXAvT7LLY3tl70hw6tQIbjI=
 github.com/Azure/go-autorest/logger v0.1.0 h1:ruG4BSDXONFRrZZJ2GUXDiUyVpayPmb1GnWeHDdaNKY=
 github.com/Azure/go-autorest/logger v0.1.0/go.mod h1:oExouG+K6PryycPJfVSxi/koC6LSNgds39diKLz7Vrc=
+github.com/Azure/go-autorest/tracing v0.1.0/go.mod h1:ROEEAFwXycQw7Sn3DXNtEedEvdeRAgDr0izn4z5Ij88=
 github.com/Azure/go-autorest/tracing v0.4.0 h1:r5D+n0u8XGFQIpIYk0xlKLDgiArnnIsfUjWANW5Wto0=
 github.com/Azure/go-autorest/tracing v0.4.0/go.mod h1:sVZ/n8H0f4naUjHNvSe2qjNiC3oV6+8CCqU9mhEvav8=
 github.com/Azure/go-autorest/tracing v0.5.0 h1:TRn4WjSnkcSy5AEG3pnbtFSwNtwzjr4VYyQflFE619k=
@@ -158,14 +161,16 @@ github.com/gardener/controller-manager-library v0.0.0-20190715130150-315e86b0196
 github.com/gardener/controller-manager-library v0.0.0-20190715130150-315e86b01963/go.mod h1:v6cbldxmpL2fYBEB2lSnq3LSEPwIHus9En6iIhwNE1k=
 github.com/gardener/controller-manager-library v0.0.0-20190830161011-2626c078acef h1:JPpsEjL/YaI1SeB4auo18tfykegJl8ItAjpY4xVjLUo=
 github.com/gardener/controller-manager-library v0.0.0-20190830161011-2626c078acef/go.mod h1:v6cbldxmpL2fYBEB2lSnq3LSEPwIHus9En6iIhwNE1k=
+github.com/gardener/etcd-backup-restore v0.0.0-20190807103447-4c8bc2972b60/go.mod h1:w55uXFfKnGZFpcfl18L1yFtd2ZhRt1NpA7bxkAAHeKg=
 github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13 h1:RBpQLA/TOYGfG0rpm4KC47WG2tUs4CIjUD8iWWw+VlM=
 github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13/go.mod h1:Y3om11E865x4aQ7cmcHjknb8RMgCO153huRb/SvP+9o=
 github.com/gardener/gardener v0.0.0-20190812144748-dec8f3c7f288/go.mod h1:ioI69PbfNBUp10k2OtIED7u0l6u1NePBw/wgox9uayQ=
 github.com/gardener/gardener v0.0.0-20190830053951-194cf8abb797/go.mod h1:UjyQiGrjIRJQ82t2PTqtdMXzJxqH/ftQ36jbpFxAWXw=
+github.com/gardener/gardener v0.0.0-20190913144920-5b4adb9f114d/go.mod h1:8LOLWzproKzfww5LdDo0/7FyVQR7gR1QA5LQc5buDzQ=
 github.com/gardener/gardener v0.0.0-20191004085047-5707d498b40c/go.mod h1:zvajWsteDY43oECil7ADr4NNp88CMltFEutUp1jX+zA=
-github.com/gardener/gardener v0.0.0-20191017105650-90c425422051 h1:7fZhgC6hYuX4ook05AbUGyYik1reZYmWFWiWYXdM0Vc=
-github.com/gardener/gardener v0.0.0-20191017105650-90c425422051/go.mod h1:EPowOY6iwWqit6mED3UOQv72bodT3YlYe/xnZHjvHWY=
-github.com/gardener/gardener v0.0.0-20191018053912-96b796da32f7 h1:AOsg4FBTtBbt/Y8+6/YMGJ9JgJ4wTJbDU04FKJkqKrw=
+github.com/gardener/gardener v0.0.0-20191025063857-c27ebd04a82b h1:bkVdRJTQftPSy38uSjz+LnRVACdNTSXCoqfMjmi5Hig=
+github.com/gardener/gardener v0.0.0-20191025063857-c27ebd04a82b/go.mod h1:/quV7aGxbIjc9+XNTsJi9R5nvLhFOrvgrKDdHjJCMVI=
+github.com/gardener/gardener v0.0.0-20191025080333-9dd60d49eaed h1:FdB5WQJpcuunAFksuRv2d+oxz1tfOD05+GpTTNzCbbE=
 github.com/gardener/gardener-extensions v0.0.0-20190725050243-a80ef643c64b/go.mod h1:uXjtl3KeVdQXuGIP26+84wJY1Kwru67l0FXm7A5DiME=
 github.com/gardener/gardener-extensions v0.0.0-20190820050625-a15de8a82f6b/go.mod h1:q69+1cUGSfQ8gSMWzU7GFz/R8K8MpOLQBT2wJJcCjEA=
 github.com/gardener/gardener-extensions v0.0.0-20190906160200-5c329d46ae81/go.mod h1:OBUAbab8OMm8pvzr/1/cdwIQnQYuMoGDTNR2c+i9nYo=
@@ -175,6 +180,8 @@ github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a
 github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a/go.mod h1:kIPm1DlE5jChb4moAseumj1qr+IITKXPJcqyIKJp14Y=
 github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993 h1:HoOo1rfm4n/T23886/Yj2yCVC81cVuXMbzdMo6PzTOs=
 github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993/go.mod h1:l18ykpXeMDrrrtiA99YTdvZPW2TOaHIR/LrtbVELIiU=
+github.com/gardener/gardener-resource-manager v0.0.0-20191025075317-09173887c1a7 h1:4Ub4XEIe9wkLXTwyyXPbCB6NU5Vf2muug4Bo3+PdDNQ=
+github.com/gardener/gardener-resource-manager v0.0.0-20191025075317-09173887c1a7/go.mod h1:sx7C8db4Q/gyddvFPZ+vbfCZpXmsRMpsfgqwn42PpXg=
 github.com/gardener/hvpa-controller v0.0.0-20190924063424-ef5c3668949d h1:PbaSklo24t3741UtA3R6z7TEY3WdhcMaOy/I0VFVHj4=
 github.com/gardener/hvpa-controller v0.0.0-20190924063424-ef5c3668949d/go.mod h1:YUvzinEboe8b9FTflj+wGvXaZBHHhQTd+R9Vk581wIE=
 github.com/gardener/machine-controller-manager v0.0.0-20190228095106-36a42c48af0a/go.mod h1:/ZDmMugbfkBfOO6/nrdnqV+OMSEuF75wrF9KFIuqndM=
@@ -322,6 +329,7 @@ github.com/grpc-ecosystem/go-grpc-middleware v1.1.0/go.mod h1:f5nM7jw/oeRSadq3xC
 github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0/go.mod h1:8NvIoxWQoOIhqOTXgfV/d3M/q6VIi02HzZEHgUlZvzk=
 github.com/grpc-ecosystem/grpc-gateway v1.5.0/go.mod h1:RSKVYQBd5MCa4OVpNdGskqpgL2+G+NZTnrVHpWWfpdw=
 github.com/grpc-ecosystem/grpc-gateway v1.6.2/go.mod h1:RSKVYQBd5MCa4OVpNdGskqpgL2+G+NZTnrVHpWWfpdw=
+github.com/grpc-ecosystem/grpc-gateway v1.8.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/grpc-ecosystem/grpc-gateway v1.9.3 h1:O8JuYkaEesTVBN68o2pLhRGTfVXnGhKtx3qjOmQkJV0=
 github.com/grpc-ecosystem/grpc-gateway v1.9.3/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/grpc-ecosystem/grpc-gateway v1.9.5 h1:UImYN5qQ8tuGpGE16ZmjvcTtTw24zw1QAp/SlnNrZhI=
@@ -551,6 +559,8 @@ go.opencensus.io v0.18.1-0.20181204023538-aab39bd6a98b/go.mod h1:vKdFvxhtzZ9onBp
 go.opencensus.io v0.19.1 h1:gPYKQ/GAQYR2ksU+qXNmq3CrOZWT1kkryvW6O0v1acY=
 go.opencensus.io v0.19.1/go.mod h1:gug0GbSHa8Pafr0d2urOSgoXHZ6x/RUlaiT0d9pqb4A=
 go.opencensus.io v0.19.2/go.mod h1:NO/8qkisMZLZ1FCsKNqtJPwc8/TaclWyY0B6wcYNg9M=
+go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
+go.opencensus.io v0.20.2/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=
 go.opencensus.io v0.22.0 h1:C9hSCOW830chIVkdja34wa6Ky+IzWllkUinR+BtRZd4=
 go.opencensus.io v0.22.0/go.mod h1:+kGneAE2xo2IficOXnaByMWTGM9T73dGwxeWcUqIpI8=
@@ -705,6 +715,7 @@ google.golang.org/api v0.0.0-20181030000543-1d582fd0359e/go.mod h1:4mhQ8q/RsB7i+
 google.golang.org/api v0.0.0-20181220000619-583d854617af/go.mod h1:4mhQ8q/RsB7i+udVvVy5NUi08OU8ZlA0gRVgrF7VFY0=
 google.golang.org/api v0.2.0 h1:B5VXkdjt7K2Gm6fGBC9C9a1OAKJDT95cTqwet+2zib0=
 google.golang.org/api v0.2.0/go.mod h1:IfRCZScioGtypHNTlz3gFk67J8uePVW7uDTBzXuIkhU=
+google.golang.org/api v0.3.1/go.mod h1:6wY9I6uQWHQ8EM57III9mq/AjF+i8G65rmVagqKMtkk=
 google.golang.org/api v0.4.0/go.mod h1:8k5glujaEP+g9n7WNsDg8QP6cUVNI86fCNMcbazEtwE=
 google.golang.org/api v0.7.0 h1:9sdfJOzWlkqPltHAuzT2Cp+yrBeY1KRVYgms8soxMwM=
 google.golang.org/api v0.7.0/go.mod h1:WtwebWUNSVBH/HAw79HIFXZNqEvBhG+Ra+ax0hx3E3M=
@@ -767,6 +778,8 @@ gopkg.in/yaml.v2 v2.0.0-20170812160011-eb3733d160e7/go.mod h1:JAlM8MvJe8wmxCU4Bl
 gopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.2.4 h1:/eiJrUcujPVeJ3xlSWaiNi3uSVmDGBK1pDHUHAnao1I=
+gopkg.in/yaml.v2 v2.2.4/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 grpc.go4.org v0.0.0-20170609214715-11d0a25b4919/go.mod h1:77eQGdRu53HpSqPFJFmuJdjuHRquDANNeA4x7B8WQ9o=
 honnef.co/go/tools v0.0.0-20180728063816-88497007e858/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20180920025451-e3ad64cb4ed3/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=

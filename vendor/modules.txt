@@ -136,7 +136,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
-# github.com/gardener/gardener v0.0.0-20191017105650-90c425422051
+# github.com/gardener/gardener v0.0.0-20191025063857-c27ebd04a82b
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/v1alpha1
@@ -189,7 +189,7 @@ github.com/gardener/gardener/pkg/utils/validation/gomega
 github.com/gardener/gardener/pkg/version
 github.com/gardener/gardener/test/integration/framework
 github.com/gardener/gardener/test/integration/shoots
-# github.com/gardener/gardener-resource-manager v0.0.0-20190828115855-7ceeb3021993
+# github.com/gardener/gardener-resource-manager v0.0.0-20191025075317-09173887c1a7
 github.com/gardener/gardener-resource-manager/pkg/apis/resources
 github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1
 github.com/gardener/gardener-resource-manager/pkg/manager
@@ -606,7 +606,7 @@ gopkg.in/inf.v0
 gopkg.in/ini.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 gopkg.in/tomb.v1
-# gopkg.in/yaml.v2 v2.2.2
+# gopkg.in/yaml.v2 v2.2.4
 gopkg.in/yaml.v2
 # k8s.io/api v0.0.0-20191004102349-159aefb8556b => k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 k8s.io/api/admission/v1beta1

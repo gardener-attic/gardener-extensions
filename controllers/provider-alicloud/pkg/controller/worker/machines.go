@@ -124,17 +124,21 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				return err
 			}
 
+			systemDisk := map[string]interface{}{
+				"size": volumeSize,
+			}
+			if pool.Volume.Type != nil {
+				systemDisk["category"] = *pool.Volume.Type
+			}
+
 			machineClassSpec := map[string]interface{}{
-				"imageID":         machineImageID,
-				"instanceType":    pool.MachineType,
-				"region":          w.worker.Spec.Region,
-				"zoneID":          zone,
-				"securityGroupID": nodesSecurityGroup.ID,
-				"vSwitchID":       nodesVSwitch.ID,
-				"systemDisk": map[string]interface{}{
-					"category": pool.Volume.Type,
-					"size":     volumeSize,
-				},
+				"imageID":                 machineImageID,
+				"instanceType":            pool.MachineType,
+				"region":                  w.worker.Spec.Region,
+				"zoneID":                  zone,
+				"securityGroupID":         nodesSecurityGroup.ID,
+				"vSwitchID":               nodesVSwitch.ID,
+				"systemDisk":              systemDisk,
 				"instanceChargeType":      "PostPaid",
 				"internetChargeType":      "PayByTraffic",
 				"internetMaxBandwidthIn":  5,

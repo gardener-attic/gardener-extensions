@@ -368,6 +368,8 @@ type MachineType struct {
 
 // MachineTypeStorage is the amount of storage associated with the root volume of this machine type.
 type MachineTypeStorage struct {
+	// Class is the class of the storage type.
+	Class string
 	// Size is the storage size.
 	Size resource.Quantity
 	// Type is the type of the storage.
@@ -807,6 +809,8 @@ type ShootSpec struct {
 	// Maintenance contains information about the time window for maintenance operations and which
 	// operations should be performed.
 	Maintenance *Maintenance
+	// Monitoring contains information about custom monitoring configurations for the shoot.
+	Monitoring *Monitoring
 	// Provider contains all provider-specific and provider-relevant information.
 	Provider Provider
 	// Region is a name of a region.
@@ -1603,6 +1607,18 @@ type MaintenanceTimeWindow struct {
 	End string
 }
 
+// Monitoring contains information about the monitoring configuration for the shoot.
+type Monitoring struct {
+	// Alerting contains information about the alerting configuration for the shoot cluster.
+	Alerting *Alerting
+}
+
+// Alerting contains information about how alerting will be done (i.e. who will receive alerts and how).
+type Alerting struct {
+	// MonitoringEmailReceivers is a list of recipients for alerts
+	EmailReceivers []string
+}
+
 // Provider contains provider-specific information that are handed-over to the provider-specific
 // extension controller.
 type Provider struct {
@@ -1694,7 +1710,7 @@ type ShootMachineImage struct {
 // Volume contains information about the volume type and size.
 type Volume struct {
 	// Type is the machine type of the worker group.
-	Type string
+	Type *string
 	// Size is the size of the root volume.
 	Size string
 }
