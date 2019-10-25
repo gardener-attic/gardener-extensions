@@ -7,12 +7,7 @@
 # - decide whether the deployment replicates the external CSI
 #   attacher, in which case leadership election must be enabled;
 #   this influences the RBAC setup, see below
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: csi-attacher
-  namespace: kube-system
----
+
 # Attacher must be able to work with PVs, nodes and VolumeAttachments
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -52,6 +47,8 @@ roleRef:
   kind: ClusterRole
   name: garden.sapcloud.io:kube-system:csi-attacher
   apiGroup: rbac.authorization.k8s.io
+
+{{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
 ---
 # Attacher must be able to work with config map in current namespace
 # if (and only if) leadership election is enabled
@@ -61,8 +58,8 @@ metadata:
   namespace: kube-system
   name: csi-attacher
 rules:
-- apiGroups: [""]
-  resources: ["configmaps"]
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
   verbs: ["get", "watch", "list", "delete", "update", "create"]
 ---
 kind: RoleBinding
@@ -77,3 +74,4 @@ roleRef:
   kind: Role
   name: csi-attacher
   apiGroup: rbac.authorization.k8s.io
+{{- end }}

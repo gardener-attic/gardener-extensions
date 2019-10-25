@@ -4,7 +4,10 @@ images:
   csi-provisioner: image-repository:image-tag
   csi-plugin-alicloud: image-repository:image-tag
   csi-snapshotter: image-repository:image-tag
+  csi-resizer: image-repository:image-tag
 regionID: shanghai-cn
+snapshotPrefix: ""
+persistentVolumePrefix: ""
 podAnnotations: {}
 attacherResources:
   requests:
@@ -21,6 +24,13 @@ provisionerResources:
     cpu: 30m
     memory: 50Mi
 snapshotterResources:
+  requests:
+    cpu: 10m
+    memory: 32Mi
+  limits:
+    cpu: 30m
+    memory: 50Mi
+resizerResources:
   requests:
     cpu: 10m
     memory: 32Mi

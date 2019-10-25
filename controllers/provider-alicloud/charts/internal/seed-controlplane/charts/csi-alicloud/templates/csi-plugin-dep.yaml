@@ -69,7 +69,7 @@ spec:
         - "--kubeconfig=/var/lib/csi-attacher/kubeconfig"
         - "--leader-election"
 {{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
-        - "--leader-election-type=configmaps"
+        - "--leader-election-type=leases"
 {{- else }}
         - "--leader-election-identity=$(MY_NAME)"
 {{- end }}
@@ -98,6 +98,11 @@ spec:
         - "--kubeconfig=/var/lib/csi-provisioner/kubeconfig"
         - "--feature-gates=Topology=True"
         - "--enable-leader-election=true"
+{{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
+        - "--leader-election-type=leases"
+        - "--leader-election-namespace=kube-system"
+        - "--volume-name-prefix=pv-{{ .Values.persistentVolumePrefix }}"
+{{- end }}
 {{- if .Values.provisionerResources }}
         resources:
 {{ toYaml .Values.provisionerResources | indent 12 }}
@@ -117,6 +122,11 @@ spec:
         args:
         - "--csi-address=$(CSI_ENDPOINT)"
         - "--kubeconfig=/var/lib/csi-snapshotter/kubeconfig"
+{{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
+        - "--leader-election"
+        - "--leader-election-namespace=kube-system"
+        - "--snapshot-name-prefix=s-{{ .Values.snapshotPrefix }}"
+{{- end }}
         env:
         - name: CSI_ENDPOINT
           value: /var/lib/kubelet/plugins/diskplugin.csi.alibabacloud.com/csi.sock
@@ -129,6 +139,28 @@ spec:
           mountPath: /var/lib/kubelet/plugins/diskplugin.csi.alibabacloud.com
         - name: csi-snapshotter
           mountPath: /var/lib/csi-snapshotter
+{{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}
+      - name: csi-resizer
+        image: {{ index .Values.images "csi-resizer" }}
+        args:
+        - "--v=5"
+        - "--csi-address=$(ADDRESS)"
+        - "--kubeconfig=/var/lib/csi-resizer/kubeconfig"
+        - "--leader-election=true"
+        - "--leader-election-namespace=kube-system"
+        env:
+        - name: ADDRESS
+          value: /var/lib/kubelet/plugins/diskplugin.csi.alibabacloud.com/csi.sock
+{{- if .Values.resizerResources}}
+        resources:
+{{ toYaml .Values.resizerResources | indent 12 }}
+{{- end}}
+        volumeMounts:
+        - name: csi-resizer
+          mountPath: /var/lib/csi-resizer
+        - name: socket-dir
+          mountPath: /var/lib/kubelet/plugins/diskplugin.csi.alibabacloud.com 
+{{- end}}
       volumes:
       - name: socket-dir
         emptyDir: {}
@@ -141,3 +173,6 @@ spec:
       - name: csi-snapshotter
         secret:
           secretName: csi-snapshotter
+      - name: csi-resizer
+        secret:
+          secretName: csi-resizer
