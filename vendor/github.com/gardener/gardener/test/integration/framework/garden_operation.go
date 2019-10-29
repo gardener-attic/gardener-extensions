@@ -54,11 +54,13 @@ import (
 )
 
 const (
-	defaultPollInterval  = 5 * time.Second
-	dashboardUserName    = "admin"
-	loggingUserName      = "admin"
-	elasticsearchLogging = "elasticsearch-logging"
-	elasticsearchPort    = 9200
+	defaultPollInterval       = 5 * time.Second
+	k8sClientInitPollInterval = 20 * time.Second
+	k8sClientInitTimeout      = 5 * time.Minute
+	dashboardUserName         = "admin"
+	loggingUserName           = "admin"
+	elasticsearchLogging      = "elasticsearch-logging"
+	elasticsearchPort         = 9200
 )
 
 // NewGardenTestOperation initializes a new test operation from a gardener kubernetes interface
@@ -155,11 +157,17 @@ func (o *GardenerTestOperation) AddShoot(ctx context.Context, shoot *v1beta1.Sho
 	if err != nil {
 		return errors.Wrap(err, "could not add schemes to shoot scheme")
 	}
-	shootClient, err = kubernetes.NewClientFromSecret(seedClient, shootop.ComputeTechnicalID(project.Name, shoot), v1beta1.GardenerName, kubernetes.WithClientOptions(client.Options{
-		Scheme: shootScheme,
-	}))
-	if err != nil {
-		return errors.Wrap(err, "could not construct Shoot client")
+
+	if err := retry.UntilTimeout(ctx, k8sClientInitPollInterval, k8sClientInitTimeout, func(ctx context.Context) (bool, error) {
+		shootClient, err = kubernetes.NewClientFromSecret(seedClient, shootop.ComputeTechnicalID(project.Name, shoot), v1beta1.GardenerName, kubernetes.WithClientOptions(client.Options{
+			Scheme: shootScheme,
+		}))
+		if err != nil {
+			return retry.MinorError(errors.Wrap(err, "could not construct Shoot client"))
+		}
+		return retry.Ok()
+	}); err != nil {
+		return err
 	}
 
 	o.ShootClient = shootClient
@@ -193,12 +201,12 @@ func (o *GardenerTestOperation) DownloadKubeconfig(ctx context.Context, client k
 // DashboardAvailable checks if the kubernetes dashboard is available
 func (o *GardenerTestOperation) DashboardAvailable(ctx context.Context) error {
 	url := fmt.Sprintf("https://api.%s/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy", *o.Shoot.Spec.DNS.Domain)
-	dashboardPassword, err := o.getAdminPassword(ctx)
+	dashboardToken, err := o.getAdminToken(ctx)
 	if err != nil {
 		return err
 	}
 
-	return o.dashboardAvailable(ctx, url, dashboardUserName, dashboardPassword)
+	return o.dashboardAvailableWithToken(ctx, url, dashboardToken)
 }
 
 // KibanaDashboardAvailable checks if Kibana instance in shoot seed namespace is available
@@ -209,7 +217,7 @@ func (o *GardenerTestOperation) KibanaDashboardAvailable(ctx context.Context) er
 		return err
 	}
 
-	return o.dashboardAvailable(ctx, url, dashboardUserName, loggingPassword)
+	return o.dashboardAvailableWithBasicAuth(ctx, url, dashboardUserName, loggingPassword)
 }
 
 // HTTPGet performs an HTTP GET request with context
@@ -322,11 +330,12 @@ func (o *GardenerTestOperation) WaitUntilDeploymentsWithLabelsIsReady(ctx contex
 
 // WaitUntilGuestbookAppIsAvailable waits until the guestbook app is available and ready to serve requests
 func (o *GardenerTestOperation) WaitUntilGuestbookAppIsAvailable(ctx context.Context, guestbookAppUrls []string) error {
-	return retry.Until(ctx, defaultPollInterval, func(ctx context.Context) (done bool, err error) {
+	return retry.UntilTimeout(ctx, defaultPollInterval, 5*time.Minute, func(ctx context.Context) (done bool, err error) {
 		for _, guestbookAppURL := range guestbookAppUrls {
 			response, err := o.HTTPGet(ctx, guestbookAppURL)
 			if err != nil {
-				return retry.SevereError(err)
+				o.Logger.Infof("Guestbook app url: %q is not available yet: %s", guestbookAppURL, err.Error())
+				return retry.MinorError(err)
 			}
 
 			if response.StatusCode != http.StatusOK {
