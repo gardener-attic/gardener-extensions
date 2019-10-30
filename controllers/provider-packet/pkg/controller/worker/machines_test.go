@@ -159,7 +159,7 @@ var _ = Describe("Machines", func() {
 				}
 
 				cluster = &extensionscontroller.Cluster{
-					CoreShoot: &gardencorev1alpha1.Shoot{
+					Shoot: &gardencorev1alpha1.Shoot{
 						Spec: gardencorev1alpha1.ShootSpec{
 							Kubernetes: gardencorev1alpha1.Kubernetes{
 								Version: shootVersion,
@@ -345,7 +345,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, packetAPIToken, packetProjectID)
 
-				cluster.CoreShoot.Spec.Kubernetes.Version = "invalid"
+				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())

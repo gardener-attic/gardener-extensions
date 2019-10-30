@@ -75,7 +75,7 @@ var _ = Describe("Terraform", func() {
 		}
 
 		cluster = &controller.Cluster{
-			CoreShoot: &gardencorev1alpha1.Shoot{
+			Shoot: &gardencorev1alpha1.Shoot{
 				Spec: gardencorev1alpha1.ShootSpec{
 					Networking: gardencorev1alpha1.Networking{
 						Pods:     &podsCIDR,

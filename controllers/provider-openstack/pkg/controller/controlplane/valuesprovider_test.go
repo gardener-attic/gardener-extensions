@@ -109,7 +109,7 @@ var _ = Describe("ValuesProvider", func() {
 		}
 		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 		cluster                   = &extensionscontroller.Cluster{
-			CoreCloudProfile: &gardencorev1alpha1.CloudProfile{
+			CloudProfile: &gardencorev1alpha1.CloudProfile{
 				Spec: gardencorev1alpha1.CloudProfileSpec{
 					ProviderConfig: &gardencorev1alpha1.ProviderConfig{
 						RawExtension: runtime.RawExtension{
@@ -118,7 +118,7 @@ var _ = Describe("ValuesProvider", func() {
 					},
 				},
 			},
-			CoreShoot: &gardencorev1alpha1.Shoot{
+			Shoot: &gardencorev1alpha1.Shoot{
 				Spec: gardencorev1alpha1.ShootSpec{
 					Networking: gardencorev1alpha1.Networking{
 						Pods: &cidr,

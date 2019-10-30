@@ -33,7 +33,6 @@ import (
 
 	"github.com/gardener/gardener-resource-manager/pkg/manager"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
@@ -84,16 +83,8 @@ func (a *actuator) Reconcile(ctx context.Context, ex *extensionsv1alpha1.Extensi
 		return err
 	}
 
-	if cluster.Shoot != nil {
-		dns := cluster.Shoot.Spec.DNS
-		if dns.Domain == nil && dns.Provider != nil && *dns.Provider == gardenv1beta1.DNSUnmanaged {
-			return nil
-		}
-	} else if cluster.CoreShoot != nil {
-		dns := cluster.CoreShoot.Spec.DNS
-		if dns == nil || (dns.Domain == nil && len(dns.Providers) > 0 && dns.Providers[0].Type != nil && *dns.Providers[0].Type == "unmanaged") {
-			return nil
-		}
+	if controller.IsUnmanagedDNSProvider(cluster) {
+		return nil
 	}
 
 	if !controller.IsHibernated(cluster) {
@@ -164,24 +155,9 @@ func (a *actuator) InjectClient(client client.Client) error {
 }
 
 func (a *actuator) createCertBroker(ctx context.Context, cluster *controller.Cluster, namespace string) error {
-	var (
-		shootName      string
-		shootNamespace string
-		shootDomain    *string
-	)
-
-	if cluster.Shoot != nil {
-		shootName = cluster.Shoot.Name
-		shootNamespace = cluster.Shoot.Namespace
-		shootDomain = cluster.Shoot.Spec.DNS.Domain
-	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.DNS != nil {
-		shootName = cluster.CoreShoot.Name
-		shootNamespace = cluster.CoreShoot.Namespace
-		shootDomain = cluster.CoreShoot.Spec.DNS.Domain
-	}
-
+	shootDomain := cluster.Shoot.Spec.DNS.Domain
 	if shootDomain == nil {
-		return fmt.Errorf("no domain given for shoot %s/%s", shootName, shootNamespace)
+		return fmt.Errorf("no domain given for shoot %s/%s", cluster.Shoot.Name, cluster.Shoot.Namespace)
 	}
 
 	var (
@@ -274,7 +250,7 @@ func (a *actuator) deleteCertBroker(ctx context.Context, namespace string) error
 func (a *actuator) createRBAC(ctx context.Context, cluster *controller.Cluster, namespace string) error {
 	chartName := "cert-broker-rbac"
 
-	renderer, err := util.NewChartRendererForShoot(controller.GetKubernetesVersion(cluster))
+	renderer, err := util.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return errors.Wrap(err, "could not create chart renderer")
 	}

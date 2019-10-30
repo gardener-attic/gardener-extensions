@@ -59,7 +59,7 @@ var _ = Describe("Ensurer", func() {
 			}
 
 			cluster = &extensionscontroller.Cluster{
-				CoreShoot: &gardencorev1alpha1.Shoot{
+				Shoot: &gardencorev1alpha1.Shoot{
 					Spec: gardencorev1alpha1.ShootSpec{
 						Kubernetes: gardencorev1alpha1.Kubernetes{
 							Version: "1.13.4",

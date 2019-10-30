@@ -184,7 +184,7 @@ var _ = Describe("Machines", func() {
 				}
 				cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 				cluster = &extensionscontroller.Cluster{
-					CoreCloudProfile: &gardencorev1alpha1.CloudProfile{
+					CloudProfile: &gardencorev1alpha1.CloudProfile{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: cloudProfileName,
 						},
@@ -196,7 +196,7 @@ var _ = Describe("Machines", func() {
 							},
 						},
 					},
-					CoreShoot: &gardencorev1alpha1.Shoot{
+					Shoot: &gardencorev1alpha1.Shoot{
 						Spec: gardencorev1alpha1.ShootSpec{
 							Networking: gardencorev1alpha1.Networking{
 								Pods: &podCIDR,
@@ -424,7 +424,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				cluster.CoreShoot.Spec.Kubernetes.Version = "invalid"
+				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
@@ -461,7 +461,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image for this cloud profile cannot be found", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				cluster.CoreCloudProfile.Name = "another-cloud-profile"
+				cluster.CloudProfile.Name = "another-cloud-profile"
 
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
 

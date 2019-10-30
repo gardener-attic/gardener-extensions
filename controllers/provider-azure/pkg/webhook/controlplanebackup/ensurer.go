@@ -66,7 +66,7 @@ func (e *ensurer) EnsureETCDStatefulSet(ctx context.Context, ectx genericmutator
 	if err := e.ensureContainers(&ss.Spec.Template.Spec, ss.Name, cluster); err != nil {
 		return err
 	}
-	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, !extensionscontroller.IsSeedBackupNil(cluster))
+	return e.ensureChecksumAnnotations(ctx, &ss.Spec.Template, ss.Namespace, ss.Name, cluster.Seed.Spec.Backup != nil)
 }
 
 func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *extensionscontroller.Cluster) error {
@@ -89,7 +89,7 @@ func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev
 func (e *ensurer) ensureBackupRestoreContainer(existingContainer *corev1.Container, name string, cluster *extensionscontroller.Cluster) (*corev1.Container, error) {
 	// Find etcd-backup-restore image
 	// TODO Get seed version from clientset when it's possible to inject it
-	image, err := e.imageVector.FindImage(azure.ETCDBackupRestoreImageName, imagevector.TargetVersion(extensionscontroller.GetKubernetesVersion(cluster)))
+	image, err := e.imageVector.FindImage(azure.ETCDBackupRestoreImageName, imagevector.TargetVersion(cluster.Shoot.Spec.Kubernetes.Version))
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not find image %s", azure.ETCDBackupRestoreImageName)
 	}
@@ -103,10 +103,10 @@ func (e *ensurer) ensureBackupRestoreContainer(existingContainer *corev1.Contain
 		volumeClaimTemplateName = name
 	)
 	if name == v1alpha1constants.StatefulSetNameETCDMain {
-		if extensionscontroller.IsSeedBackupNil(cluster) {
+		if cluster.Seed.Spec.Backup == nil {
 			e.logger.Info("Backup profile is not configured; backup will not be taken for etcd-main")
 		} else {
-			prefix = common.GenerateBackupEntryName(extensionscontroller.GetTechnicalID(cluster), extensionscontroller.GetUID(cluster))
+			prefix = common.GenerateBackupEntryName(cluster.Shoot.Status.TechnicalID, cluster.Shoot.Status.UID)
 
 			provider = azure.StorageProviderName
 			env = []corev1.EnvVar{

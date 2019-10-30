@@ -61,8 +61,8 @@ func makeCluster(pods, services string, region string, countFaultDomain, countUp
 	)
 
 	return &controller.Cluster{
-		CoreShoot:        &shoot,
-		CoreCloudProfile: &cloudProfile,
+		Shoot:        &shoot,
+		CloudProfile: &cloudProfile,
 	}
 }
 

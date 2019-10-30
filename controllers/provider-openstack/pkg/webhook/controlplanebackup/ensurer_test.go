@@ -69,7 +69,7 @@ var _ = Describe("Ensurer", func() {
 			}
 
 			cluster = &extensionscontroller.Cluster{
-				CoreShoot: &gardencorev1alpha1.Shoot{
+				Shoot: &gardencorev1alpha1.Shoot{
 					Spec: gardencorev1alpha1.ShootSpec{
 						Kubernetes: gardencorev1alpha1.Kubernetes{
 							Version: "1.13.4",
@@ -80,7 +80,7 @@ var _ = Describe("Ensurer", func() {
 						UID:         types.UID("test-uid"),
 					},
 				},
-				CoreSeed: &gardencorev1alpha1.Seed{
+				Seed: &gardencorev1alpha1.Seed{
 					Spec: gardencorev1alpha1.SeedSpec{
 						Backup: &gardencorev1alpha1.SeedBackup{},
 					},
@@ -167,7 +167,7 @@ var _ = Describe("Ensurer", func() {
 			ss := &appsv1.StatefulSet{
 				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.StatefulSetNameETCDMain},
 			}
-			cluster.CoreSeed.Spec.Backup = nil
+			cluster.Seed.Spec.Backup = nil
 
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)

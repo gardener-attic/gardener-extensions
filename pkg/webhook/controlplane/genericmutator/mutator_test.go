@@ -75,19 +75,19 @@ var _ = Describe("Mutator", func() {
 
 		clusterKey = client.ObjectKey{Name: namespace}
 		cluster    = &extensionscontroller.Cluster{
-			CoreCloudProfile: &gardencorevalpha1.CloudProfile{
+			CloudProfile: &gardencorevalpha1.CloudProfile{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: gardencorevalpha1.SchemeGroupVersion.String(),
 					Kind:       "CloudProfile",
 				},
 			},
-			CoreSeed: &gardencorevalpha1.Seed{
+			Seed: &gardencorevalpha1.Seed{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: gardencorevalpha1.SchemeGroupVersion.String(),
 					Kind:       "Seed",
 				},
 			},
-			CoreShoot: &gardencorevalpha1.Shoot{
+			Shoot: &gardencorevalpha1.Shoot{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: gardencorevalpha1.SchemeGroupVersion.String(),
 					Kind:       "Shoot",
@@ -455,13 +455,13 @@ func clusterObject(cluster *extensionscontroller.Cluster) *extensionsv1alpha1.Cl
 	return &extensionsv1alpha1.Cluster{
 		Spec: extensionsv1alpha1.ClusterSpec{
 			CloudProfile: runtime.RawExtension{
-				Raw: encode(cluster.CoreCloudProfile),
+				Raw: encode(cluster.CloudProfile),
 			},
 			Seed: runtime.RawExtension{
-				Raw: encode(cluster.CoreSeed),
+				Raw: encode(cluster.Seed),
 			},
 			Shoot: runtime.RawExtension{
-				Raw: encode(cluster.CoreShoot),
+				Raw: encode(cluster.Shoot),
 			},
 		},
 	}

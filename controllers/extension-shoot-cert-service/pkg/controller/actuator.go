@@ -157,24 +157,9 @@ func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alph
 		return err
 	}
 
-	var (
-		shootName      string
-		shootNamespace string
-		shootDomain    *string
-	)
-
-	if cluster.Shoot != nil {
-		shootName = cluster.Shoot.Name
-		shootNamespace = cluster.Shoot.Namespace
-		shootDomain = cluster.Shoot.Spec.DNS.Domain
-	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.DNS != nil {
-		shootName = cluster.CoreShoot.Name
-		shootNamespace = cluster.CoreShoot.Namespace
-		shootDomain = cluster.CoreShoot.Spec.DNS.Domain
-	}
-
+	shootDomain := cluster.Shoot.Spec.DNS.Domain
 	if shootDomain == nil {
-		return fmt.Errorf("no domain given for shoot %s/%s", shootName, shootNamespace)
+		return fmt.Errorf("no domain given for shoot %s/%s", cluster.Shoot.Name, cluster.Shoot.Namespace)
 	}
 
 	shootKubeconfig, err := a.createKubeconfigForCertManagement(ctx, namespace)
@@ -215,7 +200,7 @@ func (a *actuator) createShootResources(ctx context.Context, cluster *controller
 		"shootUserName": v1alpha1.CertManagementUserName,
 	}
 
-	renderer, err := util.NewChartRendererForShoot(controller.GetKubernetesVersion(cluster))
+	renderer, err := util.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return errors.Wrap(err, "could not create chart renderer")
 	}

@@ -68,7 +68,7 @@ func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (ma
 		return nil, err
 	}
 
-	cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(w.cluster.CoreCloudProfile)
+	cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(w.cluster.CloudProfile)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	shootVersionMajorMinor, err := util.VersionMajorMinor(extensionscontroller.GetKubernetesVersion(w.cluster))
+	shootVersionMajorMinor, err := util.VersionMajorMinor(w.cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return err
 	}
@@ -110,17 +110,10 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	var cloudProfileName string
-	if w.cluster.CloudProfile != nil {
-		cloudProfileName = w.cluster.CloudProfile.Name
-	} else if w.cluster.CoreCloudProfile != nil {
-		cloudProfileName = w.cluster.CoreCloudProfile.Name
-	}
-
 	for _, pool := range w.worker.Spec.Pools {
 		zoneLen := len(pool.Zones)
 
-		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, cloudProfileName)
+		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, w.cluster.CloudProfile.Name)
 		if err != nil {
 			return err
 		}

@@ -16,7 +16,6 @@ package controller
 
 import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -35,7 +34,7 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("pod cidr is given", &Cluster{
-			CoreShoot: &gardencorev1alpha1.Shoot{
+			Shoot: &gardencorev1alpha1.Shoot{
 				Spec: gardencorev1alpha1.ShootSpec{
 					Networking: gardencorev1alpha1.Networking{
 						Pods: &cidr,
@@ -43,114 +42,12 @@ var _ = Describe("Shoot", func() {
 				},
 			},
 		}, cidr),
-
-		Entry("cloud is AWS", &Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						AWS: &gardenv1beta1.AWSCloud{
-							Networks: gardenv1beta1.AWSNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
-							},
-						},
-					},
-				},
-			},
-		}, cidr),
-
-		Entry("cloud is Azure", &Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						Azure: &gardenv1beta1.AzureCloud{
-							Networks: gardenv1beta1.AzureNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
-							},
-						},
-					},
-				},
-			},
-		}, cidr),
-
-		Entry("cloud is GCP", &Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						GCP: &gardenv1beta1.GCPCloud{
-							Networks: gardenv1beta1.GCPNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
-							},
-						},
-					},
-				},
-			},
-		}, cidr),
-
-		Entry("cloud is OpenStack", &Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						OpenStack: &gardenv1beta1.OpenStackCloud{
-							Networks: gardenv1beta1.OpenStackNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
-							},
-						},
-					},
-				},
-			},
-		}, cidr),
-
-		Entry("cloud is Alicloud", &Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						Alicloud: &gardenv1beta1.Alicloud{
-							Networks: gardenv1beta1.AlicloudNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
-							},
-						},
-					},
-				},
-			},
-		}, cidr),
-
-		Entry("cloud is Packet", &Cluster{
-			Shoot: &gardenv1beta1.Shoot{
-				Spec: gardenv1beta1.ShootSpec{
-					Cloud: gardenv1beta1.Cloud{
-						Packet: &gardenv1beta1.PacketCloud{
-							Networks: gardenv1beta1.PacketNetworks{
-								K8SNetworks: gardenv1beta1.K8SNetworks{Pods: &cidr},
-							},
-						},
-					},
-				},
-			},
-		}, cidr),
 	)
 
-	DescribeTable("#IsHibernated (gardenv1beta1.Shoot)",
-		func(hibernation *gardenv1beta1.Hibernation, expectation bool) {
-			cluster := &Cluster{
-				Shoot: &gardenv1beta1.Shoot{
-					Spec: gardenv1beta1.ShootSpec{
-						Hibernation: hibernation,
-					},
-				},
-			}
-
-			Expect(IsHibernated(cluster)).To(Equal(expectation))
-		},
-
-		Entry("hibernation is nil", nil, false),
-		Entry("hibernation is not enabled", &gardenv1beta1.Hibernation{Enabled: &falseVar}, false),
-		Entry("hibernation is enabled", &gardenv1beta1.Hibernation{Enabled: &trueVar}, true),
-	)
-
-	DescribeTable("#IsHibernated (gardencorev1alpha1.Shoot)",
+	DescribeTable("#IsHibernated",
 		func(hibernation *gardencorev1alpha1.Hibernation, expectation bool) {
 			cluster := &Cluster{
-				CoreShoot: &gardencorev1alpha1.Shoot{
+				Shoot: &gardencorev1alpha1.Shoot{
 					Spec: gardencorev1alpha1.ShootSpec{
 						Hibernation: hibernation,
 					},
@@ -165,27 +62,48 @@ var _ = Describe("Shoot", func() {
 		Entry("hibernation is enabled", &gardencorev1alpha1.Hibernation{Enabled: &trueVar}, true),
 	)
 
-	DescribeTable("#GetReplicas (gardenv1beta1.Shoot)",
-		func(hibernation *gardenv1beta1.Hibernation, wokenUp, expectation int) {
+	var (
+		dnsDomain            = "dnsdomain"
+		dnsProviderType      = "type"
+		dnsProviderUnmanaged = "unmanaged"
+	)
+
+	DescribeTable("#IsUnmanagedDNSProvider",
+		func(dns *gardencorev1alpha1.DNS, expectation bool) {
 			cluster := &Cluster{
-				Shoot: &gardenv1beta1.Shoot{
-					Spec: gardenv1beta1.ShootSpec{
-						Hibernation: hibernation,
+				Shoot: &gardencorev1alpha1.Shoot{
+					Spec: gardencorev1alpha1.ShootSpec{
+						DNS: dns,
 					},
 				},
 			}
 
-			Expect(GetReplicas(cluster, wokenUp)).To(Equal(expectation))
+			Expect(IsUnmanagedDNSProvider(cluster)).To(Equal(expectation))
 		},
 
-		Entry("hibernation is not enabled", nil, 3, 3),
-		Entry("hibernation is enabled", &gardenv1beta1.Hibernation{Enabled: &trueVar}, 1, 0),
+		Entry("dns is nil", nil, true),
+		Entry("dns domain is set", &gardencorev1alpha1.DNS{
+			Domain: &dnsDomain,
+		}, false),
+		Entry("dns domain is not set and provider is not given", &gardencorev1alpha1.DNS{
+			Providers: []gardencorev1alpha1.DNSProvider{},
+		}, false),
+		Entry("dns domain is not set and provider is given but type is not unmanaged", &gardencorev1alpha1.DNS{
+			Providers: []gardencorev1alpha1.DNSProvider{{
+				Type: &dnsProviderType,
+			}},
+		}, false),
+		Entry("dns domain is not set and provider is given and type is unmanaged", &gardencorev1alpha1.DNS{
+			Providers: []gardencorev1alpha1.DNSProvider{{
+				Type: &dnsProviderUnmanaged,
+			}},
+		}, true),
 	)
 
-	DescribeTable("#GetReplicas (gardencorev1alpha1.Shoot)",
+	DescribeTable("#GetReplicas",
 		func(hibernation *gardencorev1alpha1.Hibernation, wokenUp, expectation int) {
 			cluster := &Cluster{
-				CoreShoot: &gardencorev1alpha1.Shoot{
+				Shoot: &gardencorev1alpha1.Shoot{
 					Spec: gardencorev1alpha1.ShootSpec{
 						Hibernation: hibernation,
 					},
