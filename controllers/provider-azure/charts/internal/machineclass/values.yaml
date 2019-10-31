@@ -22,7 +22,9 @@ machineClasses:
     sku: Stable # TODO: remove these deprecated field after couple of releases
     version: "1576.5.0" # TODO: remove these deprecated field after couple of releases
     urn: "CoreOS:CoreOS:Stable:1576.5.0"
-  volumeSize: 50
+  osDisk:
+    size: 50
+    #type: Standard_LRS
   sshPublicKey: ssh-rsa AAAAB3...
 - name: class-2-availability-set
   region: westeurope
@@ -47,5 +49,7 @@ machineClasses:
     sku: Stable # TODO: remove these deprecated field after couple of releases
     version: "1576.5.0" # TODO: remove these deprecated field after couple of releases
     urn: "CoreOS:CoreOS:Stable:1576.5.0"
-  volumeSize: 50
+  osDisk:
+    size: 50
+    type: Standard_LRS
   sshPublicKey: ssh-rsa AAAAB3...

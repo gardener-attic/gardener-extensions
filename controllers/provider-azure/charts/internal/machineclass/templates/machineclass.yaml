@@ -49,7 +49,11 @@ spec:
         urn: {{ $machineClass.image.urn }}
       osDisk:
         caching: None
-        diskSizeGB: {{ $machineClass.volumeSize }}
+        diskSizeGB: {{ $machineClass.osDisk.size }}
+        {{- if hasKey $machineClass.osDisk "type" }}
+        managedDisk:
+          storageAccountType: {{ $machineClass.osDisk.type }}
+        {{- end }}
         createOption: FromImage
   resourceGroup: {{ $machineClass.resourceGroup }}
   secretRef:

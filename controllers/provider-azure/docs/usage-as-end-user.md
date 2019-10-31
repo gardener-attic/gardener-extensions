@@ -123,7 +123,7 @@ spec:
       maximum: 2
       volume:
         size: 50Gi
-        type: standard
+        type: Standard_LRS
   networking:
     nodes: 10.250.0.0/16
     type: calico
@@ -175,7 +175,7 @@ spec:
       maximum: 2
       volume:
         size: 50Gi
-        type: standard
+        type: Standard_LRS
       zones:
       - "1"
       - "2"
