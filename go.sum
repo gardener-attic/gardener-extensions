@@ -63,6 +63,8 @@ github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f h1:lGvI8+dm9Y/Qr
 github.com/Masterminds/sprig v0.0.0-20190301161902-9f8fceff796f/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
 github.com/Masterminds/sprig v2.20.0+incompatible h1:dJTKKuUkYW3RMFdQFXPU/s6hg10RgctmTjRcbZ98Ap8=
 github.com/Masterminds/sprig v2.20.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
+github.com/Masterminds/sprig v2.22.0+incompatible h1:z4yfnGrZ7netVz+0EDJ0Wi+5VZCSYp4Z0m2dk6cEM60=
+github.com/Masterminds/sprig v2.22.0+incompatible/go.mod h1:y6hNFY5UBTIWBxnzTeuNhlNS5hqE0NB0E6fgfo2Br3o=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/NYTimes/gziphandler v1.1.1/go.mod h1:n/CVRwUEOgIxrgPvAQhUUr9oeUtvrhMomdKFjzJNB0c=
 github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
@@ -137,6 +139,8 @@ github.com/elazarl/goproxy v0.0.0-20190703090003-6125c262ffb0 h1:ZMEV8o5EYDSweKa
 github.com/elazarl/goproxy v0.0.0-20190703090003-6125c262ffb0/go.mod h1:/Zj4wYkgs4iZTTu3o/KG3Itv/qCCa8VVMlb3i9OVuzc=
 github.com/elazarl/goproxy v0.0.0-20190711103511-473e67f1d7d2 h1:aZtFdDNWY/yH86JPR2WX/PN63635VsE/f/nXNPAbYxY=
 github.com/elazarl/goproxy v0.0.0-20190711103511-473e67f1d7d2/go.mod h1:/Zj4wYkgs4iZTTu3o/KG3Itv/qCCa8VVMlb3i9OVuzc=
+github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484 h1:pEtiCjIXx3RvGjlUJuCNxNOw0MNblyR9Wi+vJGBFh+8=
+github.com/elazarl/goproxy v0.0.0-20191011121108-aa519ddbe484/go.mod h1:Ro8st/ElPeALwNFlcTpWmkr6IoMFfkjXAvTHpevnDsM=
 github.com/elazarl/goproxy/ext v0.0.0-20190703090003-6125c262ffb0 h1:ht1Fo9uxmemH6/Or11+OosQxf6UKeauPI6Ure8KVuWw=
 github.com/elazarl/goproxy/ext v0.0.0-20190703090003-6125c262ffb0/go.mod h1:gNh8nYJoAm43RfaxurUnxr+N1PwuFV3ZMl/efxlIlY8=
 github.com/elazarl/goproxy/ext v0.0.0-20190711103511-473e67f1d7d2 h1:dWB6v3RcOy03t/bUadywsbyrQwCqZeNIEX6M1OtSZOM=
@@ -161,6 +165,8 @@ github.com/gardener/controller-manager-library v0.0.0-20190715130150-315e86b0196
 github.com/gardener/controller-manager-library v0.0.0-20190715130150-315e86b01963/go.mod h1:v6cbldxmpL2fYBEB2lSnq3LSEPwIHus9En6iIhwNE1k=
 github.com/gardener/controller-manager-library v0.0.0-20190830161011-2626c078acef h1:JPpsEjL/YaI1SeB4auo18tfykegJl8ItAjpY4xVjLUo=
 github.com/gardener/controller-manager-library v0.0.0-20190830161011-2626c078acef/go.mod h1:v6cbldxmpL2fYBEB2lSnq3LSEPwIHus9En6iIhwNE1k=
+github.com/gardener/controller-manager-library v0.0.0-20191022090355-2f744b5822cc h1:9iqVa4Z+VfvAWuZFxdtAdznLPJk6+9k2R9zR7yiCmRE=
+github.com/gardener/controller-manager-library v0.0.0-20191022090355-2f744b5822cc/go.mod h1:v6cbldxmpL2fYBEB2lSnq3LSEPwIHus9En6iIhwNE1k=
 github.com/gardener/etcd-backup-restore v0.0.0-20190807103447-4c8bc2972b60/go.mod h1:w55uXFfKnGZFpcfl18L1yFtd2ZhRt1NpA7bxkAAHeKg=
 github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13 h1:RBpQLA/TOYGfG0rpm4KC47WG2tUs4CIjUD8iWWw+VlM=
 github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13/go.mod h1:Y3om11E865x4aQ7cmcHjknb8RMgCO153huRb/SvP+9o=
@@ -168,12 +174,14 @@ github.com/gardener/gardener v0.0.0-20190812144748-dec8f3c7f288/go.mod h1:ioI69P
 github.com/gardener/gardener v0.0.0-20190830053951-194cf8abb797/go.mod h1:UjyQiGrjIRJQ82t2PTqtdMXzJxqH/ftQ36jbpFxAWXw=
 github.com/gardener/gardener v0.0.0-20190913144920-5b4adb9f114d/go.mod h1:8LOLWzproKzfww5LdDo0/7FyVQR7gR1QA5LQc5buDzQ=
 github.com/gardener/gardener v0.0.0-20191004085047-5707d498b40c/go.mod h1:zvajWsteDY43oECil7ADr4NNp88CMltFEutUp1jX+zA=
-github.com/gardener/gardener v0.0.0-20191029080416-9928f1a9ddd4 h1:dbR3q2a+04+ZifeY0I9lIoD1wMz+8edOwYhs/X3DBys=
-github.com/gardener/gardener v0.0.0-20191029080416-9928f1a9ddd4/go.mod h1:Ow7vOXQYgQeHTRFn2HdbEIptelrSB5NLmVFIt2rgNeY=
+github.com/gardener/gardener v0.0.0-20191028054636-32cb0027c126/go.mod h1:Ow7vOXQYgQeHTRFn2HdbEIptelrSB5NLmVFIt2rgNeY=
+github.com/gardener/gardener v0.0.0-20191031143939-2bcc57c0519b h1:iE9cvsPp3hfZeWJK4kLMqLDIhVSgxspRq2Hvgm5c0lo=
+github.com/gardener/gardener v0.0.0-20191031143939-2bcc57c0519b/go.mod h1:PP1qdOCOljqRLqFSjtreSr8XHszMLAxvVe7Ow5UeV/c=
 github.com/gardener/gardener-extensions v0.0.0-20190725050243-a80ef643c64b/go.mod h1:uXjtl3KeVdQXuGIP26+84wJY1Kwru67l0FXm7A5DiME=
 github.com/gardener/gardener-extensions v0.0.0-20190820050625-a15de8a82f6b/go.mod h1:q69+1cUGSfQ8gSMWzU7GFz/R8K8MpOLQBT2wJJcCjEA=
 github.com/gardener/gardener-extensions v0.0.0-20190906160200-5c329d46ae81/go.mod h1:OBUAbab8OMm8pvzr/1/cdwIQnQYuMoGDTNR2c+i9nYo=
 github.com/gardener/gardener-extensions v0.0.0-20191007140606-8fe857e58f6f/go.mod h1:/AwfFcWXgW9iNnKcrtWWdwMaQSS+jqlvTHFCm1Qh1A4=
+github.com/gardener/gardener-extensions v0.0.0-20191028142629-438a3dcf5eca/go.mod h1:+Rhnk/Jjn0pvWi2WWpSiSnlugHGfBikMvnJI7Y56fJY=
 github.com/gardener/gardener-resource-manager v0.0.0-20190802142246-6b2029430332/go.mod h1:kIPm1DlE5jChb4moAseumj1qr+IITKXPJcqyIKJp14Y=
 github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a h1:8JeTMvqNg9PhDsvSDPnNNpYx4inYbtAAxpL8BJlFHME=
 github.com/gardener/gardener-resource-manager v0.0.0-20190802153254-ea0dc5872b6a/go.mod h1:kIPm1DlE5jChb4moAseumj1qr+IITKXPJcqyIKJp14Y=
@@ -333,6 +341,7 @@ github.com/grpc-ecosystem/grpc-gateway v1.9.3 h1:O8JuYkaEesTVBN68o2pLhRGTfVXnGhK
 github.com/grpc-ecosystem/grpc-gateway v1.9.3/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/grpc-ecosystem/grpc-gateway v1.9.5 h1:UImYN5qQ8tuGpGE16ZmjvcTtTw24zw1QAp/SlnNrZhI=
 github.com/grpc-ecosystem/grpc-gateway v1.9.5/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
+github.com/grpc-ecosystem/grpc-gateway v1.11.3/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/go-multierror v0.0.0-20180717150148-3d5d8f294aa0/go.mod h1:JMRHfdO9jKNzS/+BTlxCjKNQHg/jZAft8U7LloJvN7I=
@@ -411,9 +420,13 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0j
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
 github.com/mholt/archiver v3.1.1+incompatible h1:1dCVxuqs0dJseYEhi5pl7MYPH9zDa1wBi7mF09cbNkU=
 github.com/mholt/archiver v3.1.1+incompatible/go.mod h1:Dh2dOXnSdiLxRiPoVfIr/fI1TwETms9B8CTWfeh7ROU=
+github.com/mitchellh/copystructure v1.0.0 h1:Laisrj+bAB6b/yJwB5Bt3ITZhGJdqmxquMKeZ+mmkFQ=
+github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
 github.com/mitchellh/go-homedir v1.1.0 h1:lukF9ziXFxDFPkA1vsr5zpc1XuPDn/wFntq5mG+4E0Y=
 github.com/mitchellh/go-homedir v1.1.0/go.mod h1:SfyaCUpYCn1Vlf4IUYiD9fPX4A5wJrkLzIz1N1q0pr0=
 github.com/mitchellh/mapstructure v1.1.2/go.mod h1:FVVH3fgwuzCH5S8UJGiWEs2h04kUh9fWfEaFds41c1Y=
+github.com/mitchellh/reflectwalk v1.0.0 h1:9D+8oIskB4VJBN5SFlmc27fSlIBZaov1Wpk/IfikLNY=
+github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
