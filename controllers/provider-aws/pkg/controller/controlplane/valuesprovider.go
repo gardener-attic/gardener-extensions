@@ -196,7 +196,7 @@ func (vp *valuesProvider) GetConfigChartValues(
 ) (map[string]interface{}, error) {
 	// Decode infrastructureProviderStatus
 	infraStatus := &apisaws.InfrastructureStatus{}
-	if cp.Spec.ProviderConfig != nil {
+	if cp.Spec.InfrastructureProviderStatus != nil {
 		if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
 			return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 		}
@@ -254,7 +254,7 @@ func getConfigChartValues(
 	infraStatus *apisaws.InfrastructureStatus,
 	cp *extensionsv1alpha1.ControlPlane,
 ) (map[string]interface{}, error) {
-	// Get the first subnet with purpose "nodes"
+	// Get the first subnet with purpose "public"
 	subnet, err := helper.FindSubnetForPurpose(infraStatus.VPC.Subnets, apisaws.PurposePublic)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not determine subnet from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
