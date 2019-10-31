@@ -16,6 +16,10 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
+      {{- if .Values.imageVectorOverwrite }}
+      annotations:
+        checksum/configmap-extension-imagevector-overwrite: {{ include (print $.Template.BasePath "/configmap-imagevector-overwrite.yaml") . | sha256sum }}
+      {{- end }}
       labels:
         app.kubernetes.io/name: gardener-extension-{{ .Values.serviceName }}
         app.kubernetes.io/instance: {{ .Release.Name }}
@@ -38,7 +42,22 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        {{- if .Values.imageVectorOverwrite }}
+        - name: IMAGEVECTOR_OVERWRITE
+          value: /charts_overwrite/images_overwrite.yaml
+        {{- end }}
         {{- if .Values.resources }}
         resources:
 {{ toYaml .Values.resources | trim | indent 10 }}
+        {{- end }}
+        {{- if .Values.imageVectorOverwrite }}
+        volumeMounts:
+        - name: extension-imagevector-overwrite
+          mountPath: /charts_overwrite/
+          readOnly: true
+        volumes:
+        - name: extension-imagevector-overwrite
+          configMap:
+            name: gardener-extension-{{ .Values.serviceName }}-imagevector-overwrite
+            defaultMode: 420
         {{- end }}
