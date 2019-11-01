@@ -262,7 +262,6 @@ var _ = Describe("Machines", func() {
 				var (
 					defaultMachineClass = map[string]interface{}{
 						"region":             region,
-						"disableExternalIP":  true,
 						"canIpForward":       true,
 						"deletionProtection": false,
 						"description":        fmt.Sprintf("Machine of Shoot %s created by machine-controller-manager.", name),
