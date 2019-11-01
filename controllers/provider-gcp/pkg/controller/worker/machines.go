@@ -137,6 +137,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"region":             w.worker.Spec.Region,
 				"zone":               zone,
 				"canIpForward":       true,
+				"disableExternalIP":  true,
 				"deletionProtection": false,
 				"description":        fmt.Sprintf("Machine of Shoot %s created by machine-controller-manager.", w.worker.Name),
 				"disks":              []map[string]interface{}{disk},
@@ -146,8 +147,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"machineType": pool.MachineType,
 				"networkInterfaces": []map[string]interface{}{
 					{
-						"disableExternalIP": true,
-						"subnetwork":        nodesSubnet.Name,
+						"subnetwork": nodesSubnet.Name,
 					},
 				},
 				"scheduling": map[string]interface{}{
