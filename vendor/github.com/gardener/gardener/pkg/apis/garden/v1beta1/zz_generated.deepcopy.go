@@ -764,6 +764,11 @@ func (in *AzureVNet) DeepCopyInto(out *AzureVNet) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.ResourceGroup != nil {
+		in, out := &in.ResourceGroup, &out.ResourceGroup
+		*out = new(string)
+		**out = **in
+	}
 	if in.CIDR != nil {
 		in, out := &in.CIDR, &out.CIDR
 		*out = new(string)
@@ -2244,6 +2249,13 @@ func (in *NginxIngress) DeepCopyInto(out *NginxIngress) {
 		in, out := &in.LoadBalancerSourceRanges, &out.LoadBalancerSourceRanges
 		*out = make([]string, len(*in))
 		copy(*out, *in)
+	}
+	if in.Config != nil {
+		in, out := &in.Config, &out.Config
+		*out = make(map[string]string, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
+		}
 	}
 	return
 }
