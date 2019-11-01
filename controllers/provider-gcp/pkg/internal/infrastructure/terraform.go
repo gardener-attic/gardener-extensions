@@ -37,10 +37,6 @@ const (
 
 	// TerraformerOutputKeyVPCName is the name of the vpc_name terraform output variable.
 	TerraformerOutputKeyVPCName = "vpc_name"
-	// TerraformOutputKeyCloudNAT is the name of the cloud_nat terraform output variable.
-	TerraformOutputKeyCloudNAT = "cloud_nat"
-	// TerraformOutputKeyCloudRouter is the name of the cloud_router terraform output variable.
-	TerraformOutputKeyCloudRouter = "cloud_router"
 	// TerraformerOutputKeyServiceAccountEmail is the name of the service_account_email terraform output variable.
 	TerraformerOutputKeyServiceAccountEmail = "service_account_email"
 	// TerraformerOutputKeySubnetNodes is the name of the subnet_nodes terraform output variable.
@@ -94,8 +90,6 @@ func ComputeTerraformerChartValues(
 		},
 		"outputKeys": map[string]interface{}{
 			"vpcName":             TerraformerOutputKeyVPCName,
-			"cloudNAT":            TerraformOutputKeyCloudNAT,
-			"cloudRouter":         TerraformOutputKeyCloudRouter,
 			"serviceAccountEmail": TerraformerOutputKeyServiceAccountEmail,
 			"subnetNodes":         TerraformerOutputKeySubnetNodes,
 			"subnetInternal":      TerraformerOutputKeySubnetInternal,
