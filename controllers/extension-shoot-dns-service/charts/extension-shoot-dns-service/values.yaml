@@ -24,3 +24,10 @@ resources:
 controllers:
   concurrentSyncs: 5
   ignoreOperationAnnotation: false
+
+# imageVectorOverwrite: |
+#   images:
+#   - name: dns-controller-manager
+#     sourceRepository: github.com/gardener/external-dns-management
+#     repository: eu.gcr.io/gardener-project/dns-controller-manager
+#     tag: "0.7.1"
