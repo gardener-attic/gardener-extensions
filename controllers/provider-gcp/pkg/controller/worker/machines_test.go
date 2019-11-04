@@ -283,8 +283,7 @@ var _ = Describe("Machines", func() {
 						"machineType": machineType,
 						"networkInterfaces": []map[string]interface{}{
 							{
-								"subnetwork":        subnetName,
-								"disableExternalIP": true,
+								"subnetwork": subnetName,
 							},
 						},
 						"scheduling": map[string]interface{}{

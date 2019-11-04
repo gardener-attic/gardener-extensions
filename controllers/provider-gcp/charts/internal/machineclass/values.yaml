@@ -18,7 +18,6 @@ machineClasses:
   machineType: n1-standard-4
   networkInterfaces:
   - subnetwork: my-subnet
-    disableExternalIP: true
   scheduling:
     automaticRestart: true
     onHostMaintenance: MIGRATE

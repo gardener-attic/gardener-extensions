@@ -146,8 +146,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"machineType": pool.MachineType,
 				"networkInterfaces": []map[string]interface{}{
 					{
-						"disableExternalIP": true,
-						"subnetwork":        nodesSubnet.Name,
+						"subnetwork": nodesSubnet.Name,
 					},
 				},
 				"scheduling": map[string]interface{}{
