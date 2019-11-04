@@ -40,7 +40,8 @@ func AddToManagerWithOptions(mgr manager.Manager, options AddOptions) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
 		Actuator:          NewActuator(),
 		ControllerOptions: options.Controller,
-		Predicates:        infrastructure.DefaultPredicates(openstack.Type, options.IgnoreOperationAnnotation),
+		Predicates:        infrastructure.DefaultPredicates(options.IgnoreOperationAnnotation),
+		Type:              openstack.Type,
 	})
 }
 

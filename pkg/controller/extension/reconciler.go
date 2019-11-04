@@ -62,6 +62,8 @@ type AddArgs struct {
 	Predicates []predicate.Predicate
 	// Resync determines the requeue interval.
 	Resync time.Duration
+	// Type is the type of the resource considered for reconciliation.
+	Type string
 }
 
 // Add adds an Extension controller to the given manager using the given AddArgs.
@@ -71,15 +73,13 @@ func Add(mgr manager.Manager, args AddArgs) error {
 }
 
 // DefaultPredicates returns the default predicates for an extension reconciler.
-func DefaultPredicates(extensionType string, ignoreOperationAnnotation bool) []predicate.Predicate {
+func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.HasType(extensionType),
 			extensionspredicate.GenerationChanged(),
 		}
 	}
 	return []predicate.Predicate{
-		extensionspredicate.HasType(extensionType),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
 			extensionspredicate.LastOperationNotSuccessful(),
@@ -99,12 +99,14 @@ func add(mgr manager.Manager, args AddArgs) error {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Extension{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
+	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Extension{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err
 	}
 
 	return ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
-		ToRequests: extensionshandler.SimpleMapper(ClusterToExtensionMapper(args.Predicates...), extensionshandler.UpdateWithNew),
+		ToRequests: extensionshandler.SimpleMapper(ClusterToExtensionMapper(predicates...), extensionshandler.UpdateWithNew),
 	})
 }
 

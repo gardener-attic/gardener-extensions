@@ -53,7 +53,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return worker.Add(mgr, worker.AddArgs{
 		Actuator:          NewActuator(opts.MachineImagesToAMIMapping),
 		ControllerOptions: opts.Controller,
-		Predicates:        worker.DefaultPredicates(aws.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        worker.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              aws.Type,
 	})
 }
 

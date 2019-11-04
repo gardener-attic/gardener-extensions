@@ -61,6 +61,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts controller.Options, confi
 		Name:              ControllerName,
 		FinalizerSuffix:   FinalizerSuffix,
 		Resync:            0,
-		Predicates:        extension.DefaultPredicates(Type, DefaultAddOptions.IgnoreOperationAnnotation),
+		Predicates:        extension.DefaultPredicates(DefaultAddOptions.IgnoreOperationAnnotation),
+		Type:              Type,
 	})
 }

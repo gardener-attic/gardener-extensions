@@ -45,7 +45,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return backupentry.Add(mgr, backupentry.AddArgs{
 		Actuator:          genericactuator.NewActuator(newActuator(), logger),
 		ControllerOptions: opts.Controller,
-		Predicates:        backupentry.DefaultPredicates(openstack.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        backupentry.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              openstack.Type,
 	})
 }
 

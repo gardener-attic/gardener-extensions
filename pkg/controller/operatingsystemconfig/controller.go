@@ -46,25 +46,26 @@ type AddArgs struct {
 	// Predicates are the predicates to use.
 	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
+	// Type is the type of the resource considered for reconciliation.
+	Type string
 }
 
 // Add adds an operatingsystemconfig controller to the given manager using the given AddArgs.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(args.Actuator)
-	return add(mgr, args.ControllerOptions, args.Predicates)
+	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+	return add(mgr, args.ControllerOptions, predicates)
 }
 
 // DefaultPredicates returns the default predicates for an operatingsystemconfig reconciler.
-func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.HasType(typeName),
 			extensionspredicate.GenerationChanged(),
 		}
 	}
 
 	return []predicate.Predicate{
-		extensionspredicate.HasType(typeName),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
 			extensionspredicate.LastOperationNotSuccessful(),

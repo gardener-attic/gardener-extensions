@@ -39,7 +39,8 @@ type AddOptions struct {
 func AddToManagerWithOptions(mgr manager.Manager, os string, generator generator.Generator, opts AddOptions) error {
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
 		Actuator:          actuator.NewActuator(os, generator),
-		Predicates:        operatingsystemconfig.DefaultPredicates(os, opts.IgnoreOperationAnnotation),
+		Predicates:        operatingsystemconfig.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              os,
 		ControllerOptions: opts.Controller,
 	})
 }

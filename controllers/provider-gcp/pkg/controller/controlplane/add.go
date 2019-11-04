@@ -50,7 +50,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 			storageClassChart, nil, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), internal.CloudProviderConfigName, nil, mgr.GetWebhookServer().Port, logger),
 		ControllerOptions: opts.Controller,
-		Predicates:        controlplane.DefaultPredicates(gcp.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        controlplane.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              gcp.Type,
 	})
 }
 

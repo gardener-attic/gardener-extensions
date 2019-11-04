@@ -40,7 +40,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return infrastructure.Add(mgr, infrastructure.AddArgs{
 		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
-		Predicates:        infrastructure.DefaultPredicates(aws.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        infrastructure.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              aws.Type,
 	})
 }
 

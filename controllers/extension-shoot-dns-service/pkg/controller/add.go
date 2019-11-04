@@ -39,6 +39,7 @@ func AddToManager(mgr manager.Manager) error {
 		Name:              Name,
 		FinalizerSuffix:   FinalizerSuffix,
 		Resync:            60 * time.Minute,
-		Predicates:        extension.DefaultPredicates(service.ExtensionType, config.ServiceConfig.IgnoreOperationAnnotation),
+		Predicates:        extension.DefaultPredicates(config.ServiceConfig.IgnoreOperationAnnotation),
+		Type:              service.ExtensionType,
 	})
 }
