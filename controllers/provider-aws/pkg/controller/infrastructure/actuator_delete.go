@@ -23,11 +23,11 @@ import (
 	awsclient "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws/client"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	glogger "github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/gardener/gardener/pkg/utils/flow"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 

@@ -17,7 +17,8 @@ package terraformer
 import (
 	"time"
 
-	gardenerterraformer "github.com/gardener/gardener/pkg/operation/terraformer"
+	gardenerterraformer "github.com/gardener/gardener-extensions/pkg/terraformer"
+
 	"github.com/sirupsen/logrus"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"

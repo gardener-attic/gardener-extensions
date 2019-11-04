@@ -20,8 +20,9 @@ import (
 	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/imagevector"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
+
 	"github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"k8s.io/client-go/rest"
 )
 

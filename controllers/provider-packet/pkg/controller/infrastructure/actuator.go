@@ -22,10 +22,10 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	glogger "github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 
 	"github.com/go-logr/logr"
 

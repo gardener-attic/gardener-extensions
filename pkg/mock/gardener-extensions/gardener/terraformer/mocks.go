@@ -6,7 +6,8 @@ package terraformer
 
 import (
 	terraformer "github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
-	terraformer0 "github.com/gardener/gardener/pkg/operation/terraformer"
+	terraformer0 "github.com/gardener/gardener-extensions/pkg/terraformer"
+
 	gomock "github.com/golang/mock/gomock"
 	logrus "github.com/sirupsen/logrus"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"

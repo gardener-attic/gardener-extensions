@@ -30,11 +30,11 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionschartrenderer "github.com/gardener/gardener-extensions/pkg/gardener/chartrenderer"
 	extensionsterraformer "github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 	chartutil "github.com/gardener/gardener-extensions/pkg/util/chart"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
