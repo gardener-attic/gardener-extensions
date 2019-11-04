@@ -45,7 +45,7 @@ func (m *secretToBackupEntryMapper) Map(obj handler.MapObject) []reconcile.Reque
 	}
 
 	backupEntryList := &extensionsv1alpha1.BackupEntryList{}
-	if err := m.client.List(context.TODO(), backupEntryList, client.MatchingField("spec.secretRef.name", secret.Name), client.MatchingField("spec.secretRef.namespace", secret.Namespace)); err != nil {
+	if err := m.client.List(context.TODO(), backupEntryList, client.MatchingFields{"spec.secretRef.name": secret.Name}, client.MatchingFields{"spec.secretRef.namespace": secret.Namespace}); err != nil {
 		return nil
 	}
 

@@ -139,7 +139,7 @@ func (a *actuator) DeployCertManager(ctx context.Context, config config.Configur
 					Namespace: config.Spec.ResourceNamespace,
 				},
 			}
-			if err2 := a.client.Delete(ctx, deployment, kubernetes.ForceDeleteOptionFuncs...); err2 != nil {
+			if err2 := a.client.Delete(ctx, deployment, kubernetes.ForceDeleteOptions...); err2 != nil {
 				return fmt.Errorf("could not resolve deployment error '%s' by deleting cert-manager deployment '%s'", err, err2)
 			}
 			if err := a.client.Delete(ctx, sa); client.IgnoreNotFound(err) != nil {

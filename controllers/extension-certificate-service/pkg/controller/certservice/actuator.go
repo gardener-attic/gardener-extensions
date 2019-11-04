@@ -140,7 +140,7 @@ func (a *actuator) deleteIngressResources(ctx context.Context) error {
 		}
 		annotations := accessor.GetAnnotations()
 		if ingressClass := annotations[ingressClassKey]; strings.HasPrefix(ingressClass, managedCertPrefix) {
-			return a.client.Delete(ctx, obj, kubernetes.DefaultDeleteOptionFuncs...)
+			return a.client.Delete(ctx, obj, kubernetes.DefaultDeleteOptions...)
 		}
 		return nil
 	})
