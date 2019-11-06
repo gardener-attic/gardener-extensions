@@ -86,9 +86,9 @@ var _ = Describe("Helper", func() {
 
 		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
 		Entry("empty list", []azure.MachineImage{}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no name)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde"}}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no version)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde"}}, "foo", "1.2.4", nil, true),
-		Entry("entry exists", []azure.MachineImage{{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde", URN: &urn}}, "bar", "1.2.3", &azure.MachineImage{Name: "bar", Version: "1.2.3", Publisher: "abc", Offer: "bcd", SKU: "cde", URN: &urn}, false),
+		Entry("entry not found (no name)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.4", nil, true),
+		Entry("entry exists", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.3", &azure.MachineImage{Name: "bar", Version: "1.2.3", URN: &urn}, false),
 	)
 })
 

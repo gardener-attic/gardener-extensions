@@ -7,7 +7,7 @@ In this document we are describing how this configuration looks like for Azure a
 ## `CloudProfileConfig`
 
 The cloud profile configuration contains information about the update and failure domain counts in the Azure regions you want to offer.
-Additionally, it contains the real machine image identifiers in the Azure environment (publisher, offer, etc.).
+Additionally, it contains the real machine image identifiers in the Azure environment.
 You have to map every version that you specify in `.spec.machineImages[].versions` here such that the Azure extension knows the machine image identifiers for every version you want to offer.
 
 An example `CloudProfileConfig` for the Azure extension looks as follows:

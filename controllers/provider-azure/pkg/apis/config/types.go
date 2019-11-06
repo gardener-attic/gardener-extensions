@@ -42,12 +42,6 @@ type MachineImage struct {
 	Name string
 	// Version is the logical version of the machine image.
 	Version string
-	// DEPRECATED: Publisher is the publisher of the image.
-	Publisher string
-	// DEPRECATED: Offer is the offering of the image.
-	Offer string
-	// DEPRECATED: SKU is the stock keeping unit to pull images from.
-	SKU string
 	// URN is the uniform resource name, it has the format 'publisher:offer:sku:version'
 	URN *string
 }

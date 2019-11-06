@@ -87,12 +87,9 @@ var _ = Describe("Machines", func() {
 				azureTenantID       string
 				region              string
 
-				machineImageName      string
-				machineImageVersion   string
-				machineImageSKU       string
-				machineImagePublisher string
-				machineImageOffer     string
-				machineImageURN       string
+				machineImageName    string
+				machineImageVersion string
+				machineImageURN     string
 
 				resourceGroupName string
 				vnetName          string
@@ -135,9 +132,6 @@ var _ = Describe("Machines", func() {
 
 				machineImageName = "my-os"
 				machineImageVersion = "1"
-				machineImageSKU = "foo"
-				machineImagePublisher = "bar"
-				machineImageOffer = "baz"
 				machineImageURN = "bar:baz:foo:123"
 
 				resourceGroupName = "my-rg"
@@ -166,12 +160,9 @@ var _ = Describe("Machines", func() {
 
 				machineImages = []config.MachineImage{
 					{
-						Name:      machineImageName,
-						Version:   machineImageVersion,
-						Offer:     machineImageOffer,
-						Publisher: machineImagePublisher,
-						SKU:       machineImageSKU,
-						URN:       &machineImageURN,
+						Name:    machineImageName,
+						Version: machineImageVersion,
+						URN:     &machineImageURN,
 					},
 				}
 
@@ -286,11 +277,7 @@ var _ = Describe("Machines", func() {
 						},
 						"machineType": machineType,
 						"image": map[string]interface{}{
-							"publisher": machineImagePublisher,
-							"offer":     machineImageOffer,
-							"sku":       machineImageSKU,
-							"version":   machineImageVersion,
-							"urn":       machineImageURN,
+							"urn": machineImageURN,
 						},
 						"osDisk": map[string]interface{}{
 							"size": volumeSize,
@@ -341,12 +328,9 @@ var _ = Describe("Machines", func() {
 					},
 					MachineImages: []azurev1alpha1.MachineImage{
 						{
-							Name:      machineImageName,
-							Version:   machineImageVersion,
-							Publisher: machineImagePublisher,
-							SKU:       machineImageSKU,
-							Offer:     machineImageOffer,
-							URN:       &machineImageURN,
+							Name:    machineImageName,
+							Version: machineImageVersion,
+							URN:     &machineImageURN,
 						},
 					},
 				}))

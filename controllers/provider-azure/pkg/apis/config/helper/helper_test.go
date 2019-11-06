@@ -23,12 +23,6 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const (
-	sku       = "sku"
-	publisher = "publisher"
-	offer     = "offer"
-)
-
 var (
 	urn = "publisher:offer:sku:1.2.3"
 )
@@ -50,19 +44,16 @@ var _ = Describe("Helper", func() {
 		Entry("empty list", []config.MachineImage{}, "ubuntu", "1", nil),
 		Entry("entry not found (image does not exist)", makeMachineImages("debian", "1"), "ubuntu", "1", nil),
 		Entry("entry not found (version does not exist)", makeMachineImages("ubuntu", "2"), "ubuntu", "1", nil),
-		Entry("entry", makeMachineImages("ubuntu", "1"), "ubuntu", "1", &config.MachineImage{Name: "ubuntu", Version: "1", SKU: sku, Publisher: publisher, Offer: offer, URN: &urn}),
+		Entry("entry", makeMachineImages("ubuntu", "1"), "ubuntu", "1", &config.MachineImage{Name: "ubuntu", Version: "1", URN: &urn}),
 	)
 })
 
 func makeMachineImages(name, version string) []config.MachineImage {
 	return []config.MachineImage{
 		{
-			Name:      name,
-			Version:   version,
-			SKU:       sku,
-			Publisher: publisher,
-			Offer:     offer,
-			URN:       &urn,
+			Name:    name,
+			Version: version,
+			URN:     &urn,
 		},
 	}
 }

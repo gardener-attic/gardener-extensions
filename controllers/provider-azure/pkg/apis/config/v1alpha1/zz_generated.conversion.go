@@ -194,9 +194,6 @@ func Convert_config_ETCDStorage_To_v1alpha1_ETCDStorage(in *config.ETCDStorage, 
 func autoConvert_v1alpha1_MachineImage_To_config_MachineImage(in *MachineImage, out *config.MachineImage, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Version = in.Version
-	out.Publisher = in.Publisher
-	out.Offer = in.Offer
-	out.SKU = in.SKU
 	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
@@ -209,9 +206,6 @@ func Convert_v1alpha1_MachineImage_To_config_MachineImage(in *MachineImage, out 
 func autoConvert_config_MachineImage_To_v1alpha1_MachineImage(in *config.MachineImage, out *MachineImage, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Version = in.Version
-	out.Publisher = in.Publisher
-	out.Offer = in.Offer
-	out.SKU = in.SKU
 	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }

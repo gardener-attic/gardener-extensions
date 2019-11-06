@@ -248,39 +248,6 @@ string
 </tr>
 <tr>
 <td>
-<code>publisher</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DEPRECATED: Publisher is the publisher of the image.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>offer</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DEPRECATED: Offer is the offering of the image.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>sku</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>DEPRECATED: SKU is the stock keeping unit to pull images from.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>urn</code></br>
 <em>
 string
