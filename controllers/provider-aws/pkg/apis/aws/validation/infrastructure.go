@@ -1,4 +1,4 @@
-// Copyright (c) 2018 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
+// Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,49 @@
 package validation
 
 import (
+	"fmt"
+
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 
 	cidrvalidation "github.com/gardener/gardener/pkg/utils/validation/cidr"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
+
+// ValidateInfrastructureConfigAgainstCloudProfile validates the given `InfrastructureConfig` against the given `CloudProfile`.
+func ValidateInfrastructureConfigAgainstCloudProfile(infra *apisaws.InfrastructureConfig, shoot *gardencorev1alpha1.Shoot, cloudProfile *gardencorev1alpha1.CloudProfile, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	shootRegion := shoot.Spec.Region
+	for _, region := range cloudProfile.Spec.Regions {
+		if region.Name == shootRegion {
+			allErrs = append(allErrs, validateInfrastructureConfigZones(infra, region.Zones, fldPath.Child("network"))...)
+			break
+		}
+	}
+
+	return allErrs
+}
+
+// validateInfrastructureConfigZones validates the given `InfrastructureConfig` against the given `Zones`.
+func validateInfrastructureConfigZones(infra *apisaws.InfrastructureConfig, zones []gardencorev1alpha1.AvailabilityZone, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	awsZones := sets.NewString()
+	for _, awsZone := range zones {
+		awsZones.Insert(awsZone.Name)
+	}
+
+	for i, zone := range infra.Networks.Zones {
+		if !awsZones.Has(zone.Name) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("zones").Index(i).Child("name"), zone.Name, fmt.Sprintf("supported values: %v", awsZones.UnsortedList())))
+		}
+	}
+
+	return allErrs
+}
 
 // ValidateInfrastructureConfig validates a InfrastructureConfig object.
 func ValidateInfrastructureConfig(infra *apisaws.InfrastructureConfig, nodesCIDR, podsCIDR, servicesCIDR *string) field.ErrorList {
@@ -52,19 +89,27 @@ func ValidateInfrastructureConfig(infra *apisaws.InfrastructureConfig, nodesCIDR
 		workerCIDRs = make([]cidrvalidation.CIDR, 0, len(infra.Networks.Zones))
 	)
 
+	validatedZones := sets.NewString()
 	for i, zone := range infra.Networks.Zones {
-		internalPath := networksPath.Child("zones").Index(i).Child("internal")
+		zonePath := networksPath.Child("zones").Index(i)
+		if validatedZones.Has(zone.Name) {
+			allErrs = append(allErrs, field.Invalid(zonePath.Child("name"), zone.Name, "each zone may only be specified once"))
+		}
+
+		internalPath := zonePath.Child("internal")
 		cidrs = append(cidrs, cidrvalidation.NewCIDR(zone.Internal, internalPath))
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(internalPath, zone.Internal)...)
 
-		publicPath := networksPath.Child("zones").Index(i).Child("public")
+		publicPath := zonePath.Child("public")
 		cidrs = append(cidrs, cidrvalidation.NewCIDR(zone.Public, publicPath))
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(publicPath, zone.Public)...)
 
-		workerPath := networksPath.Child("zones").Index(i).Child("workers")
+		workerPath := zonePath.Child("workers")
 		cidrs = append(cidrs, cidrvalidation.NewCIDR(zone.Workers, workerPath))
 		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(workerPath, zone.Workers)...)
 		workerCIDRs = append(workerCIDRs, cidrvalidation.NewCIDR(zone.Workers, workerPath))
+
+		validatedZones.Insert(zone.Name)
 	}
 
 	allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(cidrs...)...)
@@ -93,10 +138,30 @@ func ValidateInfrastructureConfig(infra *apisaws.InfrastructureConfig, nodesCIDR
 }
 
 // ValidateInfrastructureConfigUpdate validates a InfrastructureConfig object.
-func ValidateInfrastructureConfigUpdate(oldConfig, newConfig *apisaws.InfrastructureConfig, nodesCIDR, podsCIDR, servicesCIDR *string) field.ErrorList {
+func ValidateInfrastructureConfigUpdate(oldConfig, newConfig *apisaws.InfrastructureConfig) field.ErrorList {
 	allErrs := field.ErrorList{}
 
-	allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks, oldConfig.Networks, field.NewPath("networks"))...)
+	allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks.VPC, oldConfig.Networks.VPC, field.NewPath("networks.vpc"))...)
+
+	var (
+		oldZones     = oldConfig.Networks.Zones
+		newZones     = newConfig.Networks.Zones
+		missingZones = sets.NewString()
+	)
+
+	for i, oldZone := range oldZones {
+		missingZones.Insert(oldZone.Name)
+		for j, newZone := range newZones {
+			if newZone.Name == oldZone.Name {
+				missingZones.Delete(newZone.Name)
+				allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks.Zones[j], oldConfig.Networks.Zones[j], field.NewPath("networks.zones").Index(i))...)
+			}
+		}
+	}
+
+	for zone := range missingZones {
+		allErrs = append(allErrs, field.Invalid(field.NewPath("networks.zones"), zone, "zone is missing - removing a zone is not supported"))
+	}
 
 	return allErrs
 }

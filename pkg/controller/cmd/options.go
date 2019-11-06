@@ -156,6 +156,8 @@ type ManagerOptions struct {
 }
 
 // AddFlags implements Flagger.AddFlags.
+// TODO: (timuthy) Add certDir flag as soon as Controller-Runtime v0.2.2 is used.
+// https://github.com/kubernetes-sigs/controller-runtime/pull/569
 func (m *ManagerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&m.LeaderElection, LeaderElectionFlag, m.LeaderElection, "Whether to use leader election or not when running this controller manager.")
 	fs.StringVar(&m.LeaderElectionID, LeaderElectionIDFlag, m.LeaderElectionID, "The leader election id to use.")

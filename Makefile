@@ -254,3 +254,13 @@ start-shoot-cert-service:
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
 		--leader-election=$(LEADER_ELECTION) \
 		--config=./controllers/extension-shoot-cert-service/example/00-config.yaml
+
+.PHONY: validator-aws
+validator-aws:
+	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
+		-mod=vendor \
+		-ldflags $(LD_FLAGS) \
+		./controllers/provider-aws/cmd/gardener-extension-validator-aws \
+		--webhook-config-server-host=0.0.0.0 \
+		--webhook-config-server-port=9443 \
+		--webhook-config-cert-dir=./controllers/provider-aws/example/validator-aws-certs
