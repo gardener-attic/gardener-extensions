@@ -33,7 +33,7 @@ func (a *actuator) cleanupKubernetesFirewallRules(
 	ctx context.Context,
 	config *gcpv1alpha1.InfrastructureConfig,
 	client gcpclient.Interface,
-	tf *terraformer.Terraformer,
+	tf terraformer.Terraformer,
 	account *internal.ServiceAccount,
 	shootSeedNamespace string,
 ) error {
@@ -52,7 +52,7 @@ func (a *actuator) cleanupKubernetesRoutes(
 	ctx context.Context,
 	config *gcpv1alpha1.InfrastructureConfig,
 	client gcpclient.Interface,
-	tf *terraformer.Terraformer,
+	tf terraformer.Terraformer,
 	account *internal.ServiceAccount,
 	shootSeedNamespace string,
 ) error {

@@ -92,7 +92,7 @@ func GenerateTerraformInfraConfig(infrastructure *extensionsv1alpha1.Infrastruct
 	}
 }
 
-func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure) error {
+func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure) error {
 	outputVarKeys := []string{
 		packet.SSHKeyID,
 	}

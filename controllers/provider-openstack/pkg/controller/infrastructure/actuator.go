@@ -92,7 +92,7 @@ func (a *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infras
 
 func (a *actuator) updateProviderStatus(
 	ctx context.Context,
-	tf *terraformer.Terraformer,
+	tf terraformer.Terraformer,
 	infra *extensionsv1alpha1.Infrastructure,
 	config *openstackv1alpha1.InfrastructureConfig,
 ) error {

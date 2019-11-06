@@ -161,7 +161,7 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 	}, nil
 }
 
-func (a *actuator) updateProviderStatus(ctx context.Context, tf *terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *awsapi.InfrastructureConfig) error {
+func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terraformer, infrastructure *extensionsv1alpha1.Infrastructure, infrastructureConfig *awsapi.InfrastructureConfig) error {
 	outputVarKeys := []string{
 		aws.VPCIDKey,
 		aws.SSHKeyName,

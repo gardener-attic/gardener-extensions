@@ -31,7 +31,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockchartrenderer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/gardener/chartrenderer"
-	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/gardener/terraformer"
+	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/terraformer"
 	mockgardenerchartrenderer "github.com/gardener/gardener-extensions/pkg/mock/gardener/chartrenderer"
 	"github.com/gardener/gardener-extensions/pkg/mock/go-logr/logr"
 	"github.com/gardener/gardener-extensions/pkg/util/chart"
@@ -97,7 +97,7 @@ var _ = Describe("Actuator", func() {
 					alicloudClientFactory = mockalicloudclient.NewMockFactory(ctrl)
 					vpcClient             = mockalicloudclient.NewMockVPC(ctrl)
 					terraformerFactory    = mockterraformer.NewMockFactory(ctrl)
-					terraformer           = mockterraformer.NewMockInterface(ctrl)
+					terraformer           = mockterraformer.NewMockTerraformer(ctrl)
 					chartRendererFactory  = mockchartrenderer.NewMockFactory(ctrl)
 					terraformChartOps     = mockinfrastructure.NewMockTerraformChartOps(ctrl)
 					actuator              = NewActuatorWithDeps(logger, alicloudClientFactory, terraformerFactory, chartRendererFactory, terraformChartOps)

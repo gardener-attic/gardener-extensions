@@ -47,7 +47,7 @@ func NewTerraformer(
 	purpose,
 	namespace,
 	name string,
-) (*terraformer.Terraformer, error) {
+) (terraformer.Terraformer, error) {
 	tf, err := terraformer.NewForConfig(logger.NewLogger("info"), restConfig, purpose, namespace, name, imagevector.TerraformerImage())
 	if err != nil {
 		return nil, err

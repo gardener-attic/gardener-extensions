@@ -19,10 +19,11 @@ import (
 
 	"github.com/sirupsen/logrus"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// Terraformer is a struct containing configuration parameters for the Terraform script it acts on.
+// terraformer is a struct containing configuration parameters for the Terraform script it acts on.
 // * purpose is a one-word description depicting what the Terraformer does (e.g. 'infrastructure').
 // * namespace is the namespace in which the Terraformer will act.
 // * image is the Docker image name of the Terraformer image.
@@ -36,7 +37,7 @@ import (
 //   with TF_VAR_).
 // * configurationDefined indicates whether the required configuration ConfigMaps/Secrets have been
 //   successfully defined.
-type Terraformer struct {
+type terraformer struct {
 	logger       logrus.FieldLogger
 	client       client.Client
 	coreV1Client corev1client.CoreV1Interface
@@ -78,7 +79,31 @@ const (
 
 	// TerraformerJobSuffix is the suffix used for the name of the Job which executes the Terraform configuration.
 	TerraformerJobSuffix = ".tf-job"
-
-	// TerraformerPurposeBackup is a constant for the complete Terraform setup with purpose 'etcd backup'.
-	TerraformerPurposeBackup = "backup"
 )
+
+// Terraformer is the Terraformer interface.
+type Terraformer interface {
+	SetVariablesEnvironment(tfVarsEnvironment map[string]string) Terraformer
+	SetJobBackoffLimit(int32) Terraformer
+	SetActiveDeadlineSeconds(int64) Terraformer
+	SetDeadlineCleaning(time.Duration) Terraformer
+	SetDeadlinePod(time.Duration) Terraformer
+	SetDeadlineJob(time.Duration) Terraformer
+	InitializeWith(initializer Initializer) Terraformer
+	Apply() error
+	Destroy() error
+	GetStateOutputVariables(variables ...string) (map[string]string, error)
+	ConfigExists() (bool, error)
+}
+
+// Initializer can initialize a Terraformer.
+type Initializer interface {
+	Initialize(config *InitializerConfig) error
+}
+
+// Factory is a factory that can produce Terraformer and Initializer.
+type Factory interface {
+	NewForConfig(logger logrus.FieldLogger, config *rest.Config, purpose, namespace, name, image string) (Terraformer, error)
+	New(logger logrus.FieldLogger, client client.Client, coreV1Client corev1client.CoreV1Interface, purpose, namespace, name, image string) Terraformer
+	DefaultInitializer(c client.Client, main, variables string, tfVars []byte) Initializer
+}

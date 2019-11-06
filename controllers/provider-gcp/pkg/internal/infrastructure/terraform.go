@@ -139,7 +139,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf *terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*TerraformState, error) {
 	outputKeys := []string{
 		TerraformerOutputKeyVPCName,
 		TerraformerOutputKeySubnetNodes,
@@ -199,7 +199,7 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf *terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*gcpv1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*gcpv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

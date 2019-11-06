@@ -42,6 +42,25 @@ import (
 
 const jobNameLabel = "job-name"
 
+type factory struct{}
+
+func (factory) NewForConfig(logger logrus.FieldLogger, config *rest.Config, purpose, namespace, name, image string) (Terraformer, error) {
+	return NewForConfig(logger, config, purpose, namespace, name, image)
+}
+
+func (f factory) New(logger logrus.FieldLogger, client client.Client, coreV1Client corev1client.CoreV1Interface, purpose, namespace, name, image string) Terraformer {
+	return New(logger, client, coreV1Client, purpose, namespace, name, image)
+}
+
+func (f factory) DefaultInitializer(c client.Client, main, variables string, tfVars []byte) Initializer {
+	return DefaultInitializer(c, main, variables, tfVars)
+}
+
+// DefaultFactory returns the default factory.
+func DefaultFactory() Factory {
+	return factory{}
+}
+
 // NewForConfig creates a new Terraformer and its dependencies from the given configuration.
 func NewForConfig(
 	logger logrus.FieldLogger,
@@ -50,7 +69,7 @@ func NewForConfig(
 	namespace,
 	name,
 	image string,
-) (*Terraformer, error) {
+) (Terraformer, error) {
 	c, err := client.New(config, client.Options{})
 	if err != nil {
 		return nil, err
@@ -66,7 +85,7 @@ func NewForConfig(
 
 // New takes a <logger>, a <k8sClient>, a string <purpose>, which describes for what the
 // Terraformer is used, a <name>, a <namespace> in which the Terraformer will run, and the
-// <image> name for the to-be-used Docker image. It returns a Terraformer struct with initialized
+// <image> name for the to-be-used Docker image. It returns a Terraformer interface with initialized
 // values for the namespace and the names which will be used for all the stored resources like
 // ConfigMaps/Secrets.
 func New(
@@ -77,13 +96,13 @@ func New(
 	namespace,
 	name,
 	image string,
-) *Terraformer {
+) Terraformer {
 	var (
 		prefix    = fmt.Sprintf("%s.%s", name, purpose)
 		podSuffix = utils.ComputeSHA256Hex([]byte(time.Now().String()))[:5]
 	)
 
-	return &Terraformer{
+	return &terraformer{
 		logger:       logger,
 		client:       client,
 		coreV1Client: coreV1Client,
@@ -108,7 +127,7 @@ func New(
 }
 
 // Apply executes the Terraform Job by running the 'terraform apply' command.
-func (t *Terraformer) Apply() error {
+func (t *terraformer) Apply() error {
 	if !t.configurationDefined {
 		return errors.New("Terraformer configuration has not been defined, cannot execute the Terraform scripts")
 	}
@@ -116,22 +135,21 @@ func (t *Terraformer) Apply() error {
 }
 
 // Destroy executes the Terraform Job by running the 'terraform destroy' command.
-func (t *Terraformer) Destroy() error {
+func (t *terraformer) Destroy() error {
 	if err := t.execute(context.TODO(), "destroy"); err != nil {
 		return err
 	}
-	return t.CleanupConfiguration(context.TODO())
+	return t.cleanupConfiguration(context.TODO())
 }
 
 // execute creates a Terraform Job which runs the provided scriptName (apply or destroy), waits for the Job to be completed
 // (either successful or not), prints its logs, deletes it and returns whether it was successful or not.
-func (t *Terraformer) execute(ctx context.Context, scriptName string) error {
+func (t *terraformer) execute(ctx context.Context, scriptName string) error {
 	var (
-		exitCode  int32 = 1     // Exit code of the Terraform validation pod
-		succeeded       = true  // Success status of the Terraform execution job
-		execute         = false // Should we skip the rest of the function depending on whether all ConfigMaps/Secrets exist/do not exist?
-		skipPod         = false // Should we skip the execution of the Terraform Pod (validation of the Terraform config)?
-		skipJob         = false // Should we skip the execution of the Terraform Job (actual execution of the Terraform config)?
+		succeeded = true  // Success status of the Terraform execution job
+		execute   = false // Should we skip the rest of the function depending on whether all ConfigMaps/Secrets exist/do not exist?
+		skipPod   = false // Should we skip the execution of the Terraform Pod (validation of the Terraform config)?
+		skipJob   = false // Should we skip the execution of the Terraform Job (actual execution of the Terraform config)?
 	)
 
 	// We should retry the preparation check in order to allow the kube-apiserver to actually create the ConfigMaps.
@@ -173,7 +191,7 @@ func (t *Terraformer) execute(ctx context.Context, scriptName string) error {
 		}
 
 		// Wait for the Terraform validation Pod to be completed
-		exitCode = t.waitForPod(ctx)
+		exitCode := t.waitForPod(ctx)
 		skipJob = exitCode == 0 || exitCode == 1
 
 		switch exitCode {
@@ -238,14 +256,14 @@ const (
 	rbacName        = "gardener.cloud:system:terraformer"
 )
 
-func (t *Terraformer) createOrUpdateServiceAccount(ctx context.Context) error {
+func (t *terraformer) createOrUpdateServiceAccount(ctx context.Context) error {
 	serviceAccount := &corev1.ServiceAccount{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: terraformerName}}
 	return kutil.CreateOrUpdate(ctx, t.client, serviceAccount, func() error {
 		return nil
 	})
 }
 
-func (t *Terraformer) createOrUpdateRole(ctx context.Context) error {
+func (t *terraformer) createOrUpdateRole(ctx context.Context) error {
 	role := &rbacv1.Role{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: rbacName}}
 	return kutil.CreateOrUpdate(ctx, t.client, role, func() error {
 		role.Rules = []rbacv1.PolicyRule{
@@ -259,7 +277,7 @@ func (t *Terraformer) createOrUpdateRole(ctx context.Context) error {
 	})
 }
 
-func (t *Terraformer) createOrUpdateRoleBinding(ctx context.Context) error {
+func (t *terraformer) createOrUpdateRoleBinding(ctx context.Context) error {
 	roleBinding := &rbacv1.RoleBinding{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: rbacName}}
 	return kutil.CreateOrUpdate(ctx, t.client, roleBinding, func() error {
 		roleBinding.RoleRef = rbacv1.RoleRef{
@@ -278,7 +296,7 @@ func (t *Terraformer) createOrUpdateRoleBinding(ctx context.Context) error {
 	})
 }
 
-func (t *Terraformer) createOrUpdateTerraformerAuth(ctx context.Context) error {
+func (t *terraformer) createOrUpdateTerraformerAuth(ctx context.Context) error {
 	if err := t.createOrUpdateServiceAccount(ctx); err != nil {
 		return err
 	}
@@ -288,7 +306,7 @@ func (t *Terraformer) createOrUpdateTerraformerAuth(ctx context.Context) error {
 	return t.createOrUpdateRoleBinding(ctx)
 }
 
-func (t *Terraformer) deployTerraformerPod(ctx context.Context, scriptName string) error {
+func (t *terraformer) deployTerraformerPod(ctx context.Context, scriptName string) error {
 	if err := t.createOrUpdateTerraformerAuth(ctx); err != nil {
 		return err
 	}
@@ -305,7 +323,7 @@ func (t *Terraformer) deployTerraformerPod(ctx context.Context, scriptName strin
 	})
 }
 
-func (t *Terraformer) deployTerraformerJob(ctx context.Context, scriptName string) error {
+func (t *terraformer) deployTerraformerJob(ctx context.Context, scriptName string) error {
 	if err := t.createOrUpdateTerraformerAuth(ctx); err != nil {
 		return err
 	}
@@ -335,7 +353,7 @@ func (t *Terraformer) deployTerraformerJob(ctx context.Context, scriptName strin
 	})
 }
 
-func (t *Terraformer) env() []corev1.EnvVar {
+func (t *terraformer) env() []corev1.EnvVar {
 	envVars := []corev1.EnvVar{
 		{Name: "MAX_BACKOFF_SEC", Value: "60"},
 		{Name: "MAX_TIME_SEC", Value: "1800"},
@@ -347,7 +365,7 @@ func (t *Terraformer) env() []corev1.EnvVar {
 	return envVars
 }
 
-func (t *Terraformer) addNetworkPolicyLabels(labels map[string]string) map[string]string {
+func (t *terraformer) addNetworkPolicyLabels(labels map[string]string) map[string]string {
 	if labels == nil {
 		labels = make(map[string]string)
 	}
@@ -359,7 +377,7 @@ func (t *Terraformer) addNetworkPolicyLabels(labels map[string]string) map[strin
 	return labels
 }
 
-func (t *Terraformer) podSpec(scriptName string) *corev1.PodSpec {
+func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 	const (
 		tfVolume      = "tf"
 		tfVarsVolume  = "tfvars"
@@ -440,7 +458,7 @@ func (t *Terraformer) podSpec(scriptName string) *corev1.PodSpec {
 }
 
 // listJobPods lists all pods which have a label 'job-name' whose value is equal to the Terraformer job name.
-func (t *Terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
+func (t *terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
 	if err := t.client.List(ctx, podList, client.MatchingLabels(map[string]string{jobNameLabel: t.jobName})); err != nil {
 		return nil, err
@@ -450,7 +468,7 @@ func (t *Terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) 
 
 // retrievePodLogs fetches the logs of the created Pods by the Terraform Job and returns them as a map whose
 // keys are pod names and whose values are the corresponding logs.
-func (t *Terraformer) retrievePodLogs(jobPodList *corev1.PodList) (map[string]string, error) {
+func (t *terraformer) retrievePodLogs(jobPodList *corev1.PodList) (map[string]string, error) {
 	logChan := make(chan map[string]string, 1)
 	go func() {
 		var logList = map[string]string{}
@@ -475,7 +493,7 @@ func (t *Terraformer) retrievePodLogs(jobPodList *corev1.PodList) (map[string]st
 }
 
 // cleanupJob deletes the Terraform Job and all belonging Pods from the Garden cluster.
-func (t *Terraformer) cleanupJob(ctx context.Context, jobPodList *corev1.PodList) error {
+func (t *terraformer) cleanupJob(ctx context.Context, jobPodList *corev1.PodList) error {
 	// Delete the Terraform Job
 	if err := t.client.Delete(ctx, &batchv1.Job{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.jobName}}); err == nil {
 		t.logger.Infof("Deleted Terraform Job '%s'", t.jobName)

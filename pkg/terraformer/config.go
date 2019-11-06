@@ -41,37 +41,37 @@ const (
 )
 
 // SetVariablesEnvironment sets the provided <tfvarsEnvironment> on the Terraformer object.
-func (t *Terraformer) SetVariablesEnvironment(tfvarsEnvironment map[string]string) *Terraformer {
+func (t *terraformer) SetVariablesEnvironment(tfvarsEnvironment map[string]string) Terraformer {
 	t.variablesEnvironment = tfvarsEnvironment
 	return t
 }
 
 // SetJobBackoffLimit configures the backoff limit for the Terraformer job.
-func (t *Terraformer) SetJobBackoffLimit(limit int32) *Terraformer {
+func (t *terraformer) SetJobBackoffLimit(limit int32) Terraformer {
 	t.jobBackoffLimit = limit
 	return t
 }
 
 // SetActiveDeadlineSeconds configures the active deadline seconds for the Terraformer pod and job.
-func (t *Terraformer) SetActiveDeadlineSeconds(adl int64) *Terraformer {
+func (t *terraformer) SetActiveDeadlineSeconds(adl int64) Terraformer {
 	t.activeDeadlineSeconds = adl
 	return t
 }
 
 // SetDeadlineCleaning configures the deadline while waiting for a clean environment.
-func (t *Terraformer) SetDeadlineCleaning(d time.Duration) *Terraformer {
+func (t *terraformer) SetDeadlineCleaning(d time.Duration) Terraformer {
 	t.deadlineCleaning = d
 	return t
 }
 
 // SetDeadlinePod configures the deadline while waiting for the Terraformer pod.
-func (t *Terraformer) SetDeadlinePod(d time.Duration) *Terraformer {
+func (t *terraformer) SetDeadlinePod(d time.Duration) Terraformer {
 	t.deadlinePod = d
 	return t
 }
 
 // SetDeadlineJob configures the deadline while waiting for the Terraformer job.
-func (t *Terraformer) SetDeadlineJob(d time.Duration) *Terraformer {
+func (t *terraformer) SetDeadlineJob(d time.Duration) Terraformer {
 	t.deadlineJob = d
 	return t
 }
@@ -92,10 +92,7 @@ type InitializerConfig struct {
 	InitializeState bool
 }
 
-// Initializer is a function that is called from the Terraformer to initialize its configuration.
-type Initializer func(config *InitializerConfig) error
-
-func (t *Terraformer) initializerConfig() *InitializerConfig {
+func (t *terraformer) initializerConfig() *InitializerConfig {
 	return &InitializerConfig{
 		Namespace:         t.namespace,
 		ConfigurationName: t.configName,
@@ -108,8 +105,8 @@ func (t *Terraformer) initializerConfig() *InitializerConfig {
 // InitializeWith initializes the Terraformer with the given Initializer. It is expected from the
 // Initializer to correctly create all the resources as specified in the given InitializerConfig.
 // A default implementation can be found in DefaultInitializer.
-func (t *Terraformer) InitializeWith(initializer Initializer) *Terraformer {
-	if err := initializer(t.initializerConfig()); err != nil {
+func (t *terraformer) InitializeWith(initializer Initializer) Terraformer {
+	if err := initializer.Initialize(t.initializerConfig()); err != nil {
 		t.logger.Errorf("Could not create the Terraform ConfigMaps/Secrets: %s", err.Error())
 		return t
 	}
@@ -163,10 +160,18 @@ func CreateOrUpdateTFVarsSecret(ctx context.Context, c client.Client, namespace,
 	})
 }
 
+// initializerFunc implements Initializer.
+type initializerFunc func(config *InitializerConfig) error
+
+// Initialize implements Initializer.
+func (f initializerFunc) Initialize(config *InitializerConfig) error {
+	return f(config)
+}
+
 // DefaultInitializer is an Initializer that initializes the configuration, variables and state resources
 // based on the given main, variables and tfvars content and on the given InitializerConfig.
 func DefaultInitializer(c client.Client, main, variables string, tfvars []byte) Initializer {
-	return func(config *InitializerConfig) error {
+	return initializerFunc(func(config *InitializerConfig) error {
 		ctx := context.TODO()
 		if _, err := CreateOrUpdateConfigurationConfigMap(ctx, c, config.Namespace, config.ConfigurationName, main, variables); err != nil {
 			return err
@@ -182,12 +187,12 @@ func DefaultInitializer(c client.Client, main, variables string, tfvars []byte) 
 			}
 		}
 		return nil
-	}
+	})
 }
 
 // prepare checks whether all required ConfigMaps and Secrets exist. It returns the number of
 // existing ConfigMaps/Secrets, or the error in case something unexpected happens.
-func (t *Terraformer) prepare(ctx context.Context) (int, error) {
+func (t *terraformer) prepare(ctx context.Context) (int, error) {
 	numberOfExistingResources, err := t.verifyConfigExists(ctx)
 	if err != nil {
 		return -1, err
@@ -205,24 +210,24 @@ func (t *Terraformer) prepare(ctx context.Context) (int, error) {
 	return numberOfExistingResources, nil
 }
 
-func (t *Terraformer) verifyConfigExists(ctx context.Context) (int, error) {
+func (t *terraformer) verifyConfigExists(ctx context.Context) (int, error) {
 	numberOfExistingResources := 0
 
 	if err := t.client.Get(ctx, kutil.Key(t.namespace, t.stateName), &corev1.ConfigMap{}); err == nil {
 		numberOfExistingResources++
-	} else if err != nil && !apierrors.IsNotFound(err) {
+	} else if !apierrors.IsNotFound(err) {
 		return -1, err
 	}
 
 	if err := t.client.Get(ctx, kutil.Key(t.namespace, t.variablesName), &corev1.Secret{}); err == nil {
 		numberOfExistingResources++
-	} else if err != nil && !apierrors.IsNotFound(err) {
+	} else if !apierrors.IsNotFound(err) {
 		return -1, err
 	}
 
 	if err := t.client.Get(ctx, kutil.Key(t.namespace, t.configName), &corev1.ConfigMap{}); err == nil {
 		numberOfExistingResources++
-	} else if err != nil && !apierrors.IsNotFound(err) {
+	} else if !apierrors.IsNotFound(err) {
 		return -1, err
 	}
 
@@ -230,14 +235,14 @@ func (t *Terraformer) verifyConfigExists(ctx context.Context) (int, error) {
 }
 
 // ConfigExists returns true if all three Terraform configuration secrets/configmaps exist, and false otherwise.
-func (t *Terraformer) ConfigExists() (bool, error) {
+func (t *terraformer) ConfigExists() (bool, error) {
 	numberOfExistingResources, err := t.verifyConfigExists(context.TODO())
 	return numberOfExistingResources == numberOfConfigResources, err
 }
 
-// CleanupConfiguration deletes the two ConfigMaps which store the Terraform configuration and state. It also deletes
+// cleanupConfiguration deletes the two ConfigMaps which store the Terraform configuration and state. It also deletes
 // the Secret which stores the Terraform variables.
-func (t *Terraformer) CleanupConfiguration(ctx context.Context) error {
+func (t *terraformer) cleanupConfiguration(ctx context.Context) error {
 	t.logger.Debugf("Deleting Terraform variables Secret '%s'", t.variablesName)
 	if err := t.client.Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.variablesName}}); err != nil && !apierrors.IsNotFound(err) {
 		return err
@@ -257,7 +262,7 @@ func (t *Terraformer) CleanupConfiguration(ctx context.Context) error {
 }
 
 // ensureCleanedUp deletes the job, pods, and waits until everything has been cleaned up.
-func (t *Terraformer) ensureCleanedUp() error {
+func (t *terraformer) ensureCleanedUp() error {
 	ctx := context.TODO()
 	jobPodList, err := t.listJobPods(ctx)
 	if err != nil {
