@@ -41,7 +41,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return backupbucket.Add(mgr, backupbucket.AddArgs{
 		Actuator:          newActuator(),
 		ControllerOptions: opts.Controller,
-		Predicates:        backupbucket.DefaultPredicates(alicloud.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        backupbucket.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              alicloud.Type,
 	})
 }
 

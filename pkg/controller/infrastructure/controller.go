@@ -45,22 +45,22 @@ type AddArgs struct {
 	// Predicates are the predicates to use.
 	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
+	// Type is the type of the resource considered for reconciliation.
+	Type string
 	// WatchBuilder defines additional watches on controllers that should be set up.
 	WatchBuilder extensionscontroller.WatchBuilder
 }
 
 // DefaultPredicates returns the default predicates for an infrastructure reconciler.
-func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.HasType(typeName),
 			extensionspredicate.GenerationChanged(),
 			extensionspredicate.ShootNotFailed(),
 		}
 	}
 
 	return []predicate.Predicate{
-		extensionspredicate.HasType(typeName),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
 			extensionspredicate.LastOperationNotSuccessful(),
@@ -88,12 +88,14 @@ func add(mgr manager.Manager, args AddArgs) error {
 		return err
 	}
 
-	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Infrastructure{}}, &handler.EnqueueRequestForObject{}, args.Predicates...); err != nil {
+	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+
+	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Infrastructure{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err
 	}
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Cluster{}}, &extensionshandler.EnqueueRequestsFromMapFunc{
-		ToRequests: extensionshandler.SimpleMapper(ClusterToInfrastructureMapper(args.Predicates), extensionshandler.UpdateWithNew),
+		ToRequests: extensionshandler.SimpleMapper(ClusterToInfrastructureMapper(predicates), extensionshandler.UpdateWithNew),
 	}); err != nil {
 		return err
 	}

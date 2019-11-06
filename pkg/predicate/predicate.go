@@ -206,3 +206,10 @@ func IsDeleting() predicate.Predicate {
 		return e.Meta.GetDeletionTimestamp() != nil
 	}), CreateTrigger, UpdateNewTrigger, GenericTrigger)
 }
+
+// AddTypePredicate returns a new slice which contains a type predicate and the given `predicates`.
+func AddTypePredicate(extensionType string, predicates []predicate.Predicate) []predicate.Predicate {
+	preds := make([]predicate.Predicate, 0, len(predicates)+1)
+	preds = append(preds, HasType(extensionType))
+	return append(preds, predicates...)
+}

@@ -48,7 +48,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return network.Add(mgr, network.AddArgs{
 		Actuator:          NewActuator(extensioncontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot)),
 		ControllerOptions: opts.Controller,
-		Predicates:        network.DefaultPredicates(calico.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        network.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              calico.Type,
 	})
 }
 

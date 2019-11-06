@@ -43,7 +43,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
 		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
-		Predicates:        operatingsystemconfig.DefaultPredicates(Type, opts.IgnoreOperationAnnotation),
+		Predicates:        operatingsystemconfig.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              Type,
 	})
 }
 

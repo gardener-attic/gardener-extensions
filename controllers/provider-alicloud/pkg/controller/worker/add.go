@@ -53,7 +53,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return worker.Add(mgr, worker.AddArgs{
 		Actuator:          NewActuator(opts.MachineImages),
 		ControllerOptions: opts.Controller,
-		Predicates:        worker.DefaultPredicates(alicloud.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        worker.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              alicloud.Type,
 	})
 }
 

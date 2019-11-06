@@ -44,19 +44,19 @@ type AddArgs struct {
 	// Predicates are the predicates to use.
 	// If unset, GenerationChanged will be used.
 	Predicates []predicate.Predicate
+	// Type is the type of the resource considered for reconciliation.
+	Type string
 }
 
 // DefaultPredicates returns the default predicates for a Worker reconciler.
-func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predicate.Predicate {
+func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.HasType(typeName),
 			extensionspredicate.GenerationChanged(),
 		}
 	}
 
 	return []predicate.Predicate{
-		extensionspredicate.HasType(typeName),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
 			extensionspredicate.LastOperationNotSuccessful(),
@@ -74,7 +74,8 @@ func DefaultPredicates(typeName string, ignoreOperationAnnotation bool) []predic
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(mgr, args.Actuator)
-	return add(mgr, args.ControllerOptions, args.Predicates)
+	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+	return add(mgr, args.ControllerOptions, predicates)
 }
 
 // add adds a new Controller to mgr with r as the reconcile.Reconciler

@@ -53,7 +53,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	return worker.Add(mgr, worker.AddArgs{
 		Actuator:          NewActuator(opts.MachineImagesToCloudProfilesMapping),
 		ControllerOptions: opts.Controller,
-		Predicates:        worker.DefaultPredicates(openstack.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        worker.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              openstack.Type,
 	})
 }
 

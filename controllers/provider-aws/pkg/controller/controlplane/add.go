@@ -53,7 +53,8 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 			storageClassChart, cpExposureChart, NewValuesProvider(logger), extensionscontroller.ChartRendererFactoryFunc(util.NewChartRendererForShoot),
 			imagevector.ImageVector(), aws.CloudProviderConfigName, opts.ShootWebhooks, mgr.GetWebhookServer().Port, logger),
 		ControllerOptions: opts.Controller,
-		Predicates:        controlplane.DefaultPredicates(aws.Type, opts.IgnoreOperationAnnotation),
+		Predicates:        controlplane.DefaultPredicates(opts.IgnoreOperationAnnotation),
+		Type:              aws.Type,
 	})
 }
 
