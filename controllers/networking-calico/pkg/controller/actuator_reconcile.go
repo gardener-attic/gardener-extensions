@@ -62,7 +62,7 @@ func (a *actuator) Reconcile(ctx context.Context, network *extensionsv1alpha1.Ne
 	}
 
 	// Create shoot chart renderer
-	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(extensionscontroller.GetKubernetesVersion(cluster))
+	chartRenderer, err := a.chartRendererFactory.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return errors.Wrapf(err, "could not create chart renderer for shoot '%s'", network.Namespace)
 	}

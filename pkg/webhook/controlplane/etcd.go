@@ -156,14 +156,11 @@ func DetermineBackupSchedule(c *corev1.Container, cluster *extensionscontroller.
 		begin, end string
 		shootUID   types.UID
 	)
-	if cluster.Shoot != nil && cluster.Shoot.Spec.Maintenance != nil && cluster.Shoot.Spec.Maintenance.TimeWindow != nil {
+
+	if cluster.Shoot.Spec.Maintenance != nil && cluster.Shoot.Spec.Maintenance.TimeWindow != nil {
 		begin = cluster.Shoot.Spec.Maintenance.TimeWindow.Begin
 		end = cluster.Shoot.Spec.Maintenance.TimeWindow.End
 		shootUID = cluster.Shoot.Status.UID
-	} else if cluster.CoreShoot != nil && cluster.CoreShoot.Spec.Maintenance != nil && cluster.CoreShoot.Spec.Maintenance.TimeWindow != nil {
-		begin = cluster.CoreShoot.Spec.Maintenance.TimeWindow.Begin
-		end = cluster.CoreShoot.Spec.Maintenance.TimeWindow.End
-		shootUID = cluster.CoreShoot.Status.UID
 	}
 
 	if len(begin) != 0 && len(end) != 0 {

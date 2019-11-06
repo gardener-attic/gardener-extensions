@@ -198,7 +198,7 @@ func (a *actuator) reconcileControlPlaneExposure(
 
 	// Apply control plane exposure chart
 	a.logger.Info("Applying control plane exposure chart", "controlplaneexposure", util.ObjectName(cp), "values", values)
-	version := extensionscontroller.GetKubernetesVersion(cluster)
+	version := cluster.Shoot.Spec.Kubernetes.Version
 	if err := a.controlPlaneExposureChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), version, values); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane exposure chart for controlplane '%s'", util.ObjectName(cp))
 	}
@@ -284,14 +284,7 @@ func (a *actuator) reconcileControlPlane(
 		// then we requeue the `ControlPlane` CRD in order to give the provider-specific control plane components time to
 		// properly prepare the cluster for hibernation (whatever needs to be done). If the kube-apiserver is already scaled down
 		// then we allow continuing the reconciliation.
-		var deletionTimestamp *metav1.Time
-		if cluster.Shoot != nil {
-			deletionTimestamp = cluster.Shoot.DeletionTimestamp
-		} else if cluster.CoreShoot != nil {
-			deletionTimestamp = cluster.CoreShoot.DeletionTimestamp
-		}
-
-		if deletionTimestamp == nil {
+		if cluster.Shoot.DeletionTimestamp == nil {
 			if dep.Spec.Replicas != nil && *dep.Spec.Replicas > 0 {
 				requeue = true
 			} else {
@@ -313,7 +306,7 @@ func (a *actuator) reconcileControlPlane(
 	}
 
 	// Apply control plane chart
-	version := extensionscontroller.GetKubernetesVersion(cluster)
+	version := cluster.Shoot.Spec.Kubernetes.Version
 	a.logger.Info("Applying control plane chart", "controlplane", util.ObjectName(cp))
 	if err := a.controlPlaneChart.Apply(ctx, a.chartApplier, cp.Namespace, a.imageVector, a.gardenerClientset.Version(), version, values); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane chart for controlplane '%s'", util.ObjectName(cp))

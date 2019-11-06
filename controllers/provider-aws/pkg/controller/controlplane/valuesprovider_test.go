@@ -83,7 +83,7 @@ var _ = Describe("ValuesProvider", func() {
 
 		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
-			CoreShoot: &gardencorev1alpha1.Shoot{
+			Shoot: &gardencorev1alpha1.Shoot{
 				Spec: gardencorev1alpha1.ShootSpec{
 					Networking: gardencorev1alpha1.Networking{
 						Pods: &cidr,

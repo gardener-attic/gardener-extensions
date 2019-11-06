@@ -45,7 +45,7 @@ var _ = Describe("Ensurer", func() {
 		ctrl       *gomock.Controller
 		eContext13 = genericmutator.NewInternalEnsurerContext(
 			&extensionscontroller.Cluster{
-				CoreShoot: &gardencorev1alpha1.Shoot{
+				Shoot: &gardencorev1alpha1.Shoot{
 					Spec: gardencorev1alpha1.ShootSpec{
 						Kubernetes: gardencorev1alpha1.Kubernetes{
 							Version: "1.13.0",
@@ -56,7 +56,7 @@ var _ = Describe("Ensurer", func() {
 		)
 		eContext14 = genericmutator.NewInternalEnsurerContext(
 			&extensionscontroller.Cluster{
-				CoreShoot: &gardencorev1alpha1.Shoot{
+				Shoot: &gardencorev1alpha1.Shoot{
 					Spec: gardencorev1alpha1.ShootSpec{
 						Kubernetes: gardencorev1alpha1.Kubernetes{
 							Version: "1.14.0",

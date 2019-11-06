@@ -80,7 +80,7 @@ var _ = Describe("Terraform", func() {
 		}
 		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 		cluster = &controller.Cluster{
-			CoreCloudProfile: &gardencorev1alpha1.CloudProfile{
+			CloudProfile: &gardencorev1alpha1.CloudProfile{
 				Spec: gardencorev1alpha1.CloudProfileSpec{
 					ProviderConfig: &gardencorev1alpha1.ProviderConfig{
 						RawExtension: runtime.RawExtension{
@@ -89,7 +89,7 @@ var _ = Describe("Terraform", func() {
 					},
 				},
 			},
-			CoreShoot: &gardencorev1alpha1.Shoot{
+			Shoot: &gardencorev1alpha1.Shoot{
 				Spec: gardencorev1alpha1.ShootSpec{
 					Networking: gardencorev1alpha1.Networking{
 						Pods:     &podsCIDR,

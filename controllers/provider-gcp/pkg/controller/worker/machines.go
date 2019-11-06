@@ -24,7 +24,6 @@ import (
 	gcpapihelper "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
@@ -85,7 +84,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	shootVersionMajorMinor, err := util.VersionMajorMinor(extensionscontroller.GetKubernetesVersion(w.cluster))
+	shootVersionMajorMinor, err := util.VersionMajorMinor(w.cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return err
 	}

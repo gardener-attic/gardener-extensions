@@ -82,17 +82,13 @@ func ComputeTerraformerChartValues(
 		keyStoneURL string
 		dnsServers  []string
 	)
-	if cluster.CloudProfile != nil {
-		keyStoneURL = cluster.CloudProfile.Spec.OpenStack.KeyStoneURL
-		dnsServers = cluster.CloudProfile.Spec.OpenStack.DNSServers
-	} else if cluster.CoreCloudProfile != nil {
-		cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(cluster.CoreCloudProfile)
-		if err != nil {
-			return nil, err
-		}
-		keyStoneURL = cloudProfileConfig.KeyStoneURL
-		dnsServers = cloudProfileConfig.DNSServers
+
+	cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(cluster.CloudProfile)
+	if err != nil {
+		return nil, err
 	}
+	keyStoneURL = cloudProfileConfig.KeyStoneURL
+	dnsServers = cloudProfileConfig.DNSServers
 
 	return map[string]interface{}{
 		"openstack": map[string]interface{}{

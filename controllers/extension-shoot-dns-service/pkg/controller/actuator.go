@@ -201,7 +201,7 @@ func (a *actuator) createShootResources(ctx context.Context, cluster *controller
 		return errors.Wrapf(err, "could not create managed resource %s", KeptShootResourcesName)
 	}
 
-	renderer, err := util.NewChartRendererForShoot(controller.GetKubernetesVersion(cluster))
+	renderer, err := util.NewChartRendererForShoot(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return errors.Wrap(err, "could not create chart renderer")
 	}

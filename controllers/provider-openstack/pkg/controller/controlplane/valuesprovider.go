@@ -30,7 +30,6 @@ import (
 
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	gardenv1beta1 "github.com/gardener/gardener/pkg/apis/garden/v1beta1"
 	"github.com/gardener/gardener/pkg/utils/chart"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 	"github.com/go-logr/logr"
@@ -166,9 +165,9 @@ func (vp *valuesProvider) GetConfigChartValues(
 	}
 
 	var cloudProfileConfig *apisopenstack.CloudProfileConfig
-	if cluster.CoreCloudProfile != nil && cluster.CoreCloudProfile.Spec.ProviderConfig != nil && cluster.CoreCloudProfile.Spec.ProviderConfig.Raw != nil {
+	if cluster.CloudProfile != nil && cluster.CloudProfile.Spec.ProviderConfig != nil && cluster.CloudProfile.Spec.ProviderConfig.Raw != nil {
 		cloudProfileConfig = &apisopenstack.CloudProfileConfig{}
-		if _, _, err := vp.decoder.Decode(cluster.CoreCloudProfile.Spec.ProviderConfig.Raw, nil, cloudProfileConfig); err != nil {
+		if _, _, err := vp.decoder.Decode(cluster.CloudProfile.Spec.ProviderConfig.Raw, nil, cloudProfileConfig); err != nil {
 			return nil, errors.Wrapf(err, "could not decode providerConfig of cloudProfile for '%s'", util.ObjectName(cp))
 		}
 	}
@@ -242,11 +241,8 @@ func getConfigChartValues(
 		dhcpDomain     *string
 		requestTimeout *string
 	)
-	if cluster.CloudProfile != nil {
-		keyStoneURL = cluster.CloudProfile.Spec.OpenStack.KeyStoneURL
-		dhcpDomain = cluster.CloudProfile.Spec.OpenStack.DHCPDomain
-		requestTimeout = cluster.CloudProfile.Spec.OpenStack.RequestTimeout
-	} else if cluster.CoreCloudProfile != nil && cloudProfileConfig != nil {
+
+	if cloudProfileConfig != nil {
 		keyStoneURL = cloudProfileConfig.KeyStoneURL
 		dhcpDomain = cloudProfileConfig.DHCPDomain
 		requestTimeout = cloudProfileConfig.RequestTimeout
@@ -254,7 +250,7 @@ func getConfigChartValues(
 
 	// Collect config chart values
 	values := map[string]interface{}{
-		"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"domainName":        c.DomainName,
 		"tenantName":        c.TenantName,
 		"username":          c.Username,
@@ -268,14 +264,7 @@ func getConfigChartValues(
 	}
 
 	if cpConfig.LoadBalancerClasses == nil {
-		if cluster.CloudProfile != nil && cluster.Shoot != nil {
-			for _, pool := range cluster.CloudProfile.Spec.OpenStack.Constraints.FloatingPools {
-				if pool.Name == cluster.Shoot.Spec.Cloud.OpenStack.FloatingPoolName {
-					cpConfig.LoadBalancerClasses = gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(pool.LoadBalancerClasses)
-					break
-				}
-			}
-		} else if cluster.CoreCloudProfile != nil && cluster.CoreShoot != nil && cloudProfileConfig != nil {
+		if cloudProfileConfig != nil {
 			for _, pool := range cloudProfileConfig.Constraints.FloatingPools {
 				if pool.Name == infraStatus.Networks.FloatingPool.Name {
 					cpConfig.LoadBalancerClasses = pool.LoadBalancerClasses
@@ -332,7 +321,7 @@ func getCCMChartValues(
 	values := map[string]interface{}{
 		"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
 		"clusterName":       cp.Namespace,
-		"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 		"podAnnotations": map[string]interface{}{
 			"checksum/secret-cloud-controller-manager":                          checksums[cloudControllerManagerDeploymentName],
@@ -347,17 +336,4 @@ func getCCMChartValues(
 	}
 
 	return values, nil
-}
-
-func gardenV1beta1OpenStackLoadBalancerClassToOpenStackV1alpha1LoadBalancerClass(loadBalancerClasses []gardenv1beta1.OpenStackLoadBalancerClass) []apisopenstack.LoadBalancerClass {
-	out := make([]apisopenstack.LoadBalancerClass, 0, len(loadBalancerClasses))
-	for _, loadBalancerClass := range loadBalancerClasses {
-		out = append(out, apisopenstack.LoadBalancerClass{
-			Name:              loadBalancerClass.Name,
-			FloatingSubnetID:  loadBalancerClass.FloatingSubnetID,
-			FloatingNetworkID: loadBalancerClass.FloatingNetworkID,
-			SubnetID:          loadBalancerClass.SubnetID,
-		})
-	}
-	return out
 }

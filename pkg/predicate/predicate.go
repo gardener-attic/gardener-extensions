@@ -75,19 +75,10 @@ func (s *shootNotFailedMapper) Map(e event.GenericEvent) bool {
 		return false
 	}
 
-	if cluster.Shoot != nil {
-		lastOperation := cluster.Shoot.Status.LastOperation
-		return lastOperation != nil &&
-			lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
-			cluster.Shoot.Generation == cluster.Shoot.Status.ObservedGeneration
-	} else if cluster.CoreShoot != nil {
-		lastOperation := cluster.CoreShoot.Status.LastOperation
-		return lastOperation != nil &&
-			lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
-			cluster.CoreShoot.Generation == cluster.CoreShoot.Status.ObservedGeneration
-	}
-
-	return true
+	lastOperation := cluster.Shoot.Status.LastOperation
+	return lastOperation != nil &&
+		lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
+		cluster.Shoot.Generation == cluster.Shoot.Status.ObservedGeneration
 }
 
 // ShootNotFailed is a predicate for failed shoots.

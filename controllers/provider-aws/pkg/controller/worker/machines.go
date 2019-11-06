@@ -91,7 +91,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	shootVersionMajorMinor, err := util.VersionMajorMinor(extensionscontroller.GetKubernetesVersion(w.cluster))
+	shootVersionMajorMinor, err := util.VersionMajorMinor(w.cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return err
 	}

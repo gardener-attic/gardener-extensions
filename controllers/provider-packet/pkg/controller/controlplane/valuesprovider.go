@@ -249,7 +249,7 @@ func getControlPlaneChartValues(
 		"packet-cloud-controller-manager": map[string]interface{}{
 			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
 			"clusterName":       cp.Namespace,
-			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-cloud-controller-manager": checksums[packet.CloudControllerManagerImageName],
@@ -258,7 +258,7 @@ func getControlPlaneChartValues(
 		},
 		"csi-packet": map[string]interface{}{
 			"replicas":          extensionscontroller.GetControlPlaneReplicas(cluster, scaledDown, 1),
-			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"regionID":          cp.Spec.Region,
 			"podAnnotations": map[string]interface{}{
 				"checksum/secret-csi-attacher":    checksums[packet.CSIAttacherImageName],
@@ -282,7 +282,7 @@ func getControlPlaneShootChartValues(
 				"apiToken":  base64.StdEncoding.EncodeToString([]byte(credentials.APIToken)),
 				"projectID": base64.StdEncoding.EncodeToString([]byte(credentials.ProjectID)),
 			},
-			"kubernetesVersion": extensionscontroller.GetKubernetesVersion(cluster),
+			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		},
 	}
 

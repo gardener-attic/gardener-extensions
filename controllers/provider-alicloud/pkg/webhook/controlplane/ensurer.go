@@ -18,12 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-
-	"github.com/Masterminds/semver"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
+	"github.com/Masterminds/semver"
 	"github.com/coreos/go-systemd/unit"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
@@ -51,7 +49,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx generi
 		if err != nil {
 			return err
 		}
-		ver, err := semver.NewVersion(extensionscontroller.GetKubernetesVersion(cluster))
+		ver, err := semver.NewVersion(cluster.Shoot.Spec.Kubernetes.Version)
 		if err != nil {
 			return fmt.Errorf("Can not parse shoot k8s cluster version: %v", err)
 		}
@@ -135,7 +133,7 @@ func (e *ensurer) EnsureKubeletConfiguration(ctx context.Context, ectx genericmu
 	if err != nil {
 		return err
 	}
-	ver, err := semver.NewVersion(extensionscontroller.GetKubernetesVersion(cluster))
+	ver, err := semver.NewVersion(cluster.Shoot.Spec.Kubernetes.Version)
 	if err != nil {
 		return fmt.Errorf("Can not parse shoot k8s cluster version: %v", err)
 	}

@@ -92,7 +92,7 @@ var _ = Describe("Actuator", func() {
 		}
 
 		cluster = &extensionscontroller.Cluster{
-			CoreShoot: &gardencorev1alpha1.Shoot{
+			Shoot: &gardencorev1alpha1.Shoot{
 				Spec: gardencorev1alpha1.ShootSpec{
 					Kubernetes: gardencorev1alpha1.Kubernetes{
 						Version: shootVersion,
