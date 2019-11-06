@@ -23,6 +23,7 @@ rules:
   - ""
   resources:
   - secrets
+  - secrets/finalizers
   verbs:
   - get
   - list
