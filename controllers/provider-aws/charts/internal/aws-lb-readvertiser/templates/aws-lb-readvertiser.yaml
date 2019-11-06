@@ -38,11 +38,11 @@ spec:
         - --refresh-period=5
         resources:
           requests:
-            cpu: 5m
-            memory: 10Mi
-          limits:
             cpu: 20m
             memory: 20Mi
+          limits:
+            cpu: 40m
+            memory: 40Mi
         volumeMounts:
         - name: aws-lb-readvertiser
           mountPath: /var/lib/aws-lb-readvertiser
