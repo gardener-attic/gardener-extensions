@@ -35,29 +35,30 @@ An example `InfrastructureConfig` for the Azure extension looks as follows:
 apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1
 kind: InfrastructureConfig
 networks:
-  vnet: # specify either 'name' or 'cidr'
-  # name: my-vnet
+  vnet: # specify either 'name' and 'resourceGroup' or 'cidr'
+    # name: my-vnet
+    # resouceGroup: my-vnet-resource-group
     cidr: 10.250.0.0/16
   workers: 10.250.0.0/19
-# serviceEndpoints:
-# - entry1
-  zoned: false
+  # serviceEndpoints:
+  # - Microsoft.Test
+zoned: false
 # resourceGroup:
 #   name: mygroup
 ```
 
 The `networks.vnet` section describes whether you want to create the shoot cluster in an already existing VNet or whether to create a new one:
 
-* If `networks.vnet.name` is given then you have to specify the VNet name of the existing VNet that was created by other means (manually, other tooling, ...).
+* If `networks.vnet.name` and `networks.vnet.resourceGroup` are given then you have to specify the VNet name and VNet resource group name of the existing VNet that was created by other means (manually, other tooling, ...).
 * If `networks.vnet.cidr` is given then you have to specify the VNet CIDR of a new VNet that will be created during shoot creation.
 You can freely choose a private CIDR range.
-* Either `networks.vnet.name` or `networks.vnet.cidr` must be present, but not both at the same time.
+* Either `networks.vnet.name` and `neworks.vnet.resourceGroup` or `networks.vnet.cidr` must be present, but not both at the same time.
 
 The `networks.workers` section describes the CIDR for a subnet that is used for all shoot worker nodes, i.e., VMs which later run your applications.
 The specified CIDR range must be contained in the VNet CIDR specified above, or the VNet CIDR of your already existing VNet.
 You can freely choose this CIDR and it is your responsibility to properly design the network layout to suit your needs.
 
-In the `networks.serviceEndpoints[]` list you can specify the list of Azure service endpoints which shall be associated with the worker subnet.
+In the `networks.serviceEndpoints[]` list you can specify the list of Azure service endpoints which shall be associated with the worker subnet. All available service endpoints and their technical names can be found in the (Azure Service Endpoint documentation](https://docs.microsoft.com/en-us/azure/virtual-network/virtual-network-service-endpoints-overview).
 
 Via the `.zoned` boolean you can tell whether you want to use Azure availability zones or not.
 If you don't use zones then an availability set will be created and only basic load balancers will be used.
