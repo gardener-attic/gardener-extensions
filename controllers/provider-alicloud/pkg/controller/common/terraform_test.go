@@ -19,7 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
-	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/gardener/terraformer"
+	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/terraformer"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -42,7 +42,7 @@ var _ = Describe("Terraform", func() {
 		It("should create a new terraformer and initialize it with the credentials", func() {
 			var (
 				factory         = mockterraformer.NewMockFactory(ctrl)
-				tf              = mockterraformer.NewMockInterface(ctrl)
+				tf              = mockterraformer.NewMockTerraformer(ctrl)
 				config          rest.Config
 				accessKeyID     = "accessKeyID"
 				accessKeySecret = "accessKeySecret"

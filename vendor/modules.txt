@@ -170,7 +170,6 @@ github.com/gardener/gardener/pkg/controllermanager/controller/utils
 github.com/gardener/gardener/pkg/controllermanager/metrics
 github.com/gardener/gardener/pkg/logger
 github.com/gardener/gardener/pkg/operation/common
-github.com/gardener/gardener/pkg/operation/terraformer
 github.com/gardener/gardener/pkg/scheduler/apis/config
 github.com/gardener/gardener/pkg/scheduler/apis/config/v1alpha1
 github.com/gardener/gardener/pkg/scheduler/controller/common

@@ -21,10 +21,10 @@ import (
 	azurev1alpha1helper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -204,7 +204,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf *terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*TerraformState, error) {
 	var outputKeys = []string{
 		TerraformerOutputKeyResourceGroupName,
 		TerraformerOutputKeyRouteTableName,
@@ -292,7 +292,7 @@ func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.Infrastructu
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf *terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*azurev1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*azurev1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

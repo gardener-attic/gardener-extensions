@@ -20,10 +20,10 @@ import (
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -173,7 +173,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf *terraformer.Terraformer, config *openstackv1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *openstackv1alpha1.InfrastructureConfig) (*TerraformState, error) {
 	outputKeys := []string{
 		TerraformOutputKeySSHKeyName,
 		TerraformOutputKeyRouterID,
@@ -242,7 +242,7 @@ func StatusFromTerraformState(state *TerraformState) *openstackv1alpha1.Infrastr
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf *terraformer.Terraformer, config *openstackv1alpha1.InfrastructureConfig) (*openstackv1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *openstackv1alpha1.InfrastructureConfig) (*openstackv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

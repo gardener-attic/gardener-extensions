@@ -20,8 +20,9 @@ import (
 	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/imagevector"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
+
 	"github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"k8s.io/client-go/rest"
 )
 
@@ -50,7 +51,7 @@ func NewTerraformer(
 	purpose,
 	namespace,
 	name string,
-) (*terraformer.Terraformer, error) {
+) (terraformer.Terraformer, error) {
 	tf, err := terraformer.NewForConfig(logger.NewLogger("info"), restConfig, purpose, namespace, name, imagevector.TerraformerImage())
 	if err != nil {
 		return nil, err

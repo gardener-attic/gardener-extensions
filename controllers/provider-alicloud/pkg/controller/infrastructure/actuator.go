@@ -29,12 +29,11 @@ import (
 	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionschartrenderer "github.com/gardener/gardener-extensions/pkg/gardener/chartrenderer"
-	extensionsterraformer "github.com/gardener/gardener-extensions/pkg/gardener/terraformer"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 	chartutil "github.com/gardener/gardener-extensions/pkg/util/chart"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/go-logr/logr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -60,7 +59,7 @@ func NewActuator() infrastructure.Actuator {
 	return NewActuatorWithDeps(
 		log.Log.WithName("infrastructure-actuator"),
 		alicloudclient.DefaultFactory(),
-		extensionsterraformer.DefaultFactory(),
+		terraformer.DefaultFactory(),
 		extensionschartrenderer.DefaultFactory(),
 		DefaultTerraformOps(),
 	)
@@ -70,7 +69,7 @@ func NewActuator() infrastructure.Actuator {
 func NewActuatorWithDeps(
 	logger logr.Logger,
 	alicloudClientFactory alicloudclient.Factory,
-	terraformerFactory extensionsterraformer.Factory,
+	terraformerFactory terraformer.Factory,
 	chartRendererFactory extensionschartrenderer.Factory,
 	terraformChartOps TerraformChartOps,
 ) infrastructure.Actuator {
@@ -91,7 +90,7 @@ type actuator struct {
 	logger  logr.Logger
 
 	alicloudClientFactory alicloudclient.Factory
-	terraformerFactory    extensionsterraformer.Factory
+	terraformerFactory    terraformer.Factory
 	chartRendererFactory  extensionschartrenderer.Factory
 	terraformChartOps     TerraformChartOps
 
@@ -135,7 +134,7 @@ func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *e
 	return config, credentials, nil
 }
 
-func (a *actuator) fetchEIPInternetChargeType(vpcClient alicloudclient.VPC, tf extensionsterraformer.Interface) (string, error) {
+func (a *actuator) fetchEIPInternetChargeType(vpcClient alicloudclient.VPC, tf terraformer.Terraformer) (string, error) {
 	stateVariables, err := tf.GetStateOutputVariables(TerraformerOutputKeyVPCID)
 	if err != nil {
 		if apierrors.IsNotFound(err) || terraformer.IsVariablesNotFoundError(err) {
@@ -148,7 +147,7 @@ func (a *actuator) fetchEIPInternetChargeType(vpcClient alicloudclient.VPC, tf e
 }
 
 func (a *actuator) getInitializerValues(
-	tf extensionsterraformer.Interface,
+	tf terraformer.Terraformer,
 	infra *extensionsv1alpha1.Infrastructure,
 	config *alicloudv1alpha1.InfrastructureConfig,
 	credentials *alicloud.Credentials,
@@ -177,7 +176,7 @@ func (a *actuator) getInitializerValues(
 	return a.terraformChartOps.ComputeUseVPCInitializerValues(config, vpcInfo), nil
 }
 
-func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, config *alicloudv1alpha1.InfrastructureConfig, values *InitializerValues) (extensionsterraformer.Initializer, error) {
+func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, config *alicloudv1alpha1.InfrastructureConfig, values *InitializerValues) (terraformer.Initializer, error) {
 	chartValues := a.terraformChartOps.ComputeChartValues(infra, config, values)
 	release, err := a.chartRenderer.Render(alicloud.InfraChartPath, alicloud.InfraRelease, infra.Namespace, chartValues)
 	if err != nil {
@@ -192,11 +191,11 @@ func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, conf
 	return a.terraformerFactory.DefaultInitializer(a.client, files.Main, files.Variables, files.TFVars), nil
 }
 
-func (a *actuator) newTerraformer(infra *extensionsv1alpha1.Infrastructure, credentials *alicloud.Credentials) (extensionsterraformer.Interface, error) {
+func (a *actuator) newTerraformer(infra *extensionsv1alpha1.Infrastructure, credentials *alicloud.Credentials) (terraformer.Terraformer, error) {
 	return common.NewTerraformer(a.terraformerFactory, a.config, credentials, TerraformerPurpose, infra.Namespace, infra.Name)
 }
 
-func (a *actuator) extractStatus(tf extensionsterraformer.Interface, infraConfig *alicloudv1alpha1.InfrastructureConfig) (*alicloudv1alpha1.InfrastructureStatus, error) {
+func (a *actuator) extractStatus(tf terraformer.Terraformer, infraConfig *alicloudv1alpha1.InfrastructureConfig) (*alicloudv1alpha1.InfrastructureStatus, error) {
 	outputVarKeys := []string{
 		TerraformerOutputKeyVPCID,
 		TerraformerOutputKeyVPCCIDR,

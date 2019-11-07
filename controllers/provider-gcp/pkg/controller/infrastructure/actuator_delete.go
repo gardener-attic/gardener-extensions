@@ -23,8 +23,9 @@ import (
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 	"github.com/gardener/gardener/pkg/utils/flow"
 )
 
@@ -32,7 +33,7 @@ func (a *actuator) cleanupKubernetesFirewallRules(
 	ctx context.Context,
 	config *gcpv1alpha1.InfrastructureConfig,
 	client gcpclient.Interface,
-	tf *terraformer.Terraformer,
+	tf terraformer.Terraformer,
 	account *internal.ServiceAccount,
 	shootSeedNamespace string,
 ) error {
@@ -51,7 +52,7 @@ func (a *actuator) cleanupKubernetesRoutes(
 	ctx context.Context,
 	config *gcpv1alpha1.InfrastructureConfig,
 	client gcpclient.Interface,
-	tf *terraformer.Terraformer,
+	tf terraformer.Terraformer,
 	account *internal.ServiceAccount,
 	shootSeedNamespace string,
 ) error {

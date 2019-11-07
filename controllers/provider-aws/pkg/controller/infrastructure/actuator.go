@@ -23,10 +23,10 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
+	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	glogger "github.com/gardener/gardener/pkg/logger"
-	"github.com/gardener/gardener/pkg/operation/terraformer"
 
 	"github.com/go-logr/logr"
 
@@ -82,7 +82,7 @@ func (a *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infras
 
 // Helper functions
 
-func (a *actuator) newTerraformer(purpose, namespace, name string) (*terraformer.Terraformer, error) {
+func (a *actuator) newTerraformer(purpose, namespace, name string) (terraformer.Terraformer, error) {
 	t, err := terraformer.NewForConfig(glogger.NewLogger("info"), a.restConfig, purpose, namespace, name, imagevector.TerraformerImage())
 	if err != nil {
 		return nil, err
