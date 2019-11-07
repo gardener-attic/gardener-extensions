@@ -26,6 +26,7 @@ write_files:
 {{- end -}}
 {{- end }}
 runcmd:
+- "until zypper -q install -y docker wget socat jq nfs-client; [ $? -ne 7 ]; do sleep 1; done"
 - systemctl daemon-reload
 {{ if .Bootstrap -}}
 - ln -s /usr/bin/docker /bin/docker
