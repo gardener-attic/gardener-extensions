@@ -137,7 +137,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
-# github.com/gardener/gardener v0.0.0-20191031143939-2bcc57c0519b
+# github.com/gardener/gardener v0.0.0-20191104070500-7326bc55e5fa
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/v1alpha1
@@ -179,12 +179,15 @@ github.com/gardener/gardener/pkg/scheduler/utils
 github.com/gardener/gardener/pkg/utils
 github.com/gardener/gardener/pkg/utils/chart
 github.com/gardener/gardener/pkg/utils/context
+github.com/gardener/gardener/pkg/utils/errors
 github.com/gardener/gardener/pkg/utils/flow
 github.com/gardener/gardener/pkg/utils/imagevector
 github.com/gardener/gardener/pkg/utils/kubernetes
+github.com/gardener/gardener/pkg/utils/kubernetes/client
 github.com/gardener/gardener/pkg/utils/kubernetes/health
 github.com/gardener/gardener/pkg/utils/retry
 github.com/gardener/gardener/pkg/utils/secrets
+github.com/gardener/gardener/pkg/utils/time
 github.com/gardener/gardener/pkg/utils/validation/cidr
 github.com/gardener/gardener/pkg/utils/validation/gomega
 github.com/gardener/gardener/pkg/version
@@ -194,7 +197,7 @@ github.com/gardener/gardener/test/integration/shoots
 github.com/gardener/gardener-resource-manager/pkg/apis/resources
 github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1
 github.com/gardener/gardener-resource-manager/pkg/manager
-# github.com/gardener/hvpa-controller v0.0.0-20190924063424-ef5c3668949d
+# github.com/gardener/hvpa-controller v0.0.0-20191014062307-fad3bdf06a25
 github.com/gardener/hvpa-controller/api/v1alpha1
 # github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 github.com/gardener/machine-controller-manager/pkg/apis/machine
@@ -871,7 +874,7 @@ k8s.io/utils/buffer
 k8s.io/utils/integer
 k8s.io/utils/pointer
 k8s.io/utils/trace
-# sigs.k8s.io/controller-runtime v0.2.0-beta.4
+# sigs.k8s.io/controller-runtime v0.2.0-beta.5
 sigs.k8s.io/controller-runtime
 sigs.k8s.io/controller-runtime/pkg/builder
 sigs.k8s.io/controller-runtime/pkg/cache
@@ -900,7 +903,6 @@ sigs.k8s.io/controller-runtime/pkg/predicate
 sigs.k8s.io/controller-runtime/pkg/reconcile
 sigs.k8s.io/controller-runtime/pkg/recorder
 sigs.k8s.io/controller-runtime/pkg/runtime/inject
-sigs.k8s.io/controller-runtime/pkg/runtime/log
 sigs.k8s.io/controller-runtime/pkg/scheme
 sigs.k8s.io/controller-runtime/pkg/source
 sigs.k8s.io/controller-runtime/pkg/source/internal

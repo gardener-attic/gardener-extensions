@@ -129,8 +129,7 @@ func (g *genTest) Imports(c *generator.Context) (imports []string) {
 		`k8s.io/apimachinery/pkg/labels`,
 		`k8s.io/apimachinery/pkg/types`,
 		`k8s.io/apimachinery/pkg/util/sets`,
-		`kutil "github.com/gardener/gardener/pkg/utils/kubernetes"`,
-		`kutil "github.com/gardener/gardener/pkg/utils/kubernetes"`,
+		`utilclient "github.com/gardener/gardener/pkg/utils/kubernetes/client"`,
 		`metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"`,
 		`networkingv1 "k8s.io/api/networking/v1"`,
 		`networkpolicies "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"`,
@@ -408,7 +407,7 @@ func TestNetworkPolicies(t *testing.T) {
 
 var setHeader = `
 var (
-	kubeconfig     = flag.String("kubeconfig", "", "the path to the kubeconfig  of the garden cluster that will be used for integration tests")
+	kubeconfig     = flag.String("garden-kubeconfig", "", "the path to the kubeconfig  of the garden cluster that will be used for integration tests")
 	shootName      = flag.String("shootName", "", "the name of the shoot we want to test")
 	shootNamespace = flag.String("shootNamespace", "", "the namespace name that the shoot resides in")
 	logLevel       = flag.String("verbose", "", "verbosity level, when set, logging level will be DEBUG")
@@ -591,7 +590,7 @@ var setBody = `
 
 		getFirstNodeInternalIP := func(ctx context.Context, cl kubernetes.Interface) (string, error) {
 			nodes := &corev1.NodeList{}
-			err := cl.Client().List(ctx, nodes, kutil.Limit(1))
+			err := cl.Client().List(ctx, nodes, utilclient.Limit(1))
 			if err != nil {
 				return "", err
 			}
@@ -741,12 +740,10 @@ var setBody = `
 		setGlobals(ctx)
 
 		namespaces := &corev1.NamespaceList{}
-		selector := &client.ListOptions{
-			LabelSelector: labels.SelectorFromSet(labels.Set{
-				"gardener-e2e-test": "networkpolicies",
-			}),
-		}
-		err := shootTestOperations.SeedClient.Client().List(ctx, namespaces, client.UseListOptions(selector))
+		selector := labels.SelectorFromSet(labels.Set{
+			"gardener-e2e-test": "networkpolicies",
+		})
+		err := shootTestOperations.SeedClient.Client().List(ctx, namespaces, utilclient.MatchingLabelsSelector{Selector: selector})
 		Expect(err).NotTo(HaveOccurred())
 
 		for _, ns := range namespaces.Items {

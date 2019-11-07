@@ -13,7 +13,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.0.0-20191031143939-2bcc57c0519b
+	github.com/gardener/gardener v0.0.0-20191104070500-7326bc55e5fa
 	github.com/gardener/gardener-resource-manager v0.0.0-20191025075317-09173887c1a7
 	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
 	github.com/go-logr/logr v0.1.0
@@ -50,7 +50,7 @@ require (
 	k8s.io/klog v0.3.3
 	k8s.io/kube-aggregator v0.0.0-20191004104030-d9d5f0cc7532
 	k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325
-	sigs.k8s.io/controller-runtime v0.2.0-beta.4
+	sigs.k8s.io/controller-runtime v0.2.0-beta.5
 	sigs.k8s.io/yaml v1.1.0
 )
 
@@ -61,5 +61,4 @@ replace (
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190315093550-53c4693659ed // kubernetes-1.14.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1 // kubernetes-1.14.0
 	k8s.io/client-go => k8s.io/client-go v11.0.0+incompatible // kubernetes-1.14.0
-	sigs.k8s.io/structured-merge-diff => sigs.k8s.io/structured-merge-diff v0.0.0-20190302045857-e85c7b244fd2
 )

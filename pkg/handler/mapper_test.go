@@ -73,7 +73,7 @@ var _ = Describe("Controller Mapper", func() {
 					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
 					gomock.AssignableToTypeOf(client.InNamespace(namespace)),
 				).
-				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOptionFunc) error {
+				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOption) error {
 					*actual = extensionsv1alpha1.InfrastructureList{
 						Items: []extensionsv1alpha1.Infrastructure{
 							{
@@ -122,7 +122,7 @@ var _ = Describe("Controller Mapper", func() {
 					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
 					gomock.AssignableToTypeOf(client.InNamespace(namespace)),
 				).
-				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOptionFunc) error {
+				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOption) error {
 					*actual = extensionsv1alpha1.InfrastructureList{
 						Items: []extensionsv1alpha1.Infrastructure{
 							{
@@ -158,7 +158,7 @@ var _ = Describe("Controller Mapper", func() {
 					gomock.AssignableToTypeOf(&extensionsv1alpha1.InfrastructureList{}),
 					gomock.AssignableToTypeOf(client.InNamespace(namespace)),
 				).
-				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOptionFunc) error {
+				DoAndReturn(func(_ context.Context, actual *extensionsv1alpha1.InfrastructureList, _ ...client.ListOption) error {
 					*actual = extensionsv1alpha1.InfrastructureList{}
 					return nil
 				})
