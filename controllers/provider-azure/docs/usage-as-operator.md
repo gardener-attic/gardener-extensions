@@ -29,6 +29,8 @@ machineImages:
 
 ## Example `CloudProfile` manifest
 
+The possible values for `.spec.volumeTypes[].name` on Azure are `Standard_LRS`, `StandardSSD_LRS` and `Premium_LRS`. There is another volume type called `UltraSSD_LRS` but this type is not supported to use as os disk. If an end user select a volume type whose name is not equal to one of the valid values then the machine will be created with the default volume type which belong to the selected machine type. Therefore it is recommended to configure only the valid values for the `.spec.volumeType[].name` in the `CloudProfile`.
+
 Please find below an example `CloudProfile` manifest:
 
 ```yaml
@@ -53,10 +55,13 @@ spec:
     gpu: "0"
     memory: 16Gi
   volumeTypes:
-  - name: standard
+  - name: Standard_LRS
     class: standard
     usable: true
-  - name: premium
+  - name: StandardSSD_LRS
+    class: premium
+    usable: false
+  - name: Premium_LRS
     class: premium
     usable: false
   regions:

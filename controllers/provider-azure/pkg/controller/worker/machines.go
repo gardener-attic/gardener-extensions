@@ -135,6 +135,22 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		osDisk := map[string]interface{}{
+			"size": volumeSize,
+		}
+
+		// In the past the volume type information was not passed to the machineclass.
+		// In consequence the Machine controller manager has created machines always
+		// with the default volume type of the requested machine type. Existing clusters
+		// respectively their worker pools could have an invalid volume configuration
+		// which was not applied. To do not damage exisiting cluster we will set for
+		// now the volume type only if it's a valid Azure volume type.
+		// Otherwise we will still use the default volume of the machine type.
+		if pool.Volume.Type != nil {
+			if *pool.Volume.Type == "Standard_LRS" || *pool.Volume.Type == "StandardSSD_LRS" || *pool.Volume.Type == "Premium_LRS" {
+				osDisk["type"] = *pool.Volume.Type
+			}
+		}
 
 		image := map[string]interface{}{
 			"publisher": publisher,
@@ -173,7 +189,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 					},
 					"machineType":  pool.MachineType,
 					"image":        image,
-					"volumeSize":   volumeSize,
+					"osDisk":       osDisk,
 					"sshPublicKey": string(w.worker.Spec.SSHPublicKey),
 				}
 			)

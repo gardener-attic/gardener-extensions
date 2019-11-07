@@ -292,7 +292,9 @@ var _ = Describe("Machines", func() {
 							"version":   machineImageVersion,
 							"urn":       machineImageURN,
 						},
-						"volumeSize":   volumeSize,
+						"osDisk": map[string]interface{}{
+							"size": volumeSize,
+						},
 						"sshPublicKey": sshKey,
 					}
 
