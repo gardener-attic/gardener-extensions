@@ -83,4 +83,12 @@ type Subnet struct {
 type VPC struct {
 	// Name is the VPC name.
 	Name string
+	// CloudRouter indicates whether to use an existing CloudRouter or create a new one
+	CloudRouter *CloudRouter
+}
+
+// CloudRouter contains information about the the CloudRouter configuration
+type CloudRouter struct {
+	// Name is the CloudRouter name.
+	Name string
 }

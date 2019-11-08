@@ -85,4 +85,13 @@ type Subnet struct {
 type VPC struct {
 	// Name is the VPC name.
 	Name string `json:"name,omitempty"`
+	// CloudRouter indicates whether to use an existing CloudRouter or create a new one
+	// +optional
+	CloudRouter *CloudRouter `json:"cloudRouter,omitempty"`
+}
+
+// CloudRouter contains information about the the CloudRouter configuration
+type CloudRouter struct {
+	// Name is the CloudRouter name.
+	Name string `json:"name,omitempty"`
 }

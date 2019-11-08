@@ -34,6 +34,8 @@ kind: InfrastructureConfig
 networks:
 # vpc:
 #   name: my-vpc
+#   cloudRouter:
+#     name: my-cloudrouter
   worker: 10.250.0.0/16
 # internal: 10.251.0.0/16
 ```
@@ -42,6 +44,12 @@ The `networks.vpc` section describes whether you want to create the shoot cluste
 
 * If `networks.vpc.name` is given then you have to specify the VPC name of the existing VPC that was created by other means (manually, other tooling, ...).
 If you want to get a fresh VPC for the shoot then just omit the `networks.vpc` field.
+
+* If a VPC name is not given then we will create the cloud router + NAT gateway to ensure that worker nodes don't get external IPs.
+
+* If a VPC name is given then
+  * if a cloud router name is not given we won't do anything, i.e. not creating a cloud router + NAT ourselves, resulting in worker nodes having external IPs (only for limited amount of time, end-users are asked to migrate to the following case)
+  * if a cloud router name is given we re-use this one and create a dedicated NAT for the shoot, allowing worker nodes to not have external IPs.
 
 The `networks.workers` section describes the CIDR for a subnet that is used for all shoot worker nodes, i.e., VMs which later run your applications.
 

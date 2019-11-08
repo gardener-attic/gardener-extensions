@@ -126,6 +126,21 @@ var _ = Describe("InfrastructureConfig validation", func() {
 					"Detail": Equal("must be valid canonical CIDR"),
 				}))
 			})
+			It("should forbid configuring CloudRouter if VPC name is not set", func() {
+				infrastructureConfig.Networks.VPC = &apisgcp.VPC{}
+				infrastructureConfig.Networks.VPC.CloudRouter = &apisgcp.CloudRouter{}
+
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.vpc.cloudRouter"),
+					"Detail": Equal("cloud router can not be configured when the VPC name is not specified"),
+				}, Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.vpc.name"),
+					"Detail": Equal("vpc name must not be empty when vpc key is provided"),
+				}))
+			})
 		})
 	})
 

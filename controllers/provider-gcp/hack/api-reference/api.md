@@ -196,6 +196,36 @@ map[string]bool
 </tr>
 </tbody>
 </table>
+<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.CloudRouter">CloudRouter
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.VPC">VPC</a>)
+</p>
+<p>
+<p>CloudRouter contains information about the the CloudRouter configuration</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the CloudRouter name.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.InfrastructureStatus">InfrastructureStatus
 </h3>
 <p>
@@ -551,6 +581,20 @@ string
 </td>
 <td>
 <p>Name is the VPC name.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cloudRouter</code></br>
+<em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.CloudRouter">
+CloudRouter
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CloudRouter indicates whether to use an existing CloudRouter or create a new one</p>
 </td>
 </tr>
 </tbody>

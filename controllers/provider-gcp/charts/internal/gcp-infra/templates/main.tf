@@ -31,6 +31,39 @@ resource "google_compute_subnetwork" "subnetwork-nodes" {
   region        = "{{ required "google.region is required" .Values.google.region }}"
 }
 
+{{ if .Values.create.cloudRouter -}}
+resource "google_compute_router" "router"{
+  name    = "{{ required "clusterName is required" .Values.clusterName }}-cloud-router"
+  region  = "{{ required "google.region is required" .Values.google.region }}"
+  network = "{{ required "vpc.name is required" .Values.vpc.name }}"
+}
+{{- end }}
+
+{{ if or  .Values.create.cloudRouter .Values.vpc.cloudRouter -}}
+resource "google_compute_router_nat" "nat" {
+  name                               = "{{ required "clusterName is required" .Values.clusterName }}-cloud-nat"
+  {{  if .Values.vpc.cloudRouter -}}
+  router                             = "{{ required "vpc.cloudRouter.name is required" .Values.vpc.cloudRouter.name }}"
+  {{ else -}}
+  router =  "${google_compute_router.router.name}"
+  {{ end -}}
+  region                             = "{{ required "google.region is required" .Values.google.region }}"
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
+  subnetwork {
+    name                    =  "${google_compute_subnetwork.subnetwork-nodes.self_link}"
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
+}
+{{- end}}
+
+
+
 {{ if .Values.networks.internal -}}
 resource "google_compute_subnetwork" "subnetwork-internal" {
   name          = "{{ required "clusterName is required" .Values.clusterName }}-internal"
@@ -120,6 +153,20 @@ resource "null_resource" "outputs" {
 output "{{ .Values.outputKeys.vpcName }}" {
   value = "{{ required "vpc.name is required" .Values.vpc.name }}"
 }
+
+{{ if or  .Values.create.cloudRouter .Values.vpc.cloudRouter -}}
+output "{{ .Values.outputKeys.cloudRouter }}" {
+  {{ if .Values.create.cloudRouter -}}
+  value = "${google_compute_router.router.name}"
+  {{ else -}}
+  value = "{{ .Values.vpc.cloudRouter.name }}"
+  {{ end -}}
+}
+
+output "{{ .Values.outputKeys.cloudNAT }}" {
+  value = "${google_compute_router_nat.nat.name}"
+}
+{{- end }}
 
 output "{{ .Values.outputKeys.serviceAccountEmail }}" {
   value = "${google_service_account.serviceaccount.email}"

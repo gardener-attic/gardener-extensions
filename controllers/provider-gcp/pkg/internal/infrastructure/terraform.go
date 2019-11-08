@@ -43,6 +43,10 @@ const (
 	TerraformerOutputKeySubnetNodes = "subnet_nodes"
 	// TerraformerOutputKeySubnetInternal is the name of the subnet_internal terraform output variable.
 	TerraformerOutputKeySubnetInternal = "subnet_internal"
+	// TerraformOutputKeyCloudNAT is the name of the cloud_nat terraform output variable.
+	TerraformOutputKeyCloudNAT = "cloud_nat"
+	// TerraformOutputKeyCloudRouter is the name of the cloud_router terraform output variable.
+	TerraformOutputKeyCloudRouter = "cloud_router"
 )
 
 var (
@@ -61,13 +65,30 @@ func ComputeTerraformerChartValues(
 	cluster *extensionscontroller.Cluster,
 ) map[string]interface{} {
 	var (
-		vpcName   = DefaultVPCName
-		createVPC = true
+		vpcName           = DefaultVPCName
+		createVPC         = true
+		createCloudRouter = true
+		cloudRouterName   string
 	)
 
 	if config.Networks.VPC != nil {
-		createVPC = false
 		vpcName = config.Networks.VPC.Name
+		createVPC = false
+		createCloudRouter = false
+
+		if config.Networks.VPC.CloudRouter != nil && len(config.Networks.VPC.CloudRouter.Name) > 0 {
+			cloudRouterName = config.Networks.VPC.CloudRouter.Name
+		}
+	}
+
+	vpc := map[string]interface{}{
+		"name": vpcName,
+	}
+
+	if len(cloudRouterName) > 0 {
+		vpc["cloudRouter"] = map[string]interface{}{
+			"name": cloudRouterName,
+		}
 	}
 
 	return map[string]interface{}{
@@ -76,11 +97,10 @@ func ComputeTerraformerChartValues(
 			"project": account.ProjectID,
 		},
 		"create": map[string]interface{}{
-			"vpc": createVPC,
+			"vpc":         createVPC,
+			"cloudRouter": createCloudRouter,
 		},
-		"vpc": map[string]interface{}{
-			"name": vpcName,
-		},
+		"vpc":         vpc,
 		"clusterName": infra.Namespace,
 		"networks": map[string]interface{}{
 			"pods":     extensionscontroller.GetPodNetwork(cluster),
@@ -90,6 +110,8 @@ func ComputeTerraformerChartValues(
 		},
 		"outputKeys": map[string]interface{}{
 			"vpcName":             TerraformerOutputKeyVPCName,
+			"cloudNAT":            TerraformOutputKeyCloudNAT,
+			"cloudRouter":         TerraformOutputKeyCloudRouter,
 			"serviceAccountEmail": TerraformerOutputKeyServiceAccountEmail,
 			"subnetNodes":         TerraformerOutputKeySubnetNodes,
 			"subnetInternal":      TerraformerOutputKeySubnetInternal,
@@ -130,6 +152,10 @@ type TerraformFiles struct {
 type TerraformState struct {
 	// VPCName is the name of the VPC created for an infrastructure.
 	VPCName string
+	// CloudRouterName is the name of the created / existing cloud router
+	CloudRouterName string
+	// CloudNATName is the name of the created Cloud NAT
+	CloudNATName string
 	// ServiceAccountEmail is the service account email for a network.
 	ServiceAccountEmail string
 	// SubnetNodes is the CIDR of the nodes subnet of an infrastructure.
@@ -140,10 +166,18 @@ type TerraformState struct {
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
 func ExtractTerraformState(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*TerraformState, error) {
-	outputKeys := []string{
-		TerraformerOutputKeyVPCName,
-		TerraformerOutputKeySubnetNodes,
-		TerraformerOutputKeyServiceAccountEmail,
+	var (
+		outputKeys = []string{
+			TerraformerOutputKeyVPCName,
+			TerraformerOutputKeySubnetNodes,
+			TerraformerOutputKeyServiceAccountEmail,
+		}
+
+		vpcSpecifiedWithoutCloudRouter = config.Networks.VPC != nil && config.Networks.VPC.CloudRouter == nil
+	)
+
+	if !vpcSpecifiedWithoutCloudRouter {
+		outputKeys = append(outputKeys, TerraformOutputKeyCloudRouter, TerraformOutputKeyCloudNAT)
 	}
 
 	hasInternal := config.Networks.Internal != nil
@@ -161,6 +195,12 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *gcpv1alpha1.Infra
 		SubnetNodes:         vars[TerraformerOutputKeySubnetNodes],
 		ServiceAccountEmail: vars[TerraformerOutputKeyServiceAccountEmail],
 	}
+
+	if !vpcSpecifiedWithoutCloudRouter {
+		state.CloudRouterName = vars[TerraformOutputKeyCloudRouter]
+		state.CloudNATName = vars[TerraformOutputKeyCloudNAT]
+	}
+
 	if hasInternal {
 		subnetInternal := vars[TerraformerOutputKeySubnetInternal]
 		state.SubnetInternal = &subnetInternal
@@ -189,12 +229,19 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 		}
 	)
 
+	if len(state.CloudRouterName) > 0 {
+		status.Networks.VPC.CloudRouter = &gcpv1alpha1.CloudRouter{
+			Name: state.CloudRouterName,
+		}
+	}
+
 	if state.SubnetInternal != nil {
 		status.Networks.Subnets = append(status.Networks.Subnets, gcpv1alpha1.Subnet{
 			Purpose: gcpv1alpha1.PurposeInternal,
 			Name:    *state.SubnetInternal,
 		})
 	}
+
 	return status
 }
 
