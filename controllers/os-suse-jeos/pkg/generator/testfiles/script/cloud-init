@@ -1,0 +1,24 @@
+#!/bin/bash
+
+mkdir -p '/'
+cat << EOF | base64 -d > '/foo'
+YmFy
+EOF
+chmod '0600' '/foo'
+
+cat << EOF | base64 -d > '/etc/systemd/system/docker.service'
+dW5pdA==
+EOF
+
+mkdir -p '/etc/systemd/system/docker.service.d'
+cat << EOF | base64 -d > '/etc/systemd/system/docker.service.d/10-docker-opts.conf'
+b3ZlcnJpZGU=
+EOF
+
+until zypper -q install -y docker wget socat jq nfs-client; [ $? -ne 7 ]; do sleep 1; done
+systemctl daemon-reload
+ln -s /usr/bin/docker /bin/docker
+ln -s /bin/ip /usr/bin/ip
+if [ ! -s /etc/hostname ]; then hostname > /etc/hostname; fi
+systemctl restart docker
+systemctl enable 'docker.service' && systemctl restart 'docker.service'

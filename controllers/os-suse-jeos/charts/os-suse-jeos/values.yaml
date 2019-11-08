@@ -5,6 +5,10 @@ image:
 
 resources: {}
 
+osConfig:
+  format: script  # cloud-init
+  bootCmd: "/bin/bash %s" # "/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"
+
 controllers:
   concurrentSyncs: 5
   ignoreOperationAnnotation: false

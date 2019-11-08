@@ -30,6 +30,8 @@ runcmd:
 - systemctl daemon-reload
 {{ if .Bootstrap -}}
 - ln -s /usr/bin/docker /bin/docker
+- ln -s /bin/ip /usr/bin/ip
+- if [ ! -s /etc/hostname ]; then hostname > /etc/hostname; fi
 - systemctl start docker
 {{ end -}}
 {{ range $_, $unit := .Units -}}

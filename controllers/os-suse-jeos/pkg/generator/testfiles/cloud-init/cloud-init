@@ -17,5 +17,7 @@ runcmd:
 - "until zypper -q install -y docker wget socat jq nfs-client; [ $? -ne 7 ]; do sleep 1; done"
 - systemctl daemon-reload
 - ln -s /usr/bin/docker /bin/docker
+- ln -s /bin/ip /usr/bin/ip
+- if [ ! -s /etc/hostname ]; then hostname > /etc/hostname; fi
 - systemctl start docker
 - systemctl enable 'docker.service' && systemctl restart 'docker.service'
