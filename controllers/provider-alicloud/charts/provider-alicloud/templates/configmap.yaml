@@ -21,6 +21,11 @@ data:
     machineImages:
 {{ toYaml .Values.config.machineImages | indent 4 }}
 {{- end }}
+{{- if .Values.config.machineImageOwnerSecret }}
+    machineImageOwnerSecretRef:
+      name: {{ .Values.config.machineImageOwnerSecret.name }}
+      namespace: {{ .Release.Namespace }}
+{{- end }}
     etcd:
       storage:
         className: {{ .Values.config.etcd.storage.className }}

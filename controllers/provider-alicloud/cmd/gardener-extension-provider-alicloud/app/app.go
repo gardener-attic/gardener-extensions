@@ -136,6 +136,8 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			configFileOpts.Completed().ApplyMachineImages(&alicloudworker.DefaultAddOptions.MachineImages)
+			configFileOpts.Completed().ApplyMachineImages(&alicloudinfrastructure.DefaultAddOptions.MachineImages)
+			configFileOpts.Completed().ApplyMachineImageOwnerSecretRef(&alicloudinfrastructure.DefaultAddOptions.MachineImageOwnerSecretRef)
 			configFileOpts.Completed().ApplyETCDStorage(&alicloudcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&alicloudcontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			backupBucketCtrlOpts.Completed().Apply(&alicloudbackupbucket.DefaultAddOptions.Controller)

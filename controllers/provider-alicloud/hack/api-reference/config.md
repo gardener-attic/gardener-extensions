@@ -73,6 +73,20 @@ logical names and versions to Alicloud-specific identifiers.</p>
 </tr>
 <tr>
 <td>
+<code>machineImageOwnerSecretRef</code></br>
+<em>
+<a href="https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.15/#secretreference-v1-core">
+Kubernetes core/v1.SecretReference
+</a>
+</em>
+</td>
+<td>
+<p>MachineImageOwnerSecretRef is the secret reference which contains credential of AliCloud subaccount for customized images.
+We currently assume multiple customized images should always be under this account.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>etcd</code></br>
 <em>
 <a href="#alicloud.provider.extensions.config.gardener.cloud/v1alpha1.ETCD">

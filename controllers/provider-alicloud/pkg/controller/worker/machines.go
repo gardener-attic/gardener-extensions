@@ -47,6 +47,7 @@ func (w *workerDelegate) DeployMachineClasses(ctx context.Context) error {
 			return err
 		}
 	}
+
 	return w.seedChartApplier.ApplyChart(ctx, filepath.Join(alicloud.InternalChartsPath, "machineclass"), w.worker.Namespace, "machineclass", map[string]interface{}{"machineClasses": w.machineClasses}, nil)
 }
 

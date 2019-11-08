@@ -21,6 +21,7 @@ limitations under the License.
 package config
 
 import (
+	v1 "k8s.io/api/core/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	componentbaseconfig "k8s.io/component-base/config"
 )
@@ -40,6 +41,11 @@ func (in *ControllerConfiguration) DeepCopyInto(out *ControllerConfiguration) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.MachineImageOwnerSecretRef != nil {
+		in, out := &in.MachineImageOwnerSecretRef, &out.MachineImageOwnerSecretRef
+		*out = new(v1.SecretReference)
+		**out = **in
 	}
 	in.ETCD.DeepCopyInto(&out.ETCD)
 	return

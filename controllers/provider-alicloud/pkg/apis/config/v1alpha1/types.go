@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	componentbaseconfigv1alpha1 "k8s.io/component-base/config/v1alpha1"
@@ -34,6 +35,9 @@ type ControllerConfiguration struct {
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to Alicloud-specific identifiers.
 	MachineImages []MachineImage `json:"machineImages,omitempty"`
+	// MachineImageOwnerSecretRef is the secret reference which contains credential of AliCloud subaccount for customized images.
+	// We currently assume multiple customized images should always be under this account.
+	MachineImageOwnerSecretRef *corev1.SecretReference `json:"machineImageOwnerSecretRef,omitempty"`
 	// ETCD is the etcd configuration.
 	ETCD ETCD `json:"etcd"`
 }
