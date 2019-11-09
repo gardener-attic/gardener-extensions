@@ -460,7 +460,9 @@ func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 // listJobPods lists all pods which have a label 'job-name' whose value is equal to the Terraformer job name.
 func (t *terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
 	podList := &corev1.PodList{}
-	if err := t.client.List(ctx, podList, client.MatchingLabels(map[string]string{jobNameLabel: t.jobName})); err != nil {
+	if err := t.client.List(ctx, podList,
+		client.InNamespace(t.namespace),
+		client.MatchingLabels{jobNameLabel: t.jobName}); err != nil {
 		return nil, err
 	}
 	return podList, nil
