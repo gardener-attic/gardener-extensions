@@ -15,43 +15,43 @@
 package generator
 
 import (
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
 )
 
 var _ = Describe("JeOS Cloud-init Generator Test", func() {
 
-	It("should fail creating generator without OS_CONFIG_FORMAT variable", func() {
+	It("should not fail creating generator without OS_CONFIG_FORMAT variable", func() {
 		os.Unsetenv(OsConfigFormat)
 		os.Setenv(BootCommand, "boot-command")
 		_, err := NewCloudInitGenerator()
 
-		Expect(err).To(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should fail creating generator with empty OS_CONFIG_FORMAT variable", func() {
+	It("should not fail creating generator with empty OS_CONFIG_FORMAT variable", func() {
 		os.Setenv(OsConfigFormat, "")
 		os.Setenv(BootCommand, "boot-command")
 		_, err := NewCloudInitGenerator()
 
-		Expect(err).To(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should fail creating generator with empty BOOT_COMMAND variable", func() {
+	It("should not fail creating generator with empty BOOT_COMMAND variable", func() {
 		os.Setenv(OsConfigFormat, "")
 		os.Setenv(BootCommand, "")
 		_, err := NewCloudInitGenerator()
 
-		Expect(err).To(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should fail creating generator without BOOT_COMMAND variable", func() {
-		os.Setenv(OsConfigFormat, "os-format")
+	It("should not fail creating generator without BOOT_COMMAND variable", func() {
 		os.Unsetenv(BootCommand)
 		_, err := NewCloudInitGenerator()
 
-		Expect(err).To(HaveOccurred())
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should fail creating generator with invalid OS_CONFIG_FORMAT", func() {

@@ -15,7 +15,6 @@
 package generator
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"text/template"
@@ -33,6 +32,9 @@ const (
 	// Depends on the OSC format and the infrastructure platform.
 	// Well known valid values are `"/bin/bash %s"` and `"/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"`.
 	BootCommand = "BOOT_COMMAND"
+
+	defaultOsConfigFormat = "script"
+	defaultBootCommand    = "/bin/bash %s"
 )
 
 //go:generate packr2
@@ -43,13 +45,13 @@ func NewCloudInitGenerator() (*template_gen.CloudInitGenerator, error) {
 
 	templateName, exists := os.LookupEnv(OsConfigFormat)
 	if !exists || templateName == "" {
-		return nil, fmt.Errorf("Environment variable %s must be defined", OsConfigFormat)
+		templateName = defaultOsConfigFormat
 	}
 	templateName = strings.ToLower(templateName) + "/suse-jeos.template"
 
 	bootCmd, exists := os.LookupEnv(BootCommand)
 	if !exists || bootCmd == "" {
-		return nil, fmt.Errorf("Environment variable %s must be defined", BootCommand)
+		bootCmd = defaultBootCommand
 	}
 
 	cloudInitTemplateString, err := box.FindString(templateName)
