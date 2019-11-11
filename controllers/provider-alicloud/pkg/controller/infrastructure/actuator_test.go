@@ -170,11 +170,9 @@ var _ = Describe("Actuator", func() {
 						common.TerraformVarAccessKeyID:     accessKeyID,
 						common.TerraformVarAccessKeySecret: accessKeySecret,
 					}).Return(terraformer),
-					terraformer.EXPECT().SetJobBackoffLimit(int32(0)).Return(terraformer),
 					terraformer.EXPECT().SetActiveDeadlineSeconds(int64(630)).Return(terraformer),
 					terraformer.EXPECT().SetDeadlineCleaning(5*time.Minute).Return(terraformer),
 					terraformer.EXPECT().SetDeadlinePod(15*time.Minute).Return(terraformer),
-					terraformer.EXPECT().SetDeadlineJob(15*time.Minute).Return(terraformer),
 
 					alicloudClientFactory.EXPECT().NewVPC(region, accessKeyID, accessKeySecret).Return(vpcClient, nil),
 

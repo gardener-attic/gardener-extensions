@@ -30,36 +30,37 @@ import (
 // * configName is the name of the ConfigMap containing the main Terraform file ('main.tf').
 // * variablesName is the name of the Secret containing the Terraform variables ('terraform.tfvars').
 // * stateName is the name of the ConfigMap containing the Terraform state ('terraform.tfstate').
-// * podName is the name of the Pod which will validate the Terraform file.
-// * jobName is the name of the Job which will execute the Terraform file.
+// * jobName (deprecated) is the name of the Job which will execute the Terraform file.
 // * variablesEnvironment is a map of environment variables which will be injected in the resulting
 //   Terraform job/pod. These variables should contain Terraform variables (i.e., must be prefixed
 //   with TF_VAR_).
 // * configurationDefined indicates whether the required configuration ConfigMaps/Secrets have been
 //   successfully defined.
+// * activeDeadlineSeconds is the respective Pod spec field passed to Terraformer Pods.
+// * deadlineCleaning is the timeout to wait Terraformer Pods to be cleaned up.
+// * deadlinePod is the time to wait apply/destroy Pod to be completed.
 type terraformer struct {
 	logger       logrus.FieldLogger
 	client       client.Client
 	coreV1Client corev1client.CoreV1Interface
 
 	purpose   string
+	name      string
 	namespace string
 	image     string
 
-	configName           string
-	variablesName        string
-	stateName            string
-	podName              string
+	configName    string
+	variablesName string
+	stateName     string
+	// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
 	jobName              string
 	variablesEnvironment map[string]string
 	configurationDefined bool
 
-	jobBackoffLimit       int32
 	activeDeadlineSeconds int64
 
 	deadlineCleaning time.Duration
 	deadlinePod      time.Duration
-	deadlineJob      time.Duration
 }
 
 const (
@@ -74,21 +75,19 @@ const (
 	// TerraformerStateSuffix is the suffix used for the ConfigMap which stores the Terraform state.
 	TerraformerStateSuffix = ".tf-state"
 
-	// TerraformerPodSuffix is the suffix used for the name of the Pod which validates the Terraform configuration.
-	TerraformerPodSuffix = ".tf-pod"
-
 	// TerraformerJobSuffix is the suffix used for the name of the Job which executes the Terraform configuration.
+	//
+	// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
+	// TODO: Remove after several releases.
 	TerraformerJobSuffix = ".tf-job"
 )
 
 // Terraformer is the Terraformer interface.
 type Terraformer interface {
 	SetVariablesEnvironment(tfVarsEnvironment map[string]string) Terraformer
-	SetJobBackoffLimit(int32) Terraformer
 	SetActiveDeadlineSeconds(int64) Terraformer
 	SetDeadlineCleaning(time.Duration) Terraformer
 	SetDeadlinePod(time.Duration) Terraformer
-	SetDeadlineJob(time.Duration) Terraformer
 	InitializeWith(initializer Initializer) Terraformer
 	Apply() error
 	Destroy() error

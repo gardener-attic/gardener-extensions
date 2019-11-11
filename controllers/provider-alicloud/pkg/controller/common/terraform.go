@@ -44,9 +44,7 @@ func NewTerraformer(factory terraformer.Factory, config *rest.Config, credential
 
 	return tf.
 		SetVariablesEnvironment(variablesEnvironment).
-		SetJobBackoffLimit(0).
 		SetActiveDeadlineSeconds(630).
 		SetDeadlineCleaning(5 * time.Minute).
-		SetDeadlinePod(15 * time.Minute).
-		SetDeadlineJob(15 * time.Minute), nil
+		SetDeadlinePod(15 * time.Minute), nil
 }

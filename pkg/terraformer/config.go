@@ -22,7 +22,6 @@ import (
 	"time"
 
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,13 +45,7 @@ func (t *terraformer) SetVariablesEnvironment(tfvarsEnvironment map[string]strin
 	return t
 }
 
-// SetJobBackoffLimit configures the backoff limit for the Terraformer job.
-func (t *terraformer) SetJobBackoffLimit(limit int32) Terraformer {
-	t.jobBackoffLimit = limit
-	return t
-}
-
-// SetActiveDeadlineSeconds configures the active deadline seconds for the Terraformer pod and job.
+// SetActiveDeadlineSeconds configures the active deadline seconds for the Terraformer pod.
 func (t *terraformer) SetActiveDeadlineSeconds(adl int64) Terraformer {
 	t.activeDeadlineSeconds = adl
 	return t
@@ -64,15 +57,9 @@ func (t *terraformer) SetDeadlineCleaning(d time.Duration) Terraformer {
 	return t
 }
 
-// SetDeadlinePod configures the deadline while waiting for the Terraformer pod.
+// SetDeadlinePod configures the deadline while waiting for the Terraformer apply/destroy pod.
 func (t *terraformer) SetDeadlinePod(d time.Duration) Terraformer {
 	t.deadlinePod = d
-	return t
-}
-
-// SetDeadlineJob configures the deadline while waiting for the Terraformer job.
-func (t *terraformer) SetDeadlineJob(d time.Duration) Terraformer {
-	t.deadlineJob = d
 	return t
 }
 
@@ -202,8 +189,14 @@ func (t *terraformer) prepare(ctx context.Context) (int, error) {
 		return -1, errors.New("no Terraform variables environment provided")
 	}
 
+	// Clean up possible existing pod artifacts from previous runs
+	if err := t.ensureCleanedUp(ctx); err != nil {
+		return -1, err
+	}
+
 	// Clean up possible existing job/pod artifacts from previous runs
-	if err := t.ensureCleanedUp(); err != nil {
+	// TODO: Remove after several releases.
+	if err := t.ensureCleanedUpDeprecated(); err != nil {
 		return -1, err
 	}
 
@@ -261,9 +254,26 @@ func (t *terraformer) cleanupConfiguration(ctx context.Context) error {
 	return nil
 }
 
-// ensureCleanedUp deletes the job, pods, and waits until everything has been cleaned up.
-func (t *terraformer) ensureCleanedUp() error {
+// ensureCleanedUp deletes the Terraformer pods, and waits until everything has been cleaned up.
+func (t *terraformer) ensureCleanedUp(ctx context.Context) error {
+	podList, err := t.listTerraformerPods(ctx)
+	if err != nil {
+		return err
+	}
+	if err := t.deleteTerraformerPods(ctx, podList); err != nil {
+		return err
+	}
+
+	return t.waitForCleanEnvironment(ctx)
+}
+
+// ensureCleanedUpDeprecated deletes the job, pods, and waits until everything has been cleaned up.
+//
+// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
+// TODO: Remove after several releases.
+func (t *terraformer) ensureCleanedUpDeprecated() error {
 	ctx := context.TODO()
+
 	jobPodList, err := t.listJobPods(ctx)
 	if err != nil {
 		return err
@@ -271,11 +281,12 @@ func (t *terraformer) ensureCleanedUp() error {
 	if err := t.cleanupJob(ctx, jobPodList); err != nil {
 		return err
 	}
-	return t.waitForCleanEnvironment(ctx)
+
+	return t.waitForCleanEnvironmentDeprecated(ctx)
 }
 
 // GenerateVariablesEnvironment takes a <secret> and a <keyValueMap> and builds an environment which
-// can be injected into the Terraformer job/pod manifest. The keys of the <keyValueMap> will be prefixed with
+// can be injected into the Terraformer pod manifest. The keys of the <keyValueMap> will be prefixed with
 // 'TF_VAR_' and the value will be used to extract the respective data from the <secret>.
 func GenerateVariablesEnvironment(secret *corev1.Secret, keyValueMap map[string]string) map[string]string {
 	out := make(map[string]string, len(keyValueMap))

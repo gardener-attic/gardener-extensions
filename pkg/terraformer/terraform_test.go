@@ -64,9 +64,9 @@ var _ = Describe("terraformer", func() {
 			)
 
 			var (
-				ObjectMeta = metav1.ObjectMeta{Namespace: namespace, Name: name}
+				objectMeta = metav1.ObjectMeta{Namespace: namespace, Name: name}
 				expected   = &corev1.ConfigMap{
-					ObjectMeta: ObjectMeta,
+					ObjectMeta: objectMeta,
 					Data: map[string]string{
 						MainKey:      main,
 						VariablesKey: variables,
@@ -76,7 +76,7 @@ var _ = Describe("terraformer", func() {
 
 			gomock.InOrder(
 				c.EXPECT().
-					Get(gomock.Any(), kutil.Key(namespace, name), &corev1.ConfigMap{ObjectMeta: ObjectMeta}).
+					Get(gomock.Any(), kutil.Key(namespace, name), &corev1.ConfigMap{ObjectMeta: objectMeta}).
 					Return(apierrors.NewNotFound(configMapGroupResource, name)),
 				c.EXPECT().
 					Create(gomock.Any(), expected.DeepCopy()),
@@ -98,9 +98,9 @@ var _ = Describe("terraformer", func() {
 			)
 
 			var (
-				ObjectMeta = metav1.ObjectMeta{Namespace: namespace, Name: name}
+				objectMeta = metav1.ObjectMeta{Namespace: namespace, Name: name}
 				expected   = &corev1.ConfigMap{
-					ObjectMeta: ObjectMeta,
+					ObjectMeta: objectMeta,
 					Data: map[string]string{
 						StateKey: state,
 					},
@@ -123,9 +123,9 @@ var _ = Describe("terraformer", func() {
 
 			var (
 				tfVars     = []byte("tfvars")
-				ObjectMeta = metav1.ObjectMeta{Namespace: namespace, Name: name}
+				objectMeta = metav1.ObjectMeta{Namespace: namespace, Name: name}
 				expected   = &corev1.Secret{
-					ObjectMeta: ObjectMeta,
+					ObjectMeta: objectMeta,
 					Data: map[string][]byte{
 						TFVarsKey: tfVars,
 					},
@@ -134,7 +134,7 @@ var _ = Describe("terraformer", func() {
 
 			gomock.InOrder(
 				c.EXPECT().
-					Get(gomock.Any(), kutil.Key(namespace, name), &corev1.Secret{ObjectMeta: ObjectMeta}).
+					Get(gomock.Any(), kutil.Key(namespace, name), &corev1.Secret{ObjectMeta: objectMeta}).
 					Return(apierrors.NewNotFound(secretGroupResource, name)),
 				c.EXPECT().
 					Create(gomock.Any(), expected.DeepCopy()),
@@ -241,6 +241,15 @@ var _ = Describe("terraformer", func() {
 			)
 
 			Expect(runInitializer(false)).NotTo(HaveOccurred())
+		})
+	})
+
+	Describe("#Apply", func() {
+		It("should return err when config is not defined", func() {
+			tf := New(nil, c, nil, "purpose", "namespace", "name", "image")
+
+			err := tf.Apply()
+			Expect(err).To((HaveOccurred()))
 		})
 	})
 
