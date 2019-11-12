@@ -132,6 +132,10 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		}
 
 		for zoneIndex, zone := range pool.Zones {
+			var disableExternalIP = false
+			if infrastructureStatus.Networks.VPC.CloudRouter != nil {
+				disableExternalIP = true
+			}
 			machineClassSpec := map[string]interface{}{
 				"region":             w.worker.Spec.Region,
 				"zone":               zone,
@@ -145,7 +149,8 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"machineType": pool.MachineType,
 				"networkInterfaces": []map[string]interface{}{
 					{
-						"subnetwork": nodesSubnet.Name,
+						"subnetwork":        nodesSubnet.Name,
+						"disableExternalIP": disableExternalIP,
 					},
 				},
 				"scheduling": map[string]interface{}{
