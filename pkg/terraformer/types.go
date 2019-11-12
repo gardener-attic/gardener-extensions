@@ -15,6 +15,7 @@
 package terraformer
 
 import (
+	"context"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -63,6 +64,12 @@ type terraformer struct {
 	deadlinePod      time.Duration
 }
 
+// RawState represent the terraformer state's raw data
+type RawState struct {
+	Data     string `json:"data"`
+	Encoding string `json:"encoding"`
+}
+
 const (
 	numberOfConfigResources = 3
 
@@ -80,6 +87,12 @@ const (
 	// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
 	// TODO: Remove after several releases.
 	TerraformerJobSuffix = ".tf-job"
+
+	// Base64Encoding denotes base64 encoding for the RawState.Data
+	Base64Encoding = "base64"
+
+	// NoneEncoding denotes none encoding for the RawState.Data
+	NoneEncoding = "none"
 )
 
 // Terraformer is the Terraformer interface.
@@ -93,6 +106,7 @@ type Terraformer interface {
 	Destroy() error
 	GetStateOutputVariables(variables ...string) (map[string]string, error)
 	ConfigExists() (bool, error)
+	GetRawState(context.Context) (*RawState, error)
 }
 
 // Initializer can initialize a Terraformer.
@@ -104,5 +118,5 @@ type Initializer interface {
 type Factory interface {
 	NewForConfig(logger logrus.FieldLogger, config *rest.Config, purpose, namespace, name, image string) (Terraformer, error)
 	New(logger logrus.FieldLogger, client client.Client, coreV1Client corev1client.CoreV1Interface, purpose, namespace, name, image string) Terraformer
-	DefaultInitializer(c client.Client, main, variables string, tfVars []byte) Initializer
+	DefaultInitializer(c client.Client, main, variables string, tfVars []byte, state string) Initializer
 }

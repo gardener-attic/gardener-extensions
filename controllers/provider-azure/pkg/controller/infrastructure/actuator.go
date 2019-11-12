@@ -16,7 +16,6 @@ package infrastructure
 
 import (
 	"context"
-
 	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	infrainternal "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal/infrastructure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -79,8 +78,18 @@ func (a *actuator) updateProviderStatus(
 		return err
 	}
 
+	state, err := tf.GetRawState(ctx)
+	if err != nil {
+		return err
+	}
+	stateByte, err := state.Marshal()
+	if err != nil {
+		return err
+	}
+
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infra, func() error {
 		infra.Status.ProviderStatus = &runtime.RawExtension{Object: status}
+		infra.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil
 	})
 }

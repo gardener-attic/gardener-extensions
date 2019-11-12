@@ -35,6 +35,7 @@ import (
 	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/terraformer"
 	mockgardenerchartrenderer "github.com/gardener/gardener-extensions/pkg/mock/gardener/chartrenderer"
 	"github.com/gardener/gardener-extensions/pkg/mock/go-logr/logr"
+	realterraformer "github.com/gardener/gardener-extensions/pkg/terraformer"
 	"github.com/gardener/gardener-extensions/pkg/util/chart"
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 
@@ -168,6 +169,10 @@ var _ = Describe("Actuator", func() {
 					natGatewayID    = "natGatewayID"
 					securityGroupID = "sgID"
 					keyPairName     = "keyPairName"
+					rawState        = &realterraformer.RawState{
+						Data:     "",
+						Encoding: "none",
+					}
 				)
 
 				describeNATGatewaysReq := vpc.CreateDescribeNatGatewaysRequest()
@@ -228,7 +233,7 @@ var _ = Describe("Actuator", func() {
 						},
 					}, nil),
 
-					terraformerFactory.EXPECT().DefaultInitializer(c, mainContent, variablesContent, []byte(tfVarsContent)).Return(initializer),
+					terraformerFactory.EXPECT().DefaultInitializer(c, mainContent, variablesContent, []byte(tfVarsContent), "").Return(initializer),
 
 					terraformer.EXPECT().InitializeWith(initializer).Return(terraformer),
 
@@ -255,7 +260,7 @@ var _ = Describe("Actuator", func() {
 							TerraformerOutputKeySecurityGroupID: securityGroupID,
 							TerraformerOutputKeyKeyPairName:     keyPairName,
 						}, nil),
-
+					terraformer.EXPECT().GetRawState(context.TODO()).Return(rawState, nil),
 					c.EXPECT().Status().Return(c),
 					c.EXPECT().Get(ctx, client.ObjectKey{Namespace: infra.Namespace, Name: infra.Name}, &infra),
 

@@ -101,6 +101,18 @@ func (t *terraformer) InitializeWith(initializer Initializer) Terraformer {
 	return t
 }
 
+//GetRawState returns the conten of terraform state config map
+func (t *terraformer) GetRawState(ctx context.Context) (*RawState, error) {
+	configMap := &corev1.ConfigMap{}
+	if err := t.client.Get(ctx, kutil.Key(t.namespace, t.stateName), configMap); err != nil {
+		return nil, err
+	}
+	return &RawState{
+		Data:     configMap.Data[StateKey],
+		Encoding: NoneEncoding,
+	}, nil
+}
+
 func createOrUpdateConfigMap(ctx context.Context, c client.Client, namespace, name string, values map[string]string) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
 	return configMap, kutil.CreateOrUpdate(ctx, c, configMap, func() error {
@@ -156,8 +168,8 @@ func (f initializerFunc) Initialize(config *InitializerConfig) error {
 }
 
 // DefaultInitializer is an Initializer that initializes the configuration, variables and state resources
-// based on the given main, variables and tfvars content and on the given InitializerConfig.
-func DefaultInitializer(c client.Client, main, variables string, tfvars []byte) Initializer {
+// based on the given main, variables, tfvars and state content and on the given InitializerConfig.
+func DefaultInitializer(c client.Client, main, variables string, tfvars []byte, state string) Initializer {
 	return initializerFunc(func(config *InitializerConfig) error {
 		ctx := context.TODO()
 		if _, err := CreateOrUpdateConfigurationConfigMap(ctx, c, config.Namespace, config.ConfigurationName, main, variables); err != nil {
@@ -169,7 +181,7 @@ func DefaultInitializer(c client.Client, main, variables string, tfvars []byte) 
 		}
 
 		if config.InitializeState {
-			if err := CreateStateConfigMap(ctx, c, config.Namespace, config.StateName, ""); err != nil && !apierrors.IsAlreadyExists(err) {
+			if err := CreateStateConfigMap(ctx, c, config.Namespace, config.StateName, state); err != nil && !apierrors.IsAlreadyExists(err) {
 				return err
 			}
 		}

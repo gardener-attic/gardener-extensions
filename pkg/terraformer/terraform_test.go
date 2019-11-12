@@ -195,7 +195,7 @@ var _ = Describe("terraformer", func() {
 		)
 
 		runInitializer := func(initializeState bool) error {
-			return DefaultInitializer(c, main, variables, tfVars).Initialize(&InitializerConfig{
+			return DefaultInitializer(c, main, variables, tfVars, "").Initialize(&InitializerConfig{
 				Namespace:         namespace,
 				ConfigurationName: configurationName,
 				VariablesName:     variablesName,
