@@ -118,17 +118,14 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	for _, pool := range w.worker.Spec.Pools {
-		publisher, sku, offer, urn, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
+		urn, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
 		machineImages = appendMachineImage(machineImages, apisazure.MachineImage{
-			Name:      pool.MachineImage.Name,
-			Version:   pool.MachineImage.Version,
-			Publisher: publisher,
-			SKU:       sku,
-			Offer:     offer,
-			URN:       urn,
+			Name:    pool.MachineImage.Name,
+			Version: pool.MachineImage.Version,
+			URN:     urn,
 		})
 
 		volumeSize, err := worker.DiskSize(pool.Volume.Size)
@@ -153,13 +150,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		}
 
 		image := map[string]interface{}{
-			"publisher": publisher,
-			"offer":     offer,
-			"sku":       sku,
-			"version":   pool.MachineImage.Version,
-		}
-		if urn != nil {
-			image["urn"] = *urn
+			"urn": *urn,
 		}
 
 		generateMachineClassAndDeployment := func(zone *zoneInfo, availabilitySetID *string) (worker.MachineDeployment, map[string]interface{}) {

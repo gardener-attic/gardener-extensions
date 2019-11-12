@@ -407,9 +407,6 @@ func Convert_azure_InfrastructureStatus_To_v1alpha1_InfrastructureStatus(in *azu
 func autoConvert_v1alpha1_MachineImage_To_azure_MachineImage(in *MachineImage, out *azure.MachineImage, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Version = in.Version
-	out.Publisher = in.Publisher
-	out.Offer = in.Offer
-	out.SKU = in.SKU
 	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
@@ -422,9 +419,6 @@ func Convert_v1alpha1_MachineImage_To_azure_MachineImage(in *MachineImage, out *
 func autoConvert_azure_MachineImage_To_v1alpha1_MachineImage(in *azure.MachineImage, out *MachineImage, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Version = in.Version
-	out.Publisher = in.Publisher
-	out.Offer = in.Offer
-	out.SKU = in.SKU
 	out.URN = (*string)(unsafe.Pointer(in.URN))
 	return nil
 }
