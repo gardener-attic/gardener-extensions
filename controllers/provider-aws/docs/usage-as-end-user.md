@@ -25,7 +25,7 @@ Please look up https://docs.aws.amazon.com/general/latest/gr/aws-sec-cred-types.
 
 ## `InfrastructureConfig`
 
-The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a latter step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
+The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a later step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
 
 An example `InfrastructureConfig` for the AWS extension looks as follows:
 

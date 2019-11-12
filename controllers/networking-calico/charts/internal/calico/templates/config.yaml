@@ -9,7 +9,11 @@ data:
   # To enable Typha, set this to "calico-typha" *and* set a non-zero value for Typha replicas
   # below.  We recommend using Typha if you have more than 50 nodes. Above 100 nodes it is
   # essential.
+{{- if .Values.config.typha.enabled }}
   typha_service_name: "calico-typha"
+{{- else }}
+  typha_service_name: "none"
+{{- end }}
   # Configure the Calico backend to use.
   calico_backend: "{{ .Values.config.backend }}"
   # Configure the MTU to use

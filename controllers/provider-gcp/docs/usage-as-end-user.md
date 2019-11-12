@@ -24,7 +24,7 @@ Please look up https://cloud.google.com/iam/docs/creating-managing-service-accou
 
 ## `InfrastructureConfig`
 
-The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a latter step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
+The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a later step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
 
 An example `InfrastructureConfig` for the GCP extension looks as follows:
 

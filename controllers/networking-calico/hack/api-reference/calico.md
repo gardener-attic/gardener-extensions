@@ -96,6 +96,20 @@ IPIP
 <p>IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>typha</code></br>
+<em>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.Typha">
+Typha
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Typha settings to use for calico-typha component</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.Backend">Backend
@@ -179,6 +193,39 @@ CIDR
 </tr>
 </thead>
 <tbody>
+</tbody>
+</table>
+<h3 id="calico.networking.extensions.gardener.cloud/v1alpha1.Typha">Typha
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#calico.networking.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<p>
+<p>Typha defines the block with configurations for calico typha</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>enabled</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<p>Enabled is used to define whether calico-typha is required or not.
+Note, typha is used to offload kubernetes API server,
+thus consider not to disable it for large clusters in terms of node count.
+More info can be found here <a href="https://docs.projectcalico.org/v3.9/reference/typha/">https://docs.projectcalico.org/v3.9/reference/typha/</a></p>
+</td>
+</tr>
 </tbody>
 </table>
 <hr/>

@@ -27,7 +27,7 @@ Please look up https://docs.microsoft.com/en-us/azure/active-directory/develop/h
 
 ## `InfrastructureConfig`
 
-The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a latter step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
+The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a later step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
 
 An example `InfrastructureConfig` for the Azure extension looks as follows:
 

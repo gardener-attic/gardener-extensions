@@ -52,6 +52,9 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 			"type":   hostLocal,
 			"subnet": usePodCIDR,
 		}
+		typhaConfig = map[string]interface{}{
+			"enabled": true,
+		}
 	)
 
 	if config != nil {
@@ -78,9 +81,13 @@ func ComputeCalicoChartValues(network *extensionsv1alpha1.Network, config *calic
 				calicoChartValues["ipip"] = *config.IPIP
 			}
 		}
+		if config.Typha != nil {
+			typhaConfig["enabled"] = config.Typha.Enabled
+		}
 	}
 
 	calicoConfigValues["ipam"] = ipamConfig
+	calicoConfigValues["typha"] = typhaConfig
 	calicoChartValues["config"] = calicoConfigValues
 
 	return calicoChartValues

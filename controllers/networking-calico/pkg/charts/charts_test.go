@@ -32,6 +32,10 @@ import (
 	"k8s.io/helm/pkg/manifest"
 )
 
+var (
+	trueVar = true
+)
+
 var _ = Describe("Chart package test", func() {
 	var (
 		crossSubnet                     = calicov1alpha1.CrossSubnet
@@ -108,6 +112,9 @@ var _ = Describe("Chart package test", func() {
 						"type":   networkConfig.IPAM.Type,
 						"subnet": *networkConfig.IPAM.CIDR,
 					},
+					"typha": map[string]interface{}{
+						"enabled": trueVar,
+					},
 				},
 				"ipip": calicov1alpha1.Always,
 			}))
@@ -135,6 +142,9 @@ var _ = Describe("Chart package test", func() {
 					"ipam": map[string]interface{}{
 						"type":   networkConfigAll.IPAM.Type,
 						"subnet": *networkConfigAll.IPAM.CIDR,
+					},
+					"typha": map[string]interface{}{
+						"enabled": trueVar,
 					},
 				},
 				"ipAutodetectionMethod": *networkConfigAll.IPAutoDetectionMethod,
@@ -164,6 +174,9 @@ var _ = Describe("Chart package test", func() {
 					"ipam": map[string]interface{}{
 						"type":   networkConfigInvalid.IPAM.Type,
 						"subnet": *networkConfigInvalid.IPAM.CIDR,
+					},
+					"typha": map[string]interface{}{
+						"enabled": trueVar,
 					},
 				},
 				"ipAutodetectionMethod": *networkConfigInvalid.IPAutoDetectionMethod,
