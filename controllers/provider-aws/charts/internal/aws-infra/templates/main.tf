@@ -48,32 +48,6 @@ resource "aws_route" "public" {
   gateway_id             = "{{ required "vpc.internetGatewayID is required" .Values.vpc.internetGatewayID }}"
 }
 
-resource "aws_security_group" "bastions" {
-  name        = "{{ required "clusterName is required" .Values.clusterName }}-bastions"
-  description = "Security group for bastions"
-  vpc_id      = "{{ required "vpc.id is required" .Values.vpc.id }}"
-
-{{ include "aws-infra.tags-with-suffix" (set $.Values "suffix" "bastions") | indent 2 }}
-}
-
-resource "aws_security_group_rule" "bastion_ssh_bastion" {
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.bastions.id}"
-}
-
-resource "aws_security_group_rule" "bastions_egress_all" {
-  type              = "egress"
-  from_port         = 0
-  to_port           = 0
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = "${aws_security_group.bastions.id}"
-}
-
 resource "aws_security_group" "nodes" {
   name        = "{{ required "clusterName is required" .Values.clusterName }}-nodes"
   description = "Security group for nodes"
@@ -107,15 +81,6 @@ resource "aws_security_group_rule" "nodes_udp_all" {
   protocol          = "udp"
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = "${aws_security_group.nodes.id}"
-}
-
-resource "aws_security_group_rule" "nodes_ssh_bastion" {
-  type                     = "ingress"
-  from_port                = 22
-  to_port                  = 22
-  protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.nodes.id}"
-  source_security_group_id = "${aws_security_group.bastions.id}"
 }
 
 resource "aws_security_group_rule" "nodes_egress_all" {
