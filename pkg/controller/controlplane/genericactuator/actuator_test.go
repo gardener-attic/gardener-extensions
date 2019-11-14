@@ -62,8 +62,8 @@ const (
 )
 
 var (
-	vFalse = false
-	pFalse = &vFalse
+	vFalse, vTrue = false, true
+	pFalse, pTrue = &vFalse, &vTrue
 )
 
 func TestControlplane(t *testing.T) {
@@ -137,8 +137,9 @@ var _ = Describe("Actuator", func() {
 				SecretRefs: []corev1.LocalObjectReference{
 					{Name: controlPlaneShootChartResourceName},
 				},
-				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
-				KeepObjects:  pFalse,
+				InjectLabels:              map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
+				KeepObjects:               pFalse,
+				ForceOverwriteAnnotations: pFalse,
 			},
 		}
 		deletedMRSecretForCPShootChart = &corev1.Secret{
@@ -160,8 +161,9 @@ var _ = Describe("Actuator", func() {
 				SecretRefs: []corev1.LocalObjectReference{
 					{Name: storageClassesChartResourceName},
 				},
-				InjectLabels: map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
-				KeepObjects:  pFalse,
+				InjectLabels:              map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
+				KeepObjects:               pFalse,
+				ForceOverwriteAnnotations: pTrue,
 			},
 		}
 		deletedMRSecretForStorageClassesChart = &corev1.Secret{

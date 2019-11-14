@@ -32,19 +32,7 @@ import (
 
 // RenderChartAndCreateManagedResource renders a chart and creates a ManagedResource for the gardener-resource-manager
 // out of the results.
-func RenderChartAndCreateManagedResource(
-	ctx context.Context,
-	namespace string,
-	name string,
-	client client.Client,
-	chartRenderer chartrenderer.Interface,
-	chart util.Chart,
-	values map[string]interface{},
-	imageVector imagevector.ImageVector,
-	chartNamespace string,
-	version string,
-	withNoCleanupLabel bool,
-) error {
+func RenderChartAndCreateManagedResource(ctx context.Context, namespace string, name string, client client.Client, chartRenderer chartrenderer.Interface, chart util.Chart, values map[string]interface{}, imageVector imagevector.ImageVector, chartNamespace string, version string, withNoCleanupLabel bool, forceOverwriteAnnotations bool) error {
 	chartName, data, err := chart.Render(chartRenderer, chartNamespace, imageVector, version, version, values)
 	if err != nil {
 		return errors.Wrapf(err, "could not render chart")
@@ -56,7 +44,7 @@ func RenderChartAndCreateManagedResource(
 		injectedLabels = map[string]string{ShootNoCleanupLabel: "true"}
 	}
 
-	return CreateManagedResource(ctx, client, namespace, name, "", chartName, data, false, injectedLabels)
+	return CreateManagedResource(ctx, client, namespace, name, "", chartName, data, false, injectedLabels, forceOverwriteAnnotations)
 }
 
 func CreateManagedResourceFromUnstructured(ctx context.Context, client client.Client, namespace, name, class string, objs []*unstructured.Unstructured, keepObjects bool, injectedLabels map[string]string) error {
@@ -69,7 +57,7 @@ func CreateManagedResourceFromUnstructured(ctx context.Context, client client.Cl
 		data = append(data, []byte("\n---\n")...)
 		data = append(data, bytes...)
 	}
-	return CreateManagedResource(ctx, client, namespace, name, class, name, data, keepObjects, injectedLabels)
+	return CreateManagedResource(ctx, client, namespace, name, class, name, data, keepObjects, injectedLabels, false)
 }
 
 func CreateManagedResourceFromFileChart(ctx context.Context, client client.Client, namespace, name, class string, renderer chartrenderer.Interface, chartPath, chartName string, chartValues map[string]interface{}, injectedLabels map[string]string) error {
@@ -78,10 +66,10 @@ func CreateManagedResourceFromFileChart(ctx context.Context, client client.Clien
 		return err
 	}
 
-	return CreateManagedResource(ctx, client, namespace, name, class, chartName, chart.Manifest(), false, injectedLabels)
+	return CreateManagedResource(ctx, client, namespace, name, class, chartName, chart.Manifest(), false, injectedLabels, false)
 }
 
-func CreateManagedResource(ctx context.Context, client client.Client, namespace, name, class, key string, data []byte, keepObjects bool, injectedLabels map[string]string) error {
+func CreateManagedResource(ctx context.Context, client client.Client, namespace, name, class, key string, data []byte, keepObjects bool, injectedLabels map[string]string, forceOverwriteAnnotations bool) error {
 	if key == "" {
 		key = name
 	}
@@ -100,6 +88,7 @@ func CreateManagedResource(ctx context.Context, client client.Client, namespace,
 		WithInjectedLabels(injectedLabels).
 		KeepObjects(keepObjects).
 		WithSecretRef(name).
+		ForceOverwriteAnnotations(forceOverwriteAnnotations).
 		Reconcile(ctx); err != nil {
 		return errors.Wrapf(err, "could not create or update managed resource '%s/%s'", namespace, name)
 	}
