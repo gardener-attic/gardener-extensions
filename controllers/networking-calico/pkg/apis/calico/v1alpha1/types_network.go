@@ -115,6 +115,6 @@ type Typha struct {
 	// Enabled is used to define whether calico-typha is required or not.
 	// Note, typha is used to offload kubernetes API server,
 	// thus consider not to disable it for large clusters in terms of node count.
-	// More info can be found here https://docs.projectcalico.org/v3.8/reference/typha/
+	// More info can be found here https://docs.projectcalico.org/v3.9/reference/typha/
 	Enabled bool `json:"enabled"`
 }
