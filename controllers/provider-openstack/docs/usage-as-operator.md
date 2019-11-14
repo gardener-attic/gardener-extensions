@@ -70,8 +70,10 @@ spec:
     cpu: "4"
     gpu: "0"
     memory: 8Gi
-    volumeType: default
-    volumeSize: 40Gi
+    storage:
+      class: standard
+      type: default
+      size: 40Gi
   regions:
   - name: europe-1
     zones:
