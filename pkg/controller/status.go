@@ -33,9 +33,12 @@ func LastOperation(t gardencorev1alpha1.LastOperationType, state gardencorev1alp
 
 // LastError creates a new LastError from the given parameters.
 func LastError(description string, codes ...gardencorev1alpha1.ErrorCode) *gardencorev1alpha1.LastError {
+	now := metav1.Now()
+
 	return &gardencorev1alpha1.LastError{
-		Description: description,
-		Codes:       codes,
+		Description:    description,
+		Codes:          codes,
+		LastUpdateTime: &now,
 	}
 }
 
