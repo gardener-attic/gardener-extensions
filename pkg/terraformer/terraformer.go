@@ -24,7 +24,6 @@ import (
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
-	"github.com/gardener/gardener/pkg/utils"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/retry"
 
@@ -40,7 +39,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const jobNameLabel = "job-name"
+const (
+	jobNameLabelDeprecated = "job-name"
+
+	// TerraformerLabelKeyName is a key for label on a Terraformer Pod indicating the Terraformer name.
+	TerraformerLabelKeyName = "terraformer.gardener.cloud/name"
+	// TerraformerLabelKeyPurpose is a key for label on a Terraformer Pod indicating the Terraformer purpose.
+	TerraformerLabelKeyPurpose = "terraformer.gardener.cloud/purpose"
+)
 
 type factory struct{}
 
@@ -97,16 +103,14 @@ func New(
 	name,
 	image string,
 ) Terraformer {
-	var (
-		prefix    = fmt.Sprintf("%s.%s", name, purpose)
-		podSuffix = utils.ComputeSHA256Hex([]byte(time.Now().String()))[:5]
-	)
+	var prefix = fmt.Sprintf("%s.%s", name, purpose)
 
 	return &terraformer{
 		logger:       logger,
 		client:       client,
 		coreV1Client: coreV1Client,
 
+		name:      name,
 		namespace: namespace,
 		purpose:   purpose,
 		image:     image,
@@ -114,27 +118,24 @@ func New(
 		configName:    prefix + TerraformerConfigSuffix,
 		variablesName: prefix + TerraformerVariablesSuffix,
 		stateName:     prefix + TerraformerStateSuffix,
-		podName:       fmt.Sprintf("%s-%s", prefix+TerraformerPodSuffix, podSuffix),
 		jobName:       prefix + TerraformerJobSuffix,
 
 		activeDeadlineSeconds: int64(3600),
-		jobBackoffLimit:       int32(3),
 
 		deadlineCleaning: 10 * time.Minute,
-		deadlinePod:      10 * time.Minute,
-		deadlineJob:      20 * time.Minute,
+		deadlinePod:      20 * time.Minute,
 	}
 }
 
-// Apply executes the Terraform Job by running the 'terraform apply' command.
+// Apply executes a Terraform Pod by running the 'terraform apply' command.
 func (t *terraformer) Apply() error {
 	if !t.configurationDefined {
-		return errors.New("Terraformer configuration has not been defined, cannot execute the Terraform scripts")
+		return errors.New("terraformer configuration has not been defined, cannot execute the Terraform scripts")
 	}
 	return t.execute(context.TODO(), "apply")
 }
 
-// Destroy executes the Terraform Job by running the 'terraform destroy' command.
+// Destroy executes a Terraform Pod by running the 'terraform destroy' command.
 func (t *terraformer) Destroy() error {
 	if err := t.execute(context.TODO(), "destroy"); err != nil {
 		return err
@@ -142,14 +143,13 @@ func (t *terraformer) Destroy() error {
 	return t.cleanupConfiguration(context.TODO())
 }
 
-// execute creates a Terraform Job which runs the provided scriptName (apply or destroy), waits for the Job to be completed
+// execute creates a Terraform Pod which runs the provided scriptName (apply or destroy), waits for the Pod to be completed
 // (either successful or not), prints its logs, deletes it and returns whether it was successful or not.
 func (t *terraformer) execute(ctx context.Context, scriptName string) error {
 	var (
-		succeeded = true  // Success status of the Terraform execution job
-		execute   = false // Should we skip the rest of the function depending on whether all ConfigMaps/Secrets exist/do not exist?
-		skipPod   = false // Should we skip the execution of the Terraform Pod (validation of the Terraform config)?
-		skipJob   = false // Should we skip the execution of the Terraform Job (actual execution of the Terraform config)?
+		succeeded             = true  // Success status of the Terraform apply/destroy pod
+		execute               = false // Should we skip the rest of the function depending on whether all ConfigMaps/Secrets exist/do not exist?
+		skipApplyOrDestroyPod = false // Should we skip the execution of the Terraform apply/destroy command (actual execution of the Terraform config)?
 	)
 
 	// We should retry the preparation check in order to allow the kube-apiserver to actually create the ConfigMaps.
@@ -159,14 +159,14 @@ func (t *terraformer) execute(ctx context.Context, scriptName string) error {
 			return retry.SevereError(err)
 		}
 		if numberOfExistingResources == 0 {
-			t.logger.Debug("All ConfigMaps/Secrets do not exist, can not execute the Terraform Job.")
+			t.logger.Debugf("All ConfigMaps/Secrets do not exist, can not execute the Terraform %s Pod.", scriptName)
 			return retry.Ok()
 		} else if numberOfExistingResources == numberOfConfigResources {
-			t.logger.Debug("All ConfigMaps/Secrets exist, will execute the Terraform Job.")
+			t.logger.Debugf("All ConfigMaps/Secrets exist, will execute the Terraform %s Pod.", scriptName)
 			execute = true
 			return retry.Ok()
 		} else {
-			t.logger.Error("Can not execute Terraform Job as ConfigMaps/Secrets are missing!")
+			t.logger.Errorf("Can not execute Terraform %s Pod as ConfigMaps/Secrets are missing!", scriptName)
 			return retry.MinorError(fmt.Errorf("%d/%d terraform resources are missing", numberOfConfigResources-numberOfExistingResources, numberOfConfigResources))
 		}
 	}); err != nil {
@@ -178,71 +178,55 @@ func (t *terraformer) execute(ctx context.Context, scriptName string) error {
 
 	// In case of scriptName == 'destroy', we need to first check whether the Terraform state contains
 	// something at all. If it does not contain anything, then the 'apply' could never be executed, probably
-	// because of syntax errors. In this case, we want to skip the Terraform job (as it wouldn't do anything
+	// because of syntax errors. In this case, we want to skip the Terraform destroy pod (as it wouldn't do anything
 	// anyway) and just delete the related ConfigMaps/Secrets.
 	if scriptName == "destroy" {
-		skipPod = true
-		skipJob = t.isStateEmpty()
+		skipApplyOrDestroyPod = t.isStateEmpty()
 	}
 
-	if !skipPod {
-		if err := t.deployTerraformerPod(ctx, "validate"); err != nil {
-			return err
+	if !skipApplyOrDestroyPod {
+		// Create Terraform Pod which executes the provided scriptName
+		generateName := t.computePodGenerateName(scriptName)
+		pod, err := t.deployTerraformerPod(ctx, generateName, scriptName)
+		if err != nil {
+			return fmt.Errorf("failed to deploy the Terraformer Pod with .meta.generateName '%s': %s", generateName, err.Error())
 		}
 
-		// Wait for the Terraform validation Pod to be completed
-		exitCode := t.waitForPod(ctx)
-		skipJob = exitCode == 0 || exitCode == 1
+		t.logger.Infof("Successfully created Terraformer Pod '%s'.", pod.Name)
 
-		switch exitCode {
-		case 0:
-			t.logger.Debug("Terraform validation succeeded but there is no difference between state and actual resources.")
-		case 1:
-			t.logger.Debug("Terraform validation failed, will not start the job.")
-			succeeded = false
-		default:
-			t.logger.Debug("Terraform validation has been successful.")
-		}
+		// Wait for the Terraform apply/destroy Pod to be completed
+		exitCode := t.waitForPod(ctx, pod.Name, t.deadlinePod)
+		succeeded = exitCode == 0
+		t.logger.Infof("Terraform Pod '%s' finished with exit code %d.", pod.Name, exitCode)
 	}
 
-	if !skipJob {
-		// Create Terraform Job which executes the provided scriptName
-		if err := t.deployTerraformerJob(ctx, scriptName); err != nil {
-			return fmt.Errorf("Failed to deploy the Terraformer: %s", err.Error())
-		}
-
-		// Wait for the Terraform Job to be completed
-		succeeded = t.waitForJob(ctx)
-		t.logger.Infof("Terraform '%s' finished.", t.jobName)
-	}
-
-	// Retrieve the logs of the Pods belonging to the completed Job
-	jobPodList, err := t.listJobPods(ctx)
+	// Retrieve the logs of the apply/destroy Pods
+	podList, err := t.listTerraformerPods(ctx)
 	if err != nil {
-		t.logger.Errorf("Could not retrieve list of pods belonging to Terraform job '%s': %s", t.jobName, err.Error())
-		jobPodList = &corev1.PodList{}
+		t.logger.Errorf("Could not retrieve list of pods belonging to Terraformer '%s': %s", t.name, err.Error())
+		podList = &corev1.PodList{}
 	}
 
-	t.logger.Infof("Fetching the logs for all pods belonging to the Terraform job '%s'...", t.jobName)
-	logList, err := t.retrievePodLogs(jobPodList)
+	t.logger.Infof("Fetching the logs for all pods belonging to Terraformer '%s'...", t.name)
+	logList, err := t.retrievePodLogs(podList)
 	if err != nil {
-		t.logger.Errorf("Could not retrieve the logs of the pods belonging to Terraform job '%s': %s", t.jobName, err.Error())
+		t.logger.Errorf("Could not retrieve the logs of the pods belonging to Terraformer '%s': %s", t.name, err.Error())
 		logList = map[string]string{}
 	}
 	for podName, podLogs := range logList {
-		t.logger.Infof("Logs of Pod '%s' belonging to Terraform job '%s':\n%s", podName, t.jobName, podLogs)
+		t.logger.Infof("Logs of Pod '%s' belonging to Terraformer '%s':\n%s", podName, t.name, podLogs)
 	}
 
-	// Delete the Terraform Job and all its belonging Pods
-	t.logger.Infof("Cleaning up pods created by Terraform job '%s'...", t.jobName)
-	if err := t.cleanupJob(ctx, jobPodList); err != nil {
+	// Delete the Terraformer Pods
+	t.logger.Infof("Cleaning up pods created by Terraformer '%s'...", t.name)
+	if err := t.deleteTerraformerPods(ctx, podList); err != nil {
 		return err
 	}
 
 	// Evaluate whether the execution was successful or not
-	t.logger.Infof("Terraformer execution for job '%s' has been completed.", t.jobName)
+	t.logger.Infof("Terraformer '%s' execution for command '%s' has been completed.", t.name, scriptName)
 	if !succeeded {
-		errorMessage := fmt.Sprintf("Terraform execution job '%s' could not be completed.", t.jobName)
+		errorMessage := fmt.Sprintf("Terraform execution for command '%s' could not be completed.", scriptName)
 		if terraformErrors := retrieveTerraformErrors(logList); terraformErrors != nil {
 			errorMessage += fmt.Sprintf(" The following issues have been found in the logs:\n\n%s", strings.Join(terraformErrors, "\n\n"))
 		}
@@ -306,51 +290,33 @@ func (t *terraformer) createOrUpdateTerraformerAuth(ctx context.Context) error {
 	return t.createOrUpdateRoleBinding(ctx)
 }
 
-func (t *terraformer) deployTerraformerPod(ctx context.Context, scriptName string) error {
+func (t *terraformer) deployTerraformerPod(ctx context.Context, generateName, command string) (*corev1.Pod, error) {
 	if err := t.createOrUpdateTerraformerAuth(ctx); err != nil {
-		return err
+		return nil, err
 	}
 
-	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.podName}}
-	return kutil.CreateOrUpdate(ctx, t.client, pod, func() error {
-		if pod.Labels == nil {
-			pod.Labels = make(map[string]string)
-		}
-		pod.Labels[jobNameLabel] = t.jobName
-		t.addNetworkPolicyLabels(pod.Labels)
-		pod.Spec = *t.podSpec(scriptName)
-		return nil
-	})
-}
-
-func (t *terraformer) deployTerraformerJob(ctx context.Context, scriptName string) error {
-	if err := t.createOrUpdateTerraformerAuth(ctx); err != nil {
-		return err
-	}
-
-	job := &batchv1.Job{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.jobName}}
-	podSpec := t.podSpec(scriptName)
-
-	return kutil.CreateOrUpdate(ctx, t.client, job, func() error {
-		var (
-			activeDeadlineSeconds = t.activeDeadlineSeconds
-			backoffLimit          = t.jobBackoffLimit
-			spec                  = &job.Spec
-		)
-
-		spec.ActiveDeadlineSeconds = &activeDeadlineSeconds
-		spec.BackoffLimit = &backoffLimit
-		spec.Template = corev1.PodTemplateSpec{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: t.namespace,
-				Name:      t.jobName,
-				Labels:    t.addNetworkPolicyLabels(nil),
+	t.logger.Infof("Deploying Terraformer Pod with .meta.generateName '%s'.", generateName)
+	podSpec := *t.podSpec(command)
+	pod := &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: generateName,
+			Namespace:    t.namespace,
+			Labels: map[string]string{
+				// Terraformer labels
+				TerraformerLabelKeyName:    t.name,
+				TerraformerLabelKeyPurpose: t.purpose,
+				// Network policy labels
+				v1alpha1constants.LabelNetworkPolicyToDNS:             v1alpha1constants.LabelNetworkPolicyAllowed,
+				v1alpha1constants.LabelNetworkPolicyToPrivateNetworks: v1alpha1constants.LabelNetworkPolicyAllowed,
+				v1alpha1constants.LabelNetworkPolicyToPublicNetworks:  v1alpha1constants.LabelNetworkPolicyAllowed,
+				v1alpha1constants.LabelNetworkPolicyToSeedAPIServer:   v1alpha1constants.LabelNetworkPolicyAllowed,
 			},
-			Spec: *podSpec,
-		}
+		},
+		Spec: podSpec,
+	}
 
-		return nil
-	})
+	err := t.client.Create(ctx, pod)
+	return pod, err
 }
 
 func (t *terraformer) env() []corev1.EnvVar {
@@ -363,18 +329,6 @@ func (t *terraformer) env() []corev1.EnvVar {
 		envVars = append(envVars, corev1.EnvVar{Name: k, Value: v})
 	}
 	return envVars
-}
-
-func (t *terraformer) addNetworkPolicyLabels(labels map[string]string) map[string]string {
-	if labels == nil {
-		labels = make(map[string]string)
-	}
-	labels[v1alpha1constants.LabelNetworkPolicyToDNS] = v1alpha1constants.LabelNetworkPolicyAllowed
-	labels[v1alpha1constants.LabelNetworkPolicyToPrivateNetworks] = v1alpha1constants.LabelNetworkPolicyAllowed
-	labels[v1alpha1constants.LabelNetworkPolicyToPublicNetworks] = v1alpha1constants.LabelNetworkPolicyAllowed
-	labels[v1alpha1constants.LabelNetworkPolicyToSeedAPIServer] = v1alpha1constants.LabelNetworkPolicyAllowed
-
-	return labels
 }
 
 func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
@@ -390,10 +344,7 @@ func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 
 	activeDeadlineSeconds := t.activeDeadlineSeconds
 	terminationGracePeriodSeconds := t.activeDeadlineSeconds
-	shCommand := fmt.Sprintf("sh /terraform.sh %s", scriptName)
-	if scriptName != "validate" {
-		shCommand += " 2>&1; [[ -f /success ]] && exit 0 || exit 1"
-	}
+	shCommand := fmt.Sprintf("sh /terraform.sh %s 2>&1; [[ -f /success ]] && exit 0 || exit 1", scriptName)
 
 	return &corev1.PodSpec{
 		RestartPolicy:         corev1.RestartPolicyNever,
@@ -457,28 +408,51 @@ func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 	}
 }
 
-// listJobPods lists all pods which have a label 'job-name' whose value is equal to the Terraformer job name.
-func (t *terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
-	podList := &corev1.PodList{}
+// listTerraformerPods lists all pods in the Terraformer namespace which have labels 'terraformer.gardener.cloud/name'
+// and 'terraformer.gardener.cloud/purpose' matching the current Terraformer name and purpose.
+func (t *terraformer) listTerraformerPods(ctx context.Context) (*corev1.PodList, error) {
+	var (
+		labels = map[string]string{
+			TerraformerLabelKeyName:    t.name,
+			TerraformerLabelKeyPurpose: t.purpose,
+		}
+		podList = &corev1.PodList{}
+	)
+
 	if err := t.client.List(ctx, podList,
 		client.InNamespace(t.namespace),
-		client.MatchingLabels{jobNameLabel: t.jobName}); err != nil {
+		client.MatchingLabels(labels)); err != nil {
 		return nil, err
 	}
 	return podList, nil
 }
 
-// retrievePodLogs fetches the logs of the created Pods by the Terraform Job and returns them as a map whose
+// listJobPods lists all pods in the Terraformer namespace which have a label 'job-name'
+// whose value is equal to the Terraformer job name.
+//
+// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
+// TODO: Remove after several releases.
+func (t *terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
+	podList := &corev1.PodList{}
+	if err := t.client.List(ctx, podList,
+		client.InNamespace(t.namespace),
+		client.MatchingLabels{jobNameLabelDeprecated: t.jobName}); err != nil {
+		return nil, err
+	}
+	return podList, nil
+}
+
+// retrievePodLogs fetches the logs of the created Pods by the Terraformer and returns them as a map whose
 // keys are pod names and whose values are the corresponding logs.
-func (t *terraformer) retrievePodLogs(jobPodList *corev1.PodList) (map[string]string, error) {
+func (t *terraformer) retrievePodLogs(podList *corev1.PodList) (map[string]string, error) {
 	logChan := make(chan map[string]string, 1)
 	go func() {
 		var logList = map[string]string{}
-		for _, jobPod := range jobPodList.Items {
-			name := jobPod.Name
-			logs, err := kubernetes.GetPodLogs(t.coreV1Client.Pods(jobPod.Namespace), name, &corev1.PodLogOptions{})
+		for _, pod := range podList.Items {
+			name := pod.Name
+			logs, err := kubernetes.GetPodLogs(t.coreV1Client.Pods(pod.Namespace), name, &corev1.PodLogOptions{})
 			if err != nil {
-				t.logger.Warnf("Could not retrieve the logs of Terraform job pod %s: '%v'", name, err)
+				t.logger.Warnf("Could not retrieve the logs of Terraform pod %s: '%v'", name, err)
 				continue
 			}
 			logList[name] = string(logs)
@@ -490,11 +464,26 @@ func (t *terraformer) retrievePodLogs(jobPodList *corev1.PodList) (map[string]st
 	case result := <-logChan:
 		return result, nil
 	case <-time.After(2 * time.Minute):
-		return nil, fmt.Errorf("Timeout when reading the logs of all pods created by Terraform job '%s'", t.jobName)
+		return nil, fmt.Errorf("timeout when reading the logs of all pods created by Terraformer '%s'", t.name)
 	}
 }
 
-// cleanupJob deletes the Terraform Job and all belonging Pods from the Garden cluster.
+func (t *terraformer) deleteTerraformerPods(ctx context.Context, podList *corev1.PodList) error {
+	for _, pod := range podList.Items {
+		if err := t.client.Delete(ctx, &pod); client.IgnoreNotFound(err) != nil {
+			return err
+		}
+
+		t.logger.Infof("Deleted Terraform Pod '%s'", pod.Name)
+	}
+
+	return nil
+}
+
+// cleanupJob deletes the Terraform Job and all belonging Pods.
+//
+// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
+// TODO: Remove after several releases.
 func (t *terraformer) cleanupJob(ctx context.Context, jobPodList *corev1.PodList) error {
 	// Delete the Terraform Job
 	if err := t.client.Delete(ctx, &batchv1.Job{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.jobName}}); err == nil {
@@ -516,4 +505,8 @@ func (t *terraformer) cleanupJob(ctx context.Context, jobPodList *corev1.PodList
 		}
 	}
 	return nil
+}
+
+func (t *terraformer) computePodGenerateName(command string) string {
+	return fmt.Sprintf("%s.%s.tf-%s-", t.name, t.purpose, command)
 }

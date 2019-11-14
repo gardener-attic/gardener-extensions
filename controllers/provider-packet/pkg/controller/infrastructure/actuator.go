@@ -26,14 +26,11 @@ import (
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	glogger "github.com/gardener/gardener/pkg/logger"
-
 	"github.com/go-logr/logr"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/rest"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -82,17 +79,15 @@ func (a *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infras
 // Helper functions
 
 func (a *actuator) newTerraformer(purpose, namespace, name string) (terraformer.Terraformer, error) {
-	t, err := terraformer.NewForConfig(glogger.NewLogger("info"), a.restConfig, purpose, namespace, name, imagevector.TerraformerImage())
+	tf, err := terraformer.NewForConfig(glogger.NewLogger("info"), a.restConfig, purpose, namespace, name, imagevector.TerraformerImage())
 	if err != nil {
 		return nil, err
 	}
 
-	return t.
-		SetJobBackoffLimit(0).
+	return tf.
 		SetActiveDeadlineSeconds(630).
 		SetDeadlineCleaning(5 * time.Minute).
-		SetDeadlinePod(15 * time.Minute).
-		SetDeadlineJob(15 * time.Minute), nil
+		SetDeadlinePod(15 * time.Minute), nil
 }
 
 func generateTerraformInfraVariablesEnvironment(secret *corev1.Secret) map[string]string {

@@ -142,20 +142,6 @@ func (mr *MockTerraformerMockRecorder) SetDeadlineCleaning(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlineCleaning", reflect.TypeOf((*MockTerraformer)(nil).SetDeadlineCleaning), arg0)
 }
 
-// SetDeadlineJob mocks base method
-func (m *MockTerraformer) SetDeadlineJob(arg0 time.Duration) terraformer.Terraformer {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetDeadlineJob", arg0)
-	ret0, _ := ret[0].(terraformer.Terraformer)
-	return ret0
-}
-
-// SetDeadlineJob indicates an expected call of SetDeadlineJob
-func (mr *MockTerraformerMockRecorder) SetDeadlineJob(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlineJob", reflect.TypeOf((*MockTerraformer)(nil).SetDeadlineJob), arg0)
-}
-
 // SetDeadlinePod mocks base method
 func (m *MockTerraformer) SetDeadlinePod(arg0 time.Duration) terraformer.Terraformer {
 	m.ctrl.T.Helper()
@@ -168,20 +154,6 @@ func (m *MockTerraformer) SetDeadlinePod(arg0 time.Duration) terraformer.Terrafo
 func (mr *MockTerraformerMockRecorder) SetDeadlinePod(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlinePod", reflect.TypeOf((*MockTerraformer)(nil).SetDeadlinePod), arg0)
-}
-
-// SetJobBackoffLimit mocks base method
-func (m *MockTerraformer) SetJobBackoffLimit(arg0 int32) terraformer.Terraformer {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetJobBackoffLimit", arg0)
-	ret0, _ := ret[0].(terraformer.Terraformer)
-	return ret0
-}
-
-// SetJobBackoffLimit indicates an expected call of SetJobBackoffLimit
-func (mr *MockTerraformerMockRecorder) SetJobBackoffLimit(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetJobBackoffLimit", reflect.TypeOf((*MockTerraformer)(nil).SetJobBackoffLimit), arg0)
 }
 
 // SetVariablesEnvironment mocks base method
