@@ -100,7 +100,7 @@ func (a *genericActuator) applyMachineControllerManagerShootChart(ctx context.Co
 		return err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, workerObj.Namespace, mcmShootResourceName, a.client, chartRenderer, a.mcmShootChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, workerObj.Namespace, mcmShootResourceName, a.client, chartRenderer, a.mcmShootChart, values, a.imageVector, metav1.NamespaceSystem, cluster.Shoot.Spec.Kubernetes.Version, true, false); err != nil {
 		return errors.Wrapf(err, "could not apply control plane shoot chart for worker '%s'", util.ObjectName(workerObj))
 	}
 

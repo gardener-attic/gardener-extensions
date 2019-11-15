@@ -324,7 +324,7 @@ func (a *actuator) reconcileControlPlane(
 		return false, err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, controlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, version, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, controlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, version, true, false); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
@@ -334,7 +334,7 @@ func (a *actuator) reconcileControlPlane(
 		return false, err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, version, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, version, true, true); err != nil {
 		return false, errors.Wrapf(err, "could not apply storage classes chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
