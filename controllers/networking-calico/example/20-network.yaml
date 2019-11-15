@@ -50,5 +50,7 @@ spec:
     ipam:
       type: host-local
       cidr: usePodCIDR
-#    ipAutodetectionMethod: interface=eth0
-#    ipip: CrossSubnet
+#   ipAutodetectionMethod: interface=eth0
+#   ipip: CrossSubnet
+#   typha:
+#     enabled: true

@@ -4,7 +4,9 @@ config:
   backend: bird
   ipam:
     type: "host-local"
-#    subnet: "usePodCidr"
+#   subnet: "usePodCidr"
+  typha:
+    enabled: true
 #ipip: "Always"
 #ipAutodetectionMethod: "first-found"
 images:

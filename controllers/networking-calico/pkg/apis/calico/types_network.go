@@ -53,6 +53,8 @@ type NetworkConfig struct {
 	// IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)
 	// +optional
 	IPIP *IPIP
+	// Typha settings to use for calico-typha component
+	Typha *Typha
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -68,4 +70,13 @@ type IPAM struct {
 	Type string
 	// CIDR defines the CIDR block to be used
 	CIDR *CIDR
+}
+
+// Typha defines the block with configurations for calico typha
+type Typha struct {
+	// Enabled is used to define whether calico-typha is required or not.
+	// Note, typha is used to offload kubernetes API server,
+	// thus consider not to disable it for large clusters in terms of node count.
+	// More info can be found here https://docs.projectcalico.org/v3.9/reference/typha/
+	Enabled bool
 }
