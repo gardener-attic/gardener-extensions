@@ -54,6 +54,7 @@ resource "google_compute_router_nat" "nat" {
     name                    =  "${google_compute_subnetwork.subnetwork-nodes.self_link}"
     source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
   }
+  min_ports_per_vm = "{{ required "networks.cloudNAT.minPortsPerVM is required" .Values.networks.cloudNAT.minPortsPerVM }}"
 
   log_config {
     enable = true
