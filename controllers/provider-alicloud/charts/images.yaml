@@ -38,7 +38,7 @@ images:
 - name: csi-provisioner
   sourceRepository: https://github.com/kubernetes-csi/external-provisioner
   repository: quay.io/k8scsi/csi-provisioner
-  tag: v1.0.1
+  tag: v1.0.2
   targetVersion: 1.13.x
 - name: csi-provisioner
   sourceRepository: https://github.com/kubernetes-csi/external-provisioner
@@ -48,7 +48,7 @@ images:
 - name: csi-snapshotter
   sourceRepository: https://github.com/kubernetes-csi/external-snapshotter
   repository: quay.io/k8scsi/csi-snapshotter
-  tag: v1.0.1
+  tag: v1.0.2
   targetVersion: 1.13.x
 - name: csi-snapshotter
   sourceRepository: https://github.com/kubernetes-csi/external-snapshotter
