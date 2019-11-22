@@ -294,6 +294,7 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 	ctx context.Context,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
+	checksums map[string]string,
 ) (map[string]interface{}, error) {
 	// Get credentials from the referenced secret
 	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, vp.client, &cp.Spec.SecretRef)

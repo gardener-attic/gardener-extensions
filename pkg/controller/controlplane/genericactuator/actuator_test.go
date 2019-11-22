@@ -348,7 +348,7 @@ var _ = Describe("Actuator", func() {
 				vp.EXPECT().GetConfigChartValues(ctx, cp, cluster).Return(configChartValues, nil)
 			}
 			vp.EXPECT().GetControlPlaneChartValues(ctx, cp, cluster, checksums, false).Return(controlPlaneChartValues, nil)
-			vp.EXPECT().GetControlPlaneShootChartValues(ctx, cp, cluster).Return(controlPlaneShootChartValues, nil)
+			vp.EXPECT().GetControlPlaneShootChartValues(ctx, cp, cluster, checksums).Return(controlPlaneShootChartValues, nil)
 			vp.EXPECT().GetStorageClassesChartValues(ctx, cp, cluster).Return(storageClassesChartValues, nil)
 
 			// Create actuator
