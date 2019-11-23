@@ -17,18 +17,34 @@ package helper
 import (
 	"fmt"
 
+	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
 )
 
 // FindImage takes a list of machine images, and the desired image name and version. It tries
 // to find the image with the given name and version. If it cannot be found then an error
 // is returned.
-func FindImage(machineImages []config.MachineImage, imageName, version string) (*config.MachineImage, error) {
-	for _, machineImage := range machineImages {
-		if machineImage.Name == imageName && machineImage.Version == version {
+func FindImage(profileInmages []api.MachineImages, configImages []config.MachineImage, imageName, imageVersion string) (*config.MachineImage, error) {
+	for _, machineImage := range profileInmages {
+		if machineImage.Name == imageName {
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					urn := version.URN
+					return &config.MachineImage{
+						Name:    imageName,
+						Version: version.Version,
+						URN:     &urn,
+					}, nil
+				}
+			}
+		}
+	}
+
+	for _, machineImage := range configImages {
+		if machineImage.Name == imageName && machineImage.Version == imageVersion {
 			return &machineImage, nil
 		}
 	}
 
-	return nil, fmt.Errorf("could not find an image for name %q in version %q", imageName, version)
+	return nil, fmt.Errorf("could not find an image for name %q in version %q", imageName, imageVersion)
 }

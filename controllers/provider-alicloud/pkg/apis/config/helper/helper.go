@@ -17,15 +17,26 @@ package helper
 import (
 	"fmt"
 
+	api "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 )
 
 // FindImageForRegion takes a list of machine images, and the desired image name, version and region. It tries
 // to find the image with the given name, version and region. If it cannot be found then an error
 // is returned.
-func FindImageForRegion(machineImages []config.MachineImage, imageName, version, regionID string) (string, error) {
-	for _, machineImage := range machineImages {
-		if machineImage.Name != imageName || machineImage.Version != version {
+func FindImageForRegion(profileImages []api.MachineImages, configImages []config.MachineImage, imageName, imageVersion, regionID string) (string, error) {
+	for _, machineImage := range profileImages {
+		if machineImage.Name == imageName {
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					return version.ID, nil
+				}
+			}
+		}
+	}
+
+	for _, machineImage := range configImages {
+		if machineImage.Name != imageName || machineImage.Version != imageVersion {
 			continue
 		}
 
@@ -36,5 +47,5 @@ func FindImageForRegion(machineImages []config.MachineImage, imageName, version,
 		}
 	}
 
-	return "", fmt.Errorf("could not find an image for region %q and name %q in version %q", regionID, imageName, version)
+	return "", fmt.Errorf("could not find an image for region %q and name %q in version %q", regionID, imageName, imageVersion)
 }

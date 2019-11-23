@@ -17,6 +17,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 	"strings"
 	"time"
@@ -24,12 +25,14 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	apisalicloudhelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	alicloudv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	confighelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/common"
 	extensioncontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	commonext "github.com/gardener/gardener-extensions/pkg/controller/common"
 	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionschartrenderer "github.com/gardener/gardener-extensions/pkg/gardener/chartrenderer"
@@ -38,17 +41,13 @@ import (
 	chartutil "github.com/gardener/gardener-extensions/pkg/util/chart"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/chartrenderer"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/util/retry"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -87,12 +86,11 @@ func NewActuatorWithDeps(
 	machineImageOwnerSecretRef *corev1.SecretReference,
 ) infrastructure.Actuator {
 	a := &actuator{
-		logger: logger,
-
+		logger:                     logger,
+		ChartRendererContext:       commonext.NewChartRendererContext(chartRendererFactory),
 		newClientFactory:           newClientFactory,
 		alicloudClientFactory:      alicloudClientFactory,
 		terraformerFactory:         terraformerFactory,
-		chartRendererFactory:       chartRendererFactory,
 		terraformChartOps:          terraformChartOps,
 		machineImageMapping:        machineImageMapping,
 		machineImageOwnerSecretRef: machineImageOwnerSecretRef,
@@ -102,28 +100,17 @@ func NewActuatorWithDeps(
 }
 
 type actuator struct {
-	decoder runtime.Decoder
-	logger  logr.Logger
+	logger logr.Logger
+	commonext.ChartRendererContext
 
 	alicloudECSClient     alicloudclient.ECS
 	newClientFactory      alicloudclient.ClientFactory
 	alicloudClientFactory alicloudclient.Factory
 	terraformerFactory    terraformer.Factory
-	chartRendererFactory  extensionschartrenderer.Factory
 	terraformChartOps     TerraformChartOps
-
-	client client.Client
-	config *rest.Config
-
-	chartRenderer chartrenderer.Interface
 
 	machineImageMapping        []config.MachineImage
 	machineImageOwnerSecretRef *corev1.SecretReference
-}
-
-func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	a.decoder = serializer.NewCodecFactory(scheme).UniversalDeserializer()
-	return nil
 }
 
 // InjectAPIReader implements inject.APIReader and instantiates actuator.alicloudECSClient.
@@ -147,28 +134,13 @@ func (a *actuator) InjectAPIReader(reader client.Reader) error {
 	return nil
 }
 
-// InjectClient implements inject.Client.
-func (a *actuator) InjectClient(client client.Client) error {
-	a.client = client
-	return nil
-}
-
-// InjectConfig implements inject.Config.
-func (a *actuator) InjectConfig(config *rest.Config) error {
-	a.config = config
-
-	var err error
-	a.chartRenderer, err = a.chartRendererFactory.NewForConfig(config)
-	return err
-}
-
 func (a *actuator) getConfigAndCredentialsForInfra(ctx context.Context, infra *extensionsv1alpha1.Infrastructure) (*alicloudv1alpha1.InfrastructureConfig, *alicloud.Credentials, error) {
 	config := &alicloudv1alpha1.InfrastructureConfig{}
-	if _, _, err := a.decoder.Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
+	if _, _, err := a.Decoder().Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
 		return nil, nil, err
 	}
 
-	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, a.client, &infra.Spec.SecretRef)
+	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, a.Client(), &infra.Spec.SecretRef)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -220,7 +192,7 @@ func (a *actuator) getInitializerValues(
 
 func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, config *alicloudv1alpha1.InfrastructureConfig, values *InitializerValues) (terraformer.Initializer, error) {
 	chartValues := a.terraformChartOps.ComputeChartValues(infra, config, values)
-	release, err := a.chartRenderer.Render(alicloud.InfraChartPath, alicloud.InfraRelease, infra.Namespace, chartValues)
+	release, err := a.ChartRenderer().Render(alicloud.InfraChartPath, alicloud.InfraRelease, infra.Namespace, chartValues)
 	if err != nil {
 		return nil, err
 	}
@@ -235,11 +207,11 @@ func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, conf
 		return nil, err
 	}
 
-	return a.terraformerFactory.DefaultInitializer(a.client, files.Main, files.Variables, files.TFVars, terraformState.Data), nil
+	return a.terraformerFactory.DefaultInitializer(a.Client(), files.Main, files.Variables, files.TFVars, terraformState.Data), nil
 }
 
 func (a *actuator) newTerraformer(infra *extensionsv1alpha1.Infrastructure, credentials *alicloud.Credentials) (terraformer.Terraformer, error) {
-	return common.NewTerraformer(a.terraformerFactory, a.config, credentials, TerraformerPurpose, infra.Namespace, infra.Name)
+	return common.NewTerraformer(a.terraformerFactory, a.RESTConfig(), credentials, TerraformerPurpose, infra.Namespace, infra.Name)
 }
 
 func (a *actuator) extractStatus(tf terraformer.Terraformer, infraConfig *alicloudv1alpha1.InfrastructureConfig, machineImages []alicloudv1alpha1.MachineImage) (*alicloudv1alpha1.InfrastructureStatus, error) {
@@ -359,14 +331,21 @@ func (a *actuator) shareCustomizedImages(ctx context.Context, infra *extensionsv
 	if err != nil {
 		return nil, err
 	}
-
+	var profileImages []apisalicloud.MachineImages
+	cfg, err := helper.CloudProfileConfigFromCluster(cluster)
+	if err != nil {
+		return nil, err
+	}
+	if cfg != nil {
+		profileImages = cfg.MachineImages
+	}
 	a.logger.Info("Sharing customized image with Shoot's Alicloud account from Seed", "infrastructure", infra.Name)
 	for _, worker := range cluster.Shoot.Spec.Provider.Workers {
-		imageID, err := confighelper.FindImageForRegion(a.machineImageMapping, worker.Machine.Image.Name, worker.Machine.Image.Version, infra.Spec.Region)
+		imageID, err := confighelper.FindImageForRegion(profileImages, a.machineImageMapping, worker.Machine.Image.Name, worker.Machine.Image.Version, infra.Spec.Region)
 		if err != nil {
 			if providerStatus := infra.Status.ProviderStatus; providerStatus != nil {
 				infrastructureStatus := &apisalicloud.InfrastructureStatus{}
-				if _, _, err := a.decoder.Decode(providerStatus.Raw, nil, infrastructureStatus); err != nil {
+				if _, _, err := a.Decoder().Decode(providerStatus.Raw, nil, infrastructureStatus); err != nil {
 					return nil, errors.Wrapf(err, "could not decode infrastructure status of infrastructure '%s'", util.ObjectName(infra))
 				}
 
@@ -452,7 +431,7 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
-	return extensioncontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infra, func() error {
+	return extensioncontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.Client(), infra, func() error {
 		infra.Status.ProviderStatus = &runtime.RawExtension{Object: status}
 		infra.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil

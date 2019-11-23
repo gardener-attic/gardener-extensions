@@ -90,6 +90,18 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found (no version)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.4", nil, true),
 		Entry("entry exists", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.3", &azure.MachineImage{Name: "bar", Version: "1.2.3", URN: &urn}, false),
 	)
+
+	DescribeTable("#FindDomainCountByRegion",
+		func(domainCounts []azure.DomainCount, region string, expectedCount int, expectErr bool) {
+			count, err := FindDomainCountByRegion(domainCounts, region)
+			expectResults(count, expectedCount, err, expectErr)
+		},
+
+		Entry("list is nil", nil, "foo", 0, true),
+		Entry("empty list", []azure.DomainCount{}, "foo", 0, true),
+		Entry("entry not found", []azure.DomainCount{{Region: "bar", Count: 1}}, "foo", 0, true),
+		Entry("entry exists", []azure.DomainCount{{Region: "bar", Count: 1}}, "bar", 1, false),
+	)
 })
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {
@@ -97,7 +109,7 @@ func expectResults(result, expected interface{}, err error, expectErr bool) {
 		Expect(result).To(Equal(expected))
 		Expect(err).NotTo(HaveOccurred())
 	} else {
-		Expect(result).To(BeNil())
+		Expect(result).To(BeZero())
 		Expect(err).To(HaveOccurred())
 	}
 }

@@ -79,3 +79,13 @@ func FindMachineImage(machineImages []azure.MachineImage, name, version string) 
 	}
 	return nil, fmt.Errorf("no machine image with name %q, version %q found", name, version)
 }
+
+// FindDomainCountByRegion takes a region and the domain counts and finds the count for the given region.
+func FindDomainCountByRegion(domainCounts []azure.DomainCount, region string) (int, error) {
+	for _, domainCount := range domainCounts {
+		if domainCount.Region == region {
+			return domainCount.Count, nil
+		}
+	}
+	return 0, fmt.Errorf("could not find a domain count for region %s", region)
+}

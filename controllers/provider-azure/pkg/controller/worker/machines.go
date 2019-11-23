@@ -61,7 +61,7 @@ func (w *workerDelegate) GenerateMachineDeployments(ctx context.Context) (worker
 }
 
 func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (map[string][]byte, error) {
-	credentials, err := internal.GetClientAuthData(ctx, w.client, w.worker.Spec.SecretRef)
+	credentials, err := internal.GetClientAuthData(ctx, w.Client(), w.worker.Spec.SecretRef)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	infrastructureStatus := &azureapi.InfrastructureStatus{}
-	if _, _, err := w.decoder.Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
+	if _, _, err := w.Decoder().Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
 		return err
 	}
 

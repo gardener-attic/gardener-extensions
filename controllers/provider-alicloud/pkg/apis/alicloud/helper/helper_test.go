@@ -17,7 +17,6 @@ package helper_test
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -55,8 +54,8 @@ var _ = Describe("Helper", func() {
 	)
 
 	DescribeTable("#FindMachineImage",
-		func(machineImages []alicloud.MachineImage, name, version string, expectedMachineImage *alicloud.MachineImage, expectErr bool) {
-			machineImage, err := FindMachineImage(machineImages, name, version)
+		func(configImages []alicloud.MachineImage, name, version string, expectedMachineImage *alicloud.MachineImage, expectErr bool) {
+			machineImage, err := FindMachineImage(configImages, name, version)
 			expectResults(machineImage, expectedMachineImage, err, expectErr)
 		},
 

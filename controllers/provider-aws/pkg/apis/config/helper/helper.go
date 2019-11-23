@@ -17,15 +17,30 @@ package helper
 import (
 	"fmt"
 
+	api "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 )
 
 // FindAMIForRegion takes a list of machine images, and the desired image name, version, and region. It tries
 // to find the image with the given name and version in the desired region. If it cannot be found then an error
 // is returned.
-func FindAMIForRegion(machineImages []config.MachineImage, imageName, version, regionName string) (string, error) {
-	for _, machineImage := range machineImages {
-		if machineImage.Name != imageName || machineImage.Version != version {
+func FindAMIForRegion(profileImages []api.MachineImages, configImages []config.MachineImage, imageName, imageVersion, regionName string) (string, error) {
+	for _, machineImage := range profileImages {
+		if machineImage.Name == imageName {
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					for _, mapping := range version.Regions {
+						if regionName == mapping.Name {
+							return mapping.AMI, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for _, machineImage := range configImages {
+		if machineImage.Name != imageName || machineImage.Version != imageVersion {
 			continue
 		}
 
@@ -36,5 +51,5 @@ func FindAMIForRegion(machineImages []config.MachineImage, imageName, version, r
 		}
 	}
 
-	return "", fmt.Errorf("could not find an AMI for region %q and machine image %q in version %q", regionName, imageName, version)
+	return "", fmt.Errorf("could not find an AMI for region %q and machine image %q in version %q", regionName, imageName, imageVersion)
 }

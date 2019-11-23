@@ -19,9 +19,11 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -29,22 +31,13 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/go-logr/logr"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type delegateFactory struct {
 	logger logr.Logger
-
-	restConfig *rest.Config
-
-	client  client.Client
-	scheme  *runtime.Scheme
-	decoder runtime.Decoder
+	common.RESTConfigContext
 
 	machineImageMapping []config.MachineImage
 }
@@ -67,24 +60,8 @@ func NewActuator(machineImageMapping []config.MachineImage) worker.Actuator {
 	)
 }
 
-func (d *delegateFactory) InjectScheme(scheme *runtime.Scheme) error {
-	d.scheme = scheme
-	d.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
-	return nil
-}
-
-func (d *delegateFactory) InjectConfig(restConfig *rest.Config) error {
-	d.restConfig = restConfig
-	return nil
-}
-
-func (d *delegateFactory) InjectClient(client client.Client) error {
-	d.client = client
-	return nil
-}
-
 func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensionsv1alpha1.Worker, cluster *extensionscontroller.Cluster) (genericactuator.WorkerDelegate, error) {
-	clientset, err := kubernetes.NewForConfig(d.restConfig)
+	clientset, err := kubernetes.NewForConfig(d.RESTConfig())
 	if err != nil {
 		return nil, err
 	}
@@ -94,15 +71,13 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 		return nil, err
 	}
 
-	seedChartApplier, err := gardener.NewChartApplierForConfig(d.restConfig)
+	seedChartApplier, err := gardener.NewChartApplierForConfig(d.RESTConfig())
 	if err != nil {
 		return nil, err
 	}
 
 	return NewWorkerDelegate(
-		d.client,
-		d.scheme,
-		d.decoder,
+		d.ClientContext,
 
 		d.machineImageMapping,
 		seedChartApplier,
@@ -110,20 +85,19 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 
 		worker,
 		cluster,
-	), nil
+	)
 }
 
 type workerDelegate struct {
-	client  client.Client
-	scheme  *runtime.Scheme
-	decoder runtime.Decoder
+	common.ClientContext
 
 	machineImageMapping []config.MachineImage
 	seedChartApplier    gardener.ChartApplier
 	serverVersion       string
 
-	cluster *extensionscontroller.Cluster
-	worker  *extensionsv1alpha1.Worker
+	profileConfig *apisalicloud.CloudProfileConfig
+	cluster       *extensionscontroller.Cluster
+	worker        *extensionsv1alpha1.Worker
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
@@ -132,9 +106,7 @@ type workerDelegate struct {
 
 // NewWorkerDelegate creates a new context for a worker reconciliation.
 func NewWorkerDelegate(
-	client client.Client,
-	scheme *runtime.Scheme,
-	decoder runtime.Decoder,
+	clientContext common.ClientContext,
 
 	machineImageMapping []config.MachineImage,
 	seedChartApplier gardener.ChartApplier,
@@ -142,17 +114,20 @@ func NewWorkerDelegate(
 
 	worker *extensionsv1alpha1.Worker,
 	cluster *extensionscontroller.Cluster,
-) genericactuator.WorkerDelegate {
+) (genericactuator.WorkerDelegate, error) {
+	config, err := helper.CloudProfileConfigFromCluster(cluster)
+	if err != nil {
+		return nil, err
+	}
 	return &workerDelegate{
-		client:  client,
-		scheme:  scheme,
-		decoder: decoder,
+		ClientContext: clientContext,
 
 		machineImageMapping: machineImageMapping,
 		seedChartApplier:    seedChartApplier,
 		serverVersion:       serverVersion,
 
-		cluster: cluster,
-		worker:  worker,
-	}
+		profileConfig: config,
+		cluster:       cluster,
+		worker:        worker,
+	}, nil
 }

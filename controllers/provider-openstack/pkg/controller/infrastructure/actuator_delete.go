@@ -24,12 +24,12 @@ import (
 )
 
 func (a *actuator) delete(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
-	creds, err := infrastructure.GetCredentialsFromInfrastructure(ctx, a.client, infra)
+	creds, err := infrastructure.GetCredentialsFromInfrastructure(ctx, a.Client(), infra)
 	if err != nil {
 		return err
 	}
 
-	tf, err := internal.NewTerraformer(a.restConfig, creds, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
+	tf, err := internal.NewTerraformer(a.RESTConfig(), creds, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
 	if err != nil {
 		return fmt.Errorf("could not create the Terraformer: %+v", err)
 	}

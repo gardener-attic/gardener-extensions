@@ -54,7 +54,7 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 		}
 	)
 
-	if err := w.scheme.Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
+	if err := w.Scheme().Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
 		return nil, err
 	}
 
@@ -62,7 +62,11 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version string) (string, error) {
-	machineImageID, err := confighelper.FindImage(w.machineImageMapping, name, version)
+	var profileImages []apipacket.MachineImages
+	if w.profileConfig != nil {
+		profileImages = w.profileConfig.MachineImages
+	}
+	machineImageID, err := confighelper.FindImage(profileImages, w.machineImageMapping, name, version)
 	if err == nil {
 		return machineImageID, nil
 	}
@@ -70,7 +74,7 @@ func (w *workerDelegate) findMachineImage(name, version string) (string, error) 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
 		workerStatus := &apipacket.WorkerStatus{}
-		if _, _, err := w.decoder.Decode(providerStatus.Raw, nil, workerStatus); err != nil {
+		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
@@ -86,7 +90,7 @@ func (w *workerDelegate) findMachineImage(name, version string) (string, error) 
 }
 
 func errorMachineImageNotFound(name, version string) error {
-	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig nor in worker status", name, version)
+	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig, profileconfig nor in worker status", name, version)
 }
 
 func appendMachineImage(machineImages []apipacket.MachineImage, machineImage apipacket.MachineImage) []apipacket.MachineImage {

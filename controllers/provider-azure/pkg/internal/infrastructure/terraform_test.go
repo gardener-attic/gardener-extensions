@@ -17,7 +17,8 @@ package infrastructure
 import (
 	"encoding/json"
 
-	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
@@ -40,11 +41,15 @@ func makeCluster(pods, services string, region string, countFaultDomain, countUp
 				},
 			},
 		}
-		cloudProfileConfig = azurev1alpha1.CloudProfileConfig{
-			CountFaultDomains: []azurev1alpha1.DomainCount{
+		cloudProfileConfig = apiv1alpha1.CloudProfileConfig{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "CloudProfileConfig",
+			},
+			CountFaultDomains: []apiv1alpha1.DomainCount{
 				{Region: region, Count: countFaultDomain},
 			},
-			CountUpdateDomains: []azurev1alpha1.DomainCount{
+			CountUpdateDomains: []apiv1alpha1.DomainCount{
 				{Region: region, Count: countUpdateDomain},
 			},
 		}
@@ -69,7 +74,7 @@ func makeCluster(pods, services string, region string, countFaultDomain, countUp
 var _ = Describe("Terraform", func() {
 	var (
 		infra      *extensionsv1alpha1.Infrastructure
-		config     *azurev1alpha1.InfrastructureConfig
+		config     *api.InfrastructureConfig
 		cluster    *controller.Cluster
 		clientAuth *internal.ClientAuth
 
@@ -84,9 +89,9 @@ var _ = Describe("Terraform", func() {
 			TestCIDR = "10.1.0.0/16"
 			VNetCIDR = TestCIDR
 		)
-		config = &azurev1alpha1.InfrastructureConfig{
-			Networks: azurev1alpha1.NetworkConfig{
-				VNet: azurev1alpha1.VNet{
+		config = &api.InfrastructureConfig{
+			Networks: api.NetworkConfig{
+				VNet: api.VNet{
 					Name: &VNetName,
 					CIDR: &VNetCIDR,
 				},
@@ -94,6 +99,17 @@ var _ = Describe("Terraform", func() {
 				ServiceEndpoints: []string{testServiceEndpoint},
 			},
 			Zoned: true,
+		}
+
+		rawconfig := &apiv1alpha1.InfrastructureConfig{
+			Networks: apiv1alpha1.NetworkConfig{
+				VNet: apiv1alpha1.VNet{
+					Name: &VNetName,
+					CIDR: &VNetCIDR,
+				},
+				Workers:          TestCIDR,
+				ServiceEndpoints: []string{testServiceEndpoint},
+			},
 		}
 
 		infra = &extensionsv1alpha1.Infrastructure{
@@ -109,7 +125,7 @@ var _ = Describe("Terraform", func() {
 					Name:      "azure-credentials",
 				},
 				ProviderConfig: &runtime.RawExtension{
-					Object: config,
+					Object: rawconfig,
 				},
 			},
 		}
@@ -213,7 +229,7 @@ var _ = Describe("Terraform", func() {
 				existingVnetResourceGroup = "test-rg"
 			)
 
-			config.Networks.VNet = azurev1alpha1.VNet{
+			config.Networks.VNet = api.VNet{
 				Name:          &existingVnetName,
 				ResourceGroup: &existingVnetResourceGroup,
 			}
@@ -283,25 +299,25 @@ var _ = Describe("Terraform", func() {
 
 		It("should correctly compute the status for zoned cluster", func() {
 			status := StatusFromTerraformState(state)
-			Expect(status).To(Equal(&azurev1alpha1.InfrastructureStatus{
+			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				ResourceGroup: azurev1alpha1.ResourceGroup{
+				ResourceGroup: apiv1alpha1.ResourceGroup{
 					Name: resourceGroupName,
 				},
-				RouteTables: []azurev1alpha1.RouteTable{
-					{Name: routeTableName, Purpose: azurev1alpha1.PurposeNodes},
+				RouteTables: []apiv1alpha1.RouteTable{
+					{Name: routeTableName, Purpose: apiv1alpha1.PurposeNodes},
 				},
-				SecurityGroups: []azurev1alpha1.SecurityGroup{
-					{Name: securityGroupName, Purpose: azurev1alpha1.PurposeNodes},
+				SecurityGroups: []apiv1alpha1.SecurityGroup{
+					{Name: securityGroupName, Purpose: apiv1alpha1.PurposeNodes},
 				},
-				AvailabilitySets: []azurev1alpha1.AvailabilitySet{},
-				Networks: azurev1alpha1.NetworkStatus{
-					VNet: azurev1alpha1.VNetStatus{
+				AvailabilitySets: []apiv1alpha1.AvailabilitySet{},
+				Networks: apiv1alpha1.NetworkStatus{
+					VNet: apiv1alpha1.VNetStatus{
 						Name: vnetName,
 					},
-					Subnets: []azurev1alpha1.Subnet{
+					Subnets: []apiv1alpha1.Subnet{
 						{
-							Purpose: azurev1alpha1.PurposeNodes,
+							Purpose: apiv1alpha1.PurposeNodes,
 							Name:    subnetName,
 						},
 					},
@@ -314,27 +330,27 @@ var _ = Describe("Terraform", func() {
 			state.AvailabilitySetID = availabilitySetID
 			state.AvailabilitySetName = availabilitySetName
 			status := StatusFromTerraformState(state)
-			Expect(status).To(Equal(&azurev1alpha1.InfrastructureStatus{
+			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				ResourceGroup: azurev1alpha1.ResourceGroup{
+				ResourceGroup: apiv1alpha1.ResourceGroup{
 					Name: resourceGroupName,
 				},
-				RouteTables: []azurev1alpha1.RouteTable{
-					{Name: routeTableName, Purpose: azurev1alpha1.PurposeNodes},
+				RouteTables: []apiv1alpha1.RouteTable{
+					{Name: routeTableName, Purpose: apiv1alpha1.PurposeNodes},
 				},
-				AvailabilitySets: []azurev1alpha1.AvailabilitySet{
-					{Name: availabilitySetName, ID: availabilitySetID, Purpose: azurev1alpha1.PurposeNodes},
+				AvailabilitySets: []apiv1alpha1.AvailabilitySet{
+					{Name: availabilitySetName, ID: availabilitySetID, Purpose: apiv1alpha1.PurposeNodes},
 				},
-				SecurityGroups: []azurev1alpha1.SecurityGroup{
-					{Name: securityGroupName, Purpose: azurev1alpha1.PurposeNodes},
+				SecurityGroups: []apiv1alpha1.SecurityGroup{
+					{Name: securityGroupName, Purpose: apiv1alpha1.PurposeNodes},
 				},
-				Networks: azurev1alpha1.NetworkStatus{
-					VNet: azurev1alpha1.VNetStatus{
+				Networks: apiv1alpha1.NetworkStatus{
+					VNet: apiv1alpha1.VNetStatus{
 						Name: vnetName,
 					},
-					Subnets: []azurev1alpha1.Subnet{
+					Subnets: []apiv1alpha1.Subnet{
 						{
-							Purpose: azurev1alpha1.PurposeNodes,
+							Purpose: apiv1alpha1.PurposeNodes,
 							Name:    subnetName,
 						},
 					},

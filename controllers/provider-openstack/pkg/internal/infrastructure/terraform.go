@@ -17,6 +17,8 @@ package infrastructure
 import (
 	"path/filepath"
 
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -65,7 +67,7 @@ var (
 func ComputeTerraformerChartValues(
 	infra *extensionsv1alpha1.Infrastructure,
 	credentials *internal.Credentials,
-	config *openstackv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 	cluster *controller.Cluster,
 ) (map[string]interface{}, error) {
 	var (
@@ -83,7 +85,7 @@ func ComputeTerraformerChartValues(
 		dnsServers  []string
 	)
 
-	cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(cluster.CloudProfile)
+	cloudProfileConfig, err := helper.CloudProfileConfigFromCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +129,7 @@ func RenderTerraformerChart(
 	renderer chartrenderer.Interface,
 	infra *extensionsv1alpha1.Infrastructure,
 	credentials *internal.Credentials,
-	config *openstackv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 	cluster *controller.Cluster,
 ) (*TerraformFiles, error) {
 	values, err := ComputeTerraformerChartValues(infra, credentials, config, cluster)
@@ -173,7 +175,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf terraformer.Terraformer, config *openstackv1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*TerraformState, error) {
 	outputKeys := []string{
 		TerraformOutputKeySSHKeyName,
 		TerraformOutputKeyRouterID,
@@ -242,7 +244,7 @@ func StatusFromTerraformState(state *TerraformState) *openstackv1alpha1.Infrastr
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf terraformer.Terraformer, config *openstackv1alpha1.InfrastructureConfig) (*openstackv1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*openstackv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

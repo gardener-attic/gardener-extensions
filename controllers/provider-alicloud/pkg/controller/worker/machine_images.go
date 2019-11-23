@@ -54,7 +54,7 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 		}
 	)
 
-	if err := w.scheme.Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
+	if err := w.Scheme().Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
 		return nil, err
 	}
 
@@ -62,7 +62,11 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImageForRegion(name, version, region string) (string, error) {
-	machineImageID, err := confighelper.FindImageForRegion(w.machineImageMapping, name, version, region)
+	var profileImages []apisalicloud.MachineImages
+	if w.profileConfig != nil {
+		profileImages = w.profileConfig.MachineImages
+	}
+	machineImageID, err := confighelper.FindImageForRegion(profileImages, w.machineImageMapping, name, version, region)
 	if err == nil {
 		return machineImageID, nil
 	}
@@ -70,7 +74,7 @@ func (w *workerDelegate) findMachineImageForRegion(name, version, region string)
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
 		workerStatus := &apisalicloud.WorkerStatus{}
-		if _, _, err := w.decoder.Decode(providerStatus.Raw, nil, workerStatus); err != nil {
+		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 

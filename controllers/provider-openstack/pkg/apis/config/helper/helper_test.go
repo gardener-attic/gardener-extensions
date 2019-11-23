@@ -17,6 +17,7 @@ package helper_test
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config/helper"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -25,8 +26,8 @@ import (
 
 var _ = Describe("Helper", func() {
 	DescribeTable("#FindImageForCloudProfile",
-		func(machineImages []config.MachineImage, imageName, version, cloudProfileName, expectedImage string) {
-			image, err := FindImageForCloudProfile(machineImages, imageName, version, cloudProfileName)
+		func(profileImages []api.MachineImages, configImages []config.MachineImage, imageName, version, cloudProfileName, expectedImage string) {
+			image, err := FindImageForCloudProfile(profileImages, configImages, imageName, version, cloudProfileName)
 
 			Expect(image).To(Equal(expectedImage))
 			if expectedImage != "" {
@@ -36,20 +37,30 @@ var _ = Describe("Helper", func() {
 			}
 		},
 
-		Entry("list is nil", nil, "ubuntu", "1", "eu-de-1", ""),
-		Entry("empty list", []config.MachineImage{}, "ubuntu", "1", "eu-de-1", ""),
-		Entry("entry not found (image does not exist)", makeMachineImages("debian", "1", "eu-de-1", "0"), "ubuntu", "1", "eu-de-1", ""),
-		Entry("entry not found (version does not exist)", makeMachineImages("ubuntu", "2", "eu-de-1", "0"), "ubuntu", "1", "eu-de-1", ""),
-		Entry("entry not found (region does not exist)", makeMachineImages("ubuntu", "1", "us-ca-1", "0"), "ubuntu", "1", "eu-de-1", ""),
-		Entry("entry", makeMachineImages("ubuntu", "1", "eu-de-1", "image-1234"), "ubuntu", "1", "eu-de-1", "image-1234"),
+		Entry("list is nil", nil, nil, "ubuntu", "1", "eu-de-1", ""),
+		Entry("empty list", nil, []config.MachineImage{}, "ubuntu", "1", "eu-de-1", ""),
+		Entry("entry not found (image does not exist)", nil, makeMachineImages("debian", "1", "eu-de-1", "0"), "ubuntu", "1", "eu-de-1", ""),
+		Entry("entry not found (version does not exist)", nil, makeMachineImages("ubuntu", "2", "eu-de-1", "0"), "ubuntu", "1", "eu-de-1", ""),
+		Entry("entry not found (region does not exist)", nil, makeMachineImages("ubuntu", "1", "us-ca-1", "0"), "ubuntu", "1", "eu-de-1", ""),
+		Entry("entry", nil, makeMachineImages("ubuntu", "1", "eu-de-1", "image-1234"), "ubuntu", "1", "eu-de-1", "image-1234"),
+
+		Entry("profile empty list", []api.MachineImages{}, nil, "ubuntu", "1", "eu-de-1", ""),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "0"), nil, "ubuntu", "1", "eu-de-1", ""),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "0"), nil, "ubuntu", "1", "eu-de-1", ""),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "image-1234"), nil, "ubuntu", "1", "eu-de-1", "image-1234"),
+
+		Entry("mixed entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "0"), makeMachineImages("debian", "1", "eu-de-1", "1"), "ubuntu", "1", "eu-de-1", ""),
+		Entry("mixed entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "0"), makeMachineImages("ubuntu", "2", "eu-de-1", "1"), "ubuntu", "1", "eu-de-1", ""),
+		Entry("mixed entry", makeProfileMachineImages("ubuntu", "1", "image-1234"), makeMachineImages("ubuntu", "1", "us-ca-1", "1"), "ubuntu", "1", "eu-de-1", "image-1234"),
+		Entry("mixed entry", makeProfileMachineImages("ubuntu", "1", "image-1234"), makeMachineImages("ubuntu", "1", "eu-de-1", "1"), "ubuntu", "1", "eu-de-1", "image-1234"),
 	)
 })
 
-func makeMachineImages(name, version, region, image string) []config.MachineImage {
+func makeMachineImages(name, version, profile, image string) []config.MachineImage {
 	var cloudProfileImageMapping []config.CloudProfileMapping
-	if len(region) != 0 && len(image) != 0 {
+	if len(profile) != 0 && len(image) != 0 {
 		cloudProfileImageMapping = append(cloudProfileImageMapping, config.CloudProfileMapping{
-			Name:  region,
+			Name:  profile,
 			Image: image,
 		})
 	}
@@ -59,6 +70,23 @@ func makeMachineImages(name, version, region, image string) []config.MachineImag
 			Name:          name,
 			Version:       version,
 			CloudProfiles: cloudProfileImageMapping,
+		},
+	}
+}
+
+func makeProfileMachineImages(name, version, image string) []api.MachineImages {
+	var versions []api.MachineImageVersion
+	if len(image) != 0 {
+		versions = append(versions, api.MachineImageVersion{
+			Version: version,
+			Image:   image,
+		})
+	}
+
+	return []api.MachineImages{
+		{
+			Name:     name,
+			Versions: versions,
 		},
 	}
 }

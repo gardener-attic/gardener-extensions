@@ -17,10 +17,10 @@ package infrastructure
 import (
 	"context"
 
-	"github.com/gardener/gardener/pkg/chartrenderer"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"k8s.io/client-go/util/retry"
 
-	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	infrainternal "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal/infrastructure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
@@ -31,23 +31,14 @@ import (
 	"github.com/go-logr/logr"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/rest"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type actuator struct {
 	logger logr.Logger
 
-	restConfig *rest.Config
-
-	client  client.Client
-	scheme  *runtime.Scheme
-	decoder runtime.Decoder
-
-	chartRenderer chartrenderer.Interface
+	common.ChartRendererContext
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled Infrastructure resources.
@@ -55,30 +46,6 @@ func NewActuator() infrastructure.Actuator {
 	return &actuator{
 		logger: log.Log.WithName("infrastructure-actuator"),
 	}
-}
-
-func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	a.scheme = scheme
-	a.decoder = serializer.NewCodecFactory(a.scheme).UniversalDecoder()
-	return nil
-}
-
-func (a *actuator) InjectClient(client client.Client) error {
-	a.client = client
-	return nil
-}
-
-func (a *actuator) InjectConfig(config *rest.Config) error {
-	a.restConfig = config
-
-	chartRenderer, err := chartrenderer.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-
-	a.chartRenderer = chartRenderer
-
-	return nil
 }
 
 func (a *actuator) Reconcile(ctx context.Context, config *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
@@ -95,7 +62,7 @@ func (a *actuator) updateProviderStatus(
 	ctx context.Context,
 	tf terraformer.Terraformer,
 	infra *extensionsv1alpha1.Infrastructure,
-	config *openstackv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 ) error {
 	status, err := infrainternal.ComputeStatus(tf, config)
 	if err != nil {
@@ -111,7 +78,7 @@ func (a *actuator) updateProviderStatus(
 		return err
 	}
 
-	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infra, func() error {
+	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.Client(), infra, func() error {
 		infra.Status.ProviderStatus = &runtime.RawExtension{Object: status}
 		infra.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil

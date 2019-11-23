@@ -18,17 +18,28 @@ import (
 	"fmt"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config"
+	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 )
 
 // FindImage takes a list of machine images, and the desired image name and version. It tries
 // to find the image with the given name and version. If it cannot be found then an error
 // is returned.
-func FindImage(machineImages []config.MachineImage, imageName, version string) (string, error) {
-	for _, machineImage := range machineImages {
-		if machineImage.Name == imageName && machineImage.Version == version {
+func FindImage(profileInmages []api.MachineImages, configImages []config.MachineImage, imageName, imageVersion string) (string, error) {
+	for _, machineImage := range profileInmages {
+		if machineImage.Name == imageName {
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					return version.Image, nil
+				}
+			}
+		}
+	}
+
+	for _, machineImage := range configImages {
+		if machineImage.Name == imageName && machineImage.Version == imageVersion {
 			return machineImage.Image, nil
 		}
 	}
 
-	return "", fmt.Errorf("could not find an image for name %q in version %q", imageName, version)
+	return "", fmt.Errorf("could not find an image for name %q in version %q", imageName, imageVersion)
 }

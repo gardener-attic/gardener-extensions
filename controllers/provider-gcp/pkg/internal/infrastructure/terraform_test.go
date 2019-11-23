@@ -19,7 +19,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/terraformer"
@@ -36,7 +37,7 @@ import (
 var _ = Describe("Terraform", func() {
 	var (
 		infra              *extensionsv1alpha1.Infrastructure
-		config             *gcpv1alpha1.InfrastructureConfig
+		config             *api.InfrastructureConfig
 		cluster            *controller.Cluster
 		projectID          string
 		serviceAccountData []byte
@@ -56,11 +57,24 @@ var _ = Describe("Terraform", func() {
 
 		internalCIDR := "192.168.0.0/16"
 
-		config = &gcpv1alpha1.InfrastructureConfig{
-			Networks: gcpv1alpha1.NetworkConfig{
-				VPC: &gcpv1alpha1.VPC{
+		config = &api.InfrastructureConfig{
+			Networks: api.NetworkConfig{
+				VPC: &api.VPC{
 					Name: "vpc",
-					CloudRouter: &gcpv1alpha1.CloudRouter{
+					CloudRouter: &api.CloudRouter{
+						Name: "cloudrouter",
+					},
+				},
+				Internal: &internalCIDR,
+				Worker:   "10.1.0.0/16",
+			},
+		}
+
+		rawconfig := &apiv1alpha1.InfrastructureConfig{
+			Networks: apiv1alpha1.NetworkConfig{
+				VPC: &apiv1alpha1.VPC{
+					Name: "vpc",
+					CloudRouter: &apiv1alpha1.CloudRouter{
 						Name: "cloudrouter",
 					},
 				},
@@ -82,7 +96,7 @@ var _ = Describe("Terraform", func() {
 					Name:      "gcp-credentials",
 				},
 				ProviderConfig: &runtime.RawExtension{
-					Object: config,
+					Object: rawconfig,
 				},
 			},
 		}
@@ -107,11 +121,11 @@ var _ = Describe("Terraform", func() {
 		It("should return correct state when cloudRouter name is specified", func() {
 			var (
 				cloudRouterName             = "test"
-				vpcWithoutCloudRouterConfig = &gcpv1alpha1.InfrastructureConfig{
-					Networks: gcpv1alpha1.NetworkConfig{
-						VPC: &gcpv1alpha1.VPC{
+				vpcWithoutCloudRouterConfig = &api.InfrastructureConfig{
+					Networks: api.NetworkConfig{
+						VPC: &api.VPC{
 							Name:        "vpc",
-							CloudRouter: &gcpv1alpha1.CloudRouter{Name: cloudRouterName},
+							CloudRouter: &api.CloudRouter{Name: cloudRouterName},
 						},
 						Worker: "10.1.0.0/16",
 					},
@@ -155,9 +169,9 @@ var _ = Describe("Terraform", func() {
 		})
 		It("should return correct state when cloudRouter name is NOT specified", func() {
 			var (
-				vpcWithoutCloudRouterConfig = &gcpv1alpha1.InfrastructureConfig{
-					Networks: gcpv1alpha1.NetworkConfig{
-						VPC: &gcpv1alpha1.VPC{
+				vpcWithoutCloudRouterConfig = &api.InfrastructureConfig{
+					Networks: api.NetworkConfig{
+						VPC: &api.VPC{
 							Name: "vpc",
 						},
 						Worker: "10.1.0.0/16",
@@ -306,20 +320,20 @@ var _ = Describe("Terraform", func() {
 		It("should correctly compute the status", func() {
 			status := StatusFromTerraformState(state)
 
-			Expect(status).To(Equal(&gcpv1alpha1.InfrastructureStatus{
+			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				Networks: gcpv1alpha1.NetworkStatus{
-					VPC: gcpv1alpha1.VPC{
+				Networks: apiv1alpha1.NetworkStatus{
+					VPC: apiv1alpha1.VPC{
 						Name:        vpcName,
-						CloudRouter: &gcpv1alpha1.CloudRouter{Name: cloudRouterName},
+						CloudRouter: &apiv1alpha1.CloudRouter{Name: cloudRouterName},
 					},
-					Subnets: []gcpv1alpha1.Subnet{
+					Subnets: []apiv1alpha1.Subnet{
 						{
-							Purpose: gcpv1alpha1.PurposeNodes,
+							Purpose: apiv1alpha1.PurposeNodes,
 							Name:    subnetNodes,
 						},
 						{
-							Purpose: gcpv1alpha1.PurposeInternal,
+							Purpose: apiv1alpha1.PurposeInternal,
 							Name:    subnetInternal,
 						},
 					},
@@ -332,16 +346,16 @@ var _ = Describe("Terraform", func() {
 			state.SubnetInternal = nil
 			status := StatusFromTerraformState(state)
 
-			Expect(status).To(Equal(&gcpv1alpha1.InfrastructureStatus{
+			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
-				Networks: gcpv1alpha1.NetworkStatus{
-					VPC: gcpv1alpha1.VPC{
+				Networks: apiv1alpha1.NetworkStatus{
+					VPC: apiv1alpha1.VPC{
 						Name:        vpcName,
-						CloudRouter: &gcpv1alpha1.CloudRouter{Name: cloudRouterName},
+						CloudRouter: &apiv1alpha1.CloudRouter{Name: cloudRouterName},
 					},
-					Subnets: []gcpv1alpha1.Subnet{
+					Subnets: []apiv1alpha1.Subnet{
 						{
-							Purpose: gcpv1alpha1.PurposeNodes,
+							Purpose: apiv1alpha1.PurposeNodes,
 							Name:    subnetNodes,
 						},
 					},

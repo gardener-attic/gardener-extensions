@@ -18,23 +18,35 @@ import (
 	"fmt"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 )
 
 // FindImageForCloudProfile takes a list of machine images, and the desired image name, version, and cloud profile name. It tries
 // to find the image with the given name and version in the desired cloud profile. If it cannot be found then an error
 // is returned.
-func FindImageForCloudProfile(machineImages []config.MachineImage, imageName, version, cloudProfileName string) (string, error) {
-	for _, machineImage := range machineImages {
-		if machineImage.Name != imageName || machineImage.Version != version {
-			continue
-		}
+func FindImageForCloudProfile(profileInmages []api.MachineImages, configImages []config.MachineImage, imageName, imageVersion, cloudProfileName string) (string, error) {
 
-		for _, region := range machineImage.CloudProfiles {
-			if region.Name == cloudProfileName {
-				return region.Image, nil
+	for _, machineImage := range profileInmages {
+		if machineImage.Name == imageName {
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					return version.Image, nil
+				}
 			}
 		}
 	}
 
-	return "", fmt.Errorf("could not find an image for cloud profile %q and machine image %q in version %q", cloudProfileName, imageName, version)
+	for _, machineImage := range configImages {
+		if machineImage.Name != imageName || machineImage.Version != imageVersion {
+			continue
+		}
+
+		for _, profile := range machineImage.CloudProfiles {
+			if profile.Name == cloudProfileName {
+				return profile.Image, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not find an image for cloud profile %q and machine image %q in version %q", cloudProfileName, imageName, imageVersion)
 }

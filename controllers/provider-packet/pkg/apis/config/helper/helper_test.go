@@ -17,18 +17,20 @@ package helper_test
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
 	. "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config/helper"
+	api "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
-const image = "some-uuid"
+const configImage = "some-uuid"
+const profileImage = "some-other-uuid"
 
 var _ = Describe("Helper", func() {
 	DescribeTable("#FindImage",
-		func(machineImages []config.MachineImage, imageName, version string, expectedImage string) {
-			image, err := FindImage(machineImages, imageName, version)
+		func(profileImages []api.MachineImages, configImages []config.MachineImage, imageName, version string, expectedImage string) {
+			image, err := FindImage(profileImages, configImages, imageName, version)
 
 			Expect(image).To(Equal(expectedImage))
 			if expectedImage != "" {
@@ -38,11 +40,20 @@ var _ = Describe("Helper", func() {
 			}
 		},
 
-		Entry("list is nil", nil, "ubuntu", "1", ""),
-		Entry("empty list", []config.MachineImage{}, "ubuntu", "1", ""),
-		Entry("entry not found (image does not exist)", makeMachineImages("debian", "1"), "ubuntu", "1", ""),
-		Entry("entry not found (version does not exist)", makeMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
-		Entry("entry", makeMachineImages("ubuntu", "1"), "ubuntu", "1", image),
+		Entry("list is nil", nil, nil, "ubuntu", "1", ""),
+		Entry("empty list", nil, []config.MachineImage{}, "ubuntu", "1", ""),
+		Entry("entry not found (image does not exist)", nil, makeMachineImages("debian", "1"), "ubuntu", "1", ""),
+		Entry("entry not found (version does not exist)", nil, makeMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
+		Entry("entry", nil, makeMachineImages("ubuntu", "1"), "ubuntu", "1", configImage),
+
+		Entry("profile empty list", []api.MachineImages{}, nil, "ubuntu", "1", ""),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1"), nil, "ubuntu", "1", ""),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2"), nil, "ubuntu", "1", ""),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1"), nil, "ubuntu", "1", profileImage),
+
+		Entry("mixed entry not found (image does not exist)", makeProfileMachineImages("debian", "1"), makeMachineImages("debian", "1"), "ubuntu", "1", ""),
+		Entry("mixed entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2"), makeMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
+		Entry("mixed entry", makeProfileMachineImages("ubuntu", "1"), makeMachineImages("ubuntu", "1"), "ubuntu", "1", profileImage),
 	)
 })
 
@@ -51,7 +62,24 @@ func makeMachineImages(name, version string) []config.MachineImage {
 		{
 			Name:    name,
 			Version: version,
-			ID:      image,
+			ID:      configImage,
+		},
+	}
+}
+
+func makeProfileMachineImages(name, version string) []api.MachineImages {
+	var versions []api.MachineImageVersion
+	if len(configImage) != 0 {
+		versions = append(versions, api.MachineImageVersion{
+			Version: version,
+			ID:      profileImage,
+		})
+	}
+
+	return []api.MachineImages{
+		{
+			Name:     name,
+			Versions: versions,
 		},
 	}
 }
