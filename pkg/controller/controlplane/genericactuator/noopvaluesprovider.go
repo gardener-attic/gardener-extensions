@@ -34,7 +34,7 @@ func (vp *NoopValuesProvider) GetControlPlaneChartValues(context.Context, *exten
 }
 
 // GetControlPlaneShootChartValues returns the values for the control plane shoot chart applied by this actuator.
-func (vp *NoopValuesProvider) GetControlPlaneShootChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error) {
+func (vp *NoopValuesProvider) GetControlPlaneShootChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster, map[string]string) (map[string]interface{}, error) {
 	return nil, nil
 }
 
