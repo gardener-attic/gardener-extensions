@@ -196,6 +196,38 @@ map[string]bool
 </tr>
 </tbody>
 </table>
+<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.CloudNAT">CloudNAT
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<p>
+<p>CloudNAT contains information about the the CloudNAT configuration</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>minPortsPerVM</code></br>
+<em>
+int32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MinPortsPerVM is the minimum number of ports allocated to a VM in the NAT config.
+The default value is 2048 ports.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.CloudRouter">CloudRouter
 </h3>
 <p>
@@ -430,6 +462,20 @@ VPC
 <td>
 <em>(Optional)</em>
 <p>VPC indicates whether to use an existing VPC or create a new one.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>cloudNAT</code></br>
+<em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.CloudNAT">
+CloudNAT
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>CloudNAT contains configation about the the CloudNAT configuration</p>
 </td>
 </tr>
 <tr>

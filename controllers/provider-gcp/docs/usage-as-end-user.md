@@ -38,6 +38,8 @@ networks:
 #     name: my-cloudrouter
   worker: 10.250.0.0/16
 # internal: 10.251.0.0/16
+# cloudNAT:
+#   minPortsPerVM: 2048
 ```
 
 The `networks.vpc` section describes whether you want to create the shoot cluster in an already existing VPC or whether to create a new one:
@@ -54,6 +56,8 @@ If you want to get a fresh VPC for the shoot then just omit the `networks.vpc` f
 The `networks.workers` section describes the CIDR for a subnet that is used for all shoot worker nodes, i.e., VMs which later run your applications.
 
 The `networks.internal` section is optional and can describe a CIDR for a subnet that is used for [internal load balancers](https://cloud.google.com/load-balancing/docs/internal/),
+
+The `networks.cloudNAT.minPortsPerVM` is optional and is used to define the [minimum number of ports allocated to a VM for the CloudNAT](https://cloud.google.com/nat/docs/overview#number_of_nat_ports_and_connections)
 
 The specified CIDR ranges must be contained in the VPC CIDR specified above, or the VPC CIDR of your already existing VPC.
 You can freely choose these CIDRs and it is your responsibility to properly design the network layout to suit your needs.

@@ -42,6 +42,8 @@ var _ = Describe("Terraform", func() {
 		serviceAccountData []byte
 		serviceAccount     *internal.ServiceAccount
 
+		minPortsPerVM = int32(2048)
+
 		podsCIDR     = "11.0.0.0/16"
 		servicesCIDR = "12.0.0.0/16"
 
@@ -218,6 +220,9 @@ var _ = Describe("Terraform", func() {
 					"services": servicesCIDR,
 					"worker":   config.Networks.Worker,
 					"internal": config.Networks.Internal,
+					"cloudNAT": map[string]interface{}{
+						"minPortsPerVM": minPortsPerVM,
+					},
 				},
 				"outputKeys": map[string]interface{}{
 					"vpcName":             TerraformerOutputKeyVPCName,
@@ -252,6 +257,9 @@ var _ = Describe("Terraform", func() {
 					"services": servicesCIDR,
 					"worker":   config.Networks.Worker,
 					"internal": config.Networks.Internal,
+					"cloudNAT": map[string]interface{}{
+						"minPortsPerVM": minPortsPerVM,
+					},
 				},
 				"outputKeys": map[string]interface{}{
 					"vpcName":             TerraformerOutputKeyVPCName,

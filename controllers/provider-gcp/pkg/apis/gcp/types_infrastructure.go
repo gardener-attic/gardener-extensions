@@ -33,6 +33,8 @@ type InfrastructureConfig struct {
 type NetworkConfig struct {
 	// VPC indicates whether to use an existing VPC or create a new one.
 	VPC *VPC
+	// CloudNAT contains configation about the the CloudNAT resource
+	CloudNAT *CloudNAT
 	// Internal is a private subnet (used for internal load balancers).
 	Internal *string
 	// Workers is the worker subnet range to create (used for the VMs).
@@ -91,4 +93,11 @@ type VPC struct {
 type CloudRouter struct {
 	// Name is the CloudRouter name.
 	Name string
+}
+
+// CloudNAT contains information about the the CloudNAT configuration
+type CloudNAT struct {
+	// MinPortsPerVM is the minimum number of ports allocated to a VM in the NAT config.
+	// The default value is 2048 ports.
+	MinPortsPerVM *int32
 }
