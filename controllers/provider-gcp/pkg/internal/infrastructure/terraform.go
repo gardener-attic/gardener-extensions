@@ -69,6 +69,7 @@ func ComputeTerraformerChartValues(
 		createVPC         = true
 		createCloudRouter = true
 		cloudRouterName   string
+		minPortsPerVM     = int32(2048)
 	)
 
 	if config.Networks.VPC != nil {
@@ -78,6 +79,12 @@ func ComputeTerraformerChartValues(
 
 		if config.Networks.VPC.CloudRouter != nil && len(config.Networks.VPC.CloudRouter.Name) > 0 {
 			cloudRouterName = config.Networks.VPC.CloudRouter.Name
+		}
+	}
+
+	if config.Networks.CloudNAT != nil {
+		if config.Networks.CloudNAT.MinPortsPerVM != nil {
+			minPortsPerVM = *config.Networks.CloudNAT.MinPortsPerVM
 		}
 	}
 
@@ -107,6 +114,9 @@ func ComputeTerraformerChartValues(
 			"services": extensionscontroller.GetServiceNetwork(cluster),
 			"worker":   config.Networks.Worker,
 			"internal": config.Networks.Internal,
+			"cloudNAT": map[string]interface{}{
+				"minPortsPerVM": minPortsPerVM,
+			},
 		},
 		"outputKeys": map[string]interface{}{
 			"vpcName":             TerraformerOutputKeyVPCName,
