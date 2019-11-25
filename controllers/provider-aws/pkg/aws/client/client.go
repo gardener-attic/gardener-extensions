@@ -192,32 +192,38 @@ func (c *Client) DeleteObjectsWithPrefix(ctx context.Context, bucket, prefix str
 		Bucket: aws.String(bucket),
 		Prefix: aws.String(prefix),
 	}
-	objectIDs := make([]*s3.ObjectIdentifier, 0)
+
+	var delErr error
 	if err := c.S3.ListObjectsPagesWithContext(ctx, in, func(page *s3.ListObjectsOutput, lastPage bool) bool {
+		objectIDs := make([]*s3.ObjectIdentifier, 0)
 		for _, key := range page.Contents {
 			obj := &s3.ObjectIdentifier{
 				Key: key.Key,
 			}
 			objectIDs = append(objectIDs, obj)
 		}
+
+		if len(objectIDs) != 0 {
+			if _, delErr = c.S3.DeleteObjectsWithContext(ctx, &s3.DeleteObjectsInput{
+				Bucket: aws.String(bucket),
+				Delete: &s3.Delete{
+					Objects: objectIDs,
+					Quiet:   aws.Bool(true),
+				},
+			}); delErr != nil {
+				return false
+			}
+		}
 		return !lastPage
 	}); err != nil {
 		return err
 	}
-	if len(objectIDs) == 0 {
-		return nil
-	}
 
-	if _, err := c.S3.DeleteObjectsWithContext(ctx, &s3.DeleteObjectsInput{
-		Bucket: aws.String(bucket),
-		Delete: &s3.Delete{
-			Objects: objectIDs,
-		},
-	}); err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == s3.ErrCodeNoSuchKey {
+	if delErr != nil {
+		if aerr, ok := delErr.(awserr.Error); ok && aerr.Code() == s3.ErrCodeNoSuchKey {
 			return nil
 		}
-		return err
+		return delErr
 	}
 	return nil
 }
