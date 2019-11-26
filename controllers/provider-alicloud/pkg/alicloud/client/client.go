@@ -45,7 +45,7 @@ type storageClient struct {
 	client *oss.Client
 }
 
-// NewStorageClientFromSecretRef creates a new Aliclous storage Client using the credentials from <secretRef>.
+// NewStorageClientFromSecretRef creates a new Alicloud storage Client using the credentials from <secretRef>.
 func NewStorageClientFromSecretRef(ctx context.Context, client client.Client, secretRef *corev1.SecretReference, region string) (Storage, error) {
 	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, client, secretRef)
 	if err != nil {
@@ -114,14 +114,23 @@ func (c *storageClient) CreateBucketIfNotExists(ctx context.Context, bucketName 
 	}
 
 	if err := c.client.CreateBucket(bucketName, oss.StorageClass(oss.StorageStandard), expirationOption); err != nil {
-		if ossErr, ok := err.(oss.ServiceError); ok {
-			if ossErr.StatusCode == http.StatusConflict {
-				return nil
-			}
+		if ossErr, ok := err.(oss.ServiceError); !ok {
+			return err
+		} else if ossErr.StatusCode != http.StatusConflict {
+			return err
 		}
-		return err
 	}
-	return nil
+
+	rules := []oss.LifecycleRule{
+		oss.LifecycleRule{
+			Prefix: "",
+			Status: "Enabled",
+			AbortMultipartUpload: &oss.LifecycleAbortMultipartUpload{
+				Days: 7,
+			},
+		},
+	}
+	return c.client.SetBucketLifecycle(bucketName, rules)
 }
 
 // DeleteBucketIfExists deletes the Alicloud OSS bucket with name <bucketName>. If it does not exist,
