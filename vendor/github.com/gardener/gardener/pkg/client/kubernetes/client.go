@@ -21,7 +21,6 @@ import (
 
 	gardencoreclientset "github.com/gardener/gardener/pkg/client/core/clientset/versioned"
 	gardenclientset "github.com/gardener/gardener/pkg/client/garden/clientset/versioned"
-	machineclientset "github.com/gardener/gardener/pkg/client/machine/clientset/versioned"
 	"github.com/gardener/gardener/pkg/utils"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
@@ -191,21 +190,6 @@ func ValidateClientConfig(config clientcmdapi.Config) error {
 	return nil
 }
 
-// runtimeClientFactory is the default implementation for the RuntimeClientFactory interface
-type runtimeClientFactory struct {
-}
-
-// NewRuntimeClientFactory creates a new default implementation of the RuntimeClientFactory interface
-func NewRuntimeClientFactory() RuntimeClientFactory {
-	return &runtimeClientFactory{}
-}
-
-// CreateRuntimeClientFromSecret creates a controller-runtime client by passing
-// the given parameters to NewRuntimeClientFromSecret
-func (f *runtimeClientFactory) CreateRuntimeClientFromSecret(secret *corev1.Secret, fns ...ConfigFunc) (client.Client, error) {
-	return NewRuntimeClientFromSecret(secret, fns...)
-}
-
 var supportedKubernetesVersions = []string{
 	"1.10",
 	"1.11",
@@ -269,11 +253,6 @@ func new(conf *config) (Interface, error) {
 		return nil, err
 	}
 
-	machine, err := machineclientset.NewForConfig(conf.restConfig)
-	if err != nil {
-		return nil, err
-	}
-
 	apiRegistration, err := apiserviceclientset.NewForConfig(conf.restConfig)
 	if err != nil {
 		return nil, err
@@ -296,7 +275,6 @@ func new(conf *config) (Interface, error) {
 		kubernetes:      kubernetes,
 		garden:          garden,
 		gardenCore:      gardenCore,
-		machine:         machine,
 		apiregistration: apiRegistration,
 		apiextension:    apiExtension,
 	}
