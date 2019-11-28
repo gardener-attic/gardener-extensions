@@ -109,34 +109,42 @@ func CreateShootTestArtifacts(shootTestYamlPath string, prefix *string, projectN
 }
 
 // SetProviderConfigsFromFilepath parses the infrastructure, controlPlane and networking provider-configs and sets them on the shoot
-func SetProviderConfigsFromFilepath(shoot *gardencorev1alpha1.Shoot, infrastructure, controlPlane, networking *string) error {
+func SetProviderConfigsFromFilepath(shoot *gardencorev1alpha1.Shoot, infrastructureConfigPath, controlPlaneConfigPath, networkingConfigPath, workersConfigPath *string) error {
 	// clear provider configs first
 	shoot.Spec.Provider.InfrastructureConfig = nil
 	shoot.Spec.Provider.ControlPlaneConfig = nil
 	shoot.Spec.Networking.ProviderConfig = nil
 
-	if infrastructure != nil && len(*infrastructure) != 0 {
-		infrastructureProviderConfig, err := ParseFileAsProviderConfig(*infrastructure)
+	if infrastructureConfigPath != nil && len(*infrastructureConfigPath) != 0 {
+		infrastructureProviderConfig, err := ParseFileAsProviderConfig(*infrastructureConfigPath)
 		if err != nil {
 			return err
 		}
 		shoot.Spec.Provider.InfrastructureConfig = infrastructureProviderConfig
 	}
 
-	if len(*controlPlane) != 0 {
-		controlPlaneProviderConfig, err := ParseFileAsProviderConfig(*controlPlane)
+	if len(*controlPlaneConfigPath) != 0 {
+		controlPlaneProviderConfig, err := ParseFileAsProviderConfig(*controlPlaneConfigPath)
 		if err != nil {
 			return err
 		}
 		shoot.Spec.Provider.ControlPlaneConfig = controlPlaneProviderConfig
 	}
 
-	if len(*networking) != 0 {
-		networkingProviderConfig, err := ParseFileAsProviderConfig(*networking)
+	if len(*networkingConfigPath) != 0 {
+		networkingProviderConfig, err := ParseFileAsProviderConfig(*networkingConfigPath)
 		if err != nil {
 			return err
 		}
 		shoot.Spec.Networking.ProviderConfig = networkingProviderConfig
+	}
+
+	if len(*workersConfigPath) != 0 {
+		workers, err := ParseFileAsWorkers(*workersConfigPath)
+		if err != nil {
+			return err
+		}
+		shoot.Spec.Provider.Workers = workers
 	}
 
 	return nil
@@ -192,6 +200,20 @@ func ParseFileAsProviderConfig(filepath string) (*gardencorev1alpha1.ProviderCon
 	return &gardencorev1alpha1.ProviderConfig{RawExtension: apimachineryRuntime.RawExtension{Raw: jsonData}}, nil
 }
 
+// ParseFileAsWorkers parses a file as a Worker configuration
+func ParseFileAsWorkers(filepath string) ([]gardencorev1alpha1.Worker, error) {
+	data, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	workers := []gardencorev1alpha1.Worker{}
+	if err := yaml.Unmarshal(data, &workers); err != nil {
+		return nil, fmt.Errorf("unable to decode workers: %v", err)
+	}
+	return workers, nil
+}
+
 // GetProjectRootPath gets the root path of the project relative to the integration test folder
 func GetProjectRootPath() string {
 	_, filename, _, _ := runtime.Caller(0)
@@ -219,13 +241,10 @@ func AddWorker(shoot *gardencorev1alpha1.Shoot, cloudProfile *gardencorev1alpha1
 		return err
 	}
 
-	if len(cloudProfile.Spec.VolumeTypes) == 0 {
-		return fmt.Errorf("no VolumeTypes configured in the Cloudprofile '%s'", cloudProfile.Name)
-	}
-
 	if len(cloudProfile.Spec.MachineTypes) == 0 {
 		return fmt.Errorf("no MachineTypes configured in the Cloudprofile '%s'", cloudProfile.Name)
 	}
+	machineType := cloudProfile.Spec.MachineTypes[0]
 
 	workerName, err := generateRandomWorkerName(fmt.Sprintf("%s-", shootMachineImage.Name))
 	if err != nil {
@@ -237,14 +256,20 @@ func AddWorker(shoot *gardencorev1alpha1.Shoot, cloudProfile *gardencorev1alpha1
 		Maximum: 2,
 		Minimum: 2,
 		Machine: gardencorev1alpha1.Machine{
-			Type:  cloudProfile.Spec.MachineTypes[0].Name,
+			Type:  machineType.Name,
 			Image: &shootMachineImage,
 		},
-		Volume: &gardencorev1alpha1.Volume{
+	})
+
+	if machineType.Storage == nil {
+		if len(cloudProfile.Spec.VolumeTypes) == 0 {
+			return fmt.Errorf("no VolumeTypes configured in the Cloudprofile '%s'", cloudProfile.Name)
+		}
+		shoot.Spec.Provider.Workers[0].Volume = &gardencorev1alpha1.Volume{
 			Type: &cloudProfile.Spec.VolumeTypes[0].Name,
 			Size: "35Gi",
-		},
-	})
+		}
+	}
 
 	if workerZone != nil && len(*workerZone) > 0 {
 		// using one zone as default

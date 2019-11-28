@@ -139,7 +139,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
-# github.com/gardener/gardener v0.0.0-20191104070500-7326bc55e5fa
+# github.com/gardener/gardener v0.0.0-20191127162005-7672763b3716
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/v1alpha1
@@ -165,9 +165,6 @@ github.com/gardener/gardener/pkg/client/garden/clientset/versioned
 github.com/gardener/gardener/pkg/client/garden/clientset/versioned/scheme
 github.com/gardener/gardener/pkg/client/garden/clientset/versioned/typed/garden/v1beta1
 github.com/gardener/gardener/pkg/client/kubernetes
-github.com/gardener/gardener/pkg/client/machine/clientset/versioned
-github.com/gardener/gardener/pkg/client/machine/clientset/versioned/scheme
-github.com/gardener/gardener/pkg/client/machine/clientset/versioned/typed/machine/v1alpha1
 github.com/gardener/gardener/pkg/controllermanager/controller/utils
 github.com/gardener/gardener/pkg/controllermanager/metrics
 github.com/gardener/gardener/pkg/logger
@@ -200,7 +197,7 @@ github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1
 github.com/gardener/gardener-resource-manager/pkg/manager
 # github.com/gardener/hvpa-controller v0.0.0-20191014062307-fad3bdf06a25
 github.com/gardener/hvpa-controller/api/v1alpha1
-# github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
+# github.com/gardener/machine-controller-manager v0.0.0-20191118095523-e30355bc7945
 github.com/gardener/machine-controller-manager/pkg/apis/machine
 github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1
 github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/scheme

@@ -13,9 +13,9 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.0.0-20191104070500-7326bc55e5fa
+	github.com/gardener/gardener v0.0.0-20191127162005-7672763b3716
 	github.com/gardener/gardener-resource-manager v0.0.0-20191025075317-09173887c1a7
-	github.com/gardener/machine-controller-manager v0.0.0-20190606071036-119056ee3fdd
+	github.com/gardener/machine-controller-manager v0.0.0-20191118095523-e30355bc7945
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.1
 	github.com/gobuffalo/packr v1.25.0
@@ -55,6 +55,7 @@ require (
 )
 
 replace (
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.2.0+incompatible
 	github.com/census-instrumentation/opencensus-proto v0.1.0-0.20181214143942-ba49f56771b8 => github.com/census-instrumentation/opencensus-proto v0.0.3-0.20181214143942-ba49f56771b8
 	github.com/gardener/external-dns-management => github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13
 	k8s.io/api => k8s.io/api v0.0.0-20190313235455-40a48860b5ab //kubernetes-1.14.0
