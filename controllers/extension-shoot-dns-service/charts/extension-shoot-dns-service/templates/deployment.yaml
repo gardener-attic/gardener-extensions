@@ -55,9 +55,9 @@ spec:
         - name: extension-imagevector-overwrite
           mountPath: /charts_overwrite/
           readOnly: true
-        volumes:
-        - name: extension-imagevector-overwrite
-          configMap:
-            name: gardener-extension-{{ .Values.serviceName }}-imagevector-overwrite
-            defaultMode: 420
+      volumes:
+      - name: extension-imagevector-overwrite
+        configMap:
+          name: gardener-extension-{{ .Values.serviceName }}-imagevector-overwrite
+          defaultMode: 420
         {{- end }}
