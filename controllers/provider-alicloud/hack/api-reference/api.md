@@ -283,13 +283,32 @@ string
 <td>
 </td>
 </tr>
+<tr>
+<td>
+<code>machineImages</code></br>
+<em>
+<a href="#alicloud.provider.extensions.gardener.cloud/v1alpha1.MachineImage">
+[]MachineImage
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>MachineImages is a list of machine images that have been used in this infrastructure. Usually, the extension controller
+gets the mapping from name/version to the provider-specific machine image data in its componentconfig. However, if
+a version that is still in use gets removed from this componentconfig and Shoot&rsquo;s access to the this version is revoked,
+it cannot reconcile anymore existing <code>Infrastructure</code> resources that are still using this version. Hence, it stores
+the used versions in the provider status to ensure reconciliation is possible.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="alicloud.provider.extensions.gardener.cloud/v1alpha1.MachineImage">MachineImage
 </h3>
 <p>
 (<em>Appears on:</em>
-<a href="#alicloud.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus</a>)
+<a href="#alicloud.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus</a>, 
+<a href="#alicloud.provider.extensions.gardener.cloud/v1alpha1.InfrastructureStatus">InfrastructureStatus</a>)
 </p>
 <p>
 <p>MachineImage is a mapping from logical names and versions to provider-specific machine image data.</p>

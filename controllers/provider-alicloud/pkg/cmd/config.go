@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	configloader "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/loader"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/spf13/pflag"
 )
@@ -73,6 +74,11 @@ func (c *Config) Apply(cfg *config.ControllerConfiguration) {
 // ApplyMachineImages sets the given machine images to those of this Config.
 func (c *Config) ApplyMachineImages(machineImages *[]config.MachineImage) {
 	*machineImages = c.Config.MachineImages
+}
+
+// ApplyMachineImageOwnerSecretRef sets the given machine image owener secret reference to those of this Config.
+func (c *Config) ApplyMachineImageOwnerSecretRef(secretRef *corev1.SecretReference) {
+	*secretRef = *c.Config.MachineImageOwnerSecretRef
 }
 
 // ApplyETCDStorage sets the given etcd storage configuration to that of this Config.

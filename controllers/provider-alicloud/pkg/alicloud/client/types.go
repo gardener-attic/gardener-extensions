@@ -33,6 +33,24 @@ type VPC interface {
 	DescribeEipAddresses(req *alicloudvpc.DescribeEipAddressesRequest) (*alicloudvpc.DescribeEipAddressesResponse, error)
 }
 
+// ClientFactory is the new factory to instantiate Alicloud clients.
+// TODO: move VPC to this new factory.
+type ClientFactory interface {
+	NewECSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (ECS, error)
+	NewSTSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (STS, error)
+}
+
+// STS is an interface which must be implemented by alicloud sts clients.
+type STS interface {
+	GetAccountIDFromCallerIdentity(ctx context.Context) (string, error)
+}
+
+// ECS is an interface which must be implemented by alicloud ecs clients.
+type ECS interface {
+	CheckIfImageExists(ctx context.Context, imageID string) (bool, error)
+	ShareImageToAccount(ctx context.Context, regionID, imageID, accountID string) error
+}
+
 // Factory is the factory to instantiate Alicloud clients.
 type Factory interface {
 	// NewVPC creates a new VPC client from the given credentials and region.

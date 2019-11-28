@@ -62,6 +62,10 @@ config:
       capacity: 25Gi
 #   backup:
 #     schedule: "0 */24 * * *"
+  machineImageOwnerSecret:
+    name: machine-image-owner
+    accessKeyID: ZHVtbXk=
+    accessKeySecret: ZHVtbXk=
 
 gardener:
   seed:

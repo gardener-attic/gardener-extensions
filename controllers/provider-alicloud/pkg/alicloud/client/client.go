@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/sts"
 	alicloudvpc "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
@@ -150,4 +152,78 @@ func (c *storageClient) DeleteBucketIfExists(ctx context.Context, bucketName str
 // ComputeStorageEndpoint computes the OSS storage endpoint based on the given region.
 func ComputeStorageEndpoint(region string) string {
 	return fmt.Sprintf("https://oss-%s.aliyuncs.com/", region)
+}
+
+type clientFactory struct {
+}
+
+// NewClientFactory creates a new clientFactory instance that can be used to instantiate Alicloud clients
+func NewClientFactory() ClientFactory {
+	return &clientFactory{}
+}
+
+type ecsClient struct {
+	client *ecs.Client
+}
+
+type stsClient struct {
+	client *sts.Client
+}
+
+// NewECSClient creates a new ECS client with given region, AccessKeyID, and AccessKeySecret
+func (f *clientFactory) NewECSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (ECS, error) {
+	client, err := ecs.NewClientWithAccessKey(region, accessKeyID, accessKeySecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ecsClient{
+		client: client,
+	}, nil
+}
+
+// CheckIfImageExists checks whether given imageID can be accessed by the client
+func (c *ecsClient) CheckIfImageExists(ctx context.Context, imageID string) (bool, error) {
+	request := ecs.CreateDescribeImagesRequest()
+	request.ImageId = imageID
+	request.SetScheme("HTTPS")
+	response, err := c.client.DescribeImages(request)
+	if err != nil {
+		return false, err
+	}
+	return response.TotalCount > 0, nil
+}
+
+// ShareImageToAccount shares the given image to target account from current client
+func (c *ecsClient) ShareImageToAccount(ctx context.Context, regionID, imageID, accountID string) error {
+	request := ecs.CreateModifyImageSharePermissionRequest()
+	request.RegionId = regionID
+	request.ImageId = imageID
+	request.AddAccount = &[]string{accountID}
+	request.SetScheme("HTTPS")
+	_, err := c.client.ModifyImageSharePermission(request)
+	return err
+}
+
+// NewSTSClient creates a new STS client with given region, AccessKeyID, and AccessKeySecret
+func (f *clientFactory) NewSTSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (STS, error) {
+	client, err := sts.NewClientWithAccessKey(region, accessKeyID, accessKeySecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return &stsClient{
+		client: client,
+	}, nil
+}
+
+// GetAccountIDFromCallerIdentity gets caller's accountID
+func (c *stsClient) GetAccountIDFromCallerIdentity(ctx context.Context) (string, error) {
+	request := sts.CreateGetCallerIdentityRequest()
+	request.SetScheme("HTTPS")
+	response, err := c.client.GetCallerIdentity(request)
+	if err != nil {
+		return "", err
+	}
+	return response.AccountId, nil
 }

@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:generate mockgen -package=client -destination=mocks.go github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client VPC,Factory
+//go:generate mockgen -package=client -destination=mocks.go github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client VPC,Factory,ClientFactory,ECS,STS
 
 package client

@@ -24,6 +24,7 @@ import (
 	unsafe "unsafe"
 
 	config "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
+	v1 "k8s.io/api/core/v1"
 	resource "k8s.io/apimachinery/pkg/api/resource"
 	conversion "k8s.io/apimachinery/pkg/conversion"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -104,6 +105,7 @@ func RegisterConversions(s *runtime.Scheme) error {
 func autoConvert_v1alpha1_ControllerConfiguration_To_config_ControllerConfiguration(in *ControllerConfiguration, out *config.ControllerConfiguration, s conversion.Scope) error {
 	out.ClientConnection = (*componentbaseconfig.ClientConnectionConfiguration)(unsafe.Pointer(in.ClientConnection))
 	out.MachineImages = *(*[]config.MachineImage)(unsafe.Pointer(&in.MachineImages))
+	out.MachineImageOwnerSecretRef = (*v1.SecretReference)(unsafe.Pointer(in.MachineImageOwnerSecretRef))
 	if err := Convert_v1alpha1_ETCD_To_config_ETCD(&in.ETCD, &out.ETCD, s); err != nil {
 		return err
 	}
@@ -118,6 +120,7 @@ func Convert_v1alpha1_ControllerConfiguration_To_config_ControllerConfiguration(
 func autoConvert_config_ControllerConfiguration_To_v1alpha1_ControllerConfiguration(in *config.ControllerConfiguration, out *ControllerConfiguration, s conversion.Scope) error {
 	out.ClientConnection = (*configv1alpha1.ClientConnectionConfiguration)(unsafe.Pointer(in.ClientConnection))
 	out.MachineImages = *(*[]MachineImage)(unsafe.Pointer(&in.MachineImages))
+	out.MachineImageOwnerSecretRef = (*v1.SecretReference)(unsafe.Pointer(in.MachineImageOwnerSecretRef))
 	if err := Convert_config_ETCD_To_v1alpha1_ETCD(&in.ETCD, &out.ETCD, s); err != nil {
 		return err
 	}
