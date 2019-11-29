@@ -29,3 +29,9 @@ type Actuator interface {
 	// Delete deletes the Worker.
 	Delete(context.Context, *extensionsv1alpha1.Worker, *extensionscontroller.Cluster) error
 }
+
+// StateActuator acts upon Worker's State resources.
+type StateActuator interface {
+	// Reconcile reconciles the Worker State.
+	Reconcile(context.Context, *extensionsv1alpha1.Worker) error
+}

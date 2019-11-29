@@ -22,7 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	workerhealthcheck "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/worker"
-	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	workercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -49,31 +49,22 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return errors.Wrapf(err, "could not instantiate actuator context")
 	}
 
-	// If the shoot is hibernated then we want to scale down the machine-controller-manager. However, we want to first allow it to delete
-	// all remaining worker nodes. Hence, we cannot set the replicas=0 here (otherwise it would be offline and not able to delete the nodes).
-	var replicaFunc = func() (int32, error) {
-		if extensionscontroller.IsHibernated(cluster) {
-			deployment := &appsv1.Deployment{}
-			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, a.mcmName), deployment); err != nil && !apierrors.IsNotFound(err) {
-				return 0, err
-			}
-			if replicas := deployment.Spec.Replicas; replicas != nil {
-				return *replicas, nil
-			}
-		}
-		return 1, nil
-	}
-
-	// Deploy the machine-controller-manager into the cluster.
-	a.logger.Info("Deploying the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
-	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate, replicaFunc); err != nil {
-		return err
-	}
-
 	// Generate the desired machine deployments.
 	wantedMachineDeployments, err := workerDelegate.GenerateMachineDeployments(ctx)
 	if err != nil {
 		return errors.Wrapf(err, "failed to generate the machine deployments")
+	}
+
+	// Get the list of all existing machine deployments.
+	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
+	if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
+		return err
+	}
+
+	// If we have control plane migration then we have to restore the machineSet and the machines
+	// saved in the Worker state
+	if err := a.restore(ctx, worker, existingMachineDeployments, wantedMachineDeployments); err != nil {
+		return err
 	}
 
 	// Get list of existing machine class names and list of used machine class secrets.
@@ -129,16 +120,32 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return errors.Wrapf(err, "failed to update the machine images in worker status")
 	}
 
-	// Get the list of all existing machine deployments.
-	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
-	if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
-		return err
-	}
-
 	// Generate machine deployment configuration based on previously computed list of deployments and deploy them.
 	a.logger.Info("Deploying the machine deployments", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
 	if err := a.deployMachineDeployments(ctx, cluster, worker, existingMachineDeployments, wantedMachineDeployments, workerDelegate.MachineClassKind(), clusterAutoscalerUsed); err != nil {
 		return errors.Wrapf(err, "failed to generate the machine deployment config")
+	}
+
+	// If the shoot is hibernated then we want to scale down the machine-controller-manager. However, we want to first allow it to delete
+	// all remaining worker nodes. Hence, we cannot set the replicas=0 here (otherwise it would be offline and not able to delete the nodes).
+	var replicaFunc = func() (int32, error) {
+		if extensionscontroller.IsHibernated(cluster) {
+			deployment := &appsv1.Deployment{}
+			if err := a.client.Get(ctx, kutil.Key(worker.Namespace, a.mcmName), deployment); err != nil && !apierrors.IsNotFound(err) {
+				return 0, err
+			}
+			if replicas := deployment.Spec.Replicas; replicas != nil {
+				return *replicas, nil
+			}
+		}
+		return 1, nil
+	}
+
+	// Deploy the machine-controller-manager into the cluster.
+	// It is crucial the deployment of MCM to be done after restore, otherwise the behavior is undefined
+	a.logger.Info("Deploying the machine-controller-manager", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+	if err := a.deployMachineControllerManager(ctx, worker, cluster, workerDelegate, replicaFunc); err != nil {
+		return err
 	}
 
 	// Wait until all generated machine deployments are healthy/available.
@@ -200,7 +207,7 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	return nil
 }
 
-func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments worker.MachineDeployments, classKind string, clusterAutoscalerUsed bool) error {
+func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments workercontroller.MachineDeployments, classKind string, clusterAutoscalerUsed bool) error {
 	for _, deployment := range wantedMachineDeployments {
 		var (
 			labels                    = map[string]string{"name": deployment.Name}
@@ -217,9 +224,15 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 		case !clusterAutoscalerUsed:
 			replicas = deployment.Minimum
 		// If the machine deployment does not yet exist we set replicas to min so that the cluster
-		// autoscaler can scale them as required.
+		// autoscaler can scale them as required. But if the machine deployment has some state records
+		// it means that we either have control plane migration or someone  intentionally has deleted
+		// the machine deployment
 		case existingMachineDeployment == nil:
-			replicas = deployment.Minimum
+			if deployment.State == nil {
+				replicas = deployment.Minimum
+			} else {
+				replicas = len(deployment.State.Machines)
+			}
 		// If the Shoot was hibernated and is now woken up we set replicas to min so that the cluster
 		// autoscaler can scale them as required.
 		case shootIsAwake(controller.IsHibernated(cluster), existingMachineDeployments):
@@ -296,7 +309,7 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 
 // waitUntilMachineDeploymentsAvailable waits for a maximum of 30 minutes until all the desired <machineDeployments>
 // were marked as healthy/available by the machine-controller-manager. It polls the status every 5 seconds.
-func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, wantedMachineDeployments worker.MachineDeployments) error {
+func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, wantedMachineDeployments workercontroller.MachineDeployments) error {
 	return wait.PollUntil(5*time.Second, func() (bool, error) {
 		var numHealthyDeployments, numUpdated, numDesired, numberOfAwakeMachines int32
 
@@ -351,7 +364,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 	}, ctx.Done())
 }
 
-func (a *genericActuator) updateWorkerStatusMachineDeployments(ctx context.Context, worker *extensionsv1alpha1.Worker, machineDeployments worker.MachineDeployments) error {
+func (a *genericActuator) updateWorkerStatusMachineDeployments(ctx context.Context, worker *extensionsv1alpha1.Worker, machineDeployments workercontroller.MachineDeployments) error {
 	var statusMachineDeployments []extensionsv1alpha1.MachineDeployment
 
 	for _, machineDeployment := range machineDeployments {
