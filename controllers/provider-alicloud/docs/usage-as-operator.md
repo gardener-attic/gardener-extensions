@@ -96,7 +96,7 @@ machineImageOwnerSecret:
   accessKeySecret: <base64_encoded_access_key_secret>
 ```
 
-As a result, a Secret named `machine_image_owner` by default will be created in namespace of Alicloud provider extension.
+As a result, a Secret named `machine-image-owner` by default will be created in namespace of Alicloud provider extension.
 
 ## Example `ControllerRegistration` manifest for enabling customized machine images
 
