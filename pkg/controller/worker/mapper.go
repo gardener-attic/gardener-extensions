@@ -28,3 +28,15 @@ import (
 func ClusterToWorkerMapper(predicates []predicate.Predicate) handler.Mapper {
 	return extensionshandler.ClusterToObjectMapper(func() runtime.Object { return &extensionsv1alpha1.WorkerList{} }, predicates)
 }
+
+// MachineSetToWorkerMapper returns a mapper that returns requests for Worker whose
+// referenced MachineSets have been modified.
+func MachineSetToWorkerMapper(predicates []predicate.Predicate) handler.Mapper {
+	return extensionshandler.MachineSetToObjectMapper(func() runtime.Object { return &extensionsv1alpha1.WorkerList{} }, predicates)
+}
+
+// MachineToWorkerMapper returns a mapper that returns requests for Worker whose
+// referenced Machines have been modified.
+func MachineToWorkerMapper(predicates []predicate.Predicate) handler.Mapper {
+	return extensionshandler.MachineToObjectMapper(func() runtime.Object { return &extensionsv1alpha1.WorkerList{} }, predicates)
+}

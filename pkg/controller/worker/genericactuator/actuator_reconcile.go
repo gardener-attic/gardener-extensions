@@ -16,12 +16,13 @@ package genericactuator
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	workercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -82,6 +83,22 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return err
 	}
 
+	// Get the list of all existing machine deployments.
+	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
+	if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
+		return err
+	}
+
+	err = a.addStateToMachineDeployment(ctx, worker, wantedMachineDeployments)
+	if err != nil {
+		return err
+	}
+
+	err = a.restore(ctx, cluster, worker, existingMachineDeployments, wantedMachineDeployments)
+	if err != nil {
+		return err
+	}
+
 	// During the time a rolling update happens we do not want the cluster autoscaler to interfer, hence it
 	// is removed for now.
 	var (
@@ -127,12 +144,6 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	}
 	if err := a.updateWorkerStatusMachineImages(ctx, worker, machineImages); err != nil {
 		return errors.Wrapf(err, "failed to update the machine images in worker status")
-	}
-
-	// Get the list of all existing machine deployments.
-	existingMachineDeployments := &machinev1alpha1.MachineDeploymentList{}
-	if err := a.client.List(ctx, existingMachineDeployments, client.InNamespace(worker.Namespace)); err != nil {
-		return err
 	}
 
 	// Generate machine deployment configuration based on previously computed list of deployments and deploy them.
@@ -195,7 +206,73 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 	return nil
 }
 
-func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments worker.MachineDeployments, classKind string, clusterAutoscalerUsed bool) error {
+func (a *genericActuator) addStateToMachineDeployment(ctx context.Context, worker *extensionsv1alpha1.Worker, wantedMachineDeployments workercontroller.MachineDeployments) error {
+	workerCopy := worker.DeepCopy()
+
+	if workerCopy.Status.State == nil || len(workerCopy.Status.State.Raw) <= 0 {
+		return nil
+	}
+	workerState := make(map[string]*workercontroller.MachineDeploymentState)
+
+	if err := json.Unmarshal(workerCopy.Status.State.Raw, &workerState); err != nil {
+		return err
+	}
+
+	for index, wantedMachineDeployment := range wantedMachineDeployments {
+		wantedMachineDeployments[index].State = workerState[wantedMachineDeployment.Name]
+	}
+	return nil
+}
+
+func (a *genericActuator) restore(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments workercontroller.MachineDeployments) error {
+	existingMachineDeploymentNameSet := make(map[string]struct{})
+
+	for _, existingMachineDeployment := range existingMachineDeployments.Items {
+		existingMachineDeploymentNameSet[existingMachineDeployment.Name] = struct{}{}
+	}
+
+	for _, wantedMachineDeployment := range wantedMachineDeployments {
+
+		// We restore machineSet and machines only for missing machineDeployments
+		if _, ok := existingMachineDeploymentNameSet[wantedMachineDeployment.Name]; !ok ||
+			wantedMachineDeployment.State == nil || wantedMachineDeployment.State.MachineSet == nil {
+			continue
+		}
+
+		machineSet := &machinev1alpha1.MachineSet{}
+		if _, _, err := a.decoder.Decode(wantedMachineDeployment.State.MachineSet.Raw, nil, machineSet); err != nil {
+			return err
+		}
+
+		if err := a.client.Create(ctx, machineSet); err != nil && !apierrors.IsAlreadyExists(err) {
+			return err
+		}
+
+		if err := a.client.Status().Update(ctx, machineSet); err != nil {
+			return err
+		}
+
+		for _, rawMachine := range wantedMachineDeployment.State.Machines {
+			if rawMachine.Raw == nil {
+				continue
+			}
+			machine := &machinev1alpha1.Machine{}
+			if _, _, err := a.decoder.Decode(rawMachine.Raw, nil, machine); err != nil {
+				return err
+			}
+			if err := a.client.Create(ctx, machine); err != nil && !apierrors.IsAlreadyExists(err) {
+				return err
+			}
+			if err := a.client.Status().Update(ctx, machine); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments workercontroller.MachineDeployments, classKind string, clusterAutoscalerUsed bool) error {
 	for _, deployment := range wantedMachineDeployments {
 		var (
 			labels                    = map[string]string{"name": deployment.Name}
@@ -212,9 +289,15 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 		case !clusterAutoscalerUsed:
 			replicas = deployment.Minimum
 		// If the machine deployment does not yet exist we set replicas to min so that the cluster
-		// autoscaler can scale them as required.
+		// autoscaler can scale them as required. But if the machine deployment has some state records
+		// it means that we either have control plane migration or someone  intentionally has deleted
+		// the machine deployment
 		case existingMachineDeployment == nil:
-			replicas = deployment.Minimum
+			if deployment.State == nil {
+				replicas = deployment.Minimum
+			} else {
+				replicas = len(deployment.State.Machines)
+			}
 		// If the Shoot was hibernated and is now woken up we set replicas to min so that the cluster
 		// autoscaler can scale them as required.
 		case shootIsAwake(controller.IsHibernated(cluster), existingMachineDeployments):
@@ -291,7 +374,7 @@ func (a *genericActuator) deployMachineDeployments(ctx context.Context, cluster 
 
 // waitUntilMachineDeploymentsAvailable waits for a maximum of 30 minutes until all the desired <machineDeployments>
 // were marked as healthy/available by the machine-controller-manager. It polls the status every 5 seconds.
-func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, wantedMachineDeployments worker.MachineDeployments) error {
+func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Context, cluster *controller.Cluster, worker *extensionsv1alpha1.Worker, wantedMachineDeployments workercontroller.MachineDeployments) error {
 	return wait.PollUntil(5*time.Second, func() (bool, error) {
 		var numHealthyDeployments, numUpdated, numDesired, numberOfAwakeMachines int32
 
@@ -346,7 +429,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 	}, ctx.Done())
 }
 
-func (a *genericActuator) updateWorkerStatusMachineDeployments(ctx context.Context, worker *extensionsv1alpha1.Worker, machineDeployments worker.MachineDeployments) error {
+func (a *genericActuator) updateWorkerStatusMachineDeployments(ctx context.Context, worker *extensionsv1alpha1.Worker, machineDeployments workercontroller.MachineDeployments) error {
 	var statusMachineDeployments []extensionsv1alpha1.MachineDeployment
 
 	for _, machineDeployment := range machineDeployments {

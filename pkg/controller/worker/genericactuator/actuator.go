@@ -30,6 +30,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -48,6 +49,7 @@ type genericActuator struct {
 
 	client               client.Client
 	clientset            kubernetes.Interface
+	decoder              runtime.Decoder
 	gardenerClientset    gardenerkubernetes.Interface
 	chartApplier         gardenerkubernetes.ChartApplier
 	chartRendererFactory extensionscontroller.ChartRendererFactory
@@ -75,6 +77,11 @@ func (a *genericActuator) InjectFunc(f inject.Func) error {
 
 func (a *genericActuator) InjectClient(client client.Client) error {
 	a.client = client
+	return nil
+}
+
+func (a *genericActuator) InjectScheme(scheme *runtime.Scheme) error {
+	a.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 	return nil
 }
 
