@@ -244,12 +244,36 @@ func (c *Client) CreateBucketIfNotExists(ctx context.Context, bucket, region str
 	}
 
 	if _, err := c.S3.CreateBucketWithContext(ctx, createBucketInput); err != nil {
-		if aerr, ok := err.(awserr.Error); ok && (aerr.Code() == s3.ErrCodeBucketAlreadyExists || aerr.Code() == s3.ErrCodeBucketAlreadyOwnedByYou) {
-			return nil
+		if aerr, ok := err.(awserr.Error); !ok {
+			return err
+		} else if aerr.Code() != s3.ErrCodeBucketAlreadyExists && aerr.Code() != s3.ErrCodeBucketAlreadyOwnedByYou {
+			return err
 		}
-		return err
 	}
-	return nil
+
+	// Set lifecycle rule to purge incomplete multipart upload orphaned because of force shutdown or rescheduling or networking issue with etcd-backup-restore.
+	putBucketLifecycleConfigurationInput := &s3.PutBucketLifecycleConfigurationInput{
+		Bucket: aws.String(bucket),
+		LifecycleConfiguration: &s3.BucketLifecycleConfiguration{
+			Rules: []*s3.LifecycleRule{
+				&s3.LifecycleRule{
+					// Note: Though as per documentation at https://docs.aws.amazon.com/AmazonS3/latest/API/API_LifecycleRule.html the Filter field is
+					// optional, if not specified the SDK API fails with `Malformed XML` error code. Cross verified same behavior with aws-cli client as well.
+					// Please do not remove it.
+					Filter: &s3.LifecycleRuleFilter{
+						Prefix: aws.String(""),
+					},
+					AbortIncompleteMultipartUpload: &s3.AbortIncompleteMultipartUpload{
+						DaysAfterInitiation: aws.Int64(7),
+					},
+					Status: aws.String(s3.ExpirationStatusEnabled),
+				},
+			},
+		},
+	}
+
+	_, err := c.S3.PutBucketLifecycleConfigurationWithContext(ctx, putBucketLifecycleConfigurationInput)
+	return err
 }
 
 // DeleteBucketIfExists deletes the s3 bucket with name <bucket>. If it does not exist,
