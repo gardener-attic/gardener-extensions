@@ -112,6 +112,9 @@ var _ = Describe("Machines", func() {
 				maxSurgePool2       intstr.IntOrString
 				maxUnavailablePool2 intstr.IntOrString
 
+				workerPoolHash1 string
+				workerPoolHash2 string
+
 				shootVersionMajorMinor string
 				shootVersion           string
 				machineImages          []config.MachineImage
@@ -253,6 +256,9 @@ var _ = Describe("Machines", func() {
 				_ = azurev1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
+				workerPoolHash1, _ = worker.WorkerPoolHash(w.Spec.Pools[0], cluster)
+				workerPoolHash2, _ = worker.WorkerPoolHash(w.Spec.Pools[1], cluster)
+
 				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", w, cluster)
 			})
 
@@ -291,11 +297,8 @@ var _ = Describe("Machines", func() {
 					machineClassNamePool1 = fmt.Sprintf("%s-%s", namespace, namePool1)
 					machineClassNamePool2 = fmt.Sprintf("%s-%s", namespace, namePool2)
 
-					machineClassHashPool1 = worker.MachineClassHash(machineClassPool1, shootVersionMajorMinor)
-					machineClassHashPool2 = worker.MachineClassHash(machineClassPool2, shootVersionMajorMinor)
-
-					machineClassWithHashPool1 = fmt.Sprintf("%s-%s", machineClassNamePool1, machineClassHashPool1)
-					machineClassWithHashPool2 = fmt.Sprintf("%s-%s", machineClassNamePool2, machineClassHashPool2)
+					machineClassWithHashPool1 = fmt.Sprintf("%s-%s", machineClassNamePool1, workerPoolHash1)
+					machineClassWithHashPool2 = fmt.Sprintf("%s-%s", machineClassNamePool2, workerPoolHash2)
 				)
 
 				addNameAndSecretsToMachineClass(machineClassPool1, azureClientID, azureClientSecret, azureSubscriptionID, azureTenantID, machineClassWithHashPool1)

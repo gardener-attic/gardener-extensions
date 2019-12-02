@@ -15,64 +15,219 @@
 package worker_test
 
 import (
-	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	. "github.com/gardener/gardener-extensions/pkg/controller/worker"
 
-	"k8s.io/apimachinery/pkg/util/intstr"
-
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var _ = Describe("Machines", func() {
 	Context("MachineDeployment", func() {
 		DescribeTable("#HasDeployment",
-			func(machineDeployments worker.MachineDeployments, name string, expectation bool) {
+			func(machineDeployments MachineDeployments, name string, expectation bool) {
 				Expect(machineDeployments.HasDeployment(name)).To(Equal(expectation))
 			},
 
 			Entry("list is nil", nil, "foo", false),
-			Entry("empty list", worker.MachineDeployments{}, "foo", false),
-			Entry("entry not found", worker.MachineDeployments{{Name: "bar"}}, "foo", false),
-			Entry("entry exists", worker.MachineDeployments{{Name: "bar"}}, "bar", true),
+			Entry("empty list", MachineDeployments{}, "foo", false),
+			Entry("entry not found", MachineDeployments{{Name: "bar"}}, "foo", false),
+			Entry("entry exists", MachineDeployments{{Name: "bar"}}, "bar", true),
 		)
 
 		DescribeTable("#HasClass",
-			func(machineDeployments worker.MachineDeployments, class string, expectation bool) {
+			func(machineDeployments MachineDeployments, class string, expectation bool) {
 				Expect(machineDeployments.HasClass(class)).To(Equal(expectation))
 			},
 
 			Entry("list is nil", nil, "foo", false),
-			Entry("empty list", worker.MachineDeployments{}, "foo", false),
-			Entry("entry not found", worker.MachineDeployments{{ClassName: "bar"}}, "foo", false),
-			Entry("entry exists", worker.MachineDeployments{{ClassName: "bar"}}, "bar", true),
+			Entry("empty list", MachineDeployments{}, "foo", false),
+			Entry("entry not found", MachineDeployments{{ClassName: "bar"}}, "foo", false),
+			Entry("entry exists", MachineDeployments{{ClassName: "bar"}}, "bar", true),
 		)
 
 		DescribeTable("#HasSecret",
-			func(machineDeployments worker.MachineDeployments, secret string, expectation bool) {
+			func(machineDeployments MachineDeployments, secret string, expectation bool) {
 				Expect(machineDeployments.HasSecret(secret)).To(Equal(expectation))
 			},
 
 			Entry("list is nil", nil, "foo", false),
-			Entry("empty list", worker.MachineDeployments{}, "foo", false),
-			Entry("entry not found", worker.MachineDeployments{{SecretName: "bar"}}, "foo", false),
-			Entry("entry exists", worker.MachineDeployments{{SecretName: "bar"}}, "bar", true),
+			Entry("empty list", MachineDeployments{}, "foo", false),
+			Entry("entry not found", MachineDeployments{{SecretName: "bar"}}, "foo", false),
+			Entry("entry exists", MachineDeployments{{SecretName: "bar"}}, "bar", true),
 		)
 	})
 
-	DescribeTable("#MachineClassHash",
-		func(spec map[string]interface{}, version, expectedHash string) {
-			Expect(worker.MachineClassHash(spec, version)).To(Equal(expectedHash))
-		},
+	Describe("#WorkerPoolHash", func() {
+		var (
+			volumeType = "fast"
+			pool       = extensionsv1alpha1.WorkerPool{
+				MachineType: "foo",
+				MachineImage: extensionsv1alpha1.MachineImage{
+					Name:    "bar",
+					Version: "baz",
+				},
+				ProviderConfig: &runtime.RawExtension{
+					Raw: []byte("foo"),
+				},
+				Volume: &extensionsv1alpha1.Volume{
+					Type: &volumeType,
+					Size: "20Gi",
+				},
+			}
+			cluster = &extensionscontroller.Cluster{
+				Shoot: &gardencorev1alpha1.Shoot{
+					Spec: gardencorev1alpha1.ShootSpec{
+						Kubernetes: gardencorev1alpha1.Kubernetes{
+							Version: "1.2.3",
+						},
+					},
+				},
+			}
 
-		Entry("empty spec", nil, "", "aa969"),
-		Entry("non-empty spec", map[string]interface{}{"foo": "bar"}, "1.5", "5a88b"),
-	)
+			hash, _ = WorkerPoolHash(pool, cluster)
+		)
+
+		var (
+			p   *extensionsv1alpha1.WorkerPool
+			v   string
+			err error
+		)
+
+		BeforeEach(func() {
+			p = pool.DeepCopy()
+		})
+
+		Context("hash value should not change", func() {
+			AfterEach(func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).To(Equal(hash))
+			})
+
+			It("when changing minimum", func() {
+				p.Minimum = 1
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing maximum", func() {
+				p.Maximum = 2
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing max surge", func() {
+				p.MaxSurge.StrVal = "new-val"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing max unavailable", func() {
+				p.MaxUnavailable.StrVal = "new-val"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing annotations", func() {
+				p.Annotations = map[string]string{"foo": "bar"}
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing labels", func() {
+				p.Labels = map[string]string{"foo": "bar"}
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing taints", func() {
+				p.Taints = []corev1.Taint{{Key: "foo"}}
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing name", func() {
+				p.Name = "different-name"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing user-data", func() {
+				p.UserData = []byte("new-data")
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing zones", func() {
+				p.Zones = []string{"1"}
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing the kubernetes patch version", func() {
+				v, err = WorkerPoolHash(*p, &extensionscontroller.Cluster{
+					Shoot: &gardencorev1alpha1.Shoot{
+						Spec: gardencorev1alpha1.ShootSpec{
+							Kubernetes: gardencorev1alpha1.Kubernetes{
+								Version: "1.2.4",
+							},
+						},
+					},
+				})
+			})
+		})
+
+		Context("hash value should change", func() {
+			AfterEach(func() {
+				Expect(err).NotTo(HaveOccurred())
+				Expect(v).NotTo(Equal(hash))
+			})
+
+			It("when changing machine type", func() {
+				p.MachineType = "small"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing machine image name", func() {
+				p.MachineImage.Name = "new-image"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing machine image version", func() {
+				p.MachineImage.Version = "new-version"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing volume type", func() {
+				t := "xl"
+				p.Volume.Type = &t
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing volume size", func() {
+				p.Volume.Size = "100Mi"
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing provider config", func() {
+				p.ProviderConfig.Raw = nil
+				v, err = WorkerPoolHash(*p, cluster)
+			})
+
+			It("when changing the kubernetes major/minor version", func() {
+				v, err = WorkerPoolHash(*p, &extensionscontroller.Cluster{
+					Shoot: &gardencorev1alpha1.Shoot{
+						Spec: gardencorev1alpha1.ShootSpec{
+							Kubernetes: gardencorev1alpha1.Kubernetes{
+								Version: "1.3.3",
+							},
+						},
+					},
+				})
+			})
+		})
+	})
 
 	DescribeTable("#DistributeOverZones",
 		func(zoneIndex, size, zoneSize, expectation int) {
-			Expect(worker.DistributeOverZones(zoneIndex, size, zoneSize)).To(Equal(expectation))
+			Expect(DistributeOverZones(zoneIndex, size, zoneSize)).To(Equal(expectation))
 		},
 
 		Entry("one zone, size 5", 0, 5, 1, 5),
@@ -90,7 +245,7 @@ var _ = Describe("Machines", func() {
 
 	DescribeTable("#DistributePercentOverZones",
 		func(zoneIndex int, percent string, zoneSize, total int, expectation string) {
-			Expect(worker.DistributePercentOverZones(zoneIndex, percent, zoneSize, total)).To(Equal(expectation))
+			Expect(DistributePercentOverZones(zoneIndex, percent, zoneSize, total)).To(Equal(expectation))
 		},
 
 		Entry("even size, size 2", 0, "10%", 2, 8, "10%"),
@@ -104,7 +259,7 @@ var _ = Describe("Machines", func() {
 
 	DescribeTable("#DistributePositiveIntOrPercent",
 		func(zoneIndex int, intOrPercent intstr.IntOrString, zoneSize, total int, expectation intstr.IntOrString) {
-			Expect(worker.DistributePositiveIntOrPercent(zoneIndex, intOrPercent, zoneSize, total)).To(Equal(expectation))
+			Expect(DistributePositiveIntOrPercent(zoneIndex, intOrPercent, zoneSize, total)).To(Equal(expectation))
 		},
 
 		Entry("percent", 2, intstr.FromString("75%"), 3, 5, intstr.FromString("45%")),
@@ -113,7 +268,7 @@ var _ = Describe("Machines", func() {
 
 	DescribeTable("#DiskSize",
 		func(size string, expectation int, errMatcher types.GomegaMatcher) {
-			val, err := worker.DiskSize(size)
+			val, err := DiskSize(size)
 
 			Expect(val).To(Equal(expectation))
 			Expect(err).To(errMatcher)
