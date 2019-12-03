@@ -1,3 +1,7 @@
+{{- define "name" -}}
+gardener-extension-shoot-cert-service
+{{- end -}}
+
 {{- define "certconfig" -}}
 ---
 apiVersion: shoot-cert-service.extensions.config.gardener.cloud/v1alpha1
