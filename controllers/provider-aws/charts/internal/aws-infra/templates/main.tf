@@ -29,6 +29,10 @@ resource "aws_vpc_dhcp_options_association" "vpc_dhcp_options_association" {
   dhcp_options_id = "${aws_vpc_dhcp_options.vpc_dhcp_options.id}"
 }
 
+resource "aws_default_security_group" "default" {
+  vpc_id = "${aws_vpc.vpc.id}"
+}
+
 resource "aws_internet_gateway" "igw" {
   vpc_id = "{{ required "vpc.id is required" .Values.vpc.id }}"
 
