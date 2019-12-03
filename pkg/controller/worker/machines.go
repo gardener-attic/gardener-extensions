@@ -20,6 +20,10 @@ import (
 	"regexp"
 	"strconv"
 
+	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/util"
+
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -85,10 +89,37 @@ func (m MachineDeployments) HasSecret(secretName string) bool {
 	return false
 }
 
-// MachineClassHash returns the SHA256-hash value of the <val> struct's representation concatenated with the
-// provided <version>.
-func MachineClassHash(machineClassSpec map[string]interface{}, version string) string {
-	return utils.ComputeSHA256Hex([]byte(fmt.Sprintf("%s-%s", utils.HashForMap(machineClassSpec), version)))[:5]
+// WorkerPoolHash returns a hash value for a given worker pool and a given cluster resource.
+func WorkerPoolHash(pool extensionsv1alpha1.WorkerPool, cluster *extensionscontroller.Cluster) (string, error) {
+	shootVersionMajorMinor, err := util.VersionMajorMinor(cluster.Shoot.Spec.Kubernetes.Version)
+	if err != nil {
+		return "", err
+	}
+
+	data := []string{
+		shootVersionMajorMinor,
+		pool.MachineType,
+		pool.MachineImage.Name + pool.MachineImage.Version,
+	}
+
+	if pool.Volume != nil {
+		data = append(data, pool.Volume.Size)
+
+		if pool.Volume.Type != nil {
+			data = append(data, *pool.Volume.Type)
+		}
+	}
+
+	if pool.ProviderConfig != nil && pool.ProviderConfig.Raw != nil {
+		data = append(data, string(pool.ProviderConfig.Raw))
+	}
+
+	var result string
+	for _, v := range data {
+		result += utils.ComputeSHA256Hex([]byte(v))
+	}
+
+	return utils.ComputeSHA256Hex([]byte(result))[:5], nil
 }
 
 // DistributeOverZones is a function which is used to determine how many nodes should be used

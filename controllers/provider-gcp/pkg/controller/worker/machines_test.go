@@ -112,13 +112,16 @@ var _ = Describe("Machines", func() {
 				zone1 string
 				zone2 string
 
+				workerPoolHash1 string
+				workerPoolHash2 string
+
 				shootVersionMajorMinor string
 				shootVersion           string
 				machineImages          []config.MachineImage
 				scheme                 *runtime.Scheme
 				decoder                runtime.Decoder
 				cluster                *extensionscontroller.Cluster
-				wrker                  *extensionsv1alpha1.Worker
+				workerObj              *extensionsv1alpha1.Worker
 			)
 
 			BeforeEach(func() {
@@ -176,7 +179,7 @@ var _ = Describe("Machines", func() {
 					},
 				}
 
-				wrker = &extensionsv1alpha1.Worker{
+				workerObj = &extensionsv1alpha1.Worker{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      name,
 						Namespace: namespace,
@@ -252,7 +255,10 @@ var _ = Describe("Machines", func() {
 				_ = gcpv1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", wrker, cluster)
+				workerPoolHash1, _ = worker.WorkerPoolHash(workerObj.Spec.Pools[0], cluster)
+				workerPoolHash2, _ = worker.WorkerPoolHash(workerObj.Spec.Pools[1], cluster)
+
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", workerObj, cluster)
 			})
 
 			It("should return the expected machine deployments when disableExternal IP is false ", func() {
@@ -320,15 +326,10 @@ var _ = Describe("Machines", func() {
 					machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
 					machineClassNamePool2Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool2)
 
-					machineClassHashPool1Zone1 = worker.MachineClassHash(machineClassPool1Zone1, shootVersionMajorMinor)
-					machineClassHashPool1Zone2 = worker.MachineClassHash(machineClassPool1Zone2, shootVersionMajorMinor)
-					machineClassHashPool2Zone1 = worker.MachineClassHash(machineClassPool2Zone1, shootVersionMajorMinor)
-					machineClassHashPool2Zone2 = worker.MachineClassHash(machineClassPool2Zone2, shootVersionMajorMinor)
-
-					machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, machineClassHashPool1Zone1)
-					machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, machineClassHashPool1Zone2)
-					machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, machineClassHashPool2Zone1)
-					machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, machineClassHashPool2Zone2)
+					machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, workerPoolHash1)
+					machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, workerPoolHash1)
+					machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, workerPoolHash2)
+					machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, workerPoolHash2)
 				)
 
 				addNameAndSecretToMachineClass(machineClassPool1Zone1, serviceAccountJSON, machineClassWithHashPool1Zone1)
@@ -419,7 +420,7 @@ var _ = Describe("Machines", func() {
 			})
 			It("should return the expected machine deployments when disableExternal IP is true", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
-				workerCloudRouter := wrker
+				workerCloudRouter := workerObj
 				workerCloudRouter.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
 					Raw: encode(&apisgcp.InfrastructureStatus{
 						ServiceAccountEmail: serviceAccountEmail,
@@ -501,15 +502,10 @@ var _ = Describe("Machines", func() {
 					machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
 					machineClassNamePool2Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool2)
 
-					machineClassHashPool1Zone1 = worker.MachineClassHash(machineClassPool1Zone1, shootVersionMajorMinor)
-					machineClassHashPool1Zone2 = worker.MachineClassHash(machineClassPool1Zone2, shootVersionMajorMinor)
-					machineClassHashPool2Zone1 = worker.MachineClassHash(machineClassPool2Zone1, shootVersionMajorMinor)
-					machineClassHashPool2Zone2 = worker.MachineClassHash(machineClassPool2Zone2, shootVersionMajorMinor)
-
-					machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, machineClassHashPool1Zone1)
-					machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, machineClassHashPool1Zone2)
-					machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, machineClassHashPool2Zone1)
-					machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, machineClassHashPool2Zone2)
+					machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, workerPoolHash1)
+					machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, workerPoolHash1)
+					machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, workerPoolHash2)
+					machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, workerPoolHash2)
 				)
 
 				addNameAndSecretToMachineClass(machineClassPool1Zone1, serviceAccountJSON, machineClassWithHashPool1Zone1)
@@ -613,7 +609,7 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
 				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", wrker, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", workerObj, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -623,9 +619,9 @@ var _ = Describe("Machines", func() {
 			It("should fail because the infrastructure status cannot be decoded", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
-				wrker.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
+				workerObj.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", wrker, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", workerObj, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -635,11 +631,11 @@ var _ = Describe("Machines", func() {
 			It("should fail because the nodes subnet cannot be found", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
-				wrker.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
+				workerObj.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
 					Raw: encode(&apisgcp.InfrastructureStatus{}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", wrker, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", workerObj, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -649,7 +645,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image cannot be found", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, nil, chartApplier, "", wrker, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, nil, chartApplier, "", workerObj, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -659,9 +655,9 @@ var _ = Describe("Machines", func() {
 			It("should fail because the volume size cannot be decoded", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
-				wrker.Spec.Pools[0].Volume.Size = "not-decodeable"
+				workerObj.Spec.Pools[0].Volume.Size = "not-decodeable"
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", wrker, cluster)
+				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImages, chartApplier, "", workerObj, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

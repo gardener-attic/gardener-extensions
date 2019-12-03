@@ -25,7 +25,6 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
-	"github.com/gardener/gardener-extensions/pkg/util"
 
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -94,11 +93,6 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	shootVersionMajorMinor, err := util.VersionMajorMinor(w.cluster.Shoot.Spec.Kubernetes.Version)
-	if err != nil {
-		return err
-	}
-
 	infrastructureStatus := &azureapi.InfrastructureStatus{}
 	if _, _, err := w.decoder.Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
 		return err
@@ -118,6 +112,11 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	for _, pool := range w.worker.Spec.Pools {
+		workerPoolHash, err := worker.WorkerPoolHash(pool, w.cluster)
+		if err != nil {
+			return err
+		}
+
 		urn, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
@@ -201,9 +200,8 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			}
 
 			var (
-				machineClassSpecHash = worker.MachineClassHash(machineClassSpec, shootVersionMajorMinor)
-				deploymentName       = fmt.Sprintf("%s-%s", w.worker.Namespace, pool.Name)
-				className            = fmt.Sprintf("%s-%s", deploymentName, machineClassSpecHash)
+				deploymentName = fmt.Sprintf("%s-%s", w.worker.Namespace, pool.Name)
+				className      = fmt.Sprintf("%s-%s", deploymentName, workerPoolHash)
 			)
 			if zone != nil {
 				deploymentName = fmt.Sprintf("%s-z%s", deploymentName, zone.name)
