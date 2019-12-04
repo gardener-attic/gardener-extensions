@@ -28,7 +28,12 @@ machineImages:
 - name: coreos
   version: 2135.6.0
   image: coreos-2135.6.0
-keystoneURL: https://url-to-keystone/v3/
+# keystoneURL: https://url-to-keystone/v3/
+# keystoneURLs:
+# - region: europe
+#   url: https://europe.example.com/v3/
+# - region: asia
+#   url: https://asia.example.com/v3/
 # dnsServers:
 # - 10.10.10.11
 # - 10.10.10.12
@@ -36,6 +41,7 @@ keystoneURL: https://url-to-keystone/v3/
 constraints:
   floatingPools:
   - name: fp-pool-1
+#   region: europe
 #   loadBalancerClasses:
 #   - name: lb-class-1
 #     floatingSubnetID: "1234"
@@ -43,7 +49,17 @@ constraints:
 #     subnetID: "7890"
   loadBalancerProviders:
   - name: haproxy
+#   region: europe
+# - name: f5
+#   region: asia
 ```
+
+Please note that it is possible to configure a region mapping for keystone URLs, floating pools, and load balancer providers.
+The default behavior is that, if found, the regional entry is taken.
+If no entry for the given region exists then the fallback value is the first entry in the list without a `region` field (or the `keystoneURL` value for the keystone URLs).
+Some OpenStack environments don't need these regional mappings, hence, the `region` and `keystoneURLs` fields are optional.
+If your OpenStack environment only has regional values and it doesn't make sense to provide a (non-regional) fallback then simply
+omit `keystoneURL` and always specify `region`.
 
 ## Example `CloudProfile` manifest
 

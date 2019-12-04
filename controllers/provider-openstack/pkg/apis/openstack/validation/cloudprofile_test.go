@@ -15,7 +15,7 @@
 package validation_test
 
 import (
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/validation"
 
 	. "github.com/onsi/ginkgo"
@@ -26,15 +26,15 @@ import (
 
 var _ = Describe("CloudProfileConfig validation", func() {
 	Describe("#ValidateCloudProfileConfig", func() {
-		var cloudProfileConfig *apisopenstack.CloudProfileConfig
+		var cloudProfileConfig *api.CloudProfileConfig
 
 		BeforeEach(func() {
-			cloudProfileConfig = &apisopenstack.CloudProfileConfig{
-				Constraints: apisopenstack.Constraints{
-					FloatingPools: []apisopenstack.FloatingPool{
+			cloudProfileConfig = &api.CloudProfileConfig{
+				Constraints: api.Constraints{
+					FloatingPools: []api.FloatingPool{
 						{Name: "MY-POOL"},
 					},
-					LoadBalancerProviders: []apisopenstack.LoadBalancerProvider{
+					LoadBalancerProviders: []api.LoadBalancerProvider{
 						{Name: "haproxy"},
 					},
 				},
@@ -43,10 +43,10 @@ var _ = Describe("CloudProfileConfig validation", func() {
 					"5.6.7.8",
 				},
 				KeyStoneURL: "http://url-to-keystone/v3",
-				MachineImages: []apisopenstack.MachineImages{
+				MachineImages: []api.MachineImages{
 					{
 						Name: "ubuntu",
-						Versions: []apisopenstack.MachineImageVersion{
+						Versions: []api.MachineImageVersion{
 							{
 								Version: "1.2.3",
 								Image:   "ubuntu-1.2.3",
@@ -59,7 +59,7 @@ var _ = Describe("CloudProfileConfig validation", func() {
 
 		Context("floating pools constraints", func() {
 			It("should enforce that at least one pool has been defined", func() {
-				cloudProfileConfig.Constraints.FloatingPools = []apisopenstack.FloatingPool{}
+				cloudProfileConfig.Constraints.FloatingPools = []api.FloatingPool{}
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
@@ -69,9 +69,12 @@ var _ = Describe("CloudProfileConfig validation", func() {
 				}))))
 			})
 
-			It("should forbid unsupported providers", func() {
-				cloudProfileConfig.Constraints.FloatingPools = []apisopenstack.FloatingPool{
-					{Name: ""},
+			It("should forbid unsupported pools", func() {
+				cloudProfileConfig.Constraints.FloatingPools = []api.FloatingPool{
+					{
+						Name:   "",
+						Region: makeStringPointer(""),
+					},
 				}
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
@@ -79,13 +82,36 @@ var _ = Describe("CloudProfileConfig validation", func() {
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
 					"Field": Equal("constraints.floatingPools[0].name"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("constraints.floatingPools[0].region"),
+				}))))
+			})
+
+			It("should forbid duplicates regions in pools", func() {
+				cloudProfileConfig.Constraints.FloatingPools = []api.FloatingPool{
+					{
+						Name:   "foo",
+						Region: makeStringPointer("foo"),
+					},
+					{
+						Name:   "foo",
+						Region: makeStringPointer("foo"),
+					},
+				}
+
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
+
+				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeDuplicate),
+					"Field": Equal("constraints.floatingPools[1].region"),
 				}))))
 			})
 		})
 
 		Context("load balancer provider constraints", func() {
 			It("should enforce that at least one provider has been defined", func() {
-				cloudProfileConfig.Constraints.LoadBalancerProviders = []apisopenstack.LoadBalancerProvider{}
+				cloudProfileConfig.Constraints.LoadBalancerProviders = []api.LoadBalancerProvider{}
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
@@ -96,8 +122,11 @@ var _ = Describe("CloudProfileConfig validation", func() {
 			})
 
 			It("should forbid unsupported providers", func() {
-				cloudProfileConfig.Constraints.LoadBalancerProviders = []apisopenstack.LoadBalancerProvider{
-					{Name: ""},
+				cloudProfileConfig.Constraints.LoadBalancerProviders = []api.LoadBalancerProvider{
+					{
+						Name:   "",
+						Region: makeStringPointer(""),
+					},
 				}
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
@@ -105,6 +134,29 @@ var _ = Describe("CloudProfileConfig validation", func() {
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
 					"Field": Equal("constraints.loadBalancerProviders[0].name"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("constraints.loadBalancerProviders[0].region"),
+				}))))
+			})
+
+			It("should forbid duplicates regions in providers", func() {
+				cloudProfileConfig.Constraints.LoadBalancerProviders = []api.LoadBalancerProvider{
+					{
+						Name:   "foo",
+						Region: makeStringPointer("foo"),
+					},
+					{
+						Name:   "foo",
+						Region: makeStringPointer("foo"),
+					},
+				}
+
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
+
+				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeDuplicate),
+					"Field": Equal("constraints.loadBalancerProviders[1].region"),
 				}))))
 			})
 		})
@@ -112,12 +164,49 @@ var _ = Describe("CloudProfileConfig validation", func() {
 		Context("keystone url validation", func() {
 			It("should forbid keystone urls with unsupported format", func() {
 				cloudProfileConfig.KeyStoneURL = ""
+				cloudProfileConfig.KeyStoneURLs = nil
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
 					"Field": Equal("keyStoneURL"),
+				}))))
+			})
+
+			It("should forbid keystone urls with missing keys", func() {
+				cloudProfileConfig.KeyStoneURL = ""
+				cloudProfileConfig.KeyStoneURLs = []api.KeyStoneURL{{}}
+
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
+
+				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("keyStoneURLs[0].region"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("keyStoneURLs[0].url"),
+				}))))
+			})
+
+			It("should forbid duplicate regions for keystone urls", func() {
+				cloudProfileConfig.KeyStoneURL = ""
+				cloudProfileConfig.KeyStoneURLs = []api.KeyStoneURL{
+					{
+						Region: "foo",
+						URL:    "bar",
+					},
+					{
+						Region: "foo",
+						URL:    "bar",
+					},
+				}
+
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
+
+				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeDuplicate),
+					"Field": Equal("keyStoneURLs[1].region"),
 				}))))
 			})
 		})
@@ -163,7 +252,7 @@ var _ = Describe("CloudProfileConfig validation", func() {
 
 		Context("machine image validation", func() {
 			It("should enforce that at least one machine image has been defined", func() {
-				cloudProfileConfig.MachineImages = []apisopenstack.MachineImages{}
+				cloudProfileConfig.MachineImages = []api.MachineImages{}
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
@@ -174,7 +263,7 @@ var _ = Describe("CloudProfileConfig validation", func() {
 			})
 
 			It("should forbid unsupported machine image configuration", func() {
-				cloudProfileConfig.MachineImages = []apisopenstack.MachineImages{{}}
+				cloudProfileConfig.MachineImages = []api.MachineImages{{}}
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
@@ -188,10 +277,10 @@ var _ = Describe("CloudProfileConfig validation", func() {
 			})
 
 			It("should forbid unsupported machine image version configuration", func() {
-				cloudProfileConfig.MachineImages = []apisopenstack.MachineImages{
+				cloudProfileConfig.MachineImages = []api.MachineImages{
 					{
 						Name:     "abc",
-						Versions: []apisopenstack.MachineImageVersion{{}},
+						Versions: []api.MachineImageVersion{{}},
 					},
 				}
 

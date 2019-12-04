@@ -97,6 +97,26 @@ var _ = Describe("Helper", func() {
 		Entry("profile region entry", makeProfileRegionMachineImages("ubuntu", "1", "image-1234", regionName), "ubuntu", "1", regionName, "image-1234"),
 		Entry("profile region not found", makeProfileRegionMachineImages("ubuntu", "1", "image-1234", regionName+"x"), "ubuntu", "1", regionName, ""),
 	)
+
+	DescribeTable("#FindKeyStoneURL",
+		func(keyStoneURLs []api.KeyStoneURL, keystoneURL, region, expectedKeyStoneURL string, expectErr bool) {
+			result, err := FindKeyStoneURL(keyStoneURLs, keystoneURL, region)
+
+			if !expectErr {
+				Expect(result).To(Equal(expectedKeyStoneURL))
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(result).To(BeEmpty())
+				Expect(err).To(HaveOccurred())
+			}
+		},
+
+		Entry("list is nil", nil, "default", "europe", "default", false),
+		Entry("empty list", []api.KeyStoneURL{}, "default", "europe", "default", false),
+		Entry("region not found", []api.KeyStoneURL{{URL: "bar", Region: "asia"}}, "default", "europe", "default", false),
+		Entry("region exists", []api.KeyStoneURL{{URL: "bar", Region: "europe"}}, "default", "europe", "bar", false),
+		Entry("no default URL", []api.KeyStoneURL{{URL: "bar", Region: "europe"}}, "", "asia", "", true),
+	)
 })
 
 func makeProfileMachineImages(name, version, image string) []api.MachineImages {

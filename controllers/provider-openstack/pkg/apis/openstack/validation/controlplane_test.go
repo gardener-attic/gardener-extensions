@@ -15,7 +15,7 @@
 package validation_test
 
 import (
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/validation"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
@@ -40,18 +40,18 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 			},
 		}
 
-		constraints = apisopenstack.Constraints{
-			LoadBalancerProviders: []apisopenstack.LoadBalancerProvider{
+		constraints = api.Constraints{
+			LoadBalancerProviders: []api.LoadBalancerProvider{
 				{Name: lbProvider1},
 			},
 		}
 
-		controlPlane *apisopenstack.ControlPlaneConfig
+		controlPlane *api.ControlPlaneConfig
 	)
 
 	Describe("#ValidateControlPlaneConfig", func() {
 		BeforeEach(func() {
-			controlPlane = &apisopenstack.ControlPlaneConfig{
+			controlPlane = &api.ControlPlaneConfig{
 				LoadBalancerProvider: lbProvider1,
 				Zone:                 "some-zone",
 			}
@@ -81,6 +81,101 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 				"Type":  Equal(field.ErrorTypeNotSupported),
 				"Field": Equal("loadBalancerProvider"),
 			}))))
+		})
+
+		It("should forbid using a load balancer provider for different region", func() {
+			differentRegion := "asia"
+			constraints := api.Constraints{
+				LoadBalancerProviders: []api.LoadBalancerProvider{
+					{
+						Name:   lbProvider1,
+						Region: &region,
+					},
+					{
+						Name:   "other",
+						Region: &differentRegion,
+					},
+				},
+			}
+			regions := []gardencorev1beta1.Region{
+				{
+					Name: differentRegion,
+					Zones: []gardencorev1beta1.AvailabilityZone{
+						{Name: zone},
+					},
+				},
+			}
+			controlPlane.LoadBalancerProvider = lbProvider1
+
+			errorList := ValidateControlPlaneConfig(controlPlane, differentRegion, regions, constraints)
+
+			Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Type":  Equal(field.ErrorTypeNotSupported),
+				"Field": Equal("loadBalancerProvider"),
+			}))))
+		})
+
+		It("should forbid using the non-regional load balancer provider name if region is specified", func() {
+			differentRegion := "asia"
+			lbProvider2 := "lb2"
+
+			constraints := api.Constraints{
+				LoadBalancerProviders: []api.LoadBalancerProvider{
+					{
+						Name: lbProvider2,
+					},
+					{
+						Name:   lbProvider1,
+						Region: &differentRegion,
+					},
+				},
+			}
+			regions := []gardencorev1beta1.Region{
+				{
+					Name: region,
+					Zones: []gardencorev1beta1.AvailabilityZone{
+						{Name: zone},
+					},
+				},
+			}
+			controlPlane.LoadBalancerProvider = lbProvider1
+
+			errorList := ValidateControlPlaneConfig(controlPlane, region, regions, constraints)
+
+			Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+				"Type":  Equal(field.ErrorTypeNotSupported),
+				"Field": Equal("loadBalancerProvider"),
+			}))))
+		})
+
+		It("should allow using the non-regional load balancer provider name if region not specified", func() {
+			differentRegion := "asia"
+			lbProvider2 := "lb2"
+
+			constraints := api.Constraints{
+				LoadBalancerProviders: []api.LoadBalancerProvider{
+					{
+						Name: lbProvider2,
+					},
+					{
+						Name:   lbProvider1,
+						Region: &region,
+					},
+				},
+			}
+			regions := []gardencorev1beta1.Region{
+				{
+					Name: differentRegion,
+					Zones: []gardencorev1beta1.AvailabilityZone{
+						{Name: zone},
+					},
+				},
+			}
+			controlPlane.LoadBalancerProvider = lbProvider2
+
+			errorList := ValidateControlPlaneConfig(controlPlane, differentRegion, regions, constraints)
+
+			Expect(errorList).To(BeEmpty())
 		})
 
 		It("should require the name of a zone", func() {

@@ -95,7 +95,22 @@ string
 </em>
 </td>
 <td>
+<em>(Optional)</em>
 <p>KeyStoneURL is the URL for auth{n,z} in OpenStack (pointing to KeyStone).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>keystoneURLs</code></br>
+<em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.KeyStoneURL">
+[]KeyStoneURL
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>KeyStoneURLs is a region-URL mapping for auth{n,z} in OpenStack (pointing to KeyStone).</p>
 </td>
 </tr>
 <tr>
@@ -420,6 +435,18 @@ string
 </tr>
 <tr>
 <td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Region is the region name.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>loadBalancerClasses</code></br>
 <em>
 <a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.LoadBalancerClass">
@@ -529,6 +556,47 @@ NodeStatus
 </tr>
 </tbody>
 </table>
+<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.KeyStoneURL">KeyStoneURL
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.CloudProfileConfig">CloudProfileConfig</a>)
+</p>
+<p>
+<p>KeyStoneURL is a region-URL mapping for auth{n,z} in OpenStack (pointing to KeyStone).</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Region is the name of the region.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>url</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>URL is the keystone URL.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.LoadBalancerClass">LoadBalancerClass
 </h3>
 <p>
@@ -623,6 +691,18 @@ string
 </td>
 <td>
 <p>Name is the name of the load balancer provider.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>region</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Region is the region name.</p>
 </td>
 </tr>
 </tbody>
