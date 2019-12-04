@@ -15,72 +15,28 @@
 package log
 
 import (
-	"io"
-	"os"
-	"time"
-
 	"github.com/go-logr/logr"
-	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	logzap "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
-
-// ConfigFunc sets configuration Options for `zapcore.EncoderConfig`.
-type ConfigFunc func(config *zapcore.EncoderConfig)
-
-// ZapLoggerTo returns a new Logger implementation using Zap which logs
-// to the given destination, instead of stderr.  It otherise behaves like
-// ZapLogger.
-// This function is mainly copied from controller-runtime `sigs.k8s.io/controller-runtime/pkg/runtime/log`
-// and extended to pass options for log encoding.
-// TODO: Switch back to `sigs.k8s.io/controller-runtime/pkg/runtime/log` once proper options are exposed:
-// https://github.com/kubernetes-sigs/controller-runtime/issues/442
-func ZapLoggerTo(destWriter io.Writer, development bool, configFuncs ...ConfigFunc) logr.Logger {
-	// this basically mimics New<type>Config, but with a custom sink
-	sink := zapcore.AddSync(destWriter)
-
-	var enc zapcore.Encoder
-	var lvl zap.AtomicLevel
-	var opts []zap.Option
-	if development {
-		encCfg := zap.NewDevelopmentEncoderConfig()
-		for _, f := range configFuncs {
-			f(&encCfg)
-		}
-		enc = zapcore.NewConsoleEncoder(encCfg)
-		lvl = zap.NewAtomicLevelAt(zap.DebugLevel)
-		opts = append(opts, zap.Development(), zap.AddStacktrace(zap.ErrorLevel))
-	} else {
-		encCfg := zap.NewProductionEncoderConfig()
-		for _, f := range configFuncs {
-			f(&encCfg)
-		}
-		enc = zapcore.NewJSONEncoder(encCfg)
-		lvl = zap.NewAtomicLevelAt(zap.InfoLevel)
-		opts = append(opts, zap.AddStacktrace(zap.WarnLevel),
-			zap.WrapCore(func(core zapcore.Core) zapcore.Core {
-				return zapcore.NewSampler(core, time.Second, 100, 100)
-			}))
-	}
-	opts = append(opts, zap.AddCallerSkip(1), zap.ErrorOutput(sink))
-	log := zap.New(zapcore.NewCore(&logzap.KubeAwareEncoder{Encoder: enc, Verbose: development}, sink, lvl))
-	log = log.WithOptions(opts...)
-	return zapr.NewLogger(log)
-}
 
 // ZapLogger is a Logger implementation.
 // If development is true, a Zap development config will be used
 // (stacktraces on warnings, no sampling), otherwise a Zap production
 // config will be used (stacktraces on errors, sampling).
 // Additionally, the time encoding is adjusted to `zapcore.ISO8601TimeEncoder`.
-// This function is mainly copied from controller-runtime `sigs.k8s.io/controller-runtime/pkg/runtime/log`
-// and extended to pass options for log encoding.
-// TODO: Switch back to `sigs.k8s.io/controller-runtime/pkg/runtime/log` once proper options are exposed:
-// https://github.com/kubernetes-sigs/controller-runtime/issues/442
 func ZapLogger(development bool) logr.Logger {
-	timestampConfig := func(config *zapcore.EncoderConfig) {
-		config.EncodeTime = zapcore.ISO8601TimeEncoder
-	}
-	return ZapLoggerTo(os.Stderr, development, timestampConfig)
+	return logzap.New(func(o *logzap.Options) {
+		var encCfg zapcore.EncoderConfig
+		if development {
+			encCfg = zap.NewDevelopmentEncoderConfig()
+		} else {
+			encCfg = zap.NewProductionEncoderConfig()
+		}
+		encCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+
+		o.Encoder = zapcore.NewJSONEncoder(encCfg)
+		o.Development = development
+	})
 }

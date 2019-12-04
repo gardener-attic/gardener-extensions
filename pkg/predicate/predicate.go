@@ -87,15 +87,6 @@ func ShootNotFailed() predicate.Predicate {
 		CreateTrigger, UpdateNewTrigger, DeleteTrigger, GenericTrigger)
 }
 
-// GenerationChanged is a predicate for generation changes.
-func GenerationChanged() predicate.Predicate {
-	return predicate.Funcs{
-		UpdateFunc: func(e event.UpdateEvent) bool {
-			return e.MetaOld.GetGeneration() != e.MetaNew.GetGeneration()
-		},
-	}
-}
-
 type or struct {
 	predicates []predicate.Predicate
 }

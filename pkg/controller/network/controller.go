@@ -52,7 +52,7 @@ type AddArgs struct {
 func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.GenerationChanged(),
+			predicate.GenerationChangedPredicate{},
 		}
 	}
 
@@ -65,7 +65,7 @@ func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 		extensionspredicate.ShootNotFailed(),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
-			extensionspredicate.GenerationChanged(),
+			predicate.GenerationChangedPredicate{},
 		),
 	}
 }

@@ -743,7 +743,7 @@ var setBody = `
 		selector := labels.SelectorFromSet(labels.Set{
 			"gardener-e2e-test": "networkpolicies",
 		})
-		err := shootTestOperations.SeedClient.Client().List(ctx, namespaces, utilclient.MatchingLabelsSelector{Selector: selector})
+		err := shootTestOperations.SeedClient.Client().List(ctx, namespaces, client.MatchingLabelsSelector{Selector: selector})
 		Expect(err).NotTo(HaveOccurred())
 
 		for _, ns := range namespaces.Items {

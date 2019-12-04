@@ -28,8 +28,6 @@ import (
 )
 
 const (
-	// CertDirFlag is the name of the command line flag to specify the directory that contains the webhook server key and certificate.
-	CertDirFlag = "webhook-config-cert-dir"
 	// ModeFlag is the name of the command line flag to specify the webhook config mode.
 	ModeFlag = "webhook-config-mode"
 	// URLFlag is the name of the command line flag to specify the URL that is used to register the webhooks in Kubernetes.
@@ -40,8 +38,6 @@ const (
 
 // ServerOptions are command line options that can be set for ServerConfig.
 type ServerOptions struct {
-	// CertDir is the directory that contains the webhook server key and certificate.
-	CertDir string
 	// Mode is the URl that is used to register the webhooks in Kubernetes.
 	Mode string
 	// URL is the URl that is used to register the webhooks in Kubernetes.
@@ -54,8 +50,6 @@ type ServerOptions struct {
 
 // ServerConfig is a completed webhook server configuration.
 type ServerConfig struct {
-	// CertDir is the directory that contains the webhook server key and certificate.
-	CertDir string
 	// Mode is the URl that is used to register the webhooks in Kubernetes.
 	Mode string
 	// URL is the URl that is used to register the webhooks in Kubernetes.
@@ -67,7 +61,6 @@ type ServerConfig struct {
 // Complete implements Completer.Complete.
 func (w *ServerOptions) Complete() error {
 	w.config = &ServerConfig{
-		CertDir:   w.CertDir,
 		Mode:      w.Mode,
 		URL:       w.URL,
 		Namespace: w.Namespace,
@@ -87,7 +80,6 @@ func (w *ServerOptions) Completed() *ServerConfig {
 
 // AddFlags implements Flagger.AddFlags.
 func (w *ServerOptions) AddFlags(fs *pflag.FlagSet) {
-	fs.StringVar(&w.CertDir, CertDirFlag, w.CertDir, "The directory that contains the webhook server key and certificate.")
 	fs.StringVar(&w.Mode, ModeFlag, w.Mode, "The webhook mode - either 'url' (when running outside the cluster) or 'service' (when running inside the cluster).")
 	fs.StringVar(&w.URL, URLFlag, w.URL, "The directory that contains the webhook URL when running outside of the cluster it is serving.")
 	fs.StringVar(&w.Namespace, NamespaceFlag, w.Namespace, "The webhook config namespace for 'service' mode.")
@@ -196,7 +188,7 @@ func (c *AddToManagerOptions) Complete() error {
 	return c.Server.Complete()
 }
 
-// Compoleted returns the completed AddToManagerConfig. Only call this if a previous call to `Complete` succeeded.
+// Completed returns the completed AddToManagerConfig. Only call this if a previous call to `Complete` succeeded.
 func (c *AddToManagerOptions) Completed() *AddToManagerConfig {
 	return &AddToManagerConfig{
 		serverName: c.serverName,
@@ -223,7 +215,6 @@ func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) ([]admissionregis
 	}
 
 	webhookServer := mgr.GetWebhookServer()
-	webhookServer.CertDir = c.Server.CertDir
 
 	for _, wh := range webhooks {
 		if wh.Handler != nil {
@@ -233,7 +224,7 @@ func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) ([]admissionregis
 		}
 	}
 
-	caBundle, err := extensionswebhook.GenerateCertificates(ctx, mgr, c.Server.CertDir, c.Server.Namespace, c.serverName, c.Server.Mode, c.Server.URL)
+	caBundle, err := extensionswebhook.GenerateCertificates(ctx, mgr, webhookServer.CertDir, c.Server.Namespace, c.serverName, c.Server.Mode, c.Server.URL)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "could not generate certificates")
 	}

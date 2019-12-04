@@ -76,7 +76,7 @@ func Add(mgr manager.Manager, args AddArgs) error {
 func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.GenerationChanged(),
+			predicate.GenerationChangedPredicate{},
 		}
 	}
 	return []predicate.Predicate{
@@ -88,7 +88,7 @@ func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 		extensionspredicate.ShootNotFailed(),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
-			extensionspredicate.GenerationChanged(),
+			predicate.GenerationChangedPredicate{},
 		),
 	}
 }

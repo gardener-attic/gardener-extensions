@@ -38,6 +38,8 @@ const (
 	WebhookServerHostFlag = "webhook-config-server-host"
 	// WebhookServerPortFlag is the name of the command line flag to specify the webhook server port.
 	WebhookServerPortFlag = "webhook-config-server-port"
+	// WebhookCertDirFlag is the name of the command line flag to specify the webhook certificate directory.
+	WebhookCertDirFlag = "webhook-config-cert-dir"
 
 	// MaxConcurrentReconcilesFlag is the name of the command line flag to specify the maximum number of
 	// concurrent reconciliations a controller can do.
@@ -151,24 +153,25 @@ type ManagerOptions struct {
 	WebhookServerHost string
 	// WebhookServerPort is the port for the webhook server.
 	WebhookServerPort int
+	// WebhookCertDir is the directory that contains the webhook server key and certificate.
+	WebhookCertDir string
 
 	config *ManagerConfig
 }
 
 // AddFlags implements Flagger.AddFlags.
-// TODO: (timuthy) Add certDir flag as soon as Controller-Runtime v0.2.2 is used.
-// https://github.com/kubernetes-sigs/controller-runtime/pull/569
 func (m *ManagerOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&m.LeaderElection, LeaderElectionFlag, m.LeaderElection, "Whether to use leader election or not when running this controller manager.")
 	fs.StringVar(&m.LeaderElectionID, LeaderElectionIDFlag, m.LeaderElectionID, "The leader election id to use.")
 	fs.StringVar(&m.LeaderElectionNamespace, LeaderElectionNamespaceFlag, m.LeaderElectionNamespace, "The namespace to do leader election in.")
 	fs.StringVar(&m.WebhookServerHost, WebhookServerHostFlag, m.WebhookServerHost, "The webhook server host.")
 	fs.IntVar(&m.WebhookServerPort, WebhookServerPortFlag, m.WebhookServerPort, "The webhook server port.")
+	fs.StringVar(&m.WebhookCertDir, WebhookCertDirFlag, m.WebhookCertDir, "The directory that contains the webhook server key and certificate.")
 }
 
 // Complete implements Completer.Complete.
 func (m *ManagerOptions) Complete() error {
-	m.config = &ManagerConfig{m.LeaderElection, m.LeaderElectionID, m.LeaderElectionNamespace, m.WebhookServerHost, m.WebhookServerPort}
+	m.config = &ManagerConfig{m.LeaderElection, m.LeaderElectionID, m.LeaderElectionNamespace, m.WebhookServerHost, m.WebhookServerPort, m.WebhookCertDir}
 	return nil
 }
 
@@ -189,6 +192,8 @@ type ManagerConfig struct {
 	WebhookServerHost string
 	// WebhookServerPort is the port for the webhook server.
 	WebhookServerPort int
+	// WebhookCertDir is the directory that contains the webhook server key and certificate.
+	WebhookCertDir string
 }
 
 // Apply sets the values of this ManagerConfig in the given manager.Options.
@@ -198,6 +203,7 @@ func (c *ManagerConfig) Apply(opts *manager.Options) {
 	opts.LeaderElectionNamespace = c.LeaderElectionNamespace
 	opts.Host = c.WebhookServerHost
 	opts.Port = c.WebhookServerPort
+	opts.CertDir = c.WebhookCertDir
 }
 
 // Options initializes empty manager.Options, applies the set values and returns it.
