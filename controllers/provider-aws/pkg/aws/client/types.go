@@ -16,11 +16,6 @@ package client
 
 import (
 	"context"
-
-	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/aws/aws-sdk-go/service/elb/elbiface"
-	"github.com/aws/aws-sdk-go/service/s3/s3iface"
-	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
 
 const (
@@ -46,19 +41,9 @@ type Interface interface {
 
 	// The following functions are only temporary needed due to https://github.com/gardener/gardener/issues/129.
 	ListKubernetesELBs(ctx context.Context, vpcID, clusterName string) ([]string, error)
+	ListKubernetesELBsV2(ctx context.Context, vpcID, clusterName string) ([]LoadBalancer, error)
 	ListKubernetesSecurityGroups(ctx context.Context, vpcID, clusterName string) ([]string, error)
 	DeleteELB(ctx context.Context, name string) error
+	DeleteELBV2(ctx context.Context, arn *string) error
 	DeleteSecurityGroup(ctx context.Context, id string) error
-}
-
-// Client is a struct containing several clients for the different AWS services it needs to interact with.
-// * EC2 is the standard client for the EC2 service.
-// * ELB is the standard client for the ELB service.
-// * STS is the standard client for the STS service.
-// * S3 is the standard client for the S3 service.
-type Client struct {
-	EC2 ec2iface.EC2API
-	ELB elbiface.ELBAPI
-	STS stsiface.STSAPI
-	S3  s3iface.S3API
 }
