@@ -13,17 +13,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
+echo "> Installing requirements"
 
-cd "$DIRNAME/.."
 export GO111MODULE=on
-echo "Installing requirements"
-go install -mod=vendor ./vendor/github.com/gobuffalo/packr/v2/packr2
-go install -mod=vendor ./vendor/github.com/onsi/ginkgo/ginkgo
-go install -mod=vendor ./vendor/github.com/golang/mock/mockgen
-go install -mod=vendor ./vendor/github.com/ahmetb/gen-crd-api-reference-docs
 curl -sfL "https://install.goreleaser.com/github.com/golangci/golangci-lint.sh" | sh -s -- -b $(go env GOPATH)/bin v1.20.1
 curl -s "https://raw.githubusercontent.com/helm/helm/v2.13.1/scripts/get" | bash -s -- --version 'v2.13.1'
 

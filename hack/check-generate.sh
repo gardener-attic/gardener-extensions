@@ -16,9 +16,6 @@
 
 set -e
 
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
-source "$DIRNAME/common.sh"
-
 check_branch="__generate_check"
 initialized_git=false
 stashed=false
@@ -26,82 +23,85 @@ checked_out=false
 generated=false
 
 function delete-check-branch {
-    git rev-parse --verify "$check_branch" &>/dev/null && git branch -q -D "$check_branch" || :
+  git rev-parse --verify "$check_branch" &>/dev/null && git branch -q -D "$check_branch" || :
 }
 
 function cleanup {
-    if [[ "$generated" == true ]]; then
-        if ! clean_err="$(git reset --hard -q && git clean -qdf)"; then
-            echo "Could not clean: $clean_err"
-        fi
+  if [[ "$generated" == true ]]; then
+    if ! clean_err="$("$(dirname $0)/clean.sh" && git reset --hard -q && git clean -qdf)"; then
+      echo "Could not clean: $clean_err"
     fi
+  fi
 
-    if [[ "$checked_out" == true ]]; then
-        if ! checkout_err="$(git checkout -q -)"; then
-            echo "Could not checkout to previous branch: $checkout_err"
-        fi
+  if [[ "$checked_out" == true ]]; then
+    if ! checkout_err="$(git checkout -q -)"; then
+      echo "Could not checkout to previous branch: $checkout_err"
     fi
+  fi
 
-    if [[ "$stashed" == true ]]; then
-        if ! stash_err="$(git stash pop -q)"; then
-            echo "Could not pop stash: $stash_err"
-        fi
+  if [[ "$stashed" == true ]]; then
+    if ! stash_err="$(git stash pop -q)"; then
+      echo "Could not pop stash: $stash_err"
     fi
+  fi
 
-    if [[ "$initialized_git" == true ]]; then
-        if ! rm_err="$(rm -rf .git)"; then
-            echo "Could not delete git directory: $rm_err"
-        fi
+  if [[ "$initialized_git" == true ]]; then
+    if ! rm_err="$(rm -rf .git)"; then
+      echo "Could not delete git directory: $rm_err"
     fi
+  fi
 
-    delete-check-branch
+  delete-check-branch
 }
 
 trap cleanup EXIT SIGINT SIGTERM
 
 if which git &>/dev/null; then
-    if ! git rev-parse --git-dir &>/dev/null; then
-        initialized_git=true
-        git init -q
-        git add --all
-        git config --global user.name 'Gardener'
-        git config --global user.email 'gardener@cloud'
-        git commit -q --allow-empty -m 'initial commit'
-    fi
-
-    if [[ "$(git rev-parse --abbrev-ref HEAD)" == "$check_branch" ]]; then
-        echo "Already on go generate check branch, aborting"
-        exit 1
-    fi
-    delete-check-branch
-
-    if [[ "$(git status -s)" != "" ]]; then
-        stashed=true
-        git stash --include-untracked -q
-        git stash apply -q &>/dev/null
-    fi
-
-    checked_out=true
-    git checkout -q -b "$check_branch"
+  if ! git rev-parse --git-dir &>/dev/null; then
+    initialized_git=true
+    git init -q
     git add --all
-    git commit -q --allow-empty -m 'check-generate checkpoint'
+    git config --global user.name 'Gardener'
+    git config --global user.email 'gardener@cloud'
+    git commit -q --allow-empty -m 'initial commit'
+  fi
 
-    old_status="$(git status -s)"
-    generated=true
-    # We are using VERSIONFILE_VERSION since we want to check with respect to
-    # the content of the source state.
-    if ! out=$(VERSION="$VERSIONFILE_VERSION" "$DIRNAME/generate.sh" 2>&1); then
-        echo "Error during calling $DIRNAME/generate.sh: $out"
-        exit 1
-    fi
-    new_status="$(git status -s)"
+  if [[ "$(git rev-parse --abbrev-ref HEAD)" == "$check_branch" ]]; then
+    echo "Already on go generate check branch, aborting"
+    exit 1
+  fi
+  delete-check-branch
 
-    if [[ "$old_status" != "$new_status" ]]; then
-        echo "go generate needs to be run:"
-        echo "$new_status"
-        exit 1
-    fi
+  if [[ "$(git status -s)" != "" ]]; then
+    stashed=true
+    git stash --include-untracked -q
+    git stash apply -q &>/dev/null
+  fi
+
+  checked_out=true
+  git checkout -q -b "$check_branch"
+  git add --all
+  git commit -q --allow-empty -m 'check-generate checkpoint'
+
+  old_status="$(git status -s)"
+  if ! out=$("$(dirname $0)/clean.sh" 2>&1); then
+    echo "Error during calling $(dirname $0)/clean.sh: $out"
+    exit 1
+  fi
+  generated=true
+
+  if ! out=$($(dirname $0)/generate.sh $@ 2>&1); then
+    echo "Error during calling $(dirname $0)/generate.sh: $out"
+    exit 1
+  fi
+  new_status="$(git status -s)"
+
+  if [[ "$old_status" != "$new_status" ]]; then
+    echo "go generate needs to be run:"
+    echo "$new_status"
+    exit 1
+  fi
 else
-    echo "No git detected, cannot run generate check"
+  echo "No git detected, cannot run generate check"
 fi
 exit 0

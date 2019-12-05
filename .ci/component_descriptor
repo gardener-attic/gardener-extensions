@@ -1,0 +1,3 @@
+#!/usr/bin/env bash -e
+
+cp "${BASE_DEFINITION_PATH}" "${COMPONENT_DESCRIPTOR_PATH}"

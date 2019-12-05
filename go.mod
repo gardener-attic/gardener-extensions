@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.4.2
-	github.com/ahmetb/gen-crd-api-reference-docs v0.1.5
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
 	github.com/gardener/gardener v0.35.1-0.20200128130120-5b69a02f511a
 	github.com/gardener/gardener-resource-manager v0.9.1-0.20200124091350-6ea41bbae81f
@@ -22,14 +21,12 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.10.0
-	golang.org/x/exp v0.0.0-20190510132918-efd6b22b2522 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.0.1
 	k8s.io/api v0.0.0-20191010143144-fbf594f18f80
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
 	k8s.io/apimachinery v0.0.0-20191016060620-86f2f1b9c076
 	k8s.io/autoscaler v0.0.0-20190805135949-100e91ba756e
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
-	k8s.io/code-generator v0.0.0-20190912054826-cd179ad6a269
 	k8s.io/component-base v0.0.0-20190918160511-547f6c5d7090
 	k8s.io/gengo v0.0.0-20190826232639-a874a240740c
 	k8s.io/helm v2.14.2+incompatible

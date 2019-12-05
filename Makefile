@@ -12,34 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-### Build commands
-
 .PHONY: format
 format:
-	@./hack/format.sh
+	@./hack/format.sh ./pkg
 
 .PHONY: clean
 clean:
-	@./hack/clean.sh
+	@./hack/clean.sh ./pkg/...
 
 .PHONY: generate
 generate:
-	@./hack/generate.sh
+	@./hack/generate.sh ./...
 
 .PHONY: check
 check:
-	@./hack/check.sh
+	@./hack/check.sh ./...
 
 .PHONY: test
 test:
-	@./hack/test.sh
+	@./hack/test.sh -r ./...
 
 .PHONY: verify
 verify: check generate test format
 
+.PHONY: install-requirements
+install-requirements:
+	@go install -mod=vendor ./vendor/github.com/gobuffalo/packr/v2/packr2
+	@go install -mod=vendor ./vendor/github.com/golang/mock/mockgen
+	@go install -mod=vendor ./vendor/github.com/onsi/ginkgo/ginkgo
+	@./hack/install-requirements.sh
+
 .PHONY: install
 install:
-	@./hack/install.sh
+	@./hack/install.sh ./...
+
+.PHONY: revendor
+revendor:
+	@GO111MODULE=on go mod vendor
+	@GO111MODULE=on go mod tidy
 
 .PHONY: all
 ifeq ($(VERIFY),true)
@@ -47,10 +57,3 @@ all: verify generate install
 else
 all: generate install
 endif
-
-### Debug / Development commands
-
-.PHONY: revendor
-revendor:
-	@GO111MODULE=on go mod vendor
-	@GO111MODULE=on go mod tidy

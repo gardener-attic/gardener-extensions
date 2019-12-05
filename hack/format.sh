@@ -13,12 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 
+echo "> Format"
 
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
-source "$DIRNAME/common.sh"
-
-header_text "Format"
-
-gofmt -l -w ./pkg ./controllers
+gofmt -l -w $@

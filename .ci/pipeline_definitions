@@ -5,13 +5,6 @@ gardener-extensions:
     traits:
       version:
         preprocess: 'inject-commit-hash'
-      publish:
-        dockerimages:
-          gardener-extension-hyper:
-            registry: 'gcr-readwrite'
-            image: 'eu.gcr.io/gardener-project/gardener/gardener-extension-hyper'
-            dockerfile: 'Dockerfile'
-            target: gardener-extension-hyper
     steps: ~
   jobs:
     head-update:
@@ -32,8 +25,6 @@ gardener-extensions:
           preprocess: 'finalize'
         release:
           nextversion: 'bump_minor'
-          next_version_callback: '.ci/prepare_release'
-          release_callback: '.ci/prepare_release'
         slack:
           default_channel: 'internal_scp_workspace'
           channel_cfgs:
@@ -41,7 +32,3 @@ gardener-extensions:
               channel_name: 'k8s-gardener'
               slack_cfg_name: 'scp_workspace'
         component_descriptor: ~
-        publish:
-          dockerimages:
-            gardener-extension-hyper:
-              tag_as_latest: true

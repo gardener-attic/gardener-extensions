@@ -13,16 +13,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 
+echo "> Install"
 
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
-source "$DIRNAME/common.sh"
-
-header_text "Install"
-
-LD_FLAGS="-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$VERSION"
+LD_FLAGS="${LD_FLAGS:-"-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(cat ../VERSION)"}"
 
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on \
-    go install -mod=vendor -ldflags "$LD_FLAGS" \
-    "${CMD_TREES[@]}"
+  go install -mod=vendor -ldflags "$LD_FLAGS" \
+  $@

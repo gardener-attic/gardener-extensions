@@ -15,11 +15,6 @@
 # limitations under the License.
 set -e
 
+echo "> Test"
 
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
-source "$DIRNAME/common.sh"
-
-header_text "Test"
-echo ${SKIP_INTEGRATION_TESTS}
-
-GO111MODULE=on ginkgo -mod=vendor -r "${SOURCE_TREES[@]}"
+GO111MODULE=on ginkgo -mod=vendor $@

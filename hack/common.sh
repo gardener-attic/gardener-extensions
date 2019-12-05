@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 #
 # Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
 #
@@ -13,10 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
-
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
-ROOT="$DIRNAME/.."
 
 # Enable tracing in this script off by setting the TRACE variable in your
 # environment to any value:
@@ -44,8 +40,5 @@ function header_text {
   echo "$header$*$reset"
 }
 
-SOURCE_TREES=(./controllers/... ./pkg/...)
-CMD_TREES=(./controllers/...)
-
-VERSIONFILE_VERSION="$(cat "$DIRNAME/../VERSION")"
-VERSION="${VERSION:-${EFFECTIVE_VERSION:-"$VERSIONFILE_VERSION"}}"
+SOURCE_TREES=(./cmd/... ./pkg/...)
+CMD_TREES=(./cmd/...)

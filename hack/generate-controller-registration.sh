@@ -13,11 +13,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 set -o pipefail
-
-DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
-source "$DIRNAME/common.sh"
 
 function usage {
     cat <<EOM
@@ -26,6 +24,7 @@ generate-controller-registration <name> <chart-dir> <dest> <kind-and-type> [kind
 
     <name>            Name of the controller registration to generate.
     <chart-dir>       Location of the chart directory.
+    <version-file>    Location of the VERSION file.
     <dest>            The destination file to write the registration YAML to.
     <kind-and-type>   A tuple of kind and type of the controller registration to generate.
                       Separated by ':'.
@@ -42,12 +41,15 @@ if [ "$1" == "--optional" ]; then
 fi
 NAME="$1"
 CHART_DIR="$2"
-DEST="$3"
-KIND_AND_TYPE="$4"
+VERSION_FILE="$3"
+DEST="$4"
+KIND_AND_TYPE="$5"
+
+VERSION="$(cat "$VERSION_FILE")"
 
 ( [[ -z "$NAME" ]] || [[ -z "$CHART_DIR" ]] || [[ -z "$DEST" ]] || [[ -z "$KIND_AND_TYPE" ]]) && usage
 
-KINDS_AND_TYPES=("$KIND_AND_TYPE" "${@:5}")
+KINDS_AND_TYPES=("$KIND_AND_TYPE" "${@:6}")
 
 # The following code is to make `helm package` idempotent: Usually, everytime `helm package` is invoked,
 # it produces a different `.tgz` due to modification timestamps and some special shasums of gzip. We
