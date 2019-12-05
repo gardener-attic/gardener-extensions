@@ -99,20 +99,41 @@ func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha
 }
 
 func (a *actuator) destroyKubernetesLoadBalancersAndSecurityGroups(ctx context.Context, awsClient awsclient.Interface, vpcID, clusterName string) error {
-	loadBalancers, err := awsClient.ListKubernetesELBs(ctx, vpcID, clusterName)
+	// first get a list of v1 loadbalancers (Classic)
+	loadBalancersV1, err := awsClient.ListKubernetesELBs(ctx, vpcID, clusterName)
 	if err != nil {
 		return err
 	}
+
+	// then get a list of v2 loadbalancers (Network and Application)
+	loadBalancersV2, err := awsClient.ListKubernetesELBsV2(ctx, vpcID, clusterName)
+	if err != nil {
+		return err
+	}
+
+	// get a list of security groups to delete
 	securityGroups, err := awsClient.ListKubernetesSecurityGroups(ctx, vpcID, clusterName)
 	if err != nil {
 		return err
 	}
 
-	for _, loadBalancerName := range loadBalancers {
+	// first delete v1 loadbalancers (Classic)
+	for _, loadBalancerName := range loadBalancersV1 {
 		if err := awsClient.DeleteELB(ctx, loadBalancerName); err != nil {
 			return err
 		}
 	}
+
+	// then delete v2 loadbalancers (Network and Application)
+	for _, loadBalancer := range loadBalancersV2 {
+		if loadBalancer.Arn != nil {
+			if err := awsClient.DeleteELBV2(ctx, loadBalancer.Arn); err != nil {
+				return err
+			}
+		}
+	}
+
+	// finally delete security groups
 	for _, securityGroupID := range securityGroups {
 		if err := awsClient.DeleteSecurityGroup(ctx, securityGroupID); err != nil {
 			return err

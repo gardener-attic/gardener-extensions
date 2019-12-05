@@ -18,15 +18,47 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elb/elbiface"
+	"github.com/aws/aws-sdk-go/service/elbv2"
+
+	"github.com/aws/aws-sdk-go/service/elbv2/elbv2iface"
+
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go/service/sts/stsiface"
 )
+
+// Client is a struct containing several clients for the different AWS services it needs to interact with.
+// * EC2 is the standard client for the EC2 service.
+// * STS is the standard client for the STS service.
+// * S3 is the standard client for the S3 service.
+// * ELB is the standard client for the ELB service.
+// * ELBv2 is the standard client for the ELBv2 service.
+type Client struct {
+	EC2 ec2iface.EC2API
+	STS stsiface.STSAPI
+	S3  s3iface.S3API
+
+	ELB   elbiface.ELBAPI
+	ELBv2 elbv2iface.ELBV2API
+}
+
+// LoadBalancer is a struct wrapper that holds loadbalancer metadata such as name, type, and arn.
+type LoadBalancer struct {
+	Name *string
+	Type *string
+	Arn  *string
+}
 
 // NewClient creates a new Client for the given AWS credentials <accessKeyID>, <secretAccessKey>, and
 // the AWS region <region>.
@@ -45,10 +77,11 @@ func NewClient(accessKeyID, secretAccessKey, region string) (Interface, error) {
 	}
 
 	return &Client{
-		EC2: ec2.New(s, config),
-		ELB: elb.New(s, config),
-		STS: sts.New(s, config),
-		S3:  s3.New(s, config),
+		EC2:   ec2.New(s, config),
+		ELB:   elb.New(s, config),
+		ELBv2: elbv2.New(s, config),
+		STS:   sts.New(s, config),
+		S3:    s3.New(s, config),
 	}, nil
 }
 
@@ -90,11 +123,11 @@ func (c *Client) GetInternetGateway(ctx context.Context, vpcID string) (string, 
 
 // The following functions are only temporary needed due to https://github.com/gardener/gardener/issues/129.
 
-// ListKubernetesELBs returns the list of load balancers in the given <vpcID> tagged with <clusterName>.
+// ListKubernetesELBs returns the list of ELB loadbalancers in the given <vpcID> tagged with <clusterName>.
 func (c *Client) ListKubernetesELBs(ctx context.Context, vpcID, clusterName string) ([]string, error) {
 	var (
-		results []string
-		e       error
+		results       []string
+		describeLBErr error
 	)
 
 	if err := c.ELB.DescribeLoadBalancersPagesWithContext(ctx, &elb.DescribeLoadBalancersInput{}, func(page *elb.DescribeLoadBalancersOutput, lastPage bool) bool {
@@ -105,7 +138,7 @@ func (c *Client) ListKubernetesELBs(ctx context.Context, vpcID, clusterName stri
 					LoadBalancerNames: []*string{lb.LoadBalancerName},
 				})
 				if err != nil {
-					e = err
+					describeLBErr = err
 					return false
 				}
 
@@ -124,14 +157,61 @@ func (c *Client) ListKubernetesELBs(ctx context.Context, vpcID, clusterName stri
 		return nil, err
 	}
 
-	if e != nil {
-		return nil, e
+	if describeLBErr != nil {
+		return nil, describeLBErr
 	}
 
 	return results, nil
 }
 
-// DeleteELB deletes the load balancer with the specific <name>. If it does not exist,
+// The following functions are only temporary needed due to https://github.com/gardener/gardener/issues/129.
+
+// ListKubernetesELBsV2 returns a slice of loadbalancer tuples (of types either NLB or ALB) in the given <vpcID> tagged with <clusterName>.
+func (c *Client) ListKubernetesELBsV2(ctx context.Context, vpcID, clusterName string) ([]LoadBalancer, error) {
+	var (
+		results       []LoadBalancer
+		describeLBErr error
+	)
+
+	if err := c.ELBv2.DescribeLoadBalancersPagesWithContext(ctx, &elbv2.DescribeLoadBalancersInput{}, func(page *elbv2.DescribeLoadBalancersOutput, lastPage bool) bool {
+		for _, lb := range page.LoadBalancers {
+			if lb.VpcId != nil && *lb.VpcId == vpcID {
+				// TODO: DescribeTagsWithContext can take multiple LoadBalancers,  make just 1 call to collect all Tags
+				tags, err := c.ELBv2.DescribeTagsWithContext(ctx, &elbv2.DescribeTagsInput{
+					ResourceArns: []*string{lb.LoadBalancerArn},
+				})
+				if err != nil {
+					describeLBErr = err
+					return false
+				}
+
+				for _, description := range tags.TagDescriptions {
+					for _, tag := range description.Tags {
+						if tag.Key != nil && *tag.Key == fmt.Sprintf("kubernetes.io/cluster/%s", clusterName) && tag.Value != nil && *tag.Value == "owned" {
+							results = append(results, LoadBalancer{
+								Name: lb.LoadBalancerName,
+								Type: lb.Type,
+								Arn:  lb.LoadBalancerArn,
+							})
+						}
+					}
+				}
+			}
+		}
+
+		return !lastPage
+	}); err != nil {
+		return nil, err
+	}
+
+	if describeLBErr != nil {
+		return nil, describeLBErr
+	}
+
+	return results, nil
+}
+
+// DeleteELB deletes the loadbalancer with the specific <name>. If it does not exist,
 // no error is returned.
 func (c *Client) DeleteELB(ctx context.Context, name string) error {
 	if _, err := c.ELB.DeleteLoadBalancerWithContext(ctx, &elb.DeleteLoadBalancerInput{LoadBalancerName: aws.String(name)}); err != nil {
@@ -140,6 +220,35 @@ func (c *Client) DeleteELB(ctx context.Context, name string) error {
 		}
 		return err
 	}
+	return nil
+}
+
+// DeleteELBV2 deletes the loadbalancer (NLB or ALB) as well as its target groups with its Amazon Resource Name (ARN) . If it does not exist,
+// no error is returned.
+func (c *Client) DeleteELBV2(ctx context.Context, arn *string) error {
+	targetGroups, err := c.ELBv2.DescribeTargetGroups(
+		&elbv2.DescribeTargetGroupsInput{LoadBalancerArn: arn},
+	)
+	if err != nil {
+		return errors.Wrap(err, "could not list loadbalancer target groups")
+	}
+
+	if _, err := c.ELBv2.DeleteLoadBalancerWithContext(ctx, &elbv2.DeleteLoadBalancerInput{LoadBalancerArn: arn}); err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == elb.ErrCodeAccessPointNotFoundException {
+			return nil
+		}
+		return err
+	}
+
+	for _, group := range targetGroups.TargetGroups {
+		_, err := c.ELBv2.DeleteTargetGroup(
+			&elbv2.DeleteTargetGroupInput{TargetGroupArn: group.TargetGroupArn},
+		)
+		if err != nil {
+			return errors.Wrap(err, "could not delete target groups after deleting loadbalancer")
+		}
+	}
+
 	return nil
 }
 
