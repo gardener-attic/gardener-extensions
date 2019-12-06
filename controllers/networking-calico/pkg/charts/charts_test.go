@@ -38,21 +38,30 @@ var (
 
 var _ = Describe("Chart package test", func() {
 	var (
-		crossSubnet                     = calicov1alpha1.CrossSubnet
-		invalid     calicov1alpha1.IPIP = "invalid"
-	)
+		podCIDR                                         = calicov1alpha1.CIDR("12.0.0.0/8")
+		crossSubnet                                     = calicov1alpha1.CrossSubnet
+		always                                          = calicov1alpha1.Always
+		never                                           = calicov1alpha1.Never
+		invalid             calicov1alpha1.IPv4PoolMode = "invalid"
+		autodetectionMethod                             = "interface=eth1"
+		backendNone                                     = calicov1alpha1.None
+		backendVXLan                                    = calicov1alpha1.VXLan
+		backendBird                                     = calicov1alpha1.Bird
+		backendInvalid                                  = calicov1alpha1.Backend("invalid")
+		poolIPIP                                        = calicov1alpha1.PoolIPIP
+		poolVXlan                                       = calicov1alpha1.PoolVXLan
 
-	var (
-		network              *extensionsv1alpha1.Network
-		networkConfig        *calicov1alpha1.NetworkConfig
-		networkConfigAll     *calicov1alpha1.NetworkConfig
-		networkConfigInvalid *calicov1alpha1.NetworkConfig
-		objectMeta           = metav1.ObjectMeta{
+		network                  *extensionsv1alpha1.Network
+		networkConfigNil         *calicov1alpha1.NetworkConfig
+		networkConfigBackendNone *calicov1alpha1.NetworkConfig
+		networkConfigAll         *calicov1alpha1.NetworkConfig
+		networkConfigDeprecated  *calicov1alpha1.NetworkConfig
+		networkConfigInvalid     *calicov1alpha1.NetworkConfig
+
+		objectMeta = metav1.ObjectMeta{
 			Name:      "foo",
 			Namespace: "bar",
 		}
-		podCIDR             = calicov1alpha1.CIDR("12.0.0.0/8")
-		autodetectionMethod = "interface=eth1"
 	)
 
 	BeforeEach(func() {
@@ -63,15 +72,28 @@ var _ = Describe("Chart package test", func() {
 				PodCIDR:     string(podCIDR),
 			},
 		}
-		networkConfig = &calicov1alpha1.NetworkConfig{
-			Backend: calicov1alpha1.None,
+		networkConfigNil = nil
+		networkConfigBackendNone = &calicov1alpha1.NetworkConfig{
+			Backend: &backendNone,
 			IPAM: &calicov1alpha1.IPAM{
 				CIDR: &podCIDR,
 				Type: "host-local",
 			},
 		}
 		networkConfigAll = &calicov1alpha1.NetworkConfig{
-			Backend: calicov1alpha1.None,
+			Backend: &backendVXLan,
+			IPAM: &calicov1alpha1.IPAM{
+				CIDR: &podCIDR,
+				Type: "host-local",
+			},
+			IPv4: &calicov1alpha1.IPv4{
+				Pool:                &poolVXlan,
+				Mode:                &crossSubnet,
+				AutoDetectionMethod: &autodetectionMethod,
+			},
+		}
+		networkConfigDeprecated = &calicov1alpha1.NetworkConfig{
+			Backend: &backendBird,
 			IPAM: &calicov1alpha1.IPAM{
 				CIDR: &podCIDR,
 				Type: "host-local",
@@ -80,19 +102,22 @@ var _ = Describe("Chart package test", func() {
 			IPAutoDetectionMethod: &autodetectionMethod,
 		}
 		networkConfigInvalid = &calicov1alpha1.NetworkConfig{
-			Backend: "invalid",
+			Backend: &backendInvalid,
 			IPAM: &calicov1alpha1.IPAM{
 				CIDR: &podCIDR,
 				Type: "host-local",
 			},
-			IPIP:                  &invalid,
-			IPAutoDetectionMethod: &autodetectionMethod,
+			IPv4: &calicov1alpha1.IPv4{
+				Mode:                &invalid,
+				AutoDetectionMethod: &autodetectionMethod,
+			},
 		}
 	})
 
 	Describe("#ComputeCalicoChartValues", func() {
-		It("should correctly compute the calico chart values", func() {
-			values := charts.ComputeCalicoChartValues(network, networkConfig)
+		It("empty network config should properly render calico chart values", func() {
+			values, err := charts.ComputeCalicoChartValues(network, networkConfigNil)
+			Expect(err).To(BeNil())
 			Expect(values).To(Equal(map[string]interface{}{
 				"images": map[string]interface{}{
 					"calico-cni":              imagevector.CalicoCNIImage(),
@@ -107,23 +132,74 @@ var _ = Describe("Chart package test", func() {
 					"podCIDR": network.Spec.PodCIDR,
 				},
 				"config": map[string]interface{}{
-					"backend": networkConfig.Backend,
+					"backend": string(calicov1alpha1.Bird),
 					"ipam": map[string]interface{}{
-						"type":   networkConfig.IPAM.Type,
-						"subnet": *networkConfig.IPAM.CIDR,
+						"type":   "host-local",
+						"subnet": "usePodCidr",
 					},
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
+					"felix": map[string]interface{}{
+						"ipinip": map[string]interface{}{
+							"enabled": true,
+						},
+					},
+					"ipv4": map[string]interface{}{
+						"pool":                string(poolIPIP),
+						"mode":                string(always),
+						"autoDetectionMethod": nil,
+					},
 				},
-				"ipip": calicov1alpha1.Always,
+			}))
+		})
+	})
+
+	Describe("#ComputeCalicoChartValues", func() {
+		It("should disable felix ip in ip and set pool mode to never when setting backend to none", func() {
+			values, err := charts.ComputeCalicoChartValues(network, networkConfigBackendNone)
+			Expect(err).To(BeNil())
+			Expect(values).To(Equal(map[string]interface{}{
+				"images": map[string]interface{}{
+					"calico-cni":              imagevector.CalicoCNIImage(),
+					"calico-typha":            imagevector.CalicoTyphaImage(),
+					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
+					"calico-node":             imagevector.CalicoNodeImage(),
+					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
+					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
+					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
+				},
+				"global": map[string]string{
+					"podCIDR": network.Spec.PodCIDR,
+				},
+				"config": map[string]interface{}{
+					"backend": string(*networkConfigBackendNone.Backend),
+					"ipam": map[string]interface{}{
+						"type":   networkConfigBackendNone.IPAM.Type,
+						"subnet": string(*networkConfigBackendNone.IPAM.CIDR),
+					},
+					"typha": map[string]interface{}{
+						"enabled": trueVar,
+					},
+					"felix": map[string]interface{}{
+						"ipinip": map[string]interface{}{
+							"enabled": false,
+						},
+					},
+					"ipv4": map[string]interface{}{
+						"pool":                string(poolIPIP),
+						"mode":                string(never),
+						"autoDetectionMethod": nil,
+					},
+				},
 			}))
 		})
 	})
 
 	Describe("#ComputeAllCalicoChartValues", func() {
 		It("should correctly compute all of the calico chart values", func() {
-			values := charts.ComputeCalicoChartValues(network, networkConfigAll)
+			values, err := charts.ComputeCalicoChartValues(network, networkConfigAll)
+			Expect(err).To(BeNil())
 			Expect(values).To(Equal(map[string]interface{}{
 				"images": map[string]interface{}{
 					"calico-cni":              imagevector.CalicoCNIImage(),
@@ -138,50 +214,74 @@ var _ = Describe("Chart package test", func() {
 					"podCIDR": network.Spec.PodCIDR,
 				},
 				"config": map[string]interface{}{
-					"backend": networkConfigAll.Backend,
+					"backend": string(*networkConfigAll.Backend),
 					"ipam": map[string]interface{}{
 						"type":   networkConfigAll.IPAM.Type,
-						"subnet": *networkConfigAll.IPAM.CIDR,
+						"subnet": string(*networkConfigAll.IPAM.CIDR),
 					},
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
+					"felix": map[string]interface{}{
+						"ipinip": map[string]interface{}{
+							"enabled": true,
+						},
+					},
+					"ipv4": map[string]interface{}{
+						"pool":                string(poolVXlan),
+						"mode":                string(*networkConfigAll.IPv4.Mode),
+						"autoDetectionMethod": *networkConfigAll.IPv4.AutoDetectionMethod,
+					},
 				},
-				"ipAutodetectionMethod": *networkConfigAll.IPAutoDetectionMethod,
-				"ipip":                  *networkConfigAll.IPIP,
+			}))
+		})
+	})
+
+	Describe("#ComputeAllCalicoChartValues", func() {
+		It("should respect deprecated fields in order to keep backwards compatibility", func() {
+			values, err := charts.ComputeCalicoChartValues(network, networkConfigDeprecated)
+			Expect(err).To(BeNil())
+			Expect(values).To(Equal(map[string]interface{}{
+				"images": map[string]interface{}{
+					"calico-cni":              imagevector.CalicoCNIImage(),
+					"calico-typha":            imagevector.CalicoTyphaImage(),
+					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
+					"calico-node":             imagevector.CalicoNodeImage(),
+					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
+					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
+					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
+				},
+				"global": map[string]string{
+					"podCIDR": network.Spec.PodCIDR,
+				},
+				"config": map[string]interface{}{
+					"backend": string(*networkConfigDeprecated.Backend),
+					"ipam": map[string]interface{}{
+						"type":   networkConfigDeprecated.IPAM.Type,
+						"subnet": string(*networkConfigDeprecated.IPAM.CIDR),
+					},
+					"typha": map[string]interface{}{
+						"enabled": trueVar,
+					},
+					"felix": map[string]interface{}{
+						"ipinip": map[string]interface{}{
+							"enabled": true,
+						},
+					},
+					"ipv4": map[string]interface{}{
+						"pool":                string(calicov1alpha1.PoolIPIP),
+						"mode":                string(*networkConfigDeprecated.IPIP),
+						"autoDetectionMethod": *networkConfigDeprecated.IPAutoDetectionMethod,
+					},
+				},
 			}))
 		})
 	})
 
 	Describe("#ComputeInvalidCalicoChartValues", func() {
-		It("should replace invalid values for calico charts", func() {
-			values := charts.ComputeCalicoChartValues(network, networkConfigInvalid)
-			Expect(values).To(Equal(map[string]interface{}{
-				"images": map[string]interface{}{
-					"calico-cni":              imagevector.CalicoCNIImage(),
-					"calico-typha":            imagevector.CalicoTyphaImage(),
-					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
-					"calico-node":             imagevector.CalicoNodeImage(),
-					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
-					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
-					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
-				},
-				"global": map[string]string{
-					"podCIDR": network.Spec.PodCIDR,
-				},
-				"config": map[string]interface{}{
-					"backend": calicov1alpha1.Bird,
-					"ipam": map[string]interface{}{
-						"type":   networkConfigInvalid.IPAM.Type,
-						"subnet": *networkConfigInvalid.IPAM.CIDR,
-					},
-					"typha": map[string]interface{}{
-						"enabled": trueVar,
-					},
-				},
-				"ipAutodetectionMethod": *networkConfigInvalid.IPAutoDetectionMethod,
-				"ipip":                  calicov1alpha1.Always,
-			}))
+		It("should error on invalid config value", func() {
+			_, err := charts.ComputeCalicoChartValues(network, networkConfigInvalid)
+			Expect(err).To(Equal(fmt.Errorf("error when generating calico config: unsupported value for backend: invalid")))
 		})
 	})
 
@@ -202,7 +302,7 @@ var _ = Describe("Chart package test", func() {
 				},
 			}, nil)
 
-			_, err := charts.RenderCalicoChart(mockChartRenderer, network, networkConfig)
+			_, err := charts.RenderCalicoChart(mockChartRenderer, network, networkConfigNil)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

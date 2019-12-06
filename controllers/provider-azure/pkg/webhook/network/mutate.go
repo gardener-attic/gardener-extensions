@@ -29,6 +29,7 @@ func mutateNetworkConfig(network *extensionsv1alpha1.Network) error {
 
 	var (
 		networkConfig *calicov1alpha1.NetworkConfig
+		backendNone   = calicov1alpha1.None
 		err           error
 	)
 
@@ -46,7 +47,7 @@ func mutateNetworkConfig(network *extensionsv1alpha1.Network) error {
 		}
 	}
 
-	networkConfig.Backend = calicov1alpha1.None
+	networkConfig.Backend = &backendNone
 	network.Spec.ProviderConfig = &runtime.RawExtension{
 		Object: networkConfig,
 	}

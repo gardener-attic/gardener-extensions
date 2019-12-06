@@ -26,7 +26,10 @@ const CalicoConfigKey = "config.yaml"
 
 // RenderCalicoChart renders the calico chart with the given values.
 func RenderCalicoChart(renderer chartrenderer.Interface, network *extensionsv1alpha1.Network, config *calicov1alpha1.NetworkConfig) ([]byte, error) {
-	values := ComputeCalicoChartValues(network, config)
+	values, err := ComputeCalicoChartValues(network, config)
+	if err != nil {
+		return nil, err
+	}
 	release, err := renderer.Render(calico.ChartPath, calico.ReleaseName, metav1.NamespaceSystem, values)
 	if err != nil {
 		return nil, err

@@ -4,11 +4,16 @@ config:
   backend: bird
   ipam:
     type: "host-local"
-#   subnet: "usePodCidr"
+    # subnet: "usePodCidr"
   typha:
     enabled: true
-#ipip: "Always"
-#ipAutodetectionMethod: "first-found"
+  ipv4:
+    pool: ipip # or vxlan
+    mode: "Always"
+    autoDetectionMethod: "first-found"
+  felix:
+    ipinip:
+      enabled: "true"
 images:
   calico-node: "image-repository:image-tag"
   calico-cni: "image-repository:image-tag"

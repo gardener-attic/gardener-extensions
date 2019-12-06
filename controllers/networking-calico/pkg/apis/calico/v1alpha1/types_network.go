@@ -21,20 +21,45 @@ import (
 type Backend string
 
 const (
-	Bird Backend = "bird"
-	None Backend = "none"
+	Bird  Backend = "bird"
+	None  Backend = "none"
+	VXLan Backend = "vxlan"
 )
 
-type IPIP string
+type IPv4PoolMode string
 
 const (
-	Always      IPIP = "Always"
-	Never       IPIP = "Never"
-	CrossSubnet IPIP = "CrossSubnet"
-	Off         IPIP = "Off"
+	Always      IPv4PoolMode = "Always"
+	Never       IPv4PoolMode = "Never"
+	CrossSubnet IPv4PoolMode = "CrossSubnet"
+	Off         IPv4PoolMode = "Off"
 )
 
 type CIDR string
+
+type IPv4Pool string
+
+const (
+	PoolIPIP  IPv4Pool = "ipip"
+	PoolVXLan IPv4Pool = "vxlan"
+)
+
+// IPv4 contains configuration for calico ipv4 specific settings
+type IPv4 struct {
+	// Pool configures the type of ip pool for the tunnel interface
+	// https://docs.projectcalico.org/v3.8/reference/node/configuration#environment-variables
+	// +optional
+	Pool *IPv4Pool `json:"pool,omitempty"`
+	// Mode is the mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)
+	// ipip pools accept all pool mode values values
+	// vxlan pools accept only Always and Never (unchecked)
+	// +optional
+	Mode *IPv4PoolMode `json:"mode,omitempty"`
+	// AutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
+	// https://docs.projectcalico.org/v3.8/reference/node/configuration#ip-autodetection-methods
+	// +optional
+	AutoDetectionMethod *string `json:"autoDetectionMethod,omitempty"`
+}
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -42,22 +67,31 @@ type CIDR string
 // NetworkConfig configuration for the calico networking plugin
 type NetworkConfig struct {
 	metav1.TypeMeta `json:",inline"`
-
 	// Backend defines whether a backend should be used or not (e.g., bird or none)
-	Backend Backend `json:"backend"`
+	// +optional
+	Backend *Backend `json:"backend"`
 	// IPAM to use for the Calico Plugin (e.g., host-local or Calico)
 	// +optional
 	IPAM *IPAM `json:"ipam,omitempty"`
-	// IPAutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
-	// https://docs.projectcalico.org/v2.2/reference/node/configuration#ip-autodetection-methods
+	// IPv4 contains configuration for calico ipv4 specific settings
 	// +optional
-	IPAutoDetectionMethod *string `json:"ipAutodetectionMethod,omitempty"`
-	// IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)
-	// +optional
-	IPIP *IPIP `json:"ipip,omitempty"`
+	IPv4 *IPv4 `json:"ipv4,omitempty"`
 	// Typha settings to use for calico-typha component
 	// +optional
 	Typha *Typha `json:"typha,omitempty"`
+
+	// DEPRECATED.
+	// IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)
+	// It was moved into the IPv4 struct, kept for backwards compatibility.
+	// Will be removed in a future Gardener release.
+	// +optional
+	IPIP *IPv4PoolMode `json:"ipip,omitempty"`
+	// DEPRECATED.
+	// IPAutoDetectionMethod is the method to use to autodetect the IPv4 address for this host. This is only used when the IPv4 address is being autodetected.
+	// It was moved into the IPv4 struct, kept for backwards compatibility.
+	// Will be removed in a future Gardener release.
+	// +optional
+	IPAutoDetectionMethod *string `json:"ipAutodetectionMethod,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -81,6 +115,6 @@ type Typha struct {
 	// Enabled is used to define whether calico-typha is required or not.
 	// Note, typha is used to offload kubernetes API server,
 	// thus consider not to disable it for large clusters in terms of node count.
-	// More info can be found here https://docs.projectcalico.org/v3.9/reference/typha/
+	// More info can be found here https://docs.projectcalico.org/v3.8/reference/typha/
 	Enabled bool `json:"enabled"`
 }

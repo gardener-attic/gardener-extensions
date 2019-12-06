@@ -455,10 +455,10 @@ spec:
             - name: FELIX_DEFAULTENDPOINTTOHOSTACTION
               value: "ACCEPT"
             # Auto-detect the BGP IP address.
-           {{- if .Values.ipAutodetectionMethod }}
+           {{- if .Values.config.ipv4.autoDetectionMethod }}
             # On metal the ip is bound to the lo interface (routing to the host).
             - name: IP_AUTODETECTION_METHOD
-              value: "{{ .Values.ipAutodetectionMethod }}"
+              value: "{{ .Values.config.ipv4.autoDetectionMethod }}"
             {{- end }}
             - name: IP
               value: "autodetect"
@@ -479,18 +479,10 @@ spec:
             # no effect. This should fall within `--cluster-cidr`.
             - name: CALICO_IPV4POOL_CIDR
               value: "{{ .Values.global.podCIDR }}"
-            # Enable IPIP
-            {{- if eq .Values.config.backend "none"}}
             - name: FELIX_IPINIPENABLED
-              value: "false"
-            - name: CALICO_IPV4POOL_IPIP
-              value: "Never"
-            {{- else }}
-            - name: FELIX_IPINIPENABLED
-              value: "true"
-            - name: CALICO_IPV4POOL_IPIP
-              value: "{{.Values.ipip}}"
-            {{- end }}
+              value: "{{ .Values.config.felix.ipinip.enabled }}"
+            - name: "CALICO_IPV4POOL_{{ .Values.config.ipv4.pool | upper }}"
+              value: "{{ .Values.config.ipv4.mode }}"
             # Choose the backend to use.
             - name: CALICO_NETWORKING_BACKEND
               valueFrom:
@@ -529,7 +521,7 @@ spec:
               command:
               - /bin/calico-node
               - -felix-ready
-              {{- if ne .Values.config.backend "none" }}
+              {{- if eq .Values.config.backend "bird" }}
               - -bird-ready
               {{- end }}
             periodSeconds: 10
