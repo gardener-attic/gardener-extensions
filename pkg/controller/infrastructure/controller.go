@@ -43,7 +43,7 @@ type AddArgs struct {
 	// given actuator.
 	ControllerOptions controller.Options
 	// Predicates are the predicates to use.
-	// If unset, GenerationChanged will be used.
+	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
 	// Type is the type of the resource considered for reconciliation.
 	Type string
@@ -55,7 +55,7 @@ type AddArgs struct {
 func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 	if ignoreOperationAnnotation {
 		return []predicate.Predicate{
-			extensionspredicate.GenerationChanged(),
+			predicate.GenerationChangedPredicate{},
 			extensionspredicate.ShootNotFailed(),
 		}
 	}
@@ -69,7 +69,7 @@ func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 		extensionspredicate.ShootNotFailed(),
 		extensionspredicate.Or(
 			extensionspredicate.HasOperationAnnotation(),
-			extensionspredicate.GenerationChanged(),
+			predicate.GenerationChangedPredicate{},
 		),
 	}
 }

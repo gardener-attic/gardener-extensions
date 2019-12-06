@@ -28,7 +28,7 @@ const (
 	// the 'templates' directory. Presently 'script' and 'cloud-init' are supported
 	OsConfigFormat = "OS_CONFIG_FORMAT"
 
-	// BootCommand command to be executed to bootstap the OS Configuraton
+	// BootCommand command to be executed to bootstap the OS Configuration.
 	// Depends on the OSC format and the infrastructure platform.
 	// Well known valid values are `"/bin/bash %s"` and `"/usr/bin/cloud-init clean && /usr/bin/cloud-init --file %s init"`.
 	BootCommand = "BOOT_COMMAND"

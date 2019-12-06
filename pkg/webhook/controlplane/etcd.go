@@ -145,7 +145,7 @@ func GetETCDVolumeClaimTemplate(name string, storageClassName *string, storageCa
 	}
 }
 
-// DetermineBackupSchedule determines the backup schedule based on the shoot creation and maintainance time window.
+// DetermineBackupSchedule determines the backup schedule based on the shoot creation and maintenance time window.
 func DetermineBackupSchedule(c *corev1.Container, cluster *extensionscontroller.Cluster) (string, error) {
 	schedule := ParseExistingBackupSchedule(c)
 	if len(schedule) != 0 {
@@ -171,7 +171,7 @@ func DetermineBackupSchedule(c *corev1.Container, cluster *extensionscontroller.
 
 		if maintenanceTimeWindow != utils.AlwaysTimeWindow {
 			// Randomize the snapshot timing daily but within last hour.
-			// The 15 minutes buffer is set to snapshot upload time before actual maintainance window start.
+			// The 15 minutes buffer is set to snapshot upload time before actual maintenance window start.
 			snapshotWindowBegin := maintenanceTimeWindow.Begin().Add(-1, -15, 0)
 			randomMinutes := int(crc32.ChecksumIEEE([]byte(shootUID)) % 60)
 			snapshotTime := snapshotWindowBegin.Add(0, randomMinutes, 0)

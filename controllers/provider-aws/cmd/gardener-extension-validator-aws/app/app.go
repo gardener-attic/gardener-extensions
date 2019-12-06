@@ -41,12 +41,10 @@ func NewValidatorCommand(ctx context.Context) *cobra.Command {
 		mgrOpts  = &controllercmd.ManagerOptions{
 			WebhookServerPort: 443,
 		}
-		serverOpts = &ServerOptions{}
 
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
-			serverOpts,
 		)
 	)
 
@@ -78,7 +76,6 @@ func NewValidatorCommand(ctx context.Context) *cobra.Command {
 
 			log.Info("Setting up webhook server")
 			hookServer := mgr.GetWebhookServer()
-			hookServer.CertDir = serverOpts.Completed().CertDir
 
 			log.Info("Registering webhooks")
 			hookServer.Register("/webhooks/validate-shoot-aws", &webhook.Admission{Handler: &validator.Shoot{Logger: log.WithName("shoot-validator")}})

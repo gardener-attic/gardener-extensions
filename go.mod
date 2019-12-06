@@ -34,7 +34,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.10.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	gomodules.xyz/jsonpatch/v2 v2.0.0
+	gomodules.xyz/jsonpatch/v2 v2.0.1
 	google.golang.org/api v0.7.0
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b
@@ -50,7 +50,7 @@ require (
 	k8s.io/klog v0.3.3
 	k8s.io/kube-aggregator v0.0.0-20191004104030-d9d5f0cc7532
 	k8s.io/kubelet v0.0.0-20190314002251-f6da02f58325
-	sigs.k8s.io/controller-runtime v0.2.0-beta.5
+	sigs.k8s.io/controller-runtime v0.2.2
 	sigs.k8s.io/yaml v1.1.0
 )
 

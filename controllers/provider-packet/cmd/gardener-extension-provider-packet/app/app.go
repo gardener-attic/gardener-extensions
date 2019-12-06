@@ -45,6 +45,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			LeaderElectionID:        controllercmd.LeaderElectionNameID(packet.Name),
 			LeaderElectionNamespace: os.Getenv("LEADER_ELECTION_NAMESPACE"),
 			WebhookServerPort:       443,
+			WebhookCertDir:          "/tmp/gardener-extensions-cert",
 		}
 		configFileOpts = &packetcmd.ConfigOptions{}
 
@@ -70,7 +71,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 		// options for the webhook server
 		webhookServerOptions = &webhookcmd.ServerOptions{
-			CertDir:   "/tmp/gardener-extensions-cert",
 			Namespace: os.Getenv("WEBHOOK_CONFIG_NAMESPACE"),
 		}
 
