@@ -1,4 +1,4 @@
----
+{{- if .Values.config.vpa.enabled}}
 apiVersion: "autoscaling.k8s.io/v1beta2"
 kind: VerticalPodAutoscaler
 metadata:
@@ -10,4 +10,5 @@ spec:
     kind: Deployment
     name: {{ include "name" . }}
   updatePolicy:
-    updateMode: "Auto"
+    updateMode: {{ .Values.config.vpa.updatePolicy.updateMode }}
+{{- end }}

@@ -45,6 +45,10 @@ config:
     contentType: application/json
     qps: 100
     burst: 130
+  vpa:
+    enabled: true
+    updatePolicy:
+      updateMode: "Auto"
   machineImages:
   - name: coreos-alicloud
     version: 2023.4.0
