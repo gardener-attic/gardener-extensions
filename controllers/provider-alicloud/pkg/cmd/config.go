@@ -77,8 +77,13 @@ func (c *Config) ApplyMachineImages(machineImages *[]config.MachineImage) {
 }
 
 // ApplyMachineImageOwnerSecretRef sets the given machine image owener secret reference to those of this Config.
-func (c *Config) ApplyMachineImageOwnerSecretRef(secretRef *corev1.SecretReference) {
-	*secretRef = *c.Config.MachineImageOwnerSecretRef
+func (c *Config) ApplyMachineImageOwnerSecretRef(secretRef **corev1.SecretReference) {
+	if c.Config.MachineImageOwnerSecretRef != nil {
+		*secretRef = &corev1.SecretReference{
+			Name:      c.Config.MachineImageOwnerSecretRef.Name,
+			Namespace: c.Config.MachineImageOwnerSecretRef.Namespace,
+		}
+	}
 }
 
 // ApplyETCDStorage sets the given etcd storage configuration to that of this Config.

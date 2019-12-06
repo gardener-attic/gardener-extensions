@@ -387,6 +387,9 @@ func (a *actuator) shareCustomizedImages(ctx context.Context, infra *extensionsv
 		if exists {
 			continue
 		}
+		if a.alicloudECSClient == nil {
+			return nil, fmt.Errorf("image sharing is not enabled or configured correctly and Alicloud ECS client is not instantiated in Seed. Please contact Gardener administrator")
+		}
 		if err := a.alicloudECSClient.ShareImageToAccount(ctx, infra.Spec.Region, imageID, shootCloudProviderAccountID); err != nil {
 			return nil, err
 		}
