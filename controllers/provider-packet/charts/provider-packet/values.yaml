@@ -41,6 +41,10 @@ config:
     contentType: application/json
     qps: 100
     burst: 130
+  vpa:
+    enabled: true
+    updatePolicy:
+      updateMode: "Auto"
   machineImages:
   - name: coreos
     version: 2023.5.0
