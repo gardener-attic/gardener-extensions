@@ -17,7 +17,7 @@ data:
   # Configure the Calico backend to use.
   calico_backend: "{{ .Values.config.backend }}"
   # Configure the MTU to use
-  veth_mtu: "1440"
+  veth_mtu: "{{ .Values.config.veth_mtu }}"
   # The CNI network configuration to install on each node.
   cni_network_config: |-
     {

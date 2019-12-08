@@ -20,6 +20,7 @@ kind: NetworkConfig
 ipam:
   type: host-local
   cidr: usePodCIDR
+veth_mtu: 1440
 backend: bird
 typha:
   enabled: true
@@ -72,6 +73,7 @@ spec:
       kind: NetworkConfig
       ipam:
         type: host-local
+      veth_mtu: 1440
       backend: bird
       typha:
         enabled: false
