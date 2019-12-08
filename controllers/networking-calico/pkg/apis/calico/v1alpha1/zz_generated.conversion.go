@@ -139,6 +139,7 @@ func autoConvert_v1alpha1_NetworkConfig_To_calico_NetworkConfig(in *NetworkConfi
 	out.IPAM = (*calico.IPAM)(unsafe.Pointer(in.IPAM))
 	out.IPv4 = (*calico.IPv4)(unsafe.Pointer(in.IPv4))
 	out.Typha = (*calico.Typha)(unsafe.Pointer(in.Typha))
+	out.VethMTU = (*string)(unsafe.Pointer(in.VethMTU))
 	out.IPIP = (*calico.IPv4PoolMode)(unsafe.Pointer(in.IPIP))
 	out.IPAutoDetectionMethod = (*string)(unsafe.Pointer(in.IPAutoDetectionMethod))
 	return nil
@@ -154,6 +155,7 @@ func autoConvert_calico_NetworkConfig_To_v1alpha1_NetworkConfig(in *calico.Netwo
 	out.IPAM = (*IPAM)(unsafe.Pointer(in.IPAM))
 	out.IPv4 = (*IPv4)(unsafe.Pointer(in.IPv4))
 	out.Typha = (*Typha)(unsafe.Pointer(in.Typha))
+	out.VethMTU = (*string)(unsafe.Pointer(in.VethMTU))
 	out.IPIP = (*IPv4PoolMode)(unsafe.Pointer(in.IPIP))
 	out.IPAutoDetectionMethod = (*string)(unsafe.Pointer(in.IPAutoDetectionMethod))
 	return nil

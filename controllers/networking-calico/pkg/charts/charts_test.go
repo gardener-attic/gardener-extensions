@@ -33,7 +33,9 @@ import (
 )
 
 var (
-	trueVar = true
+	trueVar    = true
+	mtuVar     = "1430"
+	defaultMtu = "1440"
 )
 
 var _ = Describe("Chart package test", func() {
@@ -55,6 +57,7 @@ var _ = Describe("Chart package test", func() {
 		networkConfigNil         *calicov1alpha1.NetworkConfig
 		networkConfigBackendNone *calicov1alpha1.NetworkConfig
 		networkConfigAll         *calicov1alpha1.NetworkConfig
+		networkConfigAllMTU      *calicov1alpha1.NetworkConfig
 		networkConfigDeprecated  *calicov1alpha1.NetworkConfig
 		networkConfigInvalid     *calicov1alpha1.NetworkConfig
 
@@ -91,6 +94,19 @@ var _ = Describe("Chart package test", func() {
 				Mode:                &crossSubnet,
 				AutoDetectionMethod: &autodetectionMethod,
 			},
+		}
+		networkConfigAllMTU = &calicov1alpha1.NetworkConfig{
+			Backend: &backendVXLan,
+			IPAM: &calicov1alpha1.IPAM{
+				CIDR: &podCIDR,
+				Type: "host-local",
+			},
+			IPv4: &calicov1alpha1.IPv4{
+				Pool:                &poolVXlan,
+				Mode:                &crossSubnet,
+				AutoDetectionMethod: &autodetectionMethod,
+			},
+			VethMTU: &mtuVar,
 		}
 		networkConfigDeprecated = &calicov1alpha1.NetworkConfig{
 			Backend: &backendBird,
@@ -140,6 +156,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
+					"vethMTU": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,
@@ -181,6 +198,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
+					"vethMTU": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": false,
@@ -222,6 +240,46 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
+					"vethMTU": defaultMtu,
+					"felix": map[string]interface{}{
+						"ipinip": map[string]interface{}{
+							"enabled": true,
+						},
+					},
+					"ipv4": map[string]interface{}{
+						"pool":                string(poolVXlan),
+						"mode":                string(*networkConfigAll.IPv4.Mode),
+						"autoDetectionMethod": *networkConfigAll.IPv4.AutoDetectionMethod,
+					},
+				},
+			}))
+		})
+		It("should correctly compute all of the calico chart values with mtu", func() {
+			values, err := charts.ComputeCalicoChartValues(network, networkConfigAllMTU)
+			Expect(err).To(BeNil())
+			Expect(values).To(Equal(map[string]interface{}{
+				"images": map[string]interface{}{
+					"calico-cni":              imagevector.CalicoCNIImage(),
+					"calico-typha":            imagevector.CalicoTyphaImage(),
+					"calico-kube-controllers": imagevector.CalicoKubeControllersImage(),
+					"calico-node":             imagevector.CalicoNodeImage(),
+					"calico-podtodaemon-flex": imagevector.CalicoFlexVolumeDriverImage(),
+					"typha-cpa":               imagevector.TyphaClusterProportionalAutoscalerImage(),
+					"typha-cpva":              imagevector.TyphaClusterProportionalVerticalAutoscalerImage(),
+				},
+				"global": map[string]string{
+					"podCIDR": network.Spec.PodCIDR,
+				},
+				"config": map[string]interface{}{
+					"backend": string(*networkConfigAll.Backend),
+					"ipam": map[string]interface{}{
+						"type":   networkConfigAll.IPAM.Type,
+						"subnet": string(*networkConfigAll.IPAM.CIDR),
+					},
+					"typha": map[string]interface{}{
+						"enabled": trueVar,
+					},
+					"vethMTU": mtuVar,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,
@@ -263,6 +321,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
+					"vethMTU": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,

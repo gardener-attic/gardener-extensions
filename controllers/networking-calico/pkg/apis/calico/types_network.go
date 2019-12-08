@@ -71,6 +71,8 @@ type NetworkConfig struct {
 	IPv4 *IPv4
 	// Typha settings to use for calico-typha component
 	Typha *Typha
+	// VethMTU settings used to configure calico port mtu
+	VethMTU *string
 
 	// DEPRECATED.
 	// IPIP is the IPIP Mode for the IPv4 Pool (e.g. Always, Never, CrossSubnet)

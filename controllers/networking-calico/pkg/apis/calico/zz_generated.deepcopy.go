@@ -100,6 +100,11 @@ func (in *NetworkConfig) DeepCopyInto(out *NetworkConfig) {
 		*out = new(Typha)
 		**out = **in
 	}
+	if in.VethMTU != nil {
+		in, out := &in.VethMTU, &out.VethMTU
+		*out = new(string)
+		**out = **in
+	}
 	if in.IPIP != nil {
 		in, out := &in.IPIP, &out.IPIP
 		*out = new(IPv4PoolMode)
