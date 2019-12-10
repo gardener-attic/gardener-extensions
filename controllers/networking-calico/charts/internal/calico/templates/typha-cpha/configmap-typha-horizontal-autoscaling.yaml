@@ -1,13 +1,10 @@
 {{- if .Values.config.typha.enabled }}
-# Config is separated in order to allow computing the SHA256 checksum
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
   name: calico-typha-horizontal-autoscaler
   namespace: kube-system
-  labels:
-    kubernetes.io/cluster-service: "true"
 data:
   ladder: |-
     {
