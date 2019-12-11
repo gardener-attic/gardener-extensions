@@ -1,4 +1,3 @@
-# Config is separated in order to allow computing the SHA256 checksum
 ---
 apiVersion: v1
 kind: ConfigMap
