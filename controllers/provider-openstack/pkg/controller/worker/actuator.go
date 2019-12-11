@@ -16,7 +16,6 @@ package worker
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/imagevector"
@@ -38,15 +37,12 @@ type delegateFactory struct {
 	logger logr.Logger
 
 	common.RESTConfigContext
-
-	machineImageToCloudProfilesMapping []config.MachineImage
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled WorkerPoolConfigs.
-func NewActuator(machineImageToCloudProfilesMapping []config.MachineImage) worker.Actuator {
+func NewActuator() worker.Actuator {
 	delegateFactory := &delegateFactory{
-		logger:                             log.Log.WithName("worker-actuator"),
-		machineImageToCloudProfilesMapping: machineImageToCloudProfilesMapping,
+		logger: log.Log.WithName("worker-actuator"),
 	}
 
 	return genericactuator.NewActuator(
@@ -79,7 +75,6 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 	return NewWorkerDelegate(
 		d.ClientContext,
 
-		d.machineImageToCloudProfilesMapping,
 		seedChartApplier,
 		serverVersion.GitVersion,
 
@@ -91,9 +86,8 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 type workerDelegate struct {
 	common.ClientContext
 
-	machineImageToCloudProfilesMapping []config.MachineImage
-	seedChartApplier                   gardener.ChartApplier
-	serverVersion                      string
+	seedChartApplier gardener.ChartApplier
+	serverVersion    string
 
 	profileConfig *api.CloudProfileConfig
 	cluster       *extensionscontroller.Cluster
@@ -108,7 +102,6 @@ type workerDelegate struct {
 func NewWorkerDelegate(
 	clientContext common.ClientContext,
 
-	machineImageToCloudProfilesMapping []config.MachineImage,
 	seedChartApplier gardener.ChartApplier,
 	serverVersion string,
 
@@ -122,9 +115,8 @@ func NewWorkerDelegate(
 	return &workerDelegate{
 		ClientContext: clientContext,
 
-		machineImageToCloudProfilesMapping: machineImageToCloudProfilesMapping,
-		seedChartApplier:                   seedChartApplier,
-		serverVersion:                      serverVersion,
+		seedChartApplier: seedChartApplier,
+		serverVersion:    serverVersion,
 
 		profileConfig: config,
 		cluster:       cluster,

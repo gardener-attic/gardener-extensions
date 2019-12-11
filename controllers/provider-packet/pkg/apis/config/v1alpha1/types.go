@@ -30,21 +30,8 @@ type ControllerConfiguration struct {
 	// settings for the proxy server to use when communicating with the apiserver.
 	// +optional
 	ClientConnection *componentbaseconfigv1alpha1.ClientConnectionConfiguration `json:"clientConnection,omitempty"`
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to Packet-specific identifiers.
-	MachineImages []MachineImage `json:"machineImages,omitempty"`
 	// ETCD is the etcd configuration.
 	ETCD ETCD `json:"etcd"`
-}
-
-// MachineImage is a mapping from logical names and versions to Packet-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string `json:"name"`
-	// Version is the logical version of the machine image.
-	Version string `json:"version"`
-	// ID is the id of the image.
-	ID string `json:"id"`
 }
 
 // ETCD is an etcd configuration.

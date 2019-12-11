@@ -23,7 +23,6 @@ import (
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/install"
 	alicloudv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/common"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
@@ -106,7 +105,6 @@ var _ = Describe("Actuator", func() {
 					shootSTSClient           = mockalicloudclient.NewMockSTS(ctrl)
 					chartRendererFactory     = mockchartrenderer.NewMockFactory(ctrl)
 					terraformChartOps        = mockinfrastructure.NewMockTerraformChartOps(ctrl)
-					machineImageMapping      = []config.MachineImage{}
 					actuator                 = NewActuatorWithDeps(
 						logger,
 						newAlicloudClientFactory,
@@ -114,7 +112,6 @@ var _ = Describe("Actuator", func() {
 						terraformerFactory,
 						chartRendererFactory,
 						terraformChartOps,
-						machineImageMapping,
 						nil,
 					)
 					c           = mockclient.NewMockClient(ctrl)

@@ -19,7 +19,6 @@ import (
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -38,15 +37,12 @@ import (
 type delegateFactory struct {
 	logger logr.Logger
 	common.RESTConfigContext
-
-	machineImageToAMIMapping []config.MachineImage
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled WorkerPoolConfigs.
-func NewActuator(machineImageToAMIMapping []config.MachineImage) worker.Actuator {
+func NewActuator() worker.Actuator {
 	delegateFactory := &delegateFactory{
-		logger:                   log.Log.WithName("worker-actuator"),
-		machineImageToAMIMapping: machineImageToAMIMapping,
+		logger: log.Log.WithName("worker-actuator"),
 	}
 
 	return genericactuator.NewActuator(
@@ -79,7 +75,6 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 	return NewWorkerDelegate(
 		d.ClientContext,
 
-		d.machineImageToAMIMapping,
 		seedChartApplier,
 		serverVersion.GitVersion,
 
@@ -91,9 +86,8 @@ func (d *delegateFactory) WorkerDelegate(ctx context.Context, worker *extensions
 type workerDelegate struct {
 	common.ClientContext
 
-	machineImageToAMIMapping []config.MachineImage
-	seedChartApplier         gardener.ChartApplier
-	serverVersion            string
+	seedChartApplier gardener.ChartApplier
+	serverVersion    string
 
 	profileConfig *apisaws.CloudProfileConfig
 	cluster       *extensionscontroller.Cluster
@@ -108,7 +102,6 @@ type workerDelegate struct {
 func NewWorkerDelegate(
 	clientContext common.ClientContext,
 
-	machineImageToAMIMapping []config.MachineImage,
 	seedChartApplier gardener.ChartApplier,
 	serverVersion string,
 
@@ -122,9 +115,8 @@ func NewWorkerDelegate(
 	return &workerDelegate{
 		ClientContext: clientContext,
 
-		machineImageToAMIMapping: machineImageToAMIMapping,
-		seedChartApplier:         seedChartApplier,
-		serverVersion:            serverVersion,
+		seedChartApplier: seedChartApplier,
+		serverVersion:    serverVersion,
 
 		profileConfig: config,
 		cluster:       cluster,

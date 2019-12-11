@@ -6,8 +6,8 @@ metadata:
   namespace: shoot--foobar--packet
 type: Opaque
 data:
-# apiToken: base64(api-token)
-# projectID: base64(project-id)
+  apiToken: ZGF0YQo=
+  projectID: ZGF0YQo=
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -17,6 +17,15 @@ spec:
   cloudProfile:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
+    spec:
+      providerConfig:
+        apiVersion: packet.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
+        machineImages:
+        - name: coreos
+          versions:
+          - version: 2023.5.0
+            id: packetimageid
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
@@ -38,6 +47,9 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--packet
+  annotations:
+    xgardener.cloud/operation: reconcile
+    gardener.cloud/operation: reconcile
 spec:
   type: packet
   region: ewr1

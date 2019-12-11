@@ -113,7 +113,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 
-		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, w.cluster.CloudProfile.Name)
+		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}

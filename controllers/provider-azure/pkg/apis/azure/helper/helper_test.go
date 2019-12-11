@@ -15,7 +15,7 @@
 package helper_test
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
+	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	. "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
 
 	. "github.com/onsi/ginkgo"
@@ -25,84 +25,126 @@ import (
 
 var _ = Describe("Helper", func() {
 	var (
-		purpose      azure.Purpose = "foo"
-		purposeWrong azure.Purpose = "baz"
-		urn          string        = "publisher:offer:sku:version"
+		purpose      api.Purpose = "foo"
+		purposeWrong api.Purpose = "baz"
+		urn          string      = "publisher:offer:sku:version"
 	)
 
 	DescribeTable("#FindSubnetByPurpose",
-		func(subnets []azure.Subnet, purpose azure.Purpose, expectedSubnet *azure.Subnet, expectErr bool) {
+		func(subnets []api.Subnet, purpose api.Purpose, expectedSubnet *api.Subnet, expectErr bool) {
 			subnet, err := FindSubnetByPurpose(subnets, purpose)
 			expectResults(subnet, expectedSubnet, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []azure.Subnet{}, purpose, nil, true),
-		Entry("entry not found", []azure.Subnet{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []azure.Subnet{{Name: "bar", Purpose: purpose}}, purpose, &azure.Subnet{Name: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.Subnet{}, purpose, nil, true),
+		Entry("entry not found", []api.Subnet{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.Subnet{{Name: "bar", Purpose: purpose}}, purpose, &api.Subnet{Name: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindSecurityGroupByPurpose",
-		func(securityGroups []azure.SecurityGroup, purpose azure.Purpose, expectedSecurityGroup *azure.SecurityGroup, expectErr bool) {
+		func(securityGroups []api.SecurityGroup, purpose api.Purpose, expectedSecurityGroup *api.SecurityGroup, expectErr bool) {
 			securityGroup, err := FindSecurityGroupByPurpose(securityGroups, purpose)
 			expectResults(securityGroup, expectedSecurityGroup, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []azure.SecurityGroup{}, purpose, nil, true),
-		Entry("entry not found", []azure.SecurityGroup{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []azure.SecurityGroup{{Name: "bar", Purpose: purpose}}, purpose, &azure.SecurityGroup{Name: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.SecurityGroup{}, purpose, nil, true),
+		Entry("entry not found", []api.SecurityGroup{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.SecurityGroup{{Name: "bar", Purpose: purpose}}, purpose, &api.SecurityGroup{Name: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindRouteTableByPurpose",
-		func(routeTables []azure.RouteTable, purpose azure.Purpose, expectedRouteTable *azure.RouteTable, expectErr bool) {
+		func(routeTables []api.RouteTable, purpose api.Purpose, expectedRouteTable *api.RouteTable, expectErr bool) {
 			routeTable, err := FindRouteTableByPurpose(routeTables, purpose)
 			expectResults(routeTable, expectedRouteTable, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []azure.RouteTable{}, purpose, nil, true),
-		Entry("entry not found", []azure.RouteTable{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []azure.RouteTable{{Name: "bar", Purpose: purpose}}, purpose, &azure.RouteTable{Name: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.RouteTable{}, purpose, nil, true),
+		Entry("entry not found", []api.RouteTable{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.RouteTable{{Name: "bar", Purpose: purpose}}, purpose, &api.RouteTable{Name: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindAvailabilitySetByPurpose",
-		func(availabilitySets []azure.AvailabilitySet, purpose azure.Purpose, expectedAvailabilitySet *azure.AvailabilitySet, expectErr bool) {
+		func(availabilitySets []api.AvailabilitySet, purpose api.Purpose, expectedAvailabilitySet *api.AvailabilitySet, expectErr bool) {
 			availabilitySet, err := FindAvailabilitySetByPurpose(availabilitySets, purpose)
 			expectResults(availabilitySet, expectedAvailabilitySet, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []azure.AvailabilitySet{}, purpose, nil, true),
-		Entry("entry not found", []azure.AvailabilitySet{{ID: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []azure.AvailabilitySet{{ID: "bar", Purpose: purpose}}, purpose, &azure.AvailabilitySet{ID: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.AvailabilitySet{}, purpose, nil, true),
+		Entry("entry not found", []api.AvailabilitySet{{ID: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.AvailabilitySet{{ID: "bar", Purpose: purpose}}, purpose, &api.AvailabilitySet{ID: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindMachineImage",
-		func(machineImages []azure.MachineImage, name, version string, expectedMachineImage *azure.MachineImage, expectErr bool) {
+		func(machineImages []api.MachineImage, name, version string, expectedMachineImage *api.MachineImage, expectErr bool) {
 			machineImage, err := FindMachineImage(machineImages, name, version)
 			expectResults(machineImage, expectedMachineImage, err, expectErr)
 		},
 
 		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
-		Entry("empty list", []azure.MachineImage{}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no name)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no version)", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.4", nil, true),
-		Entry("entry exists", []azure.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.3", &azure.MachineImage{Name: "bar", Version: "1.2.3", URN: &urn}, false),
+		Entry("empty list", []api.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []api.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []api.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.4", nil, true),
+		Entry("entry exists", []api.MachineImage{{Name: "bar", Version: "1.2.3", URN: &urn}}, "bar", "1.2.3", &api.MachineImage{Name: "bar", Version: "1.2.3", URN: &urn}, false),
 	)
 
 	DescribeTable("#FindDomainCountByRegion",
-		func(domainCounts []azure.DomainCount, region string, expectedCount int, expectErr bool) {
+		func(domainCounts []api.DomainCount, region string, expectedCount int, expectErr bool) {
 			count, err := FindDomainCountByRegion(domainCounts, region)
 			expectResults(count, expectedCount, err, expectErr)
 		},
 
 		Entry("list is nil", nil, "foo", 0, true),
-		Entry("empty list", []azure.DomainCount{}, "foo", 0, true),
-		Entry("entry not found", []azure.DomainCount{{Region: "bar", Count: 1}}, "foo", 0, true),
-		Entry("entry exists", []azure.DomainCount{{Region: "bar", Count: 1}}, "bar", 1, false),
+		Entry("empty list", []api.DomainCount{}, "foo", 0, true),
+		Entry("entry not found", []api.DomainCount{{Region: "bar", Count: 1}}, "foo", 0, true),
+		Entry("entry exists", []api.DomainCount{{Region: "bar", Count: 1}}, "bar", 1, false),
 	)
 })
+
+var (
+	profileURN = "publisher:offer:sku:1.2.4"
+)
+
+var _ = Describe("Helper", func() {
+	DescribeTable("#FindImage",
+		func(profileImages []api.MachineImages, imageName, version string, expectedImage *api.MachineImage) {
+			cfg := &api.CloudProfileConfig{}
+			cfg.MachineImages = profileImages
+			image, err := FindImageFromCloudProfile(cfg, imageName, version)
+
+			Expect(image).To(Equal(expectedImage))
+			if expectedImage != nil {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+			}
+		},
+
+		Entry("list is nil", nil, "ubuntu", "1", nil),
+
+		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", nil),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1"), "ubuntu", "1", nil),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2"), "ubuntu", "1", nil),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1"), "ubuntu", "1", &api.MachineImage{Name: "ubuntu", Version: "1", URN: &profileURN}),
+	)
+})
+
+func makeProfileMachineImages(name, version string) []api.MachineImages {
+	return []api.MachineImages{
+		{
+			Name: name,
+			Versions: []api.MachineImageVersion{
+				{
+					Version: version,
+					URN:     profileURN,
+				},
+			},
+		},
+	}
+}
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {
 	if !expectErr {

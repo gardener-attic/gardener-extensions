@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config"
 	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/worker"
@@ -66,7 +65,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(nil, nil, nil), nil, nil, "", nil, nil)
+		workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(nil, nil, nil), nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -121,7 +120,6 @@ var _ = Describe("Machines", func() {
 
 				shootVersionMajorMinor string
 				shootVersion           string
-				machineImages          []config.MachineImage
 				scheme                 *runtime.Scheme
 				decoder                runtime.Decoder
 				clusterWithoutImages   *extensionscontroller.Cluster
@@ -166,14 +164,6 @@ var _ = Describe("Machines", func() {
 
 				shootVersionMajorMinor = "1.2"
 				shootVersion = shootVersionMajorMinor + ".3"
-
-				machineImages = []config.MachineImage{
-					{
-						Name:    machineImageName,
-						Version: machineImageVersion,
-						Image:   machineImage,
-					},
-				}
 
 				clusterWithoutImages = &extensionscontroller.Cluster{
 					Shoot: &gardencorev1beta1.Shoot{
@@ -299,7 +289,7 @@ var _ = Describe("Machines", func() {
 				workerPoolHash2, _ = worker.WorkerPoolHash(w.Spec.Pools[1], cluster)
 
 				dummyUse(cluster)
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImages, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 			})
 
 			Describe("machine images", func() {
@@ -429,54 +419,9 @@ var _ = Describe("Machines", func() {
 					}
 				}
 
-				It("should return the expected machine deployments when disableExternal IP is false ", func() {
-					expectGetSecretCallToWork(c, serviceAccountJSON)
-
-					// Test workerDelegate.DeployMachineClasses()
-					setup(false)
-
-					chartApplier.
-						EXPECT().
-						ApplyChart(
-							context.TODO(),
-							filepath.Join(gcp.InternalChartsPath, "machineclass"),
-							namespace,
-							"machineclass",
-							machineClasses,
-							nil,
-						).
-						Return(nil)
-
-					err := workerDelegate.DeployMachineClasses(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GetMachineImages()
-					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
-					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
-						TypeMeta: metav1.TypeMeta{
-							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
-							Kind:       "WorkerStatus",
-						},
-						MachineImages: []apiv1alpha1.MachineImage{
-							{
-								Name:    machineImageName,
-								Version: machineImageVersion,
-								Image:   machineImage,
-							},
-						},
-					}))
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GenerateMachineDeployments()
-
-					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal(machineDeployments))
-				})
-
 				It("should return the expected machine deployments when disableExternal IP is false for profile image types", func() {
 
-					workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), nil, chartApplier, "", w, cluster)
+					workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 					expectGetSecretCallToWork(c, serviceAccountJSON)
 
@@ -518,71 +463,6 @@ var _ = Describe("Machines", func() {
 					// Test workerDelegate.GenerateMachineDeployments()
 
 					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal(machineDeployments))
-				})
-
-				It("should return the expected machine deployments when disableExternal IP is true", func() {
-					expectGetSecretCallToWork(c, serviceAccountJSON)
-
-					setup(true)
-					workerCloudRouter := w
-					workerCloudRouter.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
-						Raw: encode(&api.InfrastructureStatus{
-							ServiceAccountEmail: serviceAccountEmail,
-							Networks: api.NetworkStatus{
-								VPC: api.VPC{
-									CloudRouter: &api.CloudRouter{
-										Name: "my-cloudrouter",
-									},
-								},
-								Subnets: []api.Subnet{
-									{
-										Name:    subnetName,
-										Purpose: api.PurposeNodes,
-									},
-								},
-							},
-						}),
-					}
-					workerDelegateCloudRouter, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImages, chartApplier, "", workerCloudRouter, clusterWithoutImages)
-					// Test workerDelegate.DeployMachineClasses()
-
-					chartApplier.
-						EXPECT().
-						ApplyChart(
-							context.TODO(),
-							filepath.Join(gcp.InternalChartsPath, "machineclass"),
-							namespace,
-							"machineclass",
-							machineClasses,
-							nil,
-						).
-						Return(nil)
-
-					err := workerDelegateCloudRouter.DeployMachineClasses(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GetMachineImages()
-					machineImages, err := workerDelegateCloudRouter.GetMachineImages(context.TODO())
-					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
-						TypeMeta: metav1.TypeMeta{
-							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
-							Kind:       "WorkerStatus",
-						},
-						MachineImages: []apiv1alpha1.MachineImage{
-							{
-								Name:    machineImageName,
-								Version: machineImageVersion,
-								Image:   machineImage,
-							},
-						},
-					}))
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GenerateMachineDeployments()
-
-					result, err := workerDelegateCloudRouter.GenerateMachineDeployments(context.TODO())
 					Expect(err).NotTo(HaveOccurred())
 					Expect(result).To(Equal(machineDeployments))
 				})
@@ -610,7 +490,7 @@ var _ = Describe("Machines", func() {
 							},
 						}),
 					}
-					workerDelegateCloudRouter, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), nil, chartApplier, "", workerCloudRouter, cluster)
+					workerDelegateCloudRouter, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", workerCloudRouter, cluster)
 					// Test workerDelegate.DeployMachineClasses()
 
 					chartApplier.
@@ -667,7 +547,7 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
 				clusterWithoutImages.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImages, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -679,7 +559,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImages, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -693,7 +573,7 @@ var _ = Describe("Machines", func() {
 					Raw: encode(&api.InfrastructureStatus{}),
 				}
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImages, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -703,7 +583,7 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image cannot be found", func() {
 				expectGetSecretCallToWork(c, serviceAccountJSON)
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), nil, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -715,7 +595,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.Pools[0].Volume.Size = "not-decodeable"
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImages, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

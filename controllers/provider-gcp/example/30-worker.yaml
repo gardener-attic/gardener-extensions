@@ -6,7 +6,7 @@ metadata:
   namespace: shoot--foobar--gcp
 type: Opaque
 data:
-# serviceaccount.json: base64(serviceaccount-json)
+  serviceaccount.json: ZGF0YQo=
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -16,6 +16,15 @@ spec:
   cloudProfile:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
+    spec:
+      providerConfig:
+        apiVersion: gcp.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
+        machineImages:
+        - name: coreos
+          versions:
+          - version: 2135.6.0
+            image: gcpimageid
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
@@ -37,6 +46,9 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--gcp
+  annotations:
+    xgardener.cloud/operation: reconcile
+    gardener.cloud/operation: reconcile
 spec:
   type: gcp
   region: europe-west1

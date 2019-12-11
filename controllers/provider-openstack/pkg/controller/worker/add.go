@@ -15,7 +15,6 @@
 package worker
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	machinescheme "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/scheme"
@@ -35,8 +34,6 @@ type AddOptions struct {
 	Controller controller.Options
 	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
 	IgnoreOperationAnnotation bool
-	// MachineImagesToCloudProfilesMapping is the default mapping from machine images to cloud profiles.
-	MachineImagesToCloudProfilesMapping []config.MachineImage
 }
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
@@ -51,7 +48,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	}
 
 	return worker.Add(mgr, worker.AddArgs{
-		Actuator:          NewActuator(opts.MachineImagesToCloudProfilesMapping),
+		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
 		Predicates:        worker.DefaultPredicates(opts.IgnoreOperationAnnotation),
 		Type:              openstack.Type,

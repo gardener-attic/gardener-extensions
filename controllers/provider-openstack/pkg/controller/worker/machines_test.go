@@ -21,7 +21,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
@@ -66,7 +65,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(nil, nil, nil), nil, nil, "", nil, nil)
+		workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(nil, nil, nil), nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -121,14 +120,13 @@ var _ = Describe("Machines", func() {
 				workerPoolHash1 string
 				workerPoolHash2 string
 
-				shootVersionMajorMinor             string
-				shootVersion                       string
-				machineImageToCloudProfilesMapping []config.MachineImage
-				scheme                             *runtime.Scheme
-				decoder                            runtime.Decoder
-				clusterWithoutImages               *extensionscontroller.Cluster
-				cluster                            *extensionscontroller.Cluster
-				w                                  *extensionsv1alpha1.Worker
+				shootVersionMajorMinor string
+				shootVersion           string
+				scheme                 *runtime.Scheme
+				decoder                runtime.Decoder
+				clusterWithoutImages   *extensionscontroller.Cluster
+				cluster                *extensionscontroller.Cluster
+				w                      *extensionsv1alpha1.Worker
 			)
 
 			BeforeEach(func() {
@@ -170,19 +168,6 @@ var _ = Describe("Machines", func() {
 
 				shootVersionMajorMinor = "1.2"
 				shootVersion = shootVersionMajorMinor + ".3"
-
-				machineImageToCloudProfilesMapping = []config.MachineImage{
-					{
-						Name:    machineImageName,
-						Version: machineImageVersion,
-						CloudProfiles: []config.CloudProfileMapping{
-							{
-								Name:  cloudProfileName,
-								Image: machineImage,
-							},
-						},
-					},
-				}
 
 				cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
 					TypeMeta: metav1.TypeMeta{
@@ -319,7 +304,7 @@ var _ = Describe("Machines", func() {
 				workerPoolHash2, _ = worker.WorkerPoolHash(w.Spec.Pools[1], cluster)
 
 				dummyUse(cluster)
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImageToCloudProfilesMapping, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 			})
 
 			Describe("machine images", func() {
@@ -416,54 +401,8 @@ var _ = Describe("Machines", func() {
 					}
 				})
 
-				It("should return the expected machine deployments for config image types", func() {
-					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImageToCloudProfilesMapping, chartApplier, "", w, clusterWithoutImages)
-
-					expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
-
-					// Test workerDelegate.DeployMachineClasses()
-
-					chartApplier.
-						EXPECT().
-						ApplyChart(
-							context.TODO(),
-							filepath.Join(openstack.InternalChartsPath, "machineclass"),
-							namespace,
-							"machineclass",
-							machineClasses,
-							nil,
-						).
-						Return(nil)
-
-					err := workerDelegate.DeployMachineClasses(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GetMachineImages()
-					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
-					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
-						TypeMeta: metav1.TypeMeta{
-							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
-							Kind:       "WorkerStatus",
-						},
-						MachineImages: []apiv1alpha1.MachineImage{
-							{
-								Name:    machineImageName,
-								Version: machineImageVersion,
-								Image:   machineImage,
-							},
-						},
-					}))
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GenerateMachineDeployments()
-
-					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal(machineDeployments))
-				})
-
 				It("should return the expected machine deployments for profile image types", func() {
-					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), nil, chartApplier, "", w, cluster)
+					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 					expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
@@ -523,7 +462,7 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
 				clusterWithoutImages.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImageToCloudProfilesMapping, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -535,7 +474,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImageToCloudProfilesMapping, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -549,7 +488,7 @@ var _ = Describe("Machines", func() {
 					Raw: encode(&api.InfrastructureStatus{}),
 				}
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImageToCloudProfilesMapping, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -561,7 +500,7 @@ var _ = Describe("Machines", func() {
 
 				clusterWithoutImages.CloudProfile.Name = "another-cloud-profile"
 
-				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), machineImageToCloudProfilesMapping, chartApplier, "", w, clusterWithoutImages)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

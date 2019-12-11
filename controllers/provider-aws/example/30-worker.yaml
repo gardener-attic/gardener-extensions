@@ -6,8 +6,8 @@ metadata:
   namespace: shoot--foobar--aws
 type: Opaque
 data:
-  accessKeyID: AAAA
-  secretAccessKey: AAAA
+  accessKeyID: ZGF0YQo=
+  secretAccessKey: ZGF0YQo=
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -17,6 +17,19 @@ spec:
   cloudProfile:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
+    spec:
+      providerConfig:
+        apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
+        machineImages:
+          - name: coreos
+            versions:
+              - version: 2135.6.0
+                regions:
+                - name: eu-west-1
+                  ami: awsami-eu-west-1
+                - name: eu-east-1
+                  ami: awsami-eu-east-1
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed

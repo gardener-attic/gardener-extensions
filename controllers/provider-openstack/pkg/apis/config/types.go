@@ -29,29 +29,8 @@ type ControllerConfiguration struct {
 	// ClientConnection specifies the kubeconfig file and client connection
 	// settings for the proxy server to use when communicating with the apiserver.
 	ClientConnection *componentbaseconfig.ClientConnectionConfiguration
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to OpenStack-specific identifiers.
-	MachineImages []MachineImage
 	// ETCD is the etcd configuration.
 	ETCD ETCD
-}
-
-// MachineImage is a mapping from logical names and versions to OpenStack-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string
-	// Version is the logical version of the machine image.
-	Version string
-	// CloudProfiles is a mapping to the correct image for the given cloudprofile.
-	CloudProfiles []CloudProfileMapping
-}
-
-// CloudProfileMapping is a mapping to the correct image for the given cloudprofile.
-type CloudProfileMapping struct {
-	// Name is the name of the CloudProfile.
-	Name string
-	// Image is the name of the image.
-	Image string
 }
 
 // ETCD is an etcd configuration.

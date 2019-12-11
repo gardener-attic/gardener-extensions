@@ -59,20 +59,6 @@ settings for the proxy server to use when communicating with the apiserver.</p>
 </tr>
 <tr>
 <td>
-<code>machineImages</code></br>
-<em>
-<a href="#aws.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">
-[]MachineImage
-</a>
-</em>
-</td>
-<td>
-<p>MachineImages is the list of machine images that are understood by the controller. It maps
-logical names and versions to AWS-specific identifiers, i.e. AMIs.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>etcd</code></br>
 <em>
 <a href="#aws.provider.extensions.config.gardener.cloud/v1alpha1.ETCD">
@@ -203,101 +189,6 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <td>
 <em>(Optional)</em>
 <p>Capacity is the storage capacity used in etcd-main volume claims.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="aws.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">MachineImage
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#aws.provider.extensions.config.gardener.cloud/v1alpha1.ControllerConfiguration">ControllerConfiguration</a>)
-</p>
-<p>
-<p>MachineImage is a mapping from logical names and versions to AWS-specific identifiers, i.e. AMIs.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the logical name of the machine image.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>version</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Version is the logical version of the machine image.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>regions</code></br>
-<em>
-<a href="#aws.provider.extensions.config.gardener.cloud/v1alpha1.RegionAMIMapping">
-[]RegionAMIMapping
-</a>
-</em>
-</td>
-<td>
-<p>Regions is a mapping to the correct AMI for the machine image in the supported regions.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="aws.provider.extensions.config.gardener.cloud/v1alpha1.RegionAMIMapping">RegionAMIMapping
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#aws.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">MachineImage</a>)
-</p>
-<p>
-<p>RegionAMIMapping is a mapping to the correct AMI for the machine image in the given region.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the name of the region.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>ami</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>AMI is the AMI for the machine image.</p>
 </td>
 </tr>
 </tbody>

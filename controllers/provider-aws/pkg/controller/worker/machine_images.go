@@ -18,10 +18,9 @@ import (
 	"context"
 	"fmt"
 
-	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	apisawshelper "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
-	awsv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config/helper"
+	api "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/pkg/errors"
@@ -38,17 +37,17 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	}
 
 	var (
-		workerStatus = &apisaws.WorkerStatus{
+		workerStatus = &api.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: apisaws.SchemeGroupVersion.String(),
+				APIVersion: api.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 			MachineImages: w.machineImages,
 		}
 
-		workerStatusV1alpha1 = &awsv1alpha1.WorkerStatus{
+		workerStatusV1alpha1 = &v1alpha1.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: awsv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: v1alpha1.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 		}
@@ -62,23 +61,19 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version, region string) (string, error) {
-	var profileImages []apisaws.MachineImages
-	if w.profileConfig != nil {
-		profileImages = w.profileConfig.MachineImages
-	}
-	ami, err := confighelper.FindAMIForRegion(profileImages, w.machineImageToAMIMapping, name, version, region)
+	ami, err := helper.FindAMIForRegionFromCloudProfile(w.profileConfig, name, version, region)
 	if err == nil {
 		return ami, nil
 	}
 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
-		workerStatus := &apisaws.WorkerStatus{}
+		workerStatus := &api.WorkerStatus{}
 		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apisawshelper.FindMachineImage(workerStatus.MachineImages, name, version)
+		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
 			return "", errorMachineImageNotFound(name, version, region)
 		}
@@ -93,8 +88,8 @@ func errorMachineImageNotFound(name, version, region string) error {
 	return fmt.Errorf("could not find machine image for %s/%s/%s neither in componentconfig nor in worker status", name, version, region)
 }
 
-func appendMachineImage(machineImages []apisaws.MachineImage, machineImage apisaws.MachineImage) []apisaws.MachineImage {
-	if _, err := apisawshelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
+func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {
+	if _, err := helper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

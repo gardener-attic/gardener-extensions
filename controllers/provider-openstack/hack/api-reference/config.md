@@ -59,20 +59,6 @@ settings for the proxy server to use when communicating with the apiserver.</p>
 </tr>
 <tr>
 <td>
-<code>machineImages</code></br>
-<em>
-<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">
-[]MachineImage
-</a>
-</em>
-</td>
-<td>
-<p>MachineImages is the list of machine images that are understood by the controller. It maps
-logical names and versions to OpenStack-specific identifiers.</p>
-</td>
-</tr>
-<tr>
-<td>
 <code>etcd</code></br>
 <em>
 <a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.ETCD">
@@ -82,47 +68,6 @@ ETCD
 </td>
 <td>
 <p>ETCD is the etcd configuration.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="openstack.provider.extensions.config.gardener.cloud/v1alpha1.CloudProfileMapping">CloudProfileMapping
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">MachineImage</a>)
-</p>
-<p>
-<p>CloudProfileMapping is a mapping to the correct image for the given cloudprofile.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the name of the CloudProfile.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>image</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Image is the name of the image.</p>
 </td>
 </tr>
 </tbody>
@@ -244,60 +189,6 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <td>
 <em>(Optional)</em>
 <p>Capacity is the storage capacity used in etcd-main volume claims.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="openstack.provider.extensions.config.gardener.cloud/v1alpha1.MachineImage">MachineImage
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.ControllerConfiguration">ControllerConfiguration</a>)
-</p>
-<p>
-<p>MachineImage is a mapping from logical names and versions to OpenStack-specific identifiers.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>name</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Name is the logical name of the machine image.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>version</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Version is the logical version of the machine image.</p>
-</td>
-</tr>
-<tr>
-<td>
-<code>cloudProfiles</code></br>
-<em>
-<a href="#openstack.provider.extensions.config.gardener.cloud/v1alpha1.CloudProfileMapping">
-[]CloudProfileMapping
-</a>
-</em>
-</td>
-<td>
-<p>CloudProfiles is a mapping to the correct image for the given cloudprofile.</p>
 </td>
 </tr>
 </tbody>

@@ -26,10 +26,7 @@ import (
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
-	apisalicloudhelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	alicloudv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/common"
 	extensioncontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	commonext "github.com/gardener/gardener-extensions/pkg/controller/common"
@@ -61,7 +58,7 @@ var StatusTypeMeta = func() metav1.TypeMeta {
 }()
 
 // NewActuator instantiates an actuator with the default dependencies.
-func NewActuator(machineImageMapping []config.MachineImage, machineImageOwnerSecretRef *corev1.SecretReference) infrastructure.Actuator {
+func NewActuator(machineImageOwnerSecretRef *corev1.SecretReference) infrastructure.Actuator {
 	return NewActuatorWithDeps(
 		log.Log.WithName("infrastructure-actuator"),
 		alicloudclient.NewClientFactory(),
@@ -69,7 +66,6 @@ func NewActuator(machineImageMapping []config.MachineImage, machineImageOwnerSec
 		terraformer.DefaultFactory(),
 		extensionschartrenderer.DefaultFactory(),
 		DefaultTerraformOps(),
-		machineImageMapping,
 		machineImageOwnerSecretRef,
 	)
 }
@@ -82,7 +78,6 @@ func NewActuatorWithDeps(
 	terraformerFactory terraformer.Factory,
 	chartRendererFactory extensionschartrenderer.Factory,
 	terraformChartOps TerraformChartOps,
-	machineImageMapping []config.MachineImage,
 	machineImageOwnerSecretRef *corev1.SecretReference,
 ) infrastructure.Actuator {
 	a := &actuator{
@@ -92,7 +87,6 @@ func NewActuatorWithDeps(
 		alicloudClientFactory:      alicloudClientFactory,
 		terraformerFactory:         terraformerFactory,
 		terraformChartOps:          terraformChartOps,
-		machineImageMapping:        machineImageMapping,
 		machineImageOwnerSecretRef: machineImageOwnerSecretRef,
 	}
 
@@ -109,7 +103,6 @@ type actuator struct {
 	terraformerFactory    terraformer.Factory
 	terraformChartOps     TerraformChartOps
 
-	machineImageMapping        []config.MachineImage
 	machineImageOwnerSecretRef *corev1.SecretReference
 }
 
@@ -331,17 +324,13 @@ func (a *actuator) shareCustomizedImages(ctx context.Context, infra *extensionsv
 	if err != nil {
 		return nil, err
 	}
-	var profileImages []apisalicloud.MachineImages
 	cfg, err := helper.CloudProfileConfigFromCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
-	if cfg != nil {
-		profileImages = cfg.MachineImages
-	}
 	a.logger.Info("Sharing customized image with Shoot's Alicloud account from Seed", "infrastructure", infra.Name)
 	for _, worker := range cluster.Shoot.Spec.Provider.Workers {
-		imageID, err := confighelper.FindImageForRegion(profileImages, a.machineImageMapping, worker.Machine.Image.Name, worker.Machine.Image.Version, infra.Spec.Region)
+		imageID, err := helper.FindImageForRegionFromCloudProfile(cfg, worker.Machine.Image.Name, worker.Machine.Image.Version)
 		if err != nil {
 			if providerStatus := infra.Status.ProviderStatus; providerStatus != nil {
 				infrastructureStatus := &apisalicloud.InfrastructureStatus{}
@@ -349,7 +338,7 @@ func (a *actuator) shareCustomizedImages(ctx context.Context, infra *extensionsv
 					return nil, errors.Wrapf(err, "could not decode infrastructure status of infrastructure '%s'", util.ObjectName(infra))
 				}
 
-				machineImage, err := apisalicloudhelper.FindMachineImage(infrastructureStatus.MachineImages, worker.Machine.Image.Name, worker.Machine.Image.Version)
+				machineImage, err := helper.FindMachineImage(infrastructureStatus.MachineImages, worker.Machine.Image.Name, worker.Machine.Image.Version)
 				if err != nil {
 					return nil, err
 				}

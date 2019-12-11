@@ -6,10 +6,10 @@ metadata:
   namespace: shoot--foobar--openstack
 type: Opaque
 data:
-# domainName: base64(domain-name)
-# tenantName: base64(tenant-name)
-# username: base64(username)
-# password: base64(password)
+  domainName: ZGF0YQo=
+  tenantName: ZGF0YQo=
+  username: ZGF0YQo=
+  password: ZGF0YQo=
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -24,6 +24,11 @@ spec:
         apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
         kind: CloudProfileConfig
         keystoneURL: https://localhost
+        machineImages:
+          - name: coreos
+            versions:
+              - version: 2135.6.0
+                image: openstackimageid
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
@@ -49,6 +54,9 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--openstack
+  annotations:
+    xgardener.cloud/operation: reconcile
+    gardener.cloud/operation: reconcile
 spec:
   type: openstack
   region: eu-de-1

@@ -17,13 +17,13 @@ package helper
 import (
 	"fmt"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
+	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 )
 
 // FindSubnetByPurpose takes a list of subnets and tries to find the first entry
 // whose purpose matches with the given purpose. If no such entry is found then an error will be
 // returned.
-func FindSubnetByPurpose(subnets []azure.Subnet, purpose azure.Purpose) (*azure.Subnet, error) {
+func FindSubnetByPurpose(subnets []api.Subnet, purpose api.Purpose) (*api.Subnet, error) {
 	for _, subnet := range subnets {
 		if subnet.Purpose == purpose {
 			return &subnet, nil
@@ -35,7 +35,7 @@ func FindSubnetByPurpose(subnets []azure.Subnet, purpose azure.Purpose) (*azure.
 // FindSecurityGroupByPurpose takes a list of security groups and tries to find the first entry
 // whose purpose matches with the given purpose. If no such entry is found then an error will be
 // returned.
-func FindSecurityGroupByPurpose(securityGroups []azure.SecurityGroup, purpose azure.Purpose) (*azure.SecurityGroup, error) {
+func FindSecurityGroupByPurpose(securityGroups []api.SecurityGroup, purpose api.Purpose) (*api.SecurityGroup, error) {
 	for _, securityGroup := range securityGroups {
 		if securityGroup.Purpose == purpose {
 			return &securityGroup, nil
@@ -47,7 +47,7 @@ func FindSecurityGroupByPurpose(securityGroups []azure.SecurityGroup, purpose az
 // FindRouteTableByPurpose takes a list of route tables and tries to find the first entry
 // whose purpose matches with the given purpose. If no such entry is found then an error will be
 // returned.
-func FindRouteTableByPurpose(routeTables []azure.RouteTable, purpose azure.Purpose) (*azure.RouteTable, error) {
+func FindRouteTableByPurpose(routeTables []api.RouteTable, purpose api.Purpose) (*api.RouteTable, error) {
 	for _, routeTable := range routeTables {
 		if routeTable.Purpose == purpose {
 			return &routeTable, nil
@@ -59,7 +59,7 @@ func FindRouteTableByPurpose(routeTables []azure.RouteTable, purpose azure.Purpo
 // FindAvailabilitySetByPurpose takes a list of availability sets and tries to find the first entry
 // whose purpose matches with the given purpose. If no such entry is found then an error will be
 // returned.
-func FindAvailabilitySetByPurpose(availabilitySets []azure.AvailabilitySet, purpose azure.Purpose) (*azure.AvailabilitySet, error) {
+func FindAvailabilitySetByPurpose(availabilitySets []api.AvailabilitySet, purpose api.Purpose) (*api.AvailabilitySet, error) {
 	for _, availabilitySet := range availabilitySets {
 		if availabilitySet.Purpose == purpose {
 			return &availabilitySet, nil
@@ -71,7 +71,7 @@ func FindAvailabilitySetByPurpose(availabilitySets []azure.AvailabilitySet, purp
 // FindMachineImage takes a list of machine images and tries to find the first entry
 // whose name, version, and zone matches with the given name, version, and zone. If no such entry is
 // found then an error will be returned.
-func FindMachineImage(machineImages []azure.MachineImage, name, version string) (*azure.MachineImage, error) {
+func FindMachineImage(machineImages []api.MachineImage, name, version string) (*api.MachineImage, error) {
 	for _, machineImage := range machineImages {
 		if machineImage.Name == name && machineImage.Version == version {
 			return &machineImage, nil
@@ -81,11 +81,35 @@ func FindMachineImage(machineImages []azure.MachineImage, name, version string) 
 }
 
 // FindDomainCountByRegion takes a region and the domain counts and finds the count for the given region.
-func FindDomainCountByRegion(domainCounts []azure.DomainCount, region string) (int, error) {
+func FindDomainCountByRegion(domainCounts []api.DomainCount, region string) (int, error) {
 	for _, domainCount := range domainCounts {
 		if domainCount.Region == region {
 			return domainCount.Count, nil
 		}
 	}
 	return 0, fmt.Errorf("could not find a domain count for region %s", region)
+}
+
+// FindImageFromCloudProfile takes a list of machine images, and the desired image name and version. It tries
+// to find the image with the given name and version. If it cannot be found then an error
+// is returned.
+func FindImageFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (*api.MachineImage, error) {
+	if profileConfig != nil {
+		for _, machineImage := range profileConfig.MachineImages {
+			if machineImage.Name == imageName {
+				for _, version := range machineImage.Versions {
+					if imageVersion == version.Version {
+						urn := version.URN
+						return &api.MachineImage{
+							Name:    imageName,
+							Version: version.Version,
+							URN:     &urn,
+						}, nil
+					}
+				}
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("could not find an image for name %q in version %q", imageName, imageVersion)
 }

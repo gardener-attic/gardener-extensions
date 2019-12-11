@@ -17,13 +17,13 @@ package helper
 import (
 	"fmt"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 )
 
 // FindSubnetByPurpose takes a list of subnets and tries to find the first entry
 // whose purpose matches with the given purpose. If no such entry is found then an error will be
 // returned.
-func FindSubnetByPurpose(subnets []openstack.Subnet, purpose openstack.Purpose) (*openstack.Subnet, error) {
+func FindSubnetByPurpose(subnets []api.Subnet, purpose api.Purpose) (*api.Subnet, error) {
 	for _, subnet := range subnets {
 		if subnet.Purpose == purpose {
 			return &subnet, nil
@@ -35,7 +35,7 @@ func FindSubnetByPurpose(subnets []openstack.Subnet, purpose openstack.Purpose) 
 // FindSecurityGroupByPurpose takes a list of security groups and tries to find the first entry
 // whose purpose matches with the given purpose. If no such entry is found then an error will be
 // returned.
-func FindSecurityGroupByPurpose(securityGroups []openstack.SecurityGroup, purpose openstack.Purpose) (*openstack.SecurityGroup, error) {
+func FindSecurityGroupByPurpose(securityGroups []api.SecurityGroup, purpose api.Purpose) (*api.SecurityGroup, error) {
 	for _, securityGroup := range securityGroups {
 		if securityGroup.Purpose == purpose {
 			return &securityGroup, nil
@@ -47,11 +47,30 @@ func FindSecurityGroupByPurpose(securityGroups []openstack.SecurityGroup, purpos
 // FindMachineImage takes a list of machine images and tries to find the first entry
 // whose name, version, and zone matches with the given name, version, and cloud profile. If no such
 // entry is found then an error will be returned.
-func FindMachineImage(machineImages []openstack.MachineImage, name, version string) (*openstack.MachineImage, error) {
+func FindMachineImage(machineImages []api.MachineImage, name, version string) (*api.MachineImage, error) {
 	for _, machineImage := range machineImages {
 		if machineImage.Name == name && machineImage.Version == version {
 			return &machineImage, nil
 		}
 	}
 	return nil, fmt.Errorf("no machine image with name %q, version %q found", name, version)
+}
+
+// FindImageFromCloudProfile takes a list of machine images, and the desired image name and version. It tries
+// to find the image with the given name and version in the desired cloud profile. If it cannot be found then an error
+// is returned.
+func FindImageFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (string, error) {
+	if profileConfig != nil {
+		for _, machineImage := range profileConfig.MachineImages {
+			if machineImage.Name == imageName {
+				for _, version := range machineImage.Versions {
+					if imageVersion == version.Version {
+						return version.Image, nil
+					}
+				}
+			}
+		}
+	}
+
+	return "", fmt.Errorf("could not find an image for name %q in version %q", imageName, imageVersion)
 }

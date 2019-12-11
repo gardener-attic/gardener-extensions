@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config/helper"
-	apipacket "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
-	apipackethelper "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/helper"
-	packetv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/helper"
+	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
+
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/pkg/errors"
@@ -38,17 +38,17 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	}
 
 	var (
-		workerStatus = &apipacket.WorkerStatus{
+		workerStatus = &api.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: apipacket.SchemeGroupVersion.String(),
+				APIVersion: api.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 			MachineImages: w.machineImages,
 		}
 
-		workerStatusV1alpha1 = &packetv1alpha1.WorkerStatus{
+		workerStatusV1alpha1 = &v1alpha1.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: packetv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: v1alpha1.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 		}
@@ -62,23 +62,19 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version string) (string, error) {
-	var profileImages []apipacket.MachineImages
-	if w.profileConfig != nil {
-		profileImages = w.profileConfig.MachineImages
-	}
-	machineImageID, err := confighelper.FindImage(profileImages, w.machineImageMapping, name, version)
+	machineImageID, err := helper.FindImageFromCloudProfile(w.profileConfig, name, version)
 	if err == nil {
 		return machineImageID, nil
 	}
 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
-		workerStatus := &apipacket.WorkerStatus{}
+		workerStatus := &api.WorkerStatus{}
 		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apipackethelper.FindMachineImage(workerStatus.MachineImages, name, version)
+		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
 			return "", errorMachineImageNotFound(name, version)
 		}
@@ -93,8 +89,8 @@ func errorMachineImageNotFound(name, version string) error {
 	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig, profileconfig nor in worker status", name, version)
 }
 
-func appendMachineImage(machineImages []apipacket.MachineImage, machineImage apipacket.MachineImage) []apipacket.MachineImage {
-	if _, err := apipackethelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
+func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {
+	if _, err := helper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

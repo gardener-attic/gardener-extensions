@@ -89,7 +89,6 @@ metadata:
 spec:
   ports:
   - name: kube-apiserver
-    nodePort: 32223
     port: 443
     protocol: TCP
     targetPort: 443

@@ -32,32 +32,11 @@ type ControllerConfiguration struct {
 	// settings for the proxy server to use when communicating with the apiserver.
 	// +optional
 	ClientConnection *componentbaseconfigv1alpha1.ClientConnectionConfiguration `json:"clientConnection,omitempty"`
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to Alicloud-specific identifiers.
-	MachineImages []MachineImage `json:"machineImages,omitempty"`
 	// MachineImageOwnerSecretRef is the secret reference which contains credential of AliCloud subaccount for customized images.
 	// We currently assume multiple customized images should always be under this account.
 	MachineImageOwnerSecretRef *corev1.SecretReference `json:"machineImageOwnerSecretRef,omitempty"`
 	// ETCD is the etcd configuration.
 	ETCD ETCD `json:"etcd"`
-}
-
-// MachineImage is a mapping from logical names and versions to Alicloud-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string `json:"name"`
-	// Version is the logical version of the machine image.
-	Version string `json:"version"`
-	// Regions is a mapping to the correct IDs for the machine image in the supported regions.
-	Regions []RegionImageMapping `json:"regions"`
-}
-
-// RegionImageMapping is a mapping from Region name to supported machine image id for a specific OS version.
-type RegionImageMapping struct {
-	// Region is the ID of the region.
-	Region string `json:"region"`
-	// ImageID is the ID for the machine image.
-	ImageID string `json:"imageID"`
 }
 
 // ETCD is an etcd configuration.

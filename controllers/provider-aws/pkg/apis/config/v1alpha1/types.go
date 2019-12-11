@@ -31,29 +31,8 @@ type ControllerConfiguration struct {
 	// settings for the proxy server to use when communicating with the apiserver.
 	// +optional
 	ClientConnection *componentbaseconfigv1alpha1.ClientConnectionConfiguration `json:"clientConnection,omitempty"`
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to AWS-specific identifiers, i.e. AMIs.
-	MachineImages []MachineImage `json:"machineImages,omitempty"`
 	// ETCD is the etcd configuration.
 	ETCD ETCD `json:"etcd"`
-}
-
-// MachineImage is a mapping from logical names and versions to AWS-specific identifiers, i.e. AMIs.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string `json:"name"`
-	// Version is the logical version of the machine image.
-	Version string `json:"version"`
-	// Regions is a mapping to the correct AMI for the machine image in the supported regions.
-	Regions []RegionAMIMapping `json:"regions"`
-}
-
-// RegionAMIMapping is a mapping to the correct AMI for the machine image in the given region.
-type RegionAMIMapping struct {
-	// Name is the name of the region.
-	Name string `json:"name"`
-	// AMI is the AMI for the machine image.
-	AMI string `json:"ami"`
 }
 
 // ETCD is an etcd configuration.

@@ -31,29 +31,8 @@ type ControllerConfiguration struct {
 	// settings for the proxy server to use when communicating with the apiserver.
 	// +optional
 	ClientConnection *componentbaseconfigv1alpha1.ClientConnectionConfiguration `json:"clientConnection,omitempty"`
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to OpenStack-specific identifiers.
-	MachineImages []MachineImage `json:"machineImages,omitempty"`
 	// ETCD is the etcd configuration.
 	ETCD ETCD `json:"etcd"`
-}
-
-// MachineImage is a mapping from logical names and versions to OpenStack-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string `json:"name"`
-	// Version is the logical version of the machine image.
-	Version string `json:"version"`
-	// CloudProfiles is a mapping to the correct image for the given cloudprofile.
-	CloudProfiles []CloudProfileMapping `json:"cloudProfiles"`
-}
-
-// CloudProfileMapping is a mapping to the correct image for the given cloudprofile.
-type CloudProfileMapping struct {
-	// Name is the name of the CloudProfile.
-	Name string `json:"name"`
-	// Image is the name of the image.
-	Image string `json:"image"`
 }
 
 // ETCD is an etcd configuration.

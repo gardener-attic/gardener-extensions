@@ -18,10 +18,10 @@ import (
 	"context"
 	"fmt"
 
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config/helper"
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	apisopenstackhelper "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
-	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/pkg/errors"
@@ -38,17 +38,17 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	}
 
 	var (
-		workerStatus = &apisopenstack.WorkerStatus{
+		workerStatus = &api.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: apisopenstack.SchemeGroupVersion.String(),
+				APIVersion: api.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 			MachineImages: w.machineImages,
 		}
 
-		workerStatusV1alpha1 = &openstackv1alpha1.WorkerStatus{
+		workerStatusV1alpha1 = &v1alpha1.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: v1alpha1.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 		}
@@ -61,40 +61,36 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	return workerStatusV1alpha1, nil
 }
 
-func (w *workerDelegate) findMachineImage(name, version, cloudProfile string) (string, error) {
-	var profileImages []apisopenstack.MachineImages
-	if w.profileConfig != nil {
-		profileImages = w.profileConfig.MachineImages
-	}
-	ami, err := confighelper.FindImageForCloudProfile(profileImages, w.machineImageToCloudProfilesMapping, name, version, cloudProfile)
+func (w *workerDelegate) findMachineImage(name, version string) (string, error) {
+	ami, err := helper.FindImageFromCloudProfile(w.profileConfig, name, version)
 	if err == nil {
 		return ami, nil
 	}
 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
-		workerStatus := &apisopenstack.WorkerStatus{}
+		workerStatus := &api.WorkerStatus{}
 		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apisopenstackhelper.FindMachineImage(workerStatus.MachineImages, name, version)
+		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
-			return "", errorMachineImageNotFound(name, version, cloudProfile)
+			return "", errorMachineImageNotFound(name, version)
 		}
 
 		return machineImage.Image, nil
 	}
 
-	return "", errorMachineImageNotFound(name, version, cloudProfile)
+	return "", errorMachineImageNotFound(name, version)
 }
 
-func errorMachineImageNotFound(name, version, cloudProfile string) error {
-	return fmt.Errorf("could not find machine image for %s/%s/%s neither in componentconfig nor in worker status", name, version, cloudProfile)
+func errorMachineImageNotFound(name, version string) error {
+	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig nor in worker status", name, version)
 }
 
-func appendMachineImage(machineImages []apisopenstack.MachineImage, machineImage apisopenstack.MachineImage) []apisopenstack.MachineImage {
-	if _, err := apisopenstackhelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
+func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {
+	if _, err := helper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

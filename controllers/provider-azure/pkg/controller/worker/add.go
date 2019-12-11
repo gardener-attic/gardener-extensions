@@ -15,7 +15,6 @@
 package worker
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	machinescheme "github.com/gardener/machine-controller-manager/pkg/client/clientset/versioned/scheme"
@@ -35,8 +34,6 @@ type AddOptions struct {
 	Controller controller.Options
 	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
 	IgnoreOperationAnnotation bool
-	// MachineImages is the default list of machine images.
-	MachineImages []config.MachineImage
 }
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.
@@ -51,7 +48,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 	}
 
 	return worker.Add(mgr, worker.AddArgs{
-		Actuator:          NewActuator(opts.MachineImages),
+		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
 		Predicates:        worker.DefaultPredicates(opts.IgnoreOperationAnnotation),
 		Type:              azure.Type,

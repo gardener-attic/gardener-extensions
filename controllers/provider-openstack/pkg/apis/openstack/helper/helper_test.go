@@ -15,7 +15,7 @@
 package helper_test
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 
 	. "github.com/onsi/ginkgo"
@@ -25,47 +25,88 @@ import (
 
 var _ = Describe("Helper", func() {
 	var (
-		purpose      openstack.Purpose = "foo"
-		purposeWrong openstack.Purpose = "baz"
+		purpose      api.Purpose = "foo"
+		purposeWrong api.Purpose = "baz"
 	)
 
 	DescribeTable("#FindSubnetByPurpose",
-		func(subnets []openstack.Subnet, purpose openstack.Purpose, expectedSubnet *openstack.Subnet, expectErr bool) {
+		func(subnets []api.Subnet, purpose api.Purpose, expectedSubnet *api.Subnet, expectErr bool) {
 			subnet, err := FindSubnetByPurpose(subnets, purpose)
 			expectResults(subnet, expectedSubnet, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []openstack.Subnet{}, purpose, nil, true),
-		Entry("entry not found", []openstack.Subnet{{ID: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []openstack.Subnet{{ID: "bar", Purpose: purpose}}, purpose, &openstack.Subnet{ID: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.Subnet{}, purpose, nil, true),
+		Entry("entry not found", []api.Subnet{{ID: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.Subnet{{ID: "bar", Purpose: purpose}}, purpose, &api.Subnet{ID: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindSecurityGroupByPurpose",
-		func(securityGroups []openstack.SecurityGroup, purpose openstack.Purpose, expectedSecurityGroup *openstack.SecurityGroup, expectErr bool) {
+		func(securityGroups []api.SecurityGroup, purpose api.Purpose, expectedSecurityGroup *api.SecurityGroup, expectErr bool) {
 			securityGroup, err := FindSecurityGroupByPurpose(securityGroups, purpose)
 			expectResults(securityGroup, expectedSecurityGroup, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []openstack.SecurityGroup{}, purpose, nil, true),
-		Entry("entry not found", []openstack.SecurityGroup{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []openstack.SecurityGroup{{Name: "bar", Purpose: purpose}}, purpose, &openstack.SecurityGroup{Name: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.SecurityGroup{}, purpose, nil, true),
+		Entry("entry not found", []api.SecurityGroup{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.SecurityGroup{{Name: "bar", Purpose: purpose}}, purpose, &api.SecurityGroup{Name: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindMachineImage",
-		func(machineImages []openstack.MachineImage, name, version string, expectedMachineImage *openstack.MachineImage, expectErr bool) {
+		func(machineImages []api.MachineImage, name, version string, expectedMachineImage *api.MachineImage, expectErr bool) {
 			machineImage, err := FindMachineImage(machineImages, name, version)
 			expectResults(machineImage, expectedMachineImage, err, expectErr)
 		},
 
 		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
-		Entry("empty list", []openstack.MachineImage{}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no name)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no version)", []openstack.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
-		Entry("entry exists", []openstack.MachineImage{{Name: "bar", Version: "1.2.3"}}, "bar", "1.2.3", &openstack.MachineImage{Name: "bar", Version: "1.2.3"}, false),
+		Entry("empty list", []api.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []api.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []api.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
+		Entry("entry exists", []api.MachineImage{{Name: "bar", Version: "1.2.3"}}, "bar", "1.2.3", &api.MachineImage{Name: "bar", Version: "1.2.3"}, false),
 	)
 })
+
+var _ = Describe("Helper", func() {
+	DescribeTable("#FindImageForCloudProfile",
+		func(profileImages []api.MachineImages, imageName, version, expectedImage string) {
+			cfg := &api.CloudProfileConfig{}
+			cfg.MachineImages = profileImages
+			image, err := FindImageFromCloudProfile(cfg, imageName, version)
+
+			Expect(image).To(Equal(expectedImage))
+			if expectedImage != "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+			}
+		},
+
+		Entry("list is nil", nil, "ubuntu", "1", ""),
+
+		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", ""),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "0"), "ubuntu", "1", ""),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "0"), "ubuntu", "1", ""),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "image-1234"), "ubuntu", "1", "image-1234"),
+	)
+})
+
+func makeProfileMachineImages(name, version, image string) []api.MachineImages {
+	var versions []api.MachineImageVersion
+	if len(image) != 0 {
+		versions = append(versions, api.MachineImageVersion{
+			Version: version,
+			Image:   image,
+		})
+	}
+
+	return []api.MachineImages{
+		{
+			Name:     name,
+			Versions: versions,
+		},
+	}
+}
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {
 	if !expectErr {
