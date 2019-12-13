@@ -28,7 +28,10 @@ spec:
           - name: coreos
             versions:
               - version: 2135.6.0
-                image: openstackimageid
+                image: openstackimagename
+                regions:
+                  - name: eu-de-2
+                    id: openstackimageid
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
@@ -36,6 +39,7 @@ spec:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Shoot
     spec:
+      region: eu-de-2
       kubernetes:
         version: 1.13.4
       cloud:
@@ -59,7 +63,7 @@ metadata:
     gardener.cloud/operation: reconcile
 spec:
   type: openstack
-  region: eu-de-1
+  region: eu-de-2
   secretRef:
     name: cloudprovider
     namespace: shoot--foobar--openstack

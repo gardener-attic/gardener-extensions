@@ -96,16 +96,17 @@ func FindDomainCountByRegion(domainCounts []api.DomainCount, region string) (int
 func FindImageFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (*api.MachineImage, error) {
 	if profileConfig != nil {
 		for _, machineImage := range profileConfig.MachineImages {
-			if machineImage.Name == imageName {
-				for _, version := range machineImage.Versions {
-					if imageVersion == version.Version {
-						urn := version.URN
-						return &api.MachineImage{
-							Name:    imageName,
-							Version: version.Version,
-							URN:     &urn,
-						}, nil
-					}
+			if machineImage.Name != imageName {
+				continue
+			}
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					urn := version.URN
+					return &api.MachineImage{
+						Name:    imageName,
+						Version: version.Version,
+						URN:     &urn,
+					}, nil
 				}
 			}
 		}

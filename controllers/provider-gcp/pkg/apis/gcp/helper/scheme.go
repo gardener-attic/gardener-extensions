@@ -59,7 +59,7 @@ func InfrastructureConfigFromInfrastructure(infra *extensionsv1alpha1.Infrastruc
 
 		return config, nil
 	}
-	return nil, fmt.Errorf("infrastructure config is not set on the infrastructure resource")
+	return nil, fmt.Errorf("provider config is not set on the infrastructure resource")
 }
 
 // CloudProfileConfigForCluster decodes the provider specific cloud profile configuration for a cluster

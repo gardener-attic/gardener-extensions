@@ -50,11 +50,12 @@ func FindMachineImage(machineImages []api.MachineImage, name, version string) (*
 func FindImageFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (string, error) {
 	if profileConfig != nil {
 		for _, machineImage := range profileConfig.MachineImages {
-			if machineImage.Name == imageName {
-				for _, version := range machineImage.Versions {
-					if imageVersion == version.Version {
-						return version.Image, nil
-					}
+			if machineImage.Name != imageName {
+				continue
+			}
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					return version.Image, nil
 				}
 			}
 		}

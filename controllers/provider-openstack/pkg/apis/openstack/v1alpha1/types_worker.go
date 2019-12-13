@@ -41,5 +41,7 @@ type MachineImage struct {
 	// Version is the logical version of the machine image.
 	Version string `json:"version"`
 	// Image is the name of the image.
-	Image string `json:"image"`
+	Image string `json:"image,omitempty"`
+	// ID is the id of the image. (one of Image or ID must be set)
+	ID string `json:"id,omitempty"`
 }

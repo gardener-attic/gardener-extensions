@@ -117,11 +117,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		machineImages = appendMachineImage(machineImages, apisopenstack.MachineImage{
-			Name:    pool.MachineImage.Name,
-			Version: pool.MachineImage.Version,
-			Image:   machineImage,
-		})
+		machineImages = appendMachineImage(machineImages, *machineImage)
 
 		for zoneIndex, zone := range pool.Zones {
 			machineClassSpec := map[string]interface{}{
@@ -129,7 +125,6 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"availabilityZone": zone,
 				"machineType":      pool.MachineType,
 				"keyName":          infrastructureStatus.Node.KeyName,
-				"imageName":        machineImage,
 				"networkID":        infrastructureStatus.Networks.ID,
 				"podNetworkCidr":   extensionscontroller.GetPodNetwork(w.cluster),
 				"securityGroups":   []string{nodesSecurityGroup.Name},
@@ -142,6 +137,12 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				},
 			}
 
+			if machineImage.ID != "" {
+				machineClassSpec["imageID"] = machineImage.ID
+
+			} else {
+				machineClassSpec["imageName"] = machineImage.Image
+			}
 			var (
 				deploymentName = fmt.Sprintf("%s-%s-z%d", w.worker.Namespace, pool.Name, zoneIndex+1)
 				className      = fmt.Sprintf("%s-%s", deploymentName, workerPoolHash)

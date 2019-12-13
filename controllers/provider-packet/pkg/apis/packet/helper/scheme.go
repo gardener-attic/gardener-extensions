@@ -18,10 +18,12 @@
 package helper
 
 import (
+	"fmt"
 	"github.com/pkg/errors"
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	api "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
@@ -43,6 +45,20 @@ func init() {
 	utilruntime.Must(install.AddToScheme(Scheme))
 
 	decoder = serializer.NewCodecFactory(Scheme).UniversalDecoder()
+}
+
+// InfrastructureConfigFromInfrastructure extracts the InfrastructureConfig from the
+// ProviderConfig section of the given Infrastructure.
+func InfrastructureConfigFromInfrastructure(infra *extensionsv1alpha1.Infrastructure) (*api.InfrastructureConfig, error) {
+	config := &api.InfrastructureConfig{}
+	if infra.Spec.ProviderConfig != nil && infra.Spec.ProviderConfig.Raw != nil {
+		if _, _, err := decoder.Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
+			return nil, err
+		}
+
+		return config, nil
+	}
+	return nil, fmt.Errorf("provider config is not set on the infrastructure resource")
 }
 
 // CloudProfileConfigFromCluster decodes the provider specific cloud profile configuration for a cluster

@@ -75,7 +75,7 @@ var _ = Describe("Helper", func() {
 		func(profileImages []api.MachineImages, imageName, version string, expectedImage string) {
 			cfg := &api.CloudProfileConfig{}
 			cfg.MachineImages = profileImages
-			image, err := FindImageForRegionFromCloudProfile(cfg, imageName, version)
+			image, err := FindImageFromCloudProfile(cfg, imageName, version)
 
 			Expect(image).To(Equal(expectedImage))
 			if expectedImage != "" {

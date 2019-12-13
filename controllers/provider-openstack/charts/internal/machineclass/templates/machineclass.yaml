@@ -27,7 +27,11 @@ spec:
   availabilityZone: {{ $machineClass.availabilityZone }}
   flavorName: {{ $machineClass.machineType }}
   keyName: {{ $machineClass.keyName }}
+{{- if $machineClass.imageID }}
+  imageID: {{ $machineClass.imageID }}
+{{- else }}
   imageName: {{ $machineClass.imageName }}
+{{- end }}
   networkID: {{ $machineClass.networkID }}
   podNetworkCidr: {{ $machineClass.podNetworkCidr }}
   securityGroups:

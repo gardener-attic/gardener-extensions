@@ -17,7 +17,6 @@ package infrastructure
 import (
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 	"strings"
 	"time"
@@ -45,6 +44,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
@@ -330,7 +330,7 @@ func (a *actuator) shareCustomizedImages(ctx context.Context, infra *extensionsv
 	}
 	a.logger.Info("Sharing customized image with Shoot's Alicloud account from Seed", "infrastructure", infra.Name)
 	for _, worker := range cluster.Shoot.Spec.Provider.Workers {
-		imageID, err := helper.FindImageForRegionFromCloudProfile(cfg, worker.Machine.Image.Name, worker.Machine.Image.Version)
+		imageID, err := helper.FindImageFromCloudProfile(cfg, worker.Machine.Image.Name, worker.Machine.Image.Version)
 		if err != nil {
 			if providerStatus := infra.Status.ProviderStatus; providerStatus != nil {
 				infrastructureStatus := &apisalicloud.InfrastructureStatus{}

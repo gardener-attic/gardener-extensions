@@ -68,26 +68,36 @@ var _ = Describe("Helper", func() {
 })
 
 var _ = Describe("Helper", func() {
+	regionName := "eu-de-1"
+
 	DescribeTable("#FindImageForCloudProfile",
-		func(profileImages []api.MachineImages, imageName, version, expectedImage string) {
+		func(profileImages []api.MachineImages, imageName, version, region, expectedImage string) {
 			cfg := &api.CloudProfileConfig{}
 			cfg.MachineImages = profileImages
-			image, err := FindImageFromCloudProfile(cfg, imageName, version)
+			image, err := FindImageFromCloudProfile(cfg, imageName, version, region)
 
-			Expect(image).To(Equal(expectedImage))
-			if expectedImage != "" {
-				Expect(err).NotTo(HaveOccurred())
-			} else {
+			if expectedImage == "" {
 				Expect(err).To(HaveOccurred())
+				Expect(image).To(BeNil())
+				return
+			}
+			Expect(err).NotTo(HaveOccurred())
+			Expect(image).NotTo(BeNil())
+			if image.ID != "" {
+				Expect(image.ID).To(Equal(expectedImage))
+			} else {
+				Expect(image.Image).To(Equal(expectedImage))
 			}
 		},
 
-		Entry("list is nil", nil, "ubuntu", "1", ""),
+		Entry("list is nil", nil, "ubuntu", "1", regionName, ""),
 
-		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", ""),
-		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "0"), "ubuntu", "1", ""),
-		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "0"), "ubuntu", "1", ""),
-		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "image-1234"), "ubuntu", "1", "image-1234"),
+		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", regionName, ""),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "0"), "ubuntu", "1", regionName, ""),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "0"), "ubuntu", "1", regionName, ""),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "image-1234"), "ubuntu", "1", regionName, "image-1234"),
+		Entry("profile region entry", makeProfileRegionMachineImages("ubuntu", "1", "image-1234", regionName), "ubuntu", "1", regionName, "image-1234"),
+		Entry("profile region not found", makeProfileRegionMachineImages("ubuntu", "1", "image-1234", regionName+"x"), "ubuntu", "1", regionName, ""),
 	)
 })
 
@@ -97,6 +107,28 @@ func makeProfileMachineImages(name, version, image string) []api.MachineImages {
 		versions = append(versions, api.MachineImageVersion{
 			Version: version,
 			Image:   image,
+		})
+	}
+
+	return []api.MachineImages{
+		{
+			Name:     name,
+			Versions: versions,
+		},
+	}
+}
+
+func makeProfileRegionMachineImages(name, version, image, region string) []api.MachineImages {
+	var versions []api.MachineImageVersion
+	if len(image) != 0 {
+		versions = append(versions, api.MachineImageVersion{
+			Version: version,
+			Regions: []api.RegionIDMapping{
+				{
+					Name: region,
+					ID:   image,
+				},
+			},
 		})
 	}
 

@@ -98,14 +98,16 @@ func FindMachineImage(machineImages []api.MachineImage, name, version string) (*
 func FindAMIForRegionFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion, regionName string) (string, error) {
 	if profileConfig != nil {
 		for _, machineImage := range profileConfig.MachineImages {
-			if machineImage.Name == imageName {
-				for _, version := range machineImage.Versions {
-					if imageVersion == version.Version {
-						for _, mapping := range version.Regions {
-							if regionName == mapping.Name {
-								return mapping.AMI, nil
-							}
-						}
+			if machineImage.Name != imageName {
+				continue
+			}
+			for _, version := range machineImage.Versions {
+				if imageVersion != version.Version {
+					continue
+				}
+				for _, mapping := range version.Regions {
+					if regionName == mapping.Name {
+						return mapping.AMI, nil
 					}
 				}
 			}

@@ -56,17 +56,18 @@ func FindMachineImage(configImages []api.MachineImage, imageName, imageVersion s
 	return nil, fmt.Errorf("no machine image name %q in version %q found", imageName, imageVersion)
 }
 
-// FindImageForRegionFromCloudProfile takes a list of machine images, and the desired image name, version, and region. It tries
+// FindImageFromCloudProfile takes a list of machine images, and the desired image name, version, and region. It tries
 // to find the image with the given name and version in the desired region. If it cannot be found then an error
 // is returned.
-func FindImageForRegionFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (string, error) {
+func FindImageFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (string, error) {
 	if profileConfig != nil {
 		for _, machineImage := range profileConfig.MachineImages {
-			if machineImage.Name == imageName {
-				for _, version := range machineImage.Versions {
-					if imageVersion == version.Version {
-						return version.ID, nil
-					}
+			if machineImage.Name != imageName {
+				continue
+			}
+			for _, version := range machineImage.Versions {
+				if imageVersion == version.Version {
+					return version.ID, nil
 				}
 			}
 		}

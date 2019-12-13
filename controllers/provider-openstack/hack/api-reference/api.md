@@ -677,6 +677,17 @@ string
 <p>Image is the name of the image.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>id</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ID is the id of the image. (one of Image or ID must be set)</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.MachineImageVersion">MachineImageVersion
@@ -716,6 +727,19 @@ string
 </td>
 <td>
 <p>Image is the name of the image.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>regions</code></br>
+<em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.RegionIDMapping">
+[]RegionIDMapping
+</a>
+</em>
+</td>
+<td>
+<p>Regions is an optional mapping to the correct Image ID for the machine image in the supported regions.</p>
 </td>
 </tr>
 </tbody>
@@ -916,6 +940,47 @@ string
 <p>
 <p>Purpose is a purpose of a resource.</p>
 </p>
+<h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.RegionIDMapping">RegionIDMapping
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#openstack.provider.extensions.gardener.cloud/v1alpha1.MachineImageVersion">MachineImageVersion</a>)
+</p>
+<p>
+<p>RegionIDMapping is a mapping to the correct ID for the machine image in the given region.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Name is the name of the region.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>id</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>ID is the ID for the machine image in the given region.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="openstack.provider.extensions.gardener.cloud/v1alpha1.Router">Router
 </h3>
 <p>

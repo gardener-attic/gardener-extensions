@@ -90,10 +90,12 @@ var _ = Describe("Machines", func() {
 				openstackUserName   string
 				openstackPassword   string
 				region              string
+				regionWithImages    string
 
 				machineImageName    string
 				machineImageVersion string
 				machineImage        string
+				machineImageID      string
 
 				keyName           string
 				machineType       string
@@ -134,6 +136,8 @@ var _ = Describe("Machines", func() {
 				cloudProfileName = "openstack"
 
 				region = "eu-de-1"
+				regionWithImages = "eu-de-2"
+
 				openstackAuthURL = "auth-url"
 				openstackDomainName = "domain-name"
 				openstackTenantName = "tenant-name"
@@ -143,6 +147,7 @@ var _ = Describe("Machines", func() {
 				machineImageName = "my-os"
 				machineImageVersion = "123"
 				machineImage = "my-image-in-glance"
+				machineImageID = "my-image-id"
 
 				keyName = "key-name"
 				machineType = "large"
@@ -209,6 +214,12 @@ var _ = Describe("Machines", func() {
 							apiv1alpha1.MachineImageVersion{
 								Version: machineImageVersion,
 								Image:   machineImage,
+								Regions: []apiv1alpha1.RegionIDMapping{
+									{
+										Name: regionWithImages,
+										ID:   machineImageID,
+									},
+								},
 							},
 						},
 					},
@@ -312,14 +323,25 @@ var _ = Describe("Machines", func() {
 					defaultMachineClass map[string]interface{}
 					machineDeployments  worker.MachineDeployments
 					machineClasses      map[string]interface{}
+					workerWithRegion    *extensionsv1alpha1.Worker
+					clusterWithRegion   *extensionscontroller.Cluster
 				)
 
-				BeforeEach(func() {
+				setup := func(region, name, id string) {
+					workerWithRegion = w.DeepCopy()
+					workerWithRegion.Spec.Region = region
+
+					clusterWithRegion = &extensionscontroller.Cluster{
+						CloudProfile: cluster.CloudProfile,
+						Shoot:        cluster.Shoot.DeepCopy(),
+						Seed:         cluster.Seed,
+					}
+					clusterWithRegion.Shoot.Spec.Region = region
+
 					defaultMachineClass = map[string]interface{}{
 						"region":         region,
 						"machineType":    machineType,
 						"keyName":        keyName,
-						"imageName":      machineImage,
 						"networkID":      networkID,
 						"podNetworkCidr": podCIDR,
 						"securityGroups": []string{securityGroupName},
@@ -330,6 +352,11 @@ var _ = Describe("Machines", func() {
 						"secret": map[string]interface{}{
 							"cloudConfig": string(userData),
 						},
+					}
+					if id == "" {
+						defaultMachineClass["imageName"] = name
+					} else {
+						defaultMachineClass["imageID"] = id
 					}
 
 					var (
@@ -399,9 +426,10 @@ var _ = Describe("Machines", func() {
 							MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool2, 2, minPool2),
 						},
 					}
-				})
+				}
 
 				It("should return the expected machine deployments for profile image types", func() {
+					setup(region, machineImage, "")
 					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 					expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
@@ -435,6 +463,53 @@ var _ = Describe("Machines", func() {
 								Name:    machineImageName,
 								Version: machineImageVersion,
 								Image:   machineImage,
+							},
+						},
+					}))
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GenerateMachineDeployments()
+
+					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal(machineDeployments))
+				})
+
+				It("should return the expected machine deployments for profile image types with id", func() {
+					setup(regionWithImages, "", machineImageID)
+					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", workerWithRegion, clusterWithRegion)
+
+					expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
+
+					// Test workerDelegate.DeployMachineClasses()
+
+					chartApplier.
+						EXPECT().
+						ApplyChart(
+							context.TODO(),
+							filepath.Join(openstack.InternalChartsPath, "machineclass"),
+							namespace,
+							"machineclass",
+							machineClasses,
+							nil,
+						).
+						Return(nil)
+
+					err := workerDelegate.DeployMachineClasses(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GetMachineImages()
+					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+							Kind:       "WorkerStatus",
+						},
+						MachineImages: []apiv1alpha1.MachineImage{
+							{
+								Name:    machineImageName,
+								Version: machineImageVersion,
+								ID:      machineImageID,
 							},
 						},
 					}))
