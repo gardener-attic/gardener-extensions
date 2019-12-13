@@ -26,6 +26,8 @@ mkdir -p '{{ $unit.DropIns.Path }}'
 
 until zypper -q install -y docker wget socat jq nfs-client; [ $? -ne 7 ]; do sleep 1; done
 systemctl daemon-reload
+ip link set dev eth0 mtu 1460
+grep -q '^MTU' /etc/sysconfig/network/ifcfg-eth0 && sed -i 's/^MTU.*/MTU=1460/' /etc/sysconfig/network/ifcfg-eth0 || echo 'MTU=1460' >> /etc/sysconfig/network/ifcfg-eth0
 {{ if .Bootstrap -}}
 ln -s /usr/bin/docker /bin/docker
 ln -s /bin/ip /usr/bin/ip
