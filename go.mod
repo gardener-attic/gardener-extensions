@@ -31,9 +31,13 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.10.0
+	golang.org/x/net v0.0.0-20190912160710-24e19bdeb0f2 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8 // indirect
+	golang.org/x/tools v0.0.0-20190912185636-87d9f09c5d89 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.0.1
 	google.golang.org/api v0.7.0
+	google.golang.org/grpc v1.23.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783

@@ -19,6 +19,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	configloader "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/loader"
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/spf13/pflag"
@@ -96,4 +97,11 @@ func (c *Config) Options() config.ControllerConfiguration {
 	var cfg config.ControllerConfiguration
 	c.Apply(&cfg)
 	return cfg
+}
+
+// ApplyHealthCheckConfig applies the HealthCheckConfig to the config
+func (c *Config) ApplyHealthCheckConfig(config *healthcheckconfig.HealthCheckConfig) {
+	if c.Config.HealthCheckConfig != nil {
+		*config = *c.Config.HealthCheckConfig
+	}
 }

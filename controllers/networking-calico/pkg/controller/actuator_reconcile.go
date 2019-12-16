@@ -30,7 +30,8 @@ import (
 )
 
 const (
-	calicoConfigSecretName = "extension-networking-calico-config"
+	// CalicoConfigSecretName is the name of the secret used for the managed resource of networking calico
+	CalicoConfigSecretName = "extension-networking-calico-config"
 )
 
 func withLocalObjectRefs(refs ...string) []corev1.LocalObjectReference {
@@ -44,7 +45,7 @@ func withLocalObjectRefs(refs ...string) []corev1.LocalObjectReference {
 func calicoSecret(cl client.Client, calicoConfig []byte, namespace string) (*manager.Secret, []corev1.LocalObjectReference) {
 	return manager.NewSecret(cl).
 		WithKeyValues(map[string][]byte{charts.CalicoConfigKey: calicoConfig}).
-		WithNamespacedName(namespace, calicoConfigSecretName), withLocalObjectRefs(calicoConfigSecretName)
+		WithNamespacedName(namespace, CalicoConfigSecretName), withLocalObjectRefs(CalicoConfigSecretName)
 }
 
 // Reconcile implements Network.Actuator.
@@ -79,7 +80,7 @@ func (a *actuator) Reconcile(ctx context.Context, network *extensionsv1alpha1.Ne
 
 	if err := manager.
 		NewManagedResource(a.client).
-		WithNamespacedName(network.Namespace, calicoConfigSecretName).
+		WithNamespacedName(network.Namespace, CalicoConfigSecretName).
 		WithSecretRefs(secretRefs).
 		WithInjectedLabels(map[string]string{common.ShootNoCleanup: "true"}).
 		Reconcile(ctx); err != nil {

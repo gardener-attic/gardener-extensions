@@ -48,6 +48,8 @@ const (
 	MachineControllerManagerMonitoringConfigName = "machine-controller-manager-monitoring-config"
 	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.
 	BackupSecretName = "etcd-backup"
+	// CloudControllerManagerName is a constant for the name of the CloudController deployed by the worker controller.
+	CloudControllerManagerName = "cloud-controller-manager"
 )
 
 var (

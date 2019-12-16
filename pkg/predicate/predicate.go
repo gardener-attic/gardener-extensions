@@ -27,7 +27,6 @@ import (
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/event"
-	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
@@ -201,4 +200,25 @@ func AddTypePredicate(extensionType string, predicates []predicate.Predicate) []
 	preds := make([]predicate.Predicate, 0, len(predicates)+1)
 	preds = append(preds, HasType(extensionType))
 	return append(preds, predicates...)
+}
+
+// HasPurpose filters the incoming Controlplanes  for the given spec.purpose
+func HasPurpose(purpose extensions.Purpose) predicate.Predicate {
+	return FromMapper(MapperFunc(func(e event.GenericEvent) bool {
+		controlPlane, ok := e.Object.(*extensions.ControlPlane)
+		if !ok {
+			return false
+		}
+
+		// needed because ControlPlane of type "normal" has the spec.purpose field not set
+		if controlPlane.Spec.Purpose == nil && purpose == extensions.Normal {
+			return true
+		}
+
+		if controlPlane.Spec.Purpose == nil {
+			return false
+		}
+
+		return *controlPlane.Spec.Purpose == purpose
+	}), CreateTrigger, UpdateNewTrigger, DeleteTrigger, GenericTrigger)
 }

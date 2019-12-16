@@ -125,17 +125,17 @@ var _ = Describe("Actuator", func() {
 			Data:       map[string]string{"abc": "xyz"},
 		}
 
-		resourceKeyCPShootChart        = client.ObjectKey{Namespace: namespace, Name: controlPlaneShootChartResourceName}
+		resourceKeyCPShootChart        = client.ObjectKey{Namespace: namespace, Name: ControlPlaneShootChartResourceName}
 		createdMRSecretForCPShootChart = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ControlPlaneShootChartResourceName, Namespace: namespace},
 			Data:       map[string][]byte{chartName: []byte(renderedContent)},
 			Type:       corev1.SecretTypeOpaque,
 		}
 		createdMRForCPShootChart = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ControlPlaneShootChartResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs: []corev1.LocalObjectReference{
-					{Name: controlPlaneShootChartResourceName},
+					{Name: ControlPlaneShootChartResourceName},
 				},
 				InjectLabels:              map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
 				KeepObjects:               pFalse,
@@ -143,23 +143,23 @@ var _ = Describe("Actuator", func() {
 			},
 		}
 		deletedMRSecretForCPShootChart = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ControlPlaneShootChartResourceName, Namespace: namespace},
 		}
 		deleteMRForCPShootChart = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: controlPlaneShootChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ControlPlaneShootChartResourceName, Namespace: namespace},
 		}
 
-		resourceKeyStorageClassesChart        = client.ObjectKey{Namespace: namespace, Name: storageClassesChartResourceName}
+		resourceKeyStorageClassesChart        = client.ObjectKey{Namespace: namespace, Name: StorageClassesChartResourceName}
 		createdMRSecretForStorageClassesChart = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: StorageClassesChartResourceName, Namespace: namespace},
 			Data:       map[string][]byte{chartName: []byte(renderedContent)},
 			Type:       corev1.SecretTypeOpaque,
 		}
 		createdMRForStorageClassesChart = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: StorageClassesChartResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs: []corev1.LocalObjectReference{
-					{Name: storageClassesChartResourceName},
+					{Name: StorageClassesChartResourceName},
 				},
 				InjectLabels:              map[string]string{extensionscontroller.ShootNoCleanupLabel: "true"},
 				KeepObjects:               pFalse,
@@ -167,10 +167,10 @@ var _ = Describe("Actuator", func() {
 			},
 		}
 		deletedMRSecretForStorageClassesChart = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: StorageClassesChartResourceName, Namespace: namespace},
 		}
 		deleteMRForStorageClassesChart = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: storageClassesChartResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: StorageClassesChartResourceName, Namespace: namespace},
 		}
 
 		resourceKeyShootWebhooksNetworkPolicy = client.ObjectKey{Namespace: namespace, Name: "gardener-extension-" + providerName}
@@ -215,20 +215,20 @@ var _ = Describe("Actuator", func() {
 			ObjectMeta: extensionswebhookshoot.GetNetworkPolicyMeta(namespace, providerName).ObjectMeta,
 		}
 
-		resourceKeyShootWebhooks  = client.ObjectKey{Namespace: namespace, Name: shootWebhooksResourceName}
+		resourceKeyShootWebhooks  = client.ObjectKey{Namespace: namespace, Name: ShootWebhooksResourceName}
 		createdMRForShootWebhooks = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: shootWebhooksResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ShootWebhooksResourceName, Namespace: namespace},
 			Spec: resourcemanagerv1alpha1.ManagedResourceSpec{
 				SecretRefs: []corev1.LocalObjectReference{
-					{Name: shootWebhooksResourceName},
+					{Name: ShootWebhooksResourceName},
 				},
 			},
 		}
 		deletedMRForShootWebhooks = &resourcemanagerv1alpha1.ManagedResource{
-			ObjectMeta: metav1.ObjectMeta{Name: shootWebhooksResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ShootWebhooksResourceName, Namespace: namespace},
 		}
 		deletedMRSecretForShootWebhooks = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: shootWebhooksResourceName, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: ShootWebhooksResourceName, Namespace: namespace},
 		}
 
 		imageVector = imagevector.ImageVector([]*imagevector.ImageSource{})
@@ -291,7 +291,7 @@ var _ = Describe("Actuator", func() {
 
 				data, _ := marshalWebhooks(webhooks, providerName)
 				createdMRSecretForShootWebhooks := &corev1.Secret{
-					ObjectMeta: metav1.ObjectMeta{Name: shootWebhooksResourceName, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: ShootWebhooksResourceName, Namespace: namespace},
 					Data:       map[string][]byte{"mutatingwebhookconfiguration.yaml": data},
 					Type:       corev1.SecretTypeOpaque,
 				}

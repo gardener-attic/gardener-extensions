@@ -66,8 +66,10 @@ func (o *Options) run(ctx context.Context) {
 	}
 
 	o.serviceOptions.Completed().Apply(&config.ServiceConfig)
+	o.healthOptions.Completed().ApplyHealthCheckConfig(&config.HealthConfig)
 	o.controllerOptions.Completed().Apply(&config.ServiceConfig.ControllerOptions)
 	o.reconcileOptions.Completed().Apply(&config.ServiceConfig.IgnoreOperationAnnotation)
+	o.healthControllerOptions.Completed().Apply(&config.HealthConfig.ControllerOptions)
 
 	if err := o.controllerSwitches.Completed().AddToManager(mgr); err != nil {
 		controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

@@ -16,12 +16,16 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/pkg/controller"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/pkg/controller/config"
+	"github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/pkg/controller/healthcheck"
 	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
 
+	extensionshealthcheckcontroller "github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 	"github.com/spf13/pflag"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // DNSServiceOptions holds options related to the dns service.
@@ -32,11 +36,21 @@ type DNSServiceOptions struct {
 	config   *DNSServiceConfig
 }
 
+type HealthOptions struct {
+	HealthCheckSyncPeriod time.Duration
+	config                *HealthConfig
+}
+
 // AddFlags implements Flagger.AddFlags.
 func (o *DNSServiceOptions) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.GardenID, "garden-id", "", "ID of the current garden installation")
 	fs.StringVar(&o.SeedID, "seed-id", "", "ID of the current cluster")
 	fs.StringVar(&o.DNSClass, "dns-class", "garden", "DNS class used to filter DNS source resources in shoot clusters")
+}
+
+// AddFlags implements Flagger.AddFlags.
+func (o *HealthOptions) AddFlags(fs *pflag.FlagSet) {
+	fs.DurationVar(&o.HealthCheckSyncPeriod, "healthcheck-sync-period", time.Second*30, "sync period for the health check controller")
 }
 
 // Complete implements Completer.Complete.
@@ -51,8 +65,19 @@ func (o *DNSServiceOptions) Complete() error {
 	return nil
 }
 
+// Complete implements Completer.Complete.
+func (o *HealthOptions) Complete() error {
+	o.config = &HealthConfig{HealthCheckSyncPeriod: metav1.Duration{Duration: o.HealthCheckSyncPeriod}}
+	return nil
+}
+
 // Completed returns the decoded CertificatesServiceConfiguration instance. Only call this if `Complete` was successful.
 func (o *DNSServiceOptions) Completed() *DNSServiceConfig {
+	return o.config
+}
+
+// Completed
+func (o *HealthOptions) Completed() *HealthConfig {
 	return o.config
 }
 
@@ -70,9 +95,19 @@ func (c *DNSServiceConfig) Apply(cfg *config.Config) {
 	cfg.DNSServiceConfig.DNSClass = c.DNSClass
 }
 
+// HealthConfig contains configuration information about the health check controller.
+type HealthConfig struct {
+	HealthCheckSyncPeriod metav1.Duration
+}
+
+func (c *HealthConfig) ApplyHealthCheckConfig(config *config.HealthCheckConfig) {
+	config.Health.HealthCheckSyncPeriod = c.HealthCheckSyncPeriod
+}
+
 // SwitchOptions are the cmd.SwitchOptions for the provider controllers.
 func ControllerSwitches() *cmd.SwitchOptions {
 	return cmd.NewSwitchOptions(
 		cmd.Switch(controller.Name, controller.AddToManager),
+		cmd.Switch(extensionshealthcheckcontroller.ControllerName, healthcheck.RegisterHealthChecks),
 	)
 }

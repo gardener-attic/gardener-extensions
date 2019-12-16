@@ -19,11 +19,15 @@ import (
 	"fmt"
 	"os"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	openstackinstall "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/install"
 	openstackcmd "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/cmd"
 	openstackbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/backupbucket"
 	openstackbackupentry "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/backupentry"
 	openstackcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/healthcheck"
 	openstackinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/infrastructure"
 	openstackworker "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -59,6 +63,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 		// options for the backupentry controller
 		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the health care controller
+		healthCareCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -99,6 +108,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
 			controllerSwitches,
 			configFileOpts,
 			reconcileOpts,
@@ -127,16 +137,26 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
 			}
 
-			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
+			scheme := mgr.GetScheme()
+			if err := controller.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := openstackinstall.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := openstackinstall.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
+
+			// add common meta types to schema for controller-runtime to use v1.ListOptions
+			metav1.AddToGroupVersion(scheme, machinev1alpha1.SchemeGroupVersion)
+			// add types required for Health check
+			scheme.AddKnownTypes(machinev1alpha1.SchemeGroupVersion,
+				&machinev1alpha1.MachineDeploymentList{},
+			)
 
 			configFileOpts.Completed().ApplyETCDStorage(&openstackcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&openstackcontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
+			healthCareCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&openstackbackupbucket.DefaultAddOptions.Controller)
 			backupEntryCtrlOpts.Completed().Apply(&openstackbackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&openstackcontrolplane.DefaultAddOptions.Controller)

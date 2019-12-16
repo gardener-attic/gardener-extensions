@@ -15,6 +15,7 @@
 package config
 
 import (
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,6 +27,8 @@ type Configuration struct {
 
 	IssuerName string
 	ACME       ACME
+	// HealthCheckConfig is the config for the health check controller
+	HealthCheckConfig *healthcheckconfig.HealthCheckConfig
 }
 
 // ACME holds information about the ACME issuer used for the certificate service.

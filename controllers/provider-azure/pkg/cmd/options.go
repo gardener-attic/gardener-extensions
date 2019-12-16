@@ -18,6 +18,7 @@ import (
 	backupbucketcontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/backupbucket"
 	backupentrycontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/backupentry"
 	controlplanecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/controlplane"
+	healthcheckcontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/healthcheck"
 	infrastructurecontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	workercontroller "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
 	controlplanewebhook "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplane"
@@ -28,6 +29,7 @@ import (
 	extensionsbackupentrycontroller "github.com/gardener/gardener-extensions/pkg/controller/backupentry"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	extensionscontrolplanecontroller "github.com/gardener/gardener-extensions/pkg/controller/controlplane"
+	extensionshealthcheckcontroller "github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionsworkercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
@@ -43,6 +45,7 @@ func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 		controllercmd.Switch(extensionscontrolplanecontroller.ControllerName, controlplanecontroller.AddToManager),
 		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
 		controllercmd.Switch(extensionsworkercontroller.ControllerName, workercontroller.AddToManager),
+		controllercmd.Switch(extensionshealthcheckcontroller.ControllerName, healthcheckcontroller.AddToManager),
 	)
 }
 

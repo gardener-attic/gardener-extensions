@@ -30,6 +30,8 @@ import (
 	extensionsinfrastructurecontroller "github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	extensionsworkercontroller "github.com/gardener/gardener-extensions/pkg/controller/worker"
 
+	healthcheckcontroller "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/healthcheck"
+	extensionshealthcheckcontroller "github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 	extensioncontrolplanewebhook "github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 )
@@ -42,6 +44,7 @@ func ControllerSwitchOptions() *controllercmd.SwitchOptions {
 		controllercmd.Switch(extensionscontrolplanecontroller.ControllerName, controlplane.AddToManager),
 		controllercmd.Switch(extensionsinfrastructurecontroller.ControllerName, infrastructurecontroller.AddToManager),
 		controllercmd.Switch(extensionsworkercontroller.ControllerName, workercontroller.AddToManager),
+		controllercmd.Switch(extensionshealthcheckcontroller.ControllerName, healthcheckcontroller.AddToManager),
 	)
 }
 

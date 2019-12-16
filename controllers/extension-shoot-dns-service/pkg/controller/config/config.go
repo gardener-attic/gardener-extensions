@@ -18,12 +18,15 @@
 package config
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
 var (
 	// ServiceConfig contains configuration for the dns service.
 	ServiceConfig Config
+	// HealthConfig contains configuration for the health check controller
+	HealthConfig HealthCheckConfig
 )
 
 // Config are options to apply when adding the dns service controller to the manager.
@@ -41,4 +44,18 @@ type DNSServiceConfig struct {
 	GardenID string
 	SeedID   string
 	DNSClass string
+}
+
+// HealthCheckConfig are options to apply when adding the health check controller to the manager.
+type HealthCheckConfig struct {
+	// ControllerOptions contains options for the controller.
+	ControllerOptions controller.Options
+	// Health contains the health config
+	Health Health
+}
+
+// Health contains configuration for the health check controller
+type Health struct {
+	// HealthCheckSyncPeriod
+	HealthCheckSyncPeriod metav1.Duration
 }

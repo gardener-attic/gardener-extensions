@@ -26,6 +26,8 @@ import (
 	"github.com/spf13/cobra"
 	componentbaseconfig "k8s.io/component-base/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+
+	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/healthcheck"
 )
 
 // NewServiceControllerCommand creates a new command that is used to start the Certificate Service controller.
@@ -70,9 +72,10 @@ func (o *Options) run(ctx context.Context) {
 	}
 
 	ctrlConfig := o.certOptions.Completed()
-
+	ctrlConfig.ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
 	ctrlConfig.Apply(&controller.DefaultAddOptions.ServiceConfig)
 	o.controllerOptions.Completed().Apply(&controller.DefaultAddOptions.ControllerOptions)
+	o.healthOptions.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 	o.reconcileOptions.Completed().Apply(&controller.DefaultAddOptions.IgnoreOperationAnnotation)
 
 	if err := o.controllerSwitches.Completed().AddToManager(mgr); err != nil {

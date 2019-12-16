@@ -151,9 +151,12 @@ func (a *actuator) InjectClient(client client.Client) error {
 }
 
 const (
-	controlPlaneShootChartResourceName = "extension-controlplane-shoot"
-	storageClassesChartResourceName    = "extension-controlplane-storageclasses"
-	shootWebhooksResourceName          = "extension-controlplane-shoot-webhooks"
+	// ControlPlaneShootChartResourceName is the name of the managed resource for the control plane
+	ControlPlaneShootChartResourceName = "extension-controlplane-shoot"
+	// StorageClassesChartResourceName is the name of the managed resource for the extension control plane storageclasses
+	StorageClassesChartResourceName = "extension-controlplane-storageclasses"
+	// ShootWebhooksResourceName is the name of the managed resource for the extension control plane webhooks
+	ShootWebhooksResourceName = "extension-controlplane-shoot-webhooks"
 )
 
 // Reconcile reconciles the given controlplane and cluster, creating or updating the additional Shoot
@@ -227,18 +230,18 @@ func (a *actuator) reconcileControlPlane(
 
 		if err := manager.
 			NewSecret(a.client).
-			WithNamespacedName(cp.Namespace, shootWebhooksResourceName).
+			WithNamespacedName(cp.Namespace, ShootWebhooksResourceName).
 			WithKeyValues(map[string][]byte{"mutatingwebhookconfiguration.yaml": webhookConfiguration}).
 			Reconcile(ctx); err != nil {
-			return false, errors.Wrapf(err, "could not create or update secret '%s/%s' of managed resource containing shoot webhooks", cp.Namespace, shootWebhooksResourceName)
+			return false, errors.Wrapf(err, "could not create or update secret '%s/%s' of managed resource containing shoot webhooks", cp.Namespace, ShootWebhooksResourceName)
 		}
 
 		if err := manager.
 			NewManagedResource(a.client).
-			WithNamespacedName(cp.Namespace, shootWebhooksResourceName).
-			WithSecretRef(shootWebhooksResourceName).
+			WithNamespacedName(cp.Namespace, ShootWebhooksResourceName).
+			WithSecretRef(ShootWebhooksResourceName).
 			Reconcile(ctx); err != nil {
-			return false, errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing shoot webhooks", cp.Namespace, shootWebhooksResourceName)
+			return false, errors.Wrapf(err, "could not create or update managed resource '%s/%s' containing shoot webhooks", cp.Namespace, ShootWebhooksResourceName)
 		}
 	}
 
@@ -324,7 +327,7 @@ func (a *actuator) reconcileControlPlane(
 		return false, err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, controlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, version, true, false); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, ControlPlaneShootChartResourceName, a.client, chartRenderer, a.controlPlaneShootChart, values, a.imageVector, metav1.NamespaceSystem, version, true, false); err != nil {
 		return false, errors.Wrapf(err, "could not apply control plane shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
@@ -334,7 +337,7 @@ func (a *actuator) reconcileControlPlane(
 		return false, err
 	}
 
-	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, storageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, version, true, true); err != nil {
+	if err := extensionscontroller.RenderChartAndCreateManagedResource(ctx, cp.Namespace, StorageClassesChartResourceName, a.client, chartRenderer, a.storageClassesChart, values, a.imageVector, metav1.NamespaceSystem, version, true, true); err != nil {
 		return false, errors.Wrapf(err, "could not apply storage classes chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
@@ -388,22 +391,22 @@ func (a *actuator) deleteControlPlane(
 	cluster *extensionscontroller.Cluster,
 ) error {
 	// Delete the managed resources
-	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, storageClassesChartResourceName); err != nil {
+	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, StorageClassesChartResourceName); err != nil {
 		return errors.Wrapf(err, "could not delete managed resource containing storage classes chart for controlplane '%s'", util.ObjectName(cp))
 	}
-	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, controlPlaneShootChartResourceName); err != nil {
+	if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, ControlPlaneShootChartResourceName); err != nil {
 		return errors.Wrapf(err, "could not delete managed resource containing shoot chart for controlplane '%s'", util.ObjectName(cp))
 	}
 
 	timeoutCtx1, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx1, a.client, cp.Namespace, storageClassesChartResourceName); err != nil {
+	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx1, a.client, cp.Namespace, StorageClassesChartResourceName); err != nil {
 		return errors.Wrapf(err, "error while waiting for managed resource containing storage classes chart for controlplane '%s' to be deleted", util.ObjectName(cp))
 	}
 
 	timeoutCtx2, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx2, a.client, cp.Namespace, controlPlaneShootChartResourceName); err != nil {
+	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx2, a.client, cp.Namespace, ControlPlaneShootChartResourceName); err != nil {
 		return errors.Wrapf(err, "error while waiting for managed resource containing shoot chart for controlplane '%s' to be deleted", util.ObjectName(cp))
 	}
 
@@ -433,13 +436,13 @@ func (a *actuator) deleteControlPlane(
 			return errors.Wrapf(err, "could not delete network policy for shoot webhooks in namespace '%s'", cp.Namespace)
 		}
 
-		if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, shootWebhooksResourceName); err != nil {
+		if err := extensionscontroller.DeleteManagedResource(ctx, a.client, cp.Namespace, ShootWebhooksResourceName); err != nil {
 			return errors.Wrapf(err, "could not delete managed resource containing shoot webhooks for controlplane '%s'", util.ObjectName(cp))
 		}
 
 		timeoutCtx3, cancel := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancel()
-		if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx3, a.client, cp.Namespace, shootWebhooksResourceName); err != nil {
+		if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx3, a.client, cp.Namespace, ShootWebhooksResourceName); err != nil {
 			return errors.Wrapf(err, "error while waiting for managed resource containing shoot webhooks for controlplane '%s' to be deleted", util.ObjectName(cp))
 		}
 	}

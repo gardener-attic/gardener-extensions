@@ -19,11 +19,15 @@ import (
 	"fmt"
 	"os"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	gcpinstall "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
 	gcpcmd "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/cmd"
 	gcpbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/backupbucket"
 	gcpbackupentry "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/backupentry"
 	gcpcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/healthcheck"
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	gcpworker "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
@@ -59,6 +63,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 		// options for the backupentry controller
 		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the health care controller
+		healthCareCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -99,6 +108,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
 			configFileOpts,
 			controllerSwitches,
 			reconcileOpts,
@@ -127,16 +137,26 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
 			}
 
-			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
+			scheme := mgr.GetScheme()
+			if err := controller.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := gcpinstall.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := gcpinstall.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
+
+			// add common meta types to schema for controller-runtime to use v1.ListOptions
+			metav1.AddToGroupVersion(scheme, machinev1alpha1.SchemeGroupVersion)
+			// add types required for Health check
+			scheme.AddKnownTypes(machinev1alpha1.SchemeGroupVersion,
+				&machinev1alpha1.MachineDeploymentList{},
+			)
 
 			configFileOpts.Completed().ApplyETCDStorage(&gcpcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&gcpcontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
+			healthCareCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&gcpbackupbucket.DefaultAddOptions.Controller)
 			backupEntryCtrlOpts.Completed().Apply(&gcpbackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&gcpcontrolplane.DefaultAddOptions.Controller)

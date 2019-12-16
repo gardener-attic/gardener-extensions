@@ -113,7 +113,7 @@ var _ = Describe("ValuesProvider", func() {
 			aws.CloudProviderConfigName:              "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
 			"cloud-controller-manager":               "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 			"cloud-controller-manager-server":        "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
-			awsLBReadvertiserDeploymentName:          "599aeee0cbbfdab4ea29c642cb04a6c9a3eb90ec21b41570efb987958f99d4b1",
+			aws.LBReadvertiserDeploymentName:         "599aeee0cbbfdab4ea29c642cb04a6c9a3eb90ec21b41570efb987958f99d4b1",
 		}
 
 		configChartValues = map[string]interface{}{

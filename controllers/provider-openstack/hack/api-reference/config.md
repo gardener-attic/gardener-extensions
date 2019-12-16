@@ -70,6 +70,20 @@ ETCD
 <p>ETCD is the etcd configuration.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>healthCheckConfig</code></br>
+<em>
+<a href="https://github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config">
+github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config/v1alpha1.HealthCheckConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>HealthCheckConfig is the config for the health check controller</p>
+</td>
+</tr>
 </tbody>
 </table>
 <h3 id="openstack.provider.extensions.config.gardener.cloud/v1alpha1.ETCD">ETCD
