@@ -8,8 +8,6 @@ In this document we are describing how this configuration looks like for Calico 
 
 Calico Typha is an optional component of Project Calico designed to offload the Kubernetes API server. The Typha daemon sits between the datastore (such as the Kubernetes API server which is the one used by Gardener managed Kubernetes) and many instances of Felix. Typha’s main purpose is to increase scale by reducing each node’s impact on the datastore. You can opt-out Typha via `.spec.networking.providerConfig.typha.enabled=false` of your Shoot manifest. By default the Typha is enabled.
 
-> Note: On some cloud providers combined with some operating systems the Typha is not working properly. You may try to disable it in your Shoot manifest if you experience such issues.
-
 ## Example `NetworkingConfig` manifest
 
 An example `NetworkingConfig` for the Calico extension looks as follows:
