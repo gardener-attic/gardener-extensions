@@ -15,15 +15,14 @@
 package validation_test
 
 import (
+	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service"
+	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/validation"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
 	gomegatypes "github.com/onsi/gomega/types"
-
-	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service"
-	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/validation"
-
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 

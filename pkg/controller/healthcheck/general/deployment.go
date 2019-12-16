@@ -17,14 +17,15 @@ package general
 import (
 	"context"
 	"fmt"
+
+	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
+
 	"github.com/gardener/gardener/pkg/utils/kubernetes/health"
 	"github.com/go-logr/logr"
 	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 )
 
 // DeploymentHealthChecker contains all the information for the Deployment HealthCheck

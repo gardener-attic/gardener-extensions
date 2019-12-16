@@ -18,9 +18,10 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 	"path"
 	"text/template"
+
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 )
 
 // DefaultUnitsPath is the default CoreOS path where to store units at.

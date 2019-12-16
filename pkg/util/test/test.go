@@ -16,8 +16,9 @@ package test
 
 import (
 	"fmt"
-	"github.com/onsi/ginkgo"
 	"reflect"
+
+	"github.com/onsi/ginkgo"
 )
 
 // WithVar sets the given var to the src value and returns a function to revert to the original state.

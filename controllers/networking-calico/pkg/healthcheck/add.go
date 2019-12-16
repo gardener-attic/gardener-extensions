@@ -15,19 +15,19 @@
 package healthcheck
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
-
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
 	networkcontroller "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck/general"
+
+	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 var (

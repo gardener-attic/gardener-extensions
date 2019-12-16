@@ -17,15 +17,15 @@ package general
 import (
 	"context"
 	"fmt"
+
+	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
+
+	resourcesv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	resourcesv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
-
-	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
-	corev1 "k8s.io/api/core/v1"
 )
 
 // ManagedResourceHealthChecker contains all the information for the ManagedResource HealthCheck

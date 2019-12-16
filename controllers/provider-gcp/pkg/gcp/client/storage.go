@@ -17,13 +17,12 @@ package client
 import (
 	"context"
 
-	"google.golang.org/api/googleapi"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 
 	"cloud.google.com/go/storage"
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
-
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

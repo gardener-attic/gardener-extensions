@@ -17,6 +17,7 @@ package generator_test
 import (
 	ubuntu_generator "github.com/gardener/gardener-extensions/controllers/os-ubuntu/pkg/generator"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator/test"
+
 	"github.com/gobuffalo/packr"
 	. "github.com/onsi/ginkgo"
 )

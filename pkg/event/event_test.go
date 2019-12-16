@@ -15,10 +15,11 @@
 package event
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	"testing"
 )
 
 func TestEvent(t *testing.T) {

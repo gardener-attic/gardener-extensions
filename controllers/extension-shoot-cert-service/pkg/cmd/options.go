@@ -18,14 +18,13 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
-
 	apisconfig "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config/validation"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller"
 	controllerconfig "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/config"
 	healthcheckcontroller "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/healthcheck"
+	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	extensionshealthcheckcontroller "github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 

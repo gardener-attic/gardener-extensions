@@ -35,9 +35,7 @@ import (
 	commonosgenerator "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
-
 	runtimeclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 

@@ -20,9 +20,9 @@ import (
 	calicov1alpha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/charts"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/gardener/gardener-resource-manager/pkg/manager"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"

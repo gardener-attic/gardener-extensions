@@ -19,8 +19,8 @@ import (
 	"time"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	resourcemanager "github.com/gardener/gardener-resource-manager/pkg/manager"
 
+	resourcemanager "github.com/gardener/gardener-resource-manager/pkg/manager"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 

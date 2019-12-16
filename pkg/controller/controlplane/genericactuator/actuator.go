@@ -24,6 +24,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	extensionswebhookshoot "github.com/gardener/gardener-extensions/pkg/webhook/shoot"
+
 	"github.com/gardener/gardener-resource-manager/pkg/manager"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"

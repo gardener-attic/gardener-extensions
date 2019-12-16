@@ -17,10 +17,11 @@ package infrastructure_test
 import (
 	"fmt"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	alicloudclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud/client"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/infrastructure"
 	mockclient "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/mock/provider-alicloud/alicloud/client"
+
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

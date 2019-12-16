@@ -17,10 +17,11 @@
 package generator
 
 import (
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path"
+
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 

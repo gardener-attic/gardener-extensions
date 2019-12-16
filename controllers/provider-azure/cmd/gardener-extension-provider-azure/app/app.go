@@ -19,9 +19,6 @@ import (
 	"fmt"
 	"os"
 
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	azureinstall "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/install"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	azurecmd "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/cmd"
@@ -39,7 +36,9 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 

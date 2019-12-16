@@ -16,6 +16,7 @@ package predicate
 
 import (
 	extensionsevent "github.com/gardener/gardener-extensions/pkg/event"
+
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"

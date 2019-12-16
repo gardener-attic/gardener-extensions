@@ -15,11 +15,13 @@
 package generator
 
 import (
+	"os"
+
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator/test"
+
 	"github.com/gobuffalo/packr"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
 )
 
 var _ = Describe("JeOS Cloud-init Generator Test", func() {

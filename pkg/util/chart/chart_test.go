@@ -16,11 +16,12 @@ package chart
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/helm/pkg/manifest"
-	"testing"
 )
 
 func TestUtil(t *testing.T) {

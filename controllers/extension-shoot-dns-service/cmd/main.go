@@ -17,10 +17,10 @@ package main
 import (
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/cmd/app"
 	"github.com/gardener/gardener-extensions/pkg/controller"
-	"github.com/gardener/gardener-extensions/pkg/log"
-	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
-
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	"github.com/gardener/gardener-extensions/pkg/log"
+
+	runtimelog "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func main() {

@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/pkg/util"
+
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

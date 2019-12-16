@@ -19,17 +19,14 @@ import (
 	"fmt"
 	"os"
 
-	calicocontroller "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
-	"github.com/gardener/gardener-extensions/pkg/util"
-
-	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
-
 	calicoinstall "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/install"
+	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
 	calicocmd "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/cmd"
-	"github.com/gardener/gardener-extensions/pkg/controller"
-
+	calicocontroller "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
 	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/healthcheck"
+	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

@@ -18,9 +18,9 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // GetClientAuthFromInfrastructure retrieves the ServiceAccount from the Secret referenced in the given Infrastructure.

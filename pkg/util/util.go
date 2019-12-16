@@ -19,9 +19,7 @@ import (
 	"encoding/json"
 
 	"github.com/gardener/gardener/pkg/utils"
-
 	"k8s.io/apimachinery/pkg/runtime"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

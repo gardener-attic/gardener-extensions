@@ -17,19 +17,17 @@ package healthcheck
 import (
 	"time"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	certv1alpha1 "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/v1alpha1"
+	certcontroller "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
+	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck/general"
 
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
-	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck/general"
-
-	certv1alpha1 "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/v1alpha1"
-	certcontroller "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller"
-	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 )
 
 var (

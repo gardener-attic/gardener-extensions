@@ -17,15 +17,15 @@ package worker
 import (
 	"context"
 	"fmt"
+
+	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
+
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/go-logr/logr"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
-
-	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
 )
 
 // DefaultHealthChecker all the information for the Worker HealthCheck

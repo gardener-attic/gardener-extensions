@@ -16,9 +16,11 @@ package app
 
 import (
 	"context"
+
 	"github.com/gardener/gardener-extensions/controllers/os-suse-jeos/pkg/generator"
 	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/app"
+
 	"github.com/spf13/cobra"
 )
 

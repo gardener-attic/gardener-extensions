@@ -19,6 +19,7 @@ import (
 
 	serviceinstall "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/install"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller"
+	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/healthcheck"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -26,8 +27,6 @@ import (
 	"github.com/spf13/cobra"
 	componentbaseconfig "k8s.io/component-base/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
-
-	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/healthcheck"
 )
 
 // NewServiceControllerCommand creates a new command that is used to start the Certificate Service controller.

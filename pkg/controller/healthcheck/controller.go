@@ -17,18 +17,17 @@ package healthcheck
 import (
 	"fmt"
 
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
+	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
+
 	"github.com/gardener/gardener/pkg/api/extensions"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
-	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
-	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
-
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"

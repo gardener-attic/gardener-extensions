@@ -19,6 +19,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon"
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
+
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 

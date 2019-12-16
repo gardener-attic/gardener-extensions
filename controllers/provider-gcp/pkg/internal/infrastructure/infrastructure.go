@@ -20,6 +20,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"google.golang.org/api/compute/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"

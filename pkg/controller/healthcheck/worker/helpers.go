@@ -16,10 +16,11 @@ package worker
 
 import (
 	"fmt"
-	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 
 	"github.com/gardener/gardener-extensions/pkg/controller/healthcheck/general"
+
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var (
