@@ -26,7 +26,7 @@ import (
 	extensionswebhookshoot "github.com/gardener/gardener-extensions/pkg/webhook/shoot"
 	"github.com/gardener/gardener-resource-manager/pkg/manager"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
@@ -276,8 +276,8 @@ func (a *actuator) reconcileControlPlane(
 
 	if extensionscontroller.IsHibernated(cluster) {
 		dep := &appsv1.Deployment{}
-		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer}, dep); client.IgnoreNotFound(err) != nil {
-			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, v1alpha1constants.DeploymentNameKubeAPIServer)
+		if err := a.client.Get(ctx, client.ObjectKey{Namespace: cp.Namespace, Name: v1beta1constants.DeploymentNameKubeAPIServer}, dep); client.IgnoreNotFound(err) != nil {
+			return false, errors.Wrapf(err, "could not get deployment '%s/%s'", cp.Namespace, v1beta1constants.DeploymentNameKubeAPIServer)
 		}
 
 		// If the cluster is hibernated, check if kube-apiserver has been already scaled down. If it is not yet scaled down
@@ -456,12 +456,12 @@ func (a *actuator) computeChecksums(
 ) (map[string]string, error) {
 	// Get cloud provider secret and config from cluster
 	cpSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}, cpSecret); err != nil {
-		return nil, errors.Wrapf(err, "could not get secret '%s/%s'", namespace, v1alpha1constants.SecretNameCloudProvider)
+	if err := a.client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: v1beta1constants.SecretNameCloudProvider}, cpSecret); err != nil {
+		return nil, errors.Wrapf(err, "could not get secret '%s/%s'", namespace, v1beta1constants.SecretNameCloudProvider)
 	}
 
 	csSecrets := controlplane.MergeSecretMaps(deployedSecrets, map[string]*corev1.Secret{
-		v1alpha1constants.SecretNameCloudProvider: cpSecret,
+		v1beta1constants.SecretNameCloudProvider: cpSecret,
 	})
 
 	var csConfigMaps map[string]*corev1.ConfigMap

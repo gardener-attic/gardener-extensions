@@ -18,7 +18,7 @@ import (
 	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/validation"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
@@ -31,10 +31,10 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 		zone        = "some-zone"
 		lbProvider1 = "foo"
 
-		regions = []gardencorev1alpha1.Region{
+		regions = []gardencorev1beta1.Region{
 			{
 				Name: region,
-				Zones: []gardencorev1alpha1.AvailabilityZone{
+				Zones: []gardencorev1beta1.AvailabilityZone{
 					{Name: zone},
 				},
 			},

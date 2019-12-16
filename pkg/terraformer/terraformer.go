@@ -21,8 +21,8 @@ import (
 	"strings"
 	"time"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
-	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
+	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/retry"
@@ -230,7 +230,7 @@ func (t *terraformer) execute(ctx context.Context, scriptName string) error {
 		if terraformErrors := retrieveTerraformErrors(logList); terraformErrors != nil {
 			errorMessage += fmt.Sprintf(" The following issues have been found in the logs:\n\n%s", strings.Join(terraformErrors, "\n\n"))
 		}
-		return gardencorev1alpha1helper.DetermineError(errorMessage)
+		return gardencorev1beta1helper.DetermineError(errorMessage)
 	}
 	return nil
 }
@@ -306,10 +306,10 @@ func (t *terraformer) deployTerraformerPod(ctx context.Context, generateName, co
 				TerraformerLabelKeyName:    t.name,
 				TerraformerLabelKeyPurpose: t.purpose,
 				// Network policy labels
-				v1alpha1constants.LabelNetworkPolicyToDNS:             v1alpha1constants.LabelNetworkPolicyAllowed,
-				v1alpha1constants.LabelNetworkPolicyToPrivateNetworks: v1alpha1constants.LabelNetworkPolicyAllowed,
-				v1alpha1constants.LabelNetworkPolicyToPublicNetworks:  v1alpha1constants.LabelNetworkPolicyAllowed,
-				v1alpha1constants.LabelNetworkPolicyToSeedAPIServer:   v1alpha1constants.LabelNetworkPolicyAllowed,
+				v1beta1constants.LabelNetworkPolicyToDNS:             v1beta1constants.LabelNetworkPolicyAllowed,
+				v1beta1constants.LabelNetworkPolicyToPrivateNetworks: v1beta1constants.LabelNetworkPolicyAllowed,
+				v1beta1constants.LabelNetworkPolicyToPublicNetworks:  v1beta1constants.LabelNetworkPolicyAllowed,
+				v1beta1constants.LabelNetworkPolicyToSeedAPIServer:   v1beta1constants.LabelNetworkPolicyAllowed,
 			},
 		},
 		Spec: podSpec,

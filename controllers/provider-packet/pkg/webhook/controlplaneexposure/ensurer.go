@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -58,7 +58,7 @@ func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeCl
 		volumeClaimTemplateName = name
 	)
 
-	if name == v1alpha1constants.StatefulSetNameETCDMain {
+	if name == v1beta1constants.StatefulSetNameETCDMain {
 		etcdStorage = *e.etcdStorage
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}

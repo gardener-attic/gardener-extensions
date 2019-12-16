@@ -30,8 +30,8 @@ import (
 
 	resourcemanagerv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 	resourcesv1alpha1 "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/golang/mock/gomock"
@@ -92,9 +92,9 @@ var _ = Describe("Actuator", func() {
 		}
 
 		cluster = &extensionscontroller.Cluster{
-			Shoot: &gardencorev1alpha1.Shoot{
-				Spec: gardencorev1alpha1.ShootSpec{
-					Kubernetes: gardencorev1alpha1.Kubernetes{
+			Shoot: &gardencorev1beta1.Shoot{
+				Spec: gardencorev1beta1.ShootSpec{
+					Kubernetes: gardencorev1beta1.Kubernetes{
 						Version: shootVersion,
 					},
 				},
@@ -114,10 +114,10 @@ var _ = Describe("Actuator", func() {
 			},
 		}
 
-		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}
+		cpSecretKey    = client.ObjectKey{Namespace: namespace, Name: v1beta1constants.SecretNameCloudProvider}
 		cpConfigMapKey = client.ObjectKey{Namespace: namespace, Name: cloudProviderConfigName}
 		cpSecret       = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.SecretNameCloudProvider, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.SecretNameCloudProvider, Namespace: namespace},
 			Data:       map[string][]byte{"foo": []byte("bar")},
 		}
 		cpConfigMap = &corev1.ConfigMap{
@@ -190,8 +190,8 @@ var _ = Describe("Actuator", func() {
 							{
 								NamespaceSelector: &metav1.LabelSelector{
 									MatchLabels: map[string]string{
-										v1alpha1constants.LabelControllerRegistrationName: providerName,
-										v1alpha1constants.GardenRole:                      v1alpha1constants.GardenRoleExtension,
+										v1beta1constants.LabelControllerRegistrationName: providerName,
+										v1beta1constants.GardenRole:                      v1beta1constants.GardenRoleExtension,
 									},
 								},
 								PodSelector: &metav1.LabelSelector{
@@ -205,8 +205,8 @@ var _ = Describe("Actuator", func() {
 				},
 				PodSelector: metav1.LabelSelector{
 					MatchLabels: map[string]string{
-						v1alpha1constants.LabelApp:  v1alpha1constants.LabelKubernetes,
-						v1alpha1constants.LabelRole: v1alpha1constants.LabelAPIServer,
+						v1beta1constants.LabelApp:  v1beta1constants.LabelKubernetes,
+						v1beta1constants.LabelRole: v1beta1constants.LabelAPIServer,
 					},
 				},
 			},
@@ -234,13 +234,13 @@ var _ = Describe("Actuator", func() {
 		imageVector = imagevector.ImageVector([]*imagevector.ImageSource{})
 
 		checksums = map[string]string{
-			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			cloudProviderConfigName:                   "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			v1beta1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			cloudProviderConfigName:                  "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"cloud-controller-manager":               "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
 		checksumsNoConfig = map[string]string{
-			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			v1beta1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"cloud-controller-manager":               "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
 		}
 		exposureChecksums = map[string]string{
 			"lb-readvertiser": "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",

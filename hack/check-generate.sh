@@ -13,8 +13,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-set -e
 
+set -e
 
 DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")"
 source "$DIRNAME/common.sh"
@@ -31,7 +31,7 @@ function delete-check-branch {
 
 function cleanup {
     if [[ "$generated" == true ]]; then
-        if ! clean_err="$("$DIRNAME/clean.sh" && git reset --hard -q && git clean -qdf)"; then
+        if ! clean_err="$(git reset --hard -q && git clean -qdf)"; then
             echo "Could not clean: $clean_err"
         fi
     fi
@@ -87,10 +87,6 @@ if which git &>/dev/null; then
     git commit -q --allow-empty -m 'check-generate checkpoint'
 
     old_status="$(git status -s)"
-    if ! out=$("$DIRNAME/clean.sh" 2>&1); then
-        echo "Error during calling $DIRNAME/clean.sh: $out"
-        exit 1
-    fi
     generated=true
     # We are using VERSIONFILE_VERSION since we want to check with respect to
     # the content of the source state.

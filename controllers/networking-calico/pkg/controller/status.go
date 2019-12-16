@@ -17,7 +17,7 @@ package controller
 import (
 	"context"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
 	calicov1alpha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -38,8 +38,8 @@ func (a *actuator) updateProviderStatus(
 
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, network, func() error {
 		network.Status.ProviderStatus = &runtime.RawExtension{Object: status}
-		network.Status.LastOperation = extensionscontroller.LastOperation(gardencorev1alpha1.LastOperationTypeReconcile,
-			gardencorev1alpha1.LastOperationStateSucceeded,
+		network.Status.LastOperation = extensionscontroller.LastOperation(gardencorev1beta1.LastOperationTypeReconcile,
+			gardencorev1beta1.LastOperationStateSucceeded,
 			100,
 			"Calico was configured successfully")
 		return nil

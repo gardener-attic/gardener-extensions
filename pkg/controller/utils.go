@@ -187,7 +187,6 @@ func GetSecretByReference(ctx context.Context, c client.Client, ref *corev1.Secr
 	if err := c.Get(ctx, SecretReferenceToKey(ref), secret); err != nil {
 		return nil, err
 	}
-
 	return secret, nil
 }
 

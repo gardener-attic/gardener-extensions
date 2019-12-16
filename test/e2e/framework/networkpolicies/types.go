@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/Masterminds/semver"
-	"github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
@@ -125,7 +125,7 @@ func NewSinglePort(p int32) []Port {
 }
 
 // CheckVersion checks if shoot version is matched by ShootVersionConstraint.
-func (p *Pod) CheckVersion(shoot *v1alpha1.Shoot) bool {
+func (p *Pod) CheckVersion(shoot *v1beta1.Shoot) bool {
 	if len(p.ShootVersionConstraint) == 0 {
 		return true
 	}

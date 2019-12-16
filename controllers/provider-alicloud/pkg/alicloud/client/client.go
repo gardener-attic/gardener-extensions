@@ -19,12 +19,12 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/sts"
 	alicloudvpc "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
-
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )

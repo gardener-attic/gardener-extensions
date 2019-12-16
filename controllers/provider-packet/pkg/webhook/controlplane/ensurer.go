@@ -22,7 +22,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
 	"github.com/coreos/go-systemd/unit"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -56,7 +56,7 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx generi
 		ensureKubeAPIServerCommandLineArgs(c)
 		ensureEnvVars(c)
 	}
-	return controlplane.EnsureSecretChecksumAnnotation(ctx, &dep.Spec.Template, e.client, dep.Namespace, v1alpha1constants.SecretNameCloudProvider)
+	return controlplane.EnsureSecretChecksumAnnotation(ctx, &dep.Spec.Template, e.client, dep.Namespace, v1beta1constants.SecretNameCloudProvider)
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
@@ -103,7 +103,7 @@ var (
 			SecretKeyRef: &corev1.SecretKeySelector{
 				Key: packet.APIToken,
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: v1alpha1constants.SecretNameCloudProvider,
+					Name: v1beta1constants.SecretNameCloudProvider,
 				},
 			},
 		},

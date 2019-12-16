@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/pkg/util"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,9 +74,9 @@ func (o *operationAnnotationWrapper) Reconcile(request reconcile.Request) (recon
 	}
 
 	annotations := acc.GetAnnotations()
-	if annotations[v1alpha1constants.GardenerOperation] == v1alpha1constants.GardenerOperationReconcile {
+	if annotations[v1beta1constants.GardenerOperation] == v1beta1constants.GardenerOperationReconcile {
 		withOpAnnotation := obj.DeepCopyObject()
-		delete(annotations, v1alpha1constants.GardenerOperation)
+		delete(annotations, v1beta1constants.GardenerOperation)
 		acc.SetAnnotations(annotations)
 		if err := o.client.Patch(o.ctx, obj, client.MergeFrom(withOpAnnotation)); err != nil {
 			return reconcile.Result{}, err

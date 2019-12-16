@@ -208,15 +208,21 @@ func determineBestSeedCandidate(shoot *gardencorev1alpha1.Shoot, cloudProfile *g
 	candidateErrors := make(map[string]error)
 
 	for _, seed := range old {
-		disj, err := networksAreDisjunct(seed, shoot)
-		if !disj {
+		if disjointed, err := networksAreDisjointed(seed, shoot); !disjointed {
 			candidateErrors[seed.Name] = err
 			continue
 		}
+
+		if ignoreSeedDueToDNSConfiguration(seed, shoot) {
+			candidateErrors[seed.Name] = fmt.Errorf("seed does not support DNS")
+			continue
+		}
+
 		if !seedSelector.Matches(labels.Set(seed.Labels)) {
 			candidateErrors[seed.Name] = fmt.Errorf("seed labels don't match seed selector")
 			continue
 		}
+
 		candidates = append(candidates, seed)
 	}
 
@@ -244,7 +250,7 @@ func determineBestSeedCandidate(shoot *gardencorev1alpha1.Shoot, cloudProfile *g
 func determineCandidatesWithSameRegionStrategy(seedList []*gardencorev1alpha1.Seed, shoot *gardencorev1alpha1.Shoot, candidates []*gardencorev1alpha1.Seed) []*gardencorev1alpha1.Seed {
 	// Determine all candidate seed clusters matching the shoot's provider and region.
 	for _, seed := range seedList {
-		if seed.DeletionTimestamp == nil && seed.Spec.Provider.Type == shoot.Spec.Provider.Type && seed.Spec.Provider.Region == shoot.Spec.Region && !gardencorev1alpha1helper.TaintsHave(seed.Spec.Taints, gardencorev1alpha1.SeedTaintInvisible) && verifySeedAvailability(seed) {
+		if seed.DeletionTimestamp == nil && seed.Spec.Provider.Type == shoot.Spec.Provider.Type && seed.Spec.Provider.Region == shoot.Spec.Region && !gardencorev1alpha1helper.TaintsHave(seed.Spec.Taints, gardencorev1alpha1.SeedTaintInvisible) && common.VerifySeedReadiness(seed) {
 			candidates = append(candidates, seed)
 		}
 	}
@@ -263,7 +269,7 @@ func determineCandidatesWithMinimalDistanceStrategy(seeds []*gardencorev1alpha1.
 
 	// Determine all candidate seed clusters with matching cloud provider but different region that are lexicographically closest to the shoot
 	for _, seed := range seeds {
-		if seed.DeletionTimestamp == nil && seed.Spec.Provider.Type == shoot.Spec.Provider.Type && !gardencorev1alpha1helper.TaintsHave(seed.Spec.Taints, gardencorev1alpha1.SeedTaintInvisible) && verifySeedAvailability(seed) {
+		if seed.DeletionTimestamp == nil && seed.Spec.Provider.Type == shoot.Spec.Provider.Type && !gardencorev1alpha1helper.TaintsHave(seed.Spec.Taints, gardencorev1alpha1.SeedTaintInvisible) && common.VerifySeedReadiness(seed) {
 			seedRegion := seed.Spec.Provider.Region
 
 			for currentMaxMatchingCharacters < len(shootRegion) {
@@ -293,20 +299,28 @@ func generateSeedUsageMap(shootList []*gardencorev1alpha1.Shoot) map[string]int 
 	return m
 }
 
-func networksAreDisjunct(seed *gardencorev1alpha1.Seed, shoot *gardencorev1alpha1.Shoot) (bool, error) {
-	errs := schedulerutils.ValidateNetworkDisjointedness(seed.Spec.Networks, shoot.Spec.Networking.Nodes, shoot.Spec.Networking.Pods, shoot.Spec.Networking.Services, field.NewPath(""))
-	var errMsgs []string
+func networksAreDisjointed(seed *gardencorev1alpha1.Seed, shoot *gardencorev1alpha1.Shoot) (bool, error) {
+	var (
+		errs          = schedulerutils.ValidateNetworkDisjointedness(seed.Spec.Networks, shoot.Spec.Networking.Nodes, shoot.Spec.Networking.Pods, shoot.Spec.Networking.Services, field.NewPath(""))
+		errorMessages []string
+	)
+
 	for _, e := range errs {
-		errMsgs = append(errMsgs, e.ErrorBody())
+		errorMessages = append(errorMessages, e.ErrorBody())
 	}
-	return len(errs) == 0, fmt.Errorf("invalid networks: %s", errMsgs)
+
+	return len(errs) == 0, fmt.Errorf("invalid networks: %s", errorMessages)
 }
 
-func verifySeedAvailability(seed *gardencorev1alpha1.Seed) bool {
-	if cond := gardencorev1alpha1helper.GetCondition(seed.Status.Conditions, gardencorev1alpha1.SeedAvailable); cond != nil {
-		return cond.Status == gardencorev1alpha1.ConditionTrue
+// ignore seed if it disables DNS and shoot has DNS but not unmanaged
+func ignoreSeedDueToDNSConfiguration(seed *gardencorev1alpha1.Seed, shoot *gardencorev1alpha1.Shoot) bool {
+	if !gardencorev1alpha1helper.TaintsHave(seed.Spec.Taints, gardencorev1alpha1.SeedTaintDisableDNS) {
+		return false
 	}
-	return false
+	if shoot.Spec.DNS == nil {
+		return false
+	}
+	return !gardencorev1alpha1helper.ShootUsesUnmanagedDNS(shoot)
 }
 
 // UpdateShootToBeScheduledOntoSeed sets the seed name where the shoot should be scheduled on. Then it executes the actual update call to the API server. The call is capsuled to allow for easier testing.

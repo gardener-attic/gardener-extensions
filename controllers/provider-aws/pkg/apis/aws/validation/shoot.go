@@ -18,14 +18,14 @@ import (
 	"fmt"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 // ValidateWorkers validates the workers of a Shoot.
-func ValidateWorkers(workers []gardencorev1alpha1.Worker, zones []apisaws.Zone, fldPath *field.Path) field.ErrorList {
+func ValidateWorkers(workers []gardencorev1beta1.Worker, zones []apisaws.Zone, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	awsZones := sets.NewString()
@@ -61,7 +61,7 @@ func validateZones(zones []string, allowedZones sets.String, fldPath *field.Path
 	return allErrs
 }
 
-func validateVolume(vol *gardencorev1alpha1.Volume, fldPath *field.Path) field.ErrorList {
+func validateVolume(vol *gardencorev1beta1.Volume, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if vol.Type == nil {
 		allErrs = append(allErrs, field.Required(fldPath.Child("type"), "must not be empty"))

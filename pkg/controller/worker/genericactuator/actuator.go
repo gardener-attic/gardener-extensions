@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
@@ -157,7 +157,7 @@ func (a *genericActuator) listMachineClassSecrets(ctx context.Context, namespace
 	var (
 		secretList = &corev1.SecretList{}
 		labels     = map[string]string{
-			v1alpha1constants.GardenPurpose: v1alpha1constants.GardenPurposeMachineClass,
+			v1beta1constants.GardenPurpose: v1beta1constants.GardenPurposeMachineClass,
 		}
 	)
 

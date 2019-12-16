@@ -17,19 +17,28 @@ package controller
 import (
 	"context"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencoreinstall "github.com/gardener/gardener/pkg/apis/core/install"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/garden"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+var gardenscheme *runtime.Scheme
+
+func init() {
+	gardenscheme = runtime.NewScheme()
+	gardencoreinstall.Install(gardenscheme)
+}
+
 // Cluster contains the decoded resources of Gardener's extension Cluster resource.
 type Cluster struct {
-	CloudProfile *gardencorev1alpha1.CloudProfile
-	Seed         *gardencorev1alpha1.Seed
-	Shoot        *gardencorev1alpha1.Shoot
+	CloudProfile *gardencorev1beta1.CloudProfile
+	Seed         *gardencorev1beta1.Seed
+	Shoot        *gardencorev1beta1.Shoot
 }
 
 // GetCluster tries to read Gardener's Cluster extension resource in the given namespace.
@@ -61,13 +70,19 @@ func GetCluster(ctx context.Context, c client.Client, namespace string) (*Cluste
 }
 
 // CloudProfileFromCluster returns the CloudProfile resource inside the Cluster resource.
-func CloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1alpha1.CloudProfile, error) {
-	cloudProfile := &gardencorev1alpha1.CloudProfile{}
+func CloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1beta1.CloudProfile, error) {
+	var (
+		cloudProfileInternal = &garden.CloudProfile{}
+		cloudProfile         = &gardencorev1beta1.CloudProfile{}
+	)
 
 	if cluster.Spec.CloudProfile.Raw == nil {
 		return nil, nil
 	}
-	if _, _, err := decoder.Decode(cluster.Spec.CloudProfile.Raw, nil, cloudProfile); err != nil {
+	if _, _, err := decoder.Decode(cluster.Spec.CloudProfile.Raw, nil, cloudProfileInternal); err != nil {
+		return nil, err
+	}
+	if err := gardenscheme.Convert(cloudProfileInternal, cloudProfile, nil); err != nil {
 		return nil, err
 	}
 
@@ -75,13 +90,19 @@ func CloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha
 }
 
 // SeedFromCluster returns the Seed resource inside the Cluster resource.
-func SeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1alpha1.Seed, error) {
-	seed := &gardencorev1alpha1.Seed{}
+func SeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1beta1.Seed, error) {
+	var (
+		seedInternal = &garden.Seed{}
+		seed         = &gardencorev1beta1.Seed{}
+	)
 
 	if cluster.Spec.Seed.Raw == nil {
 		return nil, nil
 	}
-	if _, _, err := decoder.Decode(cluster.Spec.Seed.Raw, nil, seed); err != nil {
+	if _, _, err := decoder.Decode(cluster.Spec.Seed.Raw, nil, seedInternal); err != nil {
+		return nil, err
+	}
+	if err := gardenscheme.Convert(seedInternal, seed, nil); err != nil {
 		return nil, err
 	}
 
@@ -89,13 +110,19 @@ func SeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluste
 }
 
 // ShootFromCluster returns the Shoot resource inside the Cluster resource.
-func ShootFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1alpha1.Shoot, error) {
-	shoot := &gardencorev1alpha1.Shoot{}
+func ShootFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1beta1.Shoot, error) {
+	var (
+		shootInternal = &garden.Shoot{}
+		shoot         = &gardencorev1beta1.Shoot{}
+	)
 
 	if cluster.Spec.Shoot.Raw == nil {
 		return nil, nil
 	}
-	if _, _, err := decoder.Decode(cluster.Spec.Shoot.Raw, nil, shoot); err != nil {
+	if _, _, err := decoder.Decode(cluster.Spec.Shoot.Raw, nil, shootInternal); err != nil {
+		return nil, err
+	}
+	if err := gardenscheme.Convert(shootInternal, shoot, nil); err != nil {
 		return nil, err
 	}
 
@@ -104,9 +131,5 @@ func ShootFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Clust
 
 // NewGardenDecoder returns a new Garden API decoder.
 func NewGardenDecoder() (runtime.Decoder, error) {
-	scheme := runtime.NewScheme()
-	if err := gardencorev1alpha1.AddToScheme(scheme); err != nil {
-		return nil, err
-	}
-	return serializer.NewCodecFactory(scheme).UniversalDecoder(), nil
+	return serializer.NewCodecFactory(gardenscheme).UniversalDecoder(), nil
 }

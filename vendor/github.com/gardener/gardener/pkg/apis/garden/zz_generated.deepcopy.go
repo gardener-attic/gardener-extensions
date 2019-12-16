@@ -2410,6 +2410,11 @@ func (in *NginxIngress) DeepCopyInto(out *NginxIngress) {
 			(*out)[key] = val
 		}
 	}
+	if in.ExternalTrafficPolicy != nil {
+		in, out := &in.ExternalTrafficPolicy, &out.ExternalTrafficPolicy
+		*out = new(v1.ServiceExternalTrafficPolicyType)
+		**out = **in
+	}
 	return
 }
 
@@ -3370,6 +3375,11 @@ func (in *SeedNetworks) DeepCopyInto(out *SeedNetworks) {
 		*out = new(ShootNetworks)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.BlockCIDRs != nil {
+		in, out := &in.BlockCIDRs, &out.BlockCIDRs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -3404,13 +3414,12 @@ func (in *SeedSpec) DeepCopyInto(out *SeedSpec) {
 	*out = *in
 	out.Cloud = in.Cloud
 	out.Provider = in.Provider
-	out.SecretRef = in.SecretRef
-	in.Networks.DeepCopyInto(&out.Networks)
-	if in.BlockCIDRs != nil {
-		in, out := &in.BlockCIDRs, &out.BlockCIDRs
-		*out = make([]string, len(*in))
-		copy(*out, *in)
+	if in.SecretRef != nil {
+		in, out := &in.SecretRef, &out.SecretRef
+		*out = new(v1.SecretReference)
+		**out = **in
 	}
+	in.Networks.DeepCopyInto(&out.Networks)
 	if in.Taints != nil {
 		in, out := &in.Taints, &out.Taints
 		*out = make([]SeedTaint, len(*in))
@@ -3451,7 +3460,16 @@ func (in *SeedStatus) DeepCopyInto(out *SeedStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	out.Gardener = in.Gardener
+	if in.Gardener != nil {
+		in, out := &in.Gardener, &out.Gardener
+		*out = new(Gardener)
+		**out = **in
+	}
+	if in.KubernetesVersion != nil {
+		in, out := &in.KubernetesVersion, &out.KubernetesVersion
+		*out = new(string)
+		**out = **in
+	}
 	return
 }
 
@@ -3729,6 +3747,13 @@ func (in *ShootStatus) DeepCopyInto(out *ShootStatus) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
+	if in.Constraints != nil {
+		in, out := &in.Constraints, &out.Constraints
+		*out = make([]Condition, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	out.Gardener = in.Gardener
 	if in.LastOperation != nil {
 		in, out := &in.LastOperation, &out.LastOperation
@@ -3746,8 +3771,8 @@ func (in *ShootStatus) DeepCopyInto(out *ShootStatus) {
 		in, out := &in.RetryCycleStartTime, &out.RetryCycleStartTime
 		*out = (*in).DeepCopy()
 	}
-	if in.Seed != nil {
-		in, out := &in.Seed, &out.Seed
+	if in.SeedName != nil {
+		in, out := &in.SeedName, &out.SeedName
 		*out = new(string)
 		**out = **in
 	}

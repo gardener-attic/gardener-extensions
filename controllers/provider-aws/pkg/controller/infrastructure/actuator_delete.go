@@ -25,7 +25,7 @@ import (
 	controllererrors "github.com/gardener/gardener-extensions/pkg/controller/error"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
-	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
+	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	glogger "github.com/gardener/gardener/pkg/logger"
 	"github.com/gardener/gardener/pkg/utils/flow"
@@ -73,7 +73,7 @@ func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha
 			Name: "Destroying Kubernetes load balancers and security groups",
 			Fn: flow.TaskFn(func(ctx context.Context) error {
 				if err := a.destroyKubernetesLoadBalancersAndSecurityGroups(ctx, awsClient, vpcID, infrastructure.Namespace); err != nil {
-					return gardencorev1alpha1helper.DetermineError(fmt.Sprintf("Failed to destroy load balancers and security groups: %+v", err.Error()))
+					return gardencorev1beta1helper.DetermineError(fmt.Sprintf("Failed to destroy load balancers and security groups: %+v", err.Error()))
 				}
 				return nil
 			}).RetryUntilTimeout(10*time.Second, 5*time.Minute).DoIf(configExists),

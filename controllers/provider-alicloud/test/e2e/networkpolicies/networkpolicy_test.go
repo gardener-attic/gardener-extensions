@@ -29,7 +29,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/test/e2e/framework/executor"
 	networkpolicies "github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
-	"github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"github.com/gardener/gardener/pkg/client/kubernetes"
 	"github.com/gardener/gardener/pkg/logger"
 	utilclient "github.com/gardener/gardener/pkg/utils/kubernetes/client"
@@ -95,7 +95,7 @@ var _ = Describe("Network Policy Testing", func() {
 				shootGardenerTest, err = gardenerframework.NewShootGardenerTest(*kubeconfig, nil, shootAppTestLogger)
 				Expect(err).NotTo(HaveOccurred())
 
-				shoot := &v1alpha1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
+				shoot := &v1beta1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
 				shootTestOperations, err = gardenerframework.NewGardenTestOperationWithShoot(ctx, shootGardenerTest.GardenClient, shootAppTestLogger, shoot)
 				Expect(err).NotTo(HaveOccurred())
 			}

@@ -26,7 +26,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
 
 	"github.com/coreos/go-systemd/unit"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -54,9 +54,9 @@ var _ = Describe("Ensurer", func() {
 
 		dummyContext = genericmutator.NewEnsurerContext(nil, nil)
 
-		secretKey = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}
+		secretKey = client.ObjectKey{Namespace: namespace, Name: v1beta1constants.SecretNameCloudProvider}
 		secret    = &corev1.Secret{
-			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider},
+			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.SecretNameCloudProvider},
 			Data:       map[string][]byte{"foo": []byte("bar")},
 		}
 
@@ -67,14 +67,14 @@ var _ = Describe("Ensurer", func() {
 		}
 
 		annotations = map[string]string{
-			"checksum/secret-" + v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"checksum/configmap-" + internal.CloudProviderConfigName:       "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"checksum/secret-" + v1beta1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"checksum/configmap-" + internal.CloudProviderConfigName:      "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
 		}
 
 		kubeControllerManagerLabels = map[string]string{
-			v1alpha1constants.LabelNetworkPolicyToPublicNetworks:  v1alpha1constants.LabelNetworkPolicyAllowed,
-			v1alpha1constants.LabelNetworkPolicyToPrivateNetworks: v1alpha1constants.LabelNetworkPolicyAllowed,
-			v1alpha1constants.LabelNetworkPolicyToBlockedCIDRs:    v1alpha1constants.LabelNetworkPolicyAllowed,
+			v1beta1constants.LabelNetworkPolicyToPublicNetworks:  v1beta1constants.LabelNetworkPolicyAllowed,
+			v1beta1constants.LabelNetworkPolicyToPrivateNetworks: v1beta1constants.LabelNetworkPolicyAllowed,
+			v1beta1constants.LabelNetworkPolicyToBlockedCIDRs:    v1beta1constants.LabelNetworkPolicyAllowed,
 		}
 	)
 
@@ -90,7 +90,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -124,7 +124,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.DeploymentNameKubeAPIServer},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -142,15 +142,13 @@ var _ = Describe("Ensurer", func() {
 										},
 										VolumeMounts: []corev1.VolumeMount{
 											{Name: internal.CloudProviderConfigName, MountPath: "?"},
-											// TODO Use constant from github.com/gardener/gardener/pkg/apis/core/v1alpha1 when available
-											// See https://github.com/gardener/gardener/pull/930
-											{Name: v1alpha1constants.SecretNameCloudProvider, MountPath: "?"},
+											{Name: v1beta1constants.SecretNameCloudProvider, MountPath: "?"},
 										},
 									},
 								},
 								Volumes: []corev1.Volume{
 									{Name: internal.CloudProviderConfigName},
-									{Name: v1alpha1constants.SecretNameCloudProvider},
+									{Name: v1beta1constants.SecretNameCloudProvider},
 								},
 							},
 						},
@@ -179,7 +177,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -213,7 +211,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -230,13 +228,13 @@ var _ = Describe("Ensurer", func() {
 										},
 										VolumeMounts: []corev1.VolumeMount{
 											{Name: internal.CloudProviderConfigName, MountPath: "?"},
-											{Name: v1alpha1constants.SecretNameCloudProvider, MountPath: "?"},
+											{Name: v1beta1constants.SecretNameCloudProvider, MountPath: "?"},
 										},
 									},
 								},
 								Volumes: []corev1.Volume{
 									{Name: internal.CloudProviderConfigName},
-									{Name: v1alpha1constants.SecretNameCloudProvider},
+									{Name: v1beta1constants.SecretNameCloudProvider},
 								},
 							},
 						},

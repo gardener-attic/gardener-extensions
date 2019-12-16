@@ -24,8 +24,8 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -57,7 +57,7 @@ var _ = Describe("ValuesProvider", func() {
 			},
 			Spec: extensionsv1alpha1.ControlPlaneSpec{
 				SecretRef: corev1.SecretReference{
-					Name:      v1alpha1constants.SecretNameCloudProvider,
+					Name:      v1beta1constants.SecretNameCloudProvider,
 					Namespace: namespace,
 				},
 				ProviderConfig: &runtime.RawExtension{
@@ -90,22 +90,22 @@ var _ = Describe("ValuesProvider", func() {
 
 		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
-			Shoot: &gardencorev1alpha1.Shoot{
-				Spec: gardencorev1alpha1.ShootSpec{
-					Networking: gardencorev1alpha1.Networking{
+			Shoot: &gardencorev1beta1.Shoot{
+				Spec: gardencorev1beta1.ShootSpec{
+					Networking: gardencorev1beta1.Networking{
 						Pods: &cidr,
 					},
-					Kubernetes: gardencorev1alpha1.Kubernetes{
+					Kubernetes: gardencorev1beta1.Kubernetes{
 						Version: "1.13.4",
 					},
 				},
 			},
 		}
 
-		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.SecretNameCloudProvider}
+		cpSecretKey = client.ObjectKey{Namespace: namespace, Name: v1beta1constants.SecretNameCloudProvider}
 		cpSecret    = &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      v1alpha1constants.SecretNameCloudProvider,
+				Name:      v1beta1constants.SecretNameCloudProvider,
 				Namespace: namespace,
 			},
 			Type: corev1.SecretTypeOpaque,
@@ -115,10 +115,10 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		checksums = map[string]string{
-			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			internal.CloudProviderConfigName:          "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
-			"cloud-controller-manager-server":         "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
+			v1beta1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			internal.CloudProviderConfigName:         "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"cloud-controller-manager":               "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			"cloud-controller-manager-server":        "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
 		}
 
 		configChartValues = map[string]interface{}{

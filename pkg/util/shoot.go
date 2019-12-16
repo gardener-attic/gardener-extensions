@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/gardener/gardener/pkg/utils/secrets"
 
 	"github.com/Masterminds/semver"
@@ -38,9 +38,9 @@ const CAChecksumAnnotation = "checksum/ca"
 // If the CA of an existing Kubeconfig has changed, it creates a new Kubeconfig.
 // Newly generated Kubeconfigs are applied with the given `client` to the given `namespace`.
 func GetOrCreateShootKubeconfig(ctx context.Context, c client.Client, certificateConfig secrets.CertificateSecretConfig, namespace string) (*corev1.Secret, error) {
-	caSecret, ca, err := secrets.LoadCAFromSecret(c, namespace, v1alpha1constants.SecretNameCACluster)
+	caSecret, ca, err := secrets.LoadCAFromSecret(c, namespace, v1beta1constants.SecretNameCACluster)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching CA secret %s/%s: %v", namespace, v1alpha1constants.SecretNameCACluster, err)
+		return nil, fmt.Errorf("error fetching CA secret %s/%s: %v", namespace, v1beta1constants.SecretNameCACluster, err)
 	}
 
 	var (
@@ -101,7 +101,7 @@ func GetOrCreateShootKubeconfig(ctx context.Context, c client.Client, certificat
 // the Kube-Apiserver deployment of a Shoot within the Seed cluster.
 // e.g. kube-apiserver.shoot--project--prod.svc.cluster.local.
 func kubeAPIServerServiceDNS(namespace string) string {
-	return fmt.Sprintf("%s.%s", v1alpha1constants.DeploymentNameKubeAPIServer, namespace)
+	return fmt.Sprintf("%s.%s", v1beta1constants.DeploymentNameKubeAPIServer, namespace)
 }
 
 // VersionMajorMinor extracts and returns the major and the minor part of the given version (input must be a semantic version).
