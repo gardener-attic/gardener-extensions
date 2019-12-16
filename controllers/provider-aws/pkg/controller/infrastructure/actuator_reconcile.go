@@ -56,6 +56,11 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		return fmt.Errorf("failed to generate Terraform config: %+v", err)
 	}
 
+	terraformState, err := terraformer.UnmarshalRawState(infrastructure.Status.State)
+	if err != nil {
+		return err
+	}
+
 	chartRenderer, err := chartrenderer.NewForConfig(a.restConfig)
 	if err != nil {
 		return fmt.Errorf("could not create chart renderer: %+v", err)
@@ -77,7 +82,8 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 			a.client,
 			release.FileContent("main.tf"),
 			release.FileContent("variables.tf"),
-			[]byte(release.FileContent("terraform.tfvars"))),
+			[]byte(release.FileContent("terraform.tfvars")),
+			terraformState.Data),
 		).
 		Apply(); err != nil {
 
@@ -180,6 +186,15 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terr
 		return err
 	}
 
+	state, err := tf.GetRawState(ctx)
+	if err != nil {
+		return err
+	}
+	stateByte, err := state.Marshal()
+	if err != nil {
+		return err
+	}
+
 	subnets, err := computeProviderStatusSubnets(infrastructureConfig, output)
 	if err != nil {
 		return err
@@ -221,6 +236,7 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terr
 				},
 			},
 		}
+		infrastructure.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil
 	})
 }

@@ -43,6 +43,11 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 
 	terraformConfig := GenerateTerraformInfraConfig(infrastructure, string(providerSecret.Data[packet.ProjectID]))
 
+	terraformState, err := terraformer.UnmarshalRawState(infrastructure.Status.State)
+	if err != nil {
+		return fmt.Errorf("could not retrieve raw terraform state: %+v", err)
+	}
+
 	chartRenderer, err := chartrenderer.NewForConfig(a.restConfig)
 	if err != nil {
 		return fmt.Errorf("could not create chart renderer: %+v", err)
@@ -64,7 +69,8 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 			a.client,
 			release.FileContent("main.tf"),
 			release.FileContent("variables.tf"),
-			[]byte(release.FileContent("terraform.tfvars"))),
+			[]byte(release.FileContent("terraform.tfvars")),
+			terraformState.Data),
 		).
 		Apply(); err != nil {
 
@@ -102,6 +108,15 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terr
 		return err
 	}
 
+	state, err := tf.GetRawState(ctx)
+	if err != nil {
+		return err
+	}
+	stateByte, err := state.Marshal()
+	if err != nil {
+		return err
+	}
+
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infrastructure, func() error {
 		infrastructure.Status.ProviderStatus = &runtime.RawExtension{
 			Object: &packetv1alpha1.InfrastructureStatus{
@@ -112,6 +127,7 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terr
 				SSHKeyID: output[packet.SSHKeyID],
 			},
 		}
+		infrastructure.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil
 	})
 }

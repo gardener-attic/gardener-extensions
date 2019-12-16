@@ -230,7 +230,12 @@ func (a *actuator) newInitializer(infra *extensionsv1alpha1.Infrastructure, conf
 		return nil, err
 	}
 
-	return a.terraformerFactory.DefaultInitializer(a.client, files.Main, files.Variables, files.TFVars), nil
+	terraformState, err := terraformer.UnmarshalRawState(infra.Status.State)
+	if err != nil {
+		return nil, err
+	}
+
+	return a.terraformerFactory.DefaultInitializer(a.client, files.Main, files.Variables, files.TFVars, terraformState.Data), nil
 }
 
 func (a *actuator) newTerraformer(infra *extensionsv1alpha1.Infrastructure, credentials *alicloud.Credentials) (terraformer.Terraformer, error) {
@@ -438,8 +443,18 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
+	state, err := tf.GetRawState(ctx)
+	if err != nil {
+		return err
+	}
+	stateByte, err := state.Marshal()
+	if err != nil {
+		return err
+	}
+
 	return extensioncontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infra, func() error {
 		infra.Status.ProviderStatus = &runtime.RawExtension{Object: status}
+		infra.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil
 	})
 }

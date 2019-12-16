@@ -39,6 +39,11 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
+	terraformState, err := terraformer.UnmarshalRawState(infra.Status.State)
+	if err != nil {
+		return err
+	}
+
 	terraformFiles, err := infrastructure.RenderTerraformerChart(a.chartRenderer, infra, serviceAccount, config, cluster)
 	if err != nil {
 		return err
@@ -50,7 +55,7 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 	}
 
 	if err := tf.
-		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars)).
+		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars, terraformState.Data)).
 		Apply(); err != nil {
 
 		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infra.Name)

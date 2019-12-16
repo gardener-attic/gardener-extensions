@@ -58,8 +58,8 @@ func (f factory) New(logger logrus.FieldLogger, client client.Client, coreV1Clie
 	return New(logger, client, coreV1Client, purpose, namespace, name, image)
 }
 
-func (f factory) DefaultInitializer(c client.Client, main, variables string, tfVars []byte) Initializer {
-	return DefaultInitializer(c, main, variables, tfVars)
+func (f factory) DefaultInitializer(c client.Client, main, variables string, tfVars []byte, state string) Initializer {
+	return DefaultInitializer(c, main, variables, tfVars, state)
 }
 
 // DefaultFactory returns the default factory.

@@ -16,6 +16,7 @@ package infrastructure
 
 import (
 	"context"
+
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	"k8s.io/client-go/util/retry"
 
@@ -101,8 +102,18 @@ func (a *actuator) updateProviderStatus(
 		return err
 	}
 
+	state, err := tf.GetRawState(ctx)
+	if err != nil {
+		return err
+	}
+	stateByte, err := state.Marshal()
+	if err != nil {
+		return err
+	}
+
 	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infra, func() error {
 		infra.Status.ProviderStatus = &runtime.RawExtension{Object: status}
+		infra.Status.State = &runtime.RawExtension{Raw: stateByte}
 		return nil
 	})
 }

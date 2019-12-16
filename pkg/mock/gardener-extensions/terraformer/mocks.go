@@ -5,6 +5,7 @@
 package terraformer
 
 import (
+	context "context"
 	terraformer "github.com/gardener/gardener-extensions/pkg/terraformer"
 	gomock "github.com/golang/mock/gomock"
 	logrus "github.com/sirupsen/logrus"
@@ -79,6 +80,21 @@ func (m *MockTerraformer) Destroy() error {
 func (mr *MockTerraformerMockRecorder) Destroy() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockTerraformer)(nil).Destroy))
+}
+
+// GetRawState mocks base method
+func (m *MockTerraformer) GetRawState(arg0 context.Context) (*terraformer.RawState, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRawState", arg0)
+	ret0, _ := ret[0].(*terraformer.RawState)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRawState indicates an expected call of GetRawState
+func (mr *MockTerraformerMockRecorder) GetRawState(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRawState", reflect.TypeOf((*MockTerraformer)(nil).GetRawState), arg0)
 }
 
 // GetStateOutputVariables mocks base method
@@ -231,17 +247,17 @@ func (m *MockFactory) EXPECT() *MockFactoryMockRecorder {
 }
 
 // DefaultInitializer mocks base method
-func (m *MockFactory) DefaultInitializer(arg0 client.Client, arg1, arg2 string, arg3 []byte) terraformer.Initializer {
+func (m *MockFactory) DefaultInitializer(arg0 client.Client, arg1, arg2 string, arg3 []byte, arg4 string) terraformer.Initializer {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DefaultInitializer", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "DefaultInitializer", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(terraformer.Initializer)
 	return ret0
 }
 
 // DefaultInitializer indicates an expected call of DefaultInitializer
-func (mr *MockFactoryMockRecorder) DefaultInitializer(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockFactoryMockRecorder) DefaultInitializer(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultInitializer", reflect.TypeOf((*MockFactory)(nil).DefaultInitializer), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultInitializer", reflect.TypeOf((*MockFactory)(nil).DefaultInitializer), arg0, arg1, arg2, arg3, arg4)
 }
 
 // New mocks base method
