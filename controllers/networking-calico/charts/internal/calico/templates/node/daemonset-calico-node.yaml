@@ -76,7 +76,7 @@ spec:
             valueFrom:
               configMapKeyRef:
                 name: calico-config
-                key: vethMTU
+                key: veth_mtu
           # Prevents the container from sleeping forever.
           - name: SLEEP
             value: "false"
@@ -140,7 +140,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: calico-config
-                  key: vethMTU
+                  key: veth_mtu
             # Wait for the datastore.
             - name: WAIT_FOR_DATASTORE
               value: "true"

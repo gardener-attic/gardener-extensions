@@ -37,7 +37,7 @@ type calicoConfig struct {
 	IPv4    ipv4                   `json:"ipv4"`
 	IPAM    ipam                   `json:"ipam"`
 	Typha   typha                  `json:"typha"`
-	VethMTU string                 `json:"vethMTU"`
+	VethMTU string                 `json:"veth_mtu"`
 }
 
 type felix struct {

@@ -156,7 +156,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
-					"vethMTU": defaultMtu,
+					"veth_mtu": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,
@@ -198,7 +198,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
-					"vethMTU": defaultMtu,
+					"veth_mtu": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": false,
@@ -240,7 +240,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
-					"vethMTU": defaultMtu,
+					"veth_mtu": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,
@@ -279,7 +279,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
-					"vethMTU": mtuVar,
+					"veth_mtu": mtuVar,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,
@@ -321,7 +321,7 @@ var _ = Describe("Chart package test", func() {
 					"typha": map[string]interface{}{
 						"enabled": trueVar,
 					},
-					"vethMTU": defaultMtu,
+					"veth_mtu": defaultMtu,
 					"felix": map[string]interface{}{
 						"ipinip": map[string]interface{}{
 							"enabled": true,
