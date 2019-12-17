@@ -40,7 +40,7 @@ const (
 	// ModeURL is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
 	// is serving. If this is set then a URL is required for configuration.
 	ModeURL = "url"
-	// ModeURL is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
+	// ModeURLWithServiceName is a constant for the webhook mode indicating that the controller is running outside of the Kubernetes cluster it
 	// is serving but in the same cluster like the kube-apiserver. If this is set then a URL is required for configuration.
 	ModeURLWithServiceName = "url-service"
 

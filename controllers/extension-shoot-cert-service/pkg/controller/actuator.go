@@ -113,7 +113,7 @@ func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
 
 func (a *actuator) createIssuerValues(issuers ...service.IssuerConfig) ([]map[string]interface{}, error) {
 	issuerVal := []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"name": a.serviceConfig.IssuerName,
 			"acme": map[string]interface{}{
 				"email":      a.serviceConfig.ACME.Email,

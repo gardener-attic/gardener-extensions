@@ -76,24 +76,24 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				cloudProfile = &gardencorev1beta1.CloudProfile{
 					Spec: gardencorev1beta1.CloudProfileSpec{
 						Regions: []gardencorev1beta1.Region{
-							gardencorev1beta1.Region{
+							{
 								Name: region2,
 								Zones: []gardencorev1beta1.AvailabilityZone{
-									gardencorev1beta1.AvailabilityZone{
+									{
 										Name: zone2,
 									},
-									gardencorev1beta1.AvailabilityZone{
+									{
 										Name: zone,
 									},
 								},
 							},
-							gardencorev1beta1.Region{
+							{
 								Name: region,
 								Zones: []gardencorev1beta1.AvailabilityZone{
-									gardencorev1beta1.AvailabilityZone{
+									{
 										Name: zone2,
 									},
-									gardencorev1beta1.AvailabilityZone{
+									{
 										Name: zone,
 									},
 								},

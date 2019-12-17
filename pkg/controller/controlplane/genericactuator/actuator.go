@@ -68,7 +68,7 @@ func NewActuator(
 	chartRendererFactory extensionscontroller.ChartRendererFactory,
 	imageVector imagevector.ImageVector,
 	configName string,
-	shootWebhooks []admissionregistrationv1beta1.Webhook,
+	shootWebhooks []admissionregistrationv1beta1.MutatingWebhook,
 	webhookServerPort int,
 	logger logr.Logger,
 ) controlplane.Actuator {
@@ -105,7 +105,7 @@ type actuator struct {
 	chartRendererFactory      extensionscontroller.ChartRendererFactory
 	imageVector               imagevector.ImageVector
 	configName                string
-	shootWebhooks             []admissionregistrationv1beta1.Webhook
+	shootWebhooks             []admissionregistrationv1beta1.MutatingWebhook
 	webhookServerPort         int
 
 	clientset         kubernetes.Interface
@@ -479,7 +479,7 @@ func (a *actuator) computeChecksums(
 	return controlplane.ComputeChecksums(csSecrets, csConfigMaps), nil
 }
 
-func marshalWebhooks(webhooks []admissionregistrationv1beta1.Webhook, name string) ([]byte, error) {
+func marshalWebhooks(webhooks []admissionregistrationv1beta1.MutatingWebhook, name string) ([]byte, error) {
 	var (
 		buf     = new(bytes.Buffer)
 		encoder = json.NewYAMLSerializer(json.DefaultMetaFactory, nil, nil)

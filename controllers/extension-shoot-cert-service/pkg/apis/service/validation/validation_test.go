@@ -36,7 +36,7 @@ var _ = Describe("Validation", func() {
 		Entry("No issuers", service.CertConfig{}, BeEmpty()),
 		Entry("Invalid issuer", service.CertConfig{
 			Issuers: []service.IssuerConfig{
-				service.IssuerConfig{
+				{
 					Name:   "",
 					Server: "",
 					Email:  "",
@@ -58,12 +58,12 @@ var _ = Describe("Validation", func() {
 		)),
 		Entry("Duplicate issuer", service.CertConfig{
 			Issuers: []service.IssuerConfig{
-				service.IssuerConfig{
+				{
 					Name:   "issuer",
 					Server: "https://acme-v02.api.letsencrypt.org/directory",
 					Email:  "john@example.com",
 				},
-				service.IssuerConfig{
+				{
 					Name:   "issuer",
 					Server: "https://acme-v02.api.acme.org",
 					Email:  "john.doe@example.com",
@@ -77,7 +77,7 @@ var _ = Describe("Validation", func() {
 		)),
 		Entry("Valid configuration", service.CertConfig{
 			Issuers: []service.IssuerConfig{
-				service.IssuerConfig{
+				{
 					Name:   "issuer",
 					Server: "https://acme-v02.api.letsencrypt.org/directory",
 					Email:  "john@example.com",
