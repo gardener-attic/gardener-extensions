@@ -22,11 +22,14 @@ import (
 	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/rest"
 )
@@ -286,7 +289,8 @@ func CheckMachineDeployment(deployment *machinev1alpha1.MachineDeployment) error
 
 var (
 	trueSeedConditionTypes = []gardencorev1alpha1.ConditionType{
-		gardencorev1alpha1.SeedAvailable,
+		gardencorev1alpha1.SeedGardenletReady,
+		gardencorev1alpha1.SeedBootstrapped,
 	}
 )
 
@@ -295,7 +299,7 @@ func CheckSeed(seed *gardencorev1alpha1.Seed, identity *gardencorev1alpha1.Garde
 	if seed.Status.ObservedGeneration < seed.Generation {
 		return fmt.Errorf("observed generation outdated (%d/%d)", seed.Status.ObservedGeneration, seed.Generation)
 	}
-	if seed.Status.Gardener != *identity {
+	if !apiequality.Semantic.DeepEqual(seed.Status.Gardener, identity) {
 		return fmt.Errorf("observing Gardener version not up to date (%v/%v)", seed.Status.Gardener, identity)
 	}
 
@@ -325,7 +329,7 @@ func CheckExtensionObject(obj extensionsv1alpha1.Object) error {
 		return fmt.Errorf("observed generation outdated (%d/%d)", status.GetObservedGeneration(), obj.GetGeneration())
 	}
 
-	op, ok := obj.GetAnnotations()[v1alpha1constants.GardenerOperation]
+	op, ok := obj.GetAnnotations()[v1beta1constants.GardenerOperation]
 	if ok {
 		return fmt.Errorf("gardener operation %q is not yet picked up by extension controller", op)
 	}
@@ -339,7 +343,7 @@ func CheckExtensionObject(obj extensionsv1alpha1.Object) error {
 		return fmt.Errorf("extension did not record a last operation yet")
 	}
 
-	if lastOp.GetState() != gardencorev1alpha1.LastOperationStateSucceeded {
+	if lastOp.GetState() != gardencorev1beta1.LastOperationStateSucceeded {
 		return fmt.Errorf("extension state is not succeeded but %v", lastOp.GetState())
 	}
 	return nil

@@ -22,8 +22,8 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	gardencorev1alpha1helper "github.com/gardener/gardener/pkg/apis/core/v1alpha1/helper"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
@@ -106,7 +106,7 @@ func (r *reconciler) reconcile(ctx context.Context, cp *extensionsv1alpha1.Contr
 		return reconcile.Result{}, err
 	}
 
-	operationType := gardencorev1alpha1helper.ComputeOperationType(cp.ObjectMeta, cp.Status.LastOperation)
+	operationType := gardencorev1beta1helper.ComputeOperationType(cp.ObjectMeta, cp.Status.LastOperation)
 	if err := r.updateStatusProcessing(ctx, cp, operationType, "Reconciling the controlplane"); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -145,7 +145,7 @@ func (r *reconciler) delete(ctx context.Context, cp *extensionsv1alpha1.ControlP
 		return reconcile.Result{}, nil
 	}
 
-	operationType := gardencorev1alpha1helper.ComputeOperationType(cp.ObjectMeta, cp.Status.LastOperation)
+	operationType := gardencorev1beta1helper.ComputeOperationType(cp.ObjectMeta, cp.Status.LastOperation)
 	if err := r.updateStatusProcessing(ctx, cp, operationType, "Deleting the controlplane"); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -176,18 +176,18 @@ func (r *reconciler) delete(ctx context.Context, cp *extensionsv1alpha1.ControlP
 	return reconcile.Result{}, nil
 }
 
-func (r *reconciler) updateStatusProcessing(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1alpha1.LastOperationType, description string) error {
-	cp.Status.LastOperation = extensionscontroller.LastOperation(lastOperationType, gardencorev1alpha1.LastOperationStateProcessing, 1, description)
+func (r *reconciler) updateStatusProcessing(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1beta1.LastOperationType, description string) error {
+	cp.Status.LastOperation = extensionscontroller.LastOperation(lastOperationType, gardencorev1beta1.LastOperationStateProcessing, 1, description)
 	return r.client.Status().Update(ctx, cp)
 }
 
-func (r *reconciler) updateStatusError(ctx context.Context, err error, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1alpha1.LastOperationType, description string) error {
+func (r *reconciler) updateStatusError(ctx context.Context, err error, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1beta1.LastOperationType, description string) error {
 	cp.Status.ObservedGeneration = cp.Generation
-	cp.Status.LastOperation, cp.Status.LastError = extensionscontroller.ReconcileError(lastOperationType, gardencorev1alpha1helper.FormatLastErrDescription(fmt.Errorf("%s: %v", description, err)), 50, gardencorev1alpha1helper.ExtractErrorCodes(err)...)
+	cp.Status.LastOperation, cp.Status.LastError = extensionscontroller.ReconcileError(lastOperationType, gardencorev1beta1helper.FormatLastErrDescription(fmt.Errorf("%s: %v", description, err)), 50, gardencorev1beta1helper.ExtractErrorCodes(err)...)
 	return r.client.Status().Update(ctx, cp)
 }
 
-func (r *reconciler) updateStatusSuccess(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1alpha1.LastOperationType, description string) error {
+func (r *reconciler) updateStatusSuccess(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1beta1.LastOperationType, description string) error {
 	cp.Status.ObservedGeneration = cp.Generation
 	cp.Status.LastOperation, cp.Status.LastError = extensionscontroller.ReconcileSucceeded(lastOperationType, description)
 	return r.client.Status().Update(ctx, cp)

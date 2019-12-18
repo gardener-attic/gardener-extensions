@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -32,9 +32,9 @@ import (
 
 func makeCluster(pods, services string, region string, countFaultDomain, countUpdateDomain int) *controller.Cluster {
 	var (
-		shoot = gardencorev1alpha1.Shoot{
-			Spec: gardencorev1alpha1.ShootSpec{
-				Networking: gardencorev1alpha1.Networking{
+		shoot = gardencorev1beta1.Shoot{
+			Spec: gardencorev1beta1.ShootSpec{
+				Networking: gardencorev1beta1.Networking{
 					Pods:     &pods,
 					Services: &services,
 				},
@@ -49,9 +49,9 @@ func makeCluster(pods, services string, region string, countFaultDomain, countUp
 			},
 		}
 		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
-		cloudProfile              = gardencorev1alpha1.CloudProfile{
-			Spec: gardencorev1alpha1.CloudProfileSpec{
-				ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+		cloudProfile              = gardencorev1beta1.CloudProfile{
+			Spec: gardencorev1beta1.CloudProfileSpec{
+				ProviderConfig: &gardencorev1beta1.ProviderConfig{
 					RawExtension: runtime.RawExtension{
 						Raw: cloudProfileConfigJSON,
 					},

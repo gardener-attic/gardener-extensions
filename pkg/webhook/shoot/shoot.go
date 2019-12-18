@@ -19,7 +19,7 @@ import (
 
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -100,7 +100,7 @@ func buildSelector() (*metav1.LabelSelector, error) {
 	// Create and return LabelSelector
 	return &metav1.LabelSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
-			{Key: v1alpha1constants.GardenerPurpose, Operator: metav1.LabelSelectorOpIn, Values: []string{metav1.NamespaceSystem}},
+			{Key: v1beta1constants.GardenerPurpose, Operator: metav1.LabelSelectorOpIn, Values: []string{metav1.NamespaceSystem}},
 		},
 	}, nil
 }

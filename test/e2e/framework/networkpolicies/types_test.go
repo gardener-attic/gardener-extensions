@@ -15,7 +15,7 @@
 package networkpolicies
 
 import (
-	"github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	"github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/labels"
@@ -80,9 +80,9 @@ var _ = Describe("Types", func() {
 
 			It("should panic when Shoot kubernetes version is invalid", func() {
 				Expect(func() {
-					shoot := &v1alpha1.Shoot{
-						Spec: v1alpha1.ShootSpec{
-							Kubernetes: v1alpha1.Kubernetes{
+					shoot := &v1beta1.Shoot{
+						Spec: v1beta1.ShootSpec{
+							Kubernetes: v1beta1.Kubernetes{
 								Version: "something invalid",
 							},
 						},
@@ -93,9 +93,9 @@ var _ = Describe("Types", func() {
 			})
 
 			It("should return false when Pod versions is greater than Shoot version", func() {
-				shoot := &v1alpha1.Shoot{
-					Spec: v1alpha1.ShootSpec{
-						Kubernetes: v1alpha1.Kubernetes{
+				shoot := &v1beta1.Shoot{
+					Spec: v1beta1.ShootSpec{
+						Kubernetes: v1beta1.Kubernetes{
 							Version: "0.9",
 						},
 					},
@@ -104,9 +104,9 @@ var _ = Describe("Types", func() {
 				Expect(p.CheckVersion(shoot)).To(BeFalse())
 			})
 			It("should return true when Pod versions matches than Shoot version", func() {
-				shoot := &v1alpha1.Shoot{
-					Spec: v1alpha1.ShootSpec{
-						Kubernetes: v1alpha1.Kubernetes{
+				shoot := &v1beta1.Shoot{
+					Spec: v1beta1.ShootSpec{
+						Kubernetes: v1beta1.Kubernetes{
 							Version: "1.1",
 						},
 					},

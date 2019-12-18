@@ -17,13 +17,13 @@ package validation
 import (
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // ValidateControlPlaneConfig validates a ControlPlaneConfig object.
-func ValidateControlPlaneConfig(controlPlaneConfig *apisalicloud.ControlPlaneConfig, region string, regions []gardencorev1alpha1.Region) field.ErrorList {
+func ValidateControlPlaneConfig(controlPlaneConfig *apisalicloud.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if len(controlPlaneConfig.Zone) == 0 {
@@ -36,7 +36,7 @@ func ValidateControlPlaneConfig(controlPlaneConfig *apisalicloud.ControlPlaneCon
 }
 
 // ValidateControlPlaneConfigUpdate validates a ControlPlaneConfig object.
-func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisalicloud.ControlPlaneConfig, region string, regions []gardencorev1alpha1.Region) field.ErrorList {
+func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisalicloud.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Zone, oldConfig.Zone, field.NewPath("zone"))...)
@@ -44,7 +44,7 @@ func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisalicloud.Control
 	return allErrs
 }
 
-func validateZoneConstraints(regions []gardencorev1alpha1.Region, region, zone, oldZone string) (bool, []string) {
+func validateZoneConstraints(regions []gardencorev1beta1.Region, region, zone, oldZone string) (bool, []string) {
 	if zone == oldZone {
 		return true, nil
 	}

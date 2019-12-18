@@ -30,7 +30,7 @@ import (
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
@@ -187,24 +187,24 @@ var _ = Describe("Machines", func() {
 				}
 				cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 				cluster = &extensionscontroller.Cluster{
-					CloudProfile: &gardencorev1alpha1.CloudProfile{
+					CloudProfile: &gardencorev1beta1.CloudProfile{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: cloudProfileName,
 						},
-						Spec: gardencorev1alpha1.CloudProfileSpec{
-							ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+						Spec: gardencorev1beta1.CloudProfileSpec{
+							ProviderConfig: &gardencorev1beta1.ProviderConfig{
 								RawExtension: runtime.RawExtension{
 									Raw: cloudProfileConfigJSON,
 								},
 							},
 						},
 					},
-					Shoot: &gardencorev1alpha1.Shoot{
-						Spec: gardencorev1alpha1.ShootSpec{
-							Networking: gardencorev1alpha1.Networking{
+					Shoot: &gardencorev1beta1.Shoot{
+						Spec: gardencorev1beta1.ShootSpec{
+							Networking: gardencorev1beta1.Networking{
 								Pods: &podCIDR,
 							},
-							Kubernetes: gardencorev1alpha1.Kubernetes{
+							Kubernetes: gardencorev1beta1.Kubernetes{
 								Version: shootVersion,
 							},
 						},

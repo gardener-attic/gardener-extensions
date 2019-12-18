@@ -29,9 +29,9 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
@@ -186,9 +186,9 @@ var _ = Describe("Machines", func() {
 				}
 
 				cluster = &extensionscontroller.Cluster{
-					Shoot: &gardencorev1alpha1.Shoot{
-						Spec: gardencorev1alpha1.ShootSpec{
-							Kubernetes: gardencorev1alpha1.Kubernetes{
+					Shoot: &gardencorev1beta1.Shoot{
+						Spec: gardencorev1beta1.ShootSpec{
+							Kubernetes: gardencorev1beta1.Kubernetes{
 								Version: shootVersion,
 							},
 						},
@@ -632,7 +632,7 @@ func useDefaultMachineClass(def map[string]interface{}, key string, value interf
 func addNameAndSecretToMachineClass(class map[string]interface{}, awsAccessKeyID, awsSecretAccessKey, name string) {
 	class["name"] = name
 	class["labels"] = map[string]string{
-		v1alpha1constants.GardenPurpose: v1alpha1constants.GardenPurposeMachineClass,
+		v1beta1constants.GardenPurpose: v1beta1constants.GardenPurposeMachineClass,
 	}
 	class["secret"].(map[string]interface{})[aws.AccessKeyID] = awsAccessKeyID
 	class["secret"].(map[string]interface{})[aws.SecretAccessKey] = awsSecretAccessKey

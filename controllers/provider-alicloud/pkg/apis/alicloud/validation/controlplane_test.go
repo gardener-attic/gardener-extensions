@@ -18,7 +18,7 @@ import (
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/validation"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
@@ -30,10 +30,10 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 		region = "foo"
 		zone   = "some-zone"
 
-		regions = []gardencorev1alpha1.Region{
+		regions = []gardencorev1beta1.Region{
 			{
 				Name: region,
-				Zones: []gardencorev1alpha1.AvailabilityZone{
+				Zones: []gardencorev1beta1.AvailabilityZone{
 					{Name: zone},
 				},
 			},

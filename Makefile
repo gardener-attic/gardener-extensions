@@ -79,14 +79,6 @@ docker-images: docker-image-hyper
 revendor:
 	@GO111MODULE=on go mod vendor
 	@GO111MODULE=on go mod tidy
-	# Remove conversion files to prevent cyclic dependencies between Gardener and Extension APIs.
-	# This is needed as long as we migrate from gardener/v1beta1 to core/v1alpha1 APIs.
-	# This can be removed again as soon as the old gardener/v1beta1 API group is deleted.
-	@rm -f vendor/github.com/gardener/gardener/pkg/apis/core/v1alpha1/zz_generated.conversion.go
-	@rm -f vendor/github.com/gardener/gardener/pkg/apis/core/v1alpha1/conversions.go
-	@rm -f vendor/github.com/gardener/gardener/pkg/apis/garden/v1beta1/zz_generated.conversion.go
-	@rm -f vendor/github.com/gardener/gardener/pkg/apis/garden/v1beta1/conversions.go
-	sed -i 's/, addConversionFuncs)/\)/g' vendor/github.com/gardener/gardener/pkg/apis/core/v1alpha1/register.go
 
 .PHONY: start-os-coreos
 start-os-coreos:

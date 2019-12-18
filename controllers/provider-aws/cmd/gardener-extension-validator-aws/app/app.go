@@ -23,7 +23,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/validator"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	componentbaseconfig "k8s.io/component-base/config"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -66,7 +66,7 @@ func NewValidatorCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
 			}
 
-			if err := gardencorev1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := gardencorev1beta1.AddToScheme(mgr.GetScheme()); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 

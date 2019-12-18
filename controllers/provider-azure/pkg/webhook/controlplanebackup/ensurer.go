@@ -23,7 +23,7 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/go-logr/logr"
@@ -80,7 +80,7 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace, name string, backupConfigured bool) error {
-	if name == v1alpha1constants.StatefulSetNameETCDMain && backupConfigured {
+	if name == v1beta1constants.StatefulSetNameETCDMain && backupConfigured {
 		return controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, azure.BackupSecretName)
 	}
 	return nil
@@ -102,7 +102,7 @@ func (e *ensurer) ensureBackupRestoreContainer(existingContainer *corev1.Contain
 		env                     []corev1.EnvVar
 		volumeClaimTemplateName = name
 	)
-	if name == v1alpha1constants.StatefulSetNameETCDMain {
+	if name == v1beta1constants.StatefulSetNameETCDMain {
 		if cluster.Seed.Spec.Backup == nil {
 			e.logger.Info("Backup profile is not configured; backup will not be taken for etcd-main")
 		} else {

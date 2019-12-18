@@ -17,13 +17,13 @@ package validation
 import (
 	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // ValidateControlPlaneConfig validates a ControlPlaneConfig object.
-func ValidateControlPlaneConfig(controlPlaneConfig *apisopenstack.ControlPlaneConfig, region string, regions []gardencorev1alpha1.Region, constraints apisopenstack.Constraints) field.ErrorList {
+func ValidateControlPlaneConfig(controlPlaneConfig *apisopenstack.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region, constraints apisopenstack.Constraints) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if len(controlPlaneConfig.LoadBalancerProvider) == 0 {
@@ -42,7 +42,7 @@ func ValidateControlPlaneConfig(controlPlaneConfig *apisopenstack.ControlPlaneCo
 }
 
 // ValidateControlPlaneConfigUpdate validates a ControlPlaneConfig object.
-func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisopenstack.ControlPlaneConfig, region string, regions []gardencorev1alpha1.Region, constraints apisopenstack.Constraints) field.ErrorList {
+func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisopenstack.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region, constraints apisopenstack.Constraints) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Zone, oldConfig.Zone, field.NewPath("zone"))...)
@@ -67,7 +67,7 @@ func validateLoadBalancerProviderConstraints(providers []apisopenstack.LoadBalan
 	return false, validValues
 }
 
-func validateZoneConstraints(regions []gardencorev1alpha1.Region, region, zone, oldZone string) (bool, []string) {
+func validateZoneConstraints(regions []gardencorev1beta1.Region, region, zone, oldZone string) (bool, []string) {
 	if zone == oldZone {
 		return true, nil
 	}

@@ -25,7 +25,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -58,9 +58,9 @@ var _ = Describe("Ensurer", func() {
 
 		ctrl *gomock.Controller
 
-		svcKey = client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer}
+		svcKey = client.ObjectKey{Namespace: namespace, Name: v1beta1constants.DeploymentNameKubeAPIServer}
 		svc    = &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer, Namespace: namespace},
+			ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer, Namespace: namespace},
 			Status: corev1.ServiceStatus{
 				LoadBalancer: corev1.LoadBalancerStatus{
 					Ingress: []corev1.LoadBalancerIngress{
@@ -83,7 +83,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer, Namespace: namespace},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -116,7 +116,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-apiserver deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer, Namespace: namespace},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -152,7 +152,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDMain},
 				}
 			)
 
@@ -168,7 +168,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDMain},
 					Spec: appsv1.StatefulSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 							{
@@ -199,7 +199,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents},
 				}
 			)
 
@@ -215,7 +215,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents},
 					Spec: appsv1.StatefulSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 							{
@@ -260,8 +260,8 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
-	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, v1alpha1constants.StatefulSetNameETCDEvents)
-	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(v1alpha1constants.StatefulSetNameETCDEvents, nil, nil)))
+	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, v1beta1constants.StatefulSetNameETCDEvents)
+	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(v1beta1constants.StatefulSetNameETCDEvents, nil, nil)))
 }
 
 func clientGet(result runtime.Object) interface{} {

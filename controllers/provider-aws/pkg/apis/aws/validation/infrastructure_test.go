@@ -17,7 +17,7 @@ package validation_test
 import (
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 
 	. "github.com/gardener/gardener/pkg/utils/validation/gomega"
@@ -66,34 +66,34 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 	Describe("#ValidateInfrastructureConfigAgainstCloudProfile", func() {
 		var (
-			cloudProfile *gardencorev1alpha1.CloudProfile
-			shoot        *gardencorev1alpha1.Shoot
+			cloudProfile *gardencorev1beta1.CloudProfile
+			shoot        *gardencorev1beta1.Shoot
 			region       = "eu-west"
 			region2      = "us-west"
 		)
 		Context("zones validation", func() {
 			BeforeEach(func() {
-				cloudProfile = &gardencorev1alpha1.CloudProfile{
-					Spec: gardencorev1alpha1.CloudProfileSpec{
-						Regions: []gardencorev1alpha1.Region{
-							gardencorev1alpha1.Region{
+				cloudProfile = &gardencorev1beta1.CloudProfile{
+					Spec: gardencorev1beta1.CloudProfileSpec{
+						Regions: []gardencorev1beta1.Region{
+							gardencorev1beta1.Region{
 								Name: region2,
-								Zones: []gardencorev1alpha1.AvailabilityZone{
-									gardencorev1alpha1.AvailabilityZone{
+								Zones: []gardencorev1beta1.AvailabilityZone{
+									gardencorev1beta1.AvailabilityZone{
 										Name: zone2,
 									},
-									gardencorev1alpha1.AvailabilityZone{
+									gardencorev1beta1.AvailabilityZone{
 										Name: zone,
 									},
 								},
 							},
-							gardencorev1alpha1.Region{
+							gardencorev1beta1.Region{
 								Name: region,
-								Zones: []gardencorev1alpha1.AvailabilityZone{
-									gardencorev1alpha1.AvailabilityZone{
+								Zones: []gardencorev1beta1.AvailabilityZone{
+									gardencorev1beta1.AvailabilityZone{
 										Name: zone2,
 									},
-									gardencorev1alpha1.AvailabilityZone{
+									gardencorev1beta1.AvailabilityZone{
 										Name: zone,
 									},
 								},
@@ -101,8 +101,8 @@ var _ = Describe("InfrastructureConfig validation", func() {
 						},
 					},
 				}
-				shoot = &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
+				shoot = &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
 						Region: region,
 					},
 				}

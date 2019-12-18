@@ -17,7 +17,7 @@ package util
 import (
 	"context"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 	gardener "github.com/gardener/gardener/pkg/client/kubernetes"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
@@ -69,7 +69,7 @@ func NewShootClients(c client.Client, clientset kubernetes.Interface, gardenerCl
 // NewClientForShoot returns the rest config and the client for the given shoot namespace.
 func NewClientForShoot(ctx context.Context, c client.Client, namespace string, opts client.Options) (*rest.Config, client.Client, error) {
 	gardenerSecret := &corev1.Secret{}
-	if err := c.Get(ctx, kutil.Key(namespace, v1alpha1constants.SecretNameGardener), gardenerSecret); err != nil {
+	if err := c.Get(ctx, kutil.Key(namespace, v1beta1constants.SecretNameGardener), gardenerSecret); err != nil {
 		return nil, nil, err
 	}
 	shootRESTConfig, err := NewRESTConfigFromKubeconfig(gardenerSecret.Data[secrets.DataKeyKubeconfig])

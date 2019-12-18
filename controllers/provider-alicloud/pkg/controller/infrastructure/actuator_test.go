@@ -37,7 +37,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/mock/go-logr/logr"
 	realterraformer "github.com/gardener/gardener-extensions/pkg/terraformer"
 	"github.com/gardener/gardener-extensions/pkg/util/chart"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -150,8 +150,8 @@ var _ = Describe("Actuator", func() {
 					accessKeyID     = "accessKeyID"
 					accessKeySecret = "accessKeySecret"
 					cluster         = controller.Cluster{
-						Shoot: &gardencorev1alpha1.Shoot{
-							Spec: gardencorev1alpha1.ShootSpec{
+						Shoot: &gardencorev1beta1.Shoot{
+							Spec: gardencorev1beta1.ShootSpec{
 								Region: region,
 							},
 						},

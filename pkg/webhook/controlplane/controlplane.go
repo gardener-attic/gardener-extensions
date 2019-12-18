@@ -19,7 +19,7 @@ import (
 
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -105,11 +105,11 @@ func buildSelector(kind, provider string) (*metav1.LabelSelector, error) {
 	var key string
 	switch kind {
 	case KindSeed:
-		key = v1alpha1constants.LabelSeedProvider
+		key = v1beta1constants.LabelSeedProvider
 	case KindShoot:
-		key = v1alpha1constants.LabelShootProvider
+		key = v1beta1constants.LabelShootProvider
 	case KindBackup:
-		key = v1alpha1constants.LabelBackupProvider
+		key = v1beta1constants.LabelBackupProvider
 	default:
 		return nil, fmt.Errorf("invalid webhook kind '%s'", kind)
 	}

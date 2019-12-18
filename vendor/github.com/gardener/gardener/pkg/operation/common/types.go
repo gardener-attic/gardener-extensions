@@ -189,9 +189,6 @@ const (
 	// CalicoKubeControllersDeploymentName is the name of calico-kube-controllers deployment.
 	CalicoKubeControllersDeploymentName = "calico-kube-controllers"
 
-	// CalicoTyphaDeploymentName is the name of the calico-typha deployment.
-	CalicoTyphaDeploymentName = "calico-typha-deploy"
-
 	// CoreDNSDeploymentName is the name of the coredns deployment.
 	CoreDNSDeploymentName = "coredns"
 
@@ -221,6 +218,15 @@ const (
 
 	// KubecfgSecretName is the name of the kubecfg secret.
 	KubecfgSecretName = "kubecfg"
+
+	// DependencyWatchdogExternalProbeSecretName is the name of the kubecfg secret with internal DNS for external access.
+	DependencyWatchdogExternalProbeSecretName = "dependency-watchdog-external-probe"
+
+	// DependencyWatchdogInternalProbeSecretName is the name of the kubecfg secret with cluster IP access.
+	DependencyWatchdogInternalProbeSecretName = "dependency-watchdog-internal-probe"
+
+	// DeprecatedKubecfgInternalProbeSecretName is the name of the kubecfg secret with cluster IP access.
+	DeprecatedKubecfgInternalProbeSecretName = "kubecfg-internal"
 
 	// KubeAPIServerHealthCheck is a key for the kube-apiserver-health-check user.
 	KubeAPIServerHealthCheck = "kube-apiserver-health-check"
@@ -431,6 +437,9 @@ const (
 	// HvpaControllerImageName is the name of the hvpa-controller image
 	HvpaControllerImageName = "hvpa-controller"
 
+	// DependencyWatchdogImageName is the name of the dependency-watchdog image
+	DependencyWatchdogImageName = "dependency-watchdog"
+
 	// ServiceAccountSigningKeySecretDataKey is the data key of a signing key Kubernetes secret.
 	ServiceAccountSigningKeySecretDataKey = "signing-key"
 )
@@ -443,7 +452,6 @@ var (
 		v1alpha1constants.DeploymentNameKubeAPIServer,
 		v1alpha1constants.DeploymentNameKubeControllerManager,
 		v1alpha1constants.DeploymentNameKubeScheduler,
-		v1alpha1constants.DeploymentNameDependencyWatchdog,
 		MachineControllerManagerDeploymentName,
 	)
 
@@ -457,7 +465,6 @@ var (
 	// RequiredSystemComponentDeployments is a set of the required system components.
 	RequiredSystemComponentDeployments = sets.NewString(
 		CalicoKubeControllersDeploymentName,
-		CalicoTyphaDeploymentName,
 		CoreDNSDeploymentName,
 		VPNShootDeploymentName,
 		MetricsServerDeploymentName,

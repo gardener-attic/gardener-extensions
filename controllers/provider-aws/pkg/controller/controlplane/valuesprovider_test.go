@@ -23,8 +23,8 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -83,12 +83,12 @@ var _ = Describe("ValuesProvider", func() {
 
 		cidr    = "10.250.0.0/19"
 		cluster = &extensionscontroller.Cluster{
-			Shoot: &gardencorev1alpha1.Shoot{
-				Spec: gardencorev1alpha1.ShootSpec{
-					Networking: gardencorev1alpha1.Networking{
+			Shoot: &gardencorev1beta1.Shoot{
+				Spec: gardencorev1beta1.ShootSpec{
+					Networking: gardencorev1beta1.Networking{
 						Pods: &cidr,
 					},
-					Kubernetes: gardencorev1alpha1.Kubernetes{
+					Kubernetes: gardencorev1beta1.Kubernetes{
 						Version: "1.13.4",
 					},
 				},
@@ -96,7 +96,7 @@ var _ = Describe("ValuesProvider", func() {
 		}
 		cpService = &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      v1alpha1constants.DeploymentNameKubeAPIServer,
+				Name:      v1beta1constants.DeploymentNameKubeAPIServer,
 				Namespace: namespace,
 			},
 			Status: corev1.ServiceStatus{
@@ -109,11 +109,11 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		checksums = map[string]string{
-			v1alpha1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			aws.CloudProviderConfigName:               "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
-			"cloud-controller-manager":                "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
-			"cloud-controller-manager-server":         "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
-			awsLBReadvertiserDeploymentName:           "599aeee0cbbfdab4ea29c642cb04a6c9a3eb90ec21b41570efb987958f99d4b1",
+			v1beta1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			aws.CloudProviderConfigName:              "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			"cloud-controller-manager":               "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			"cloud-controller-manager-server":        "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
+			awsLBReadvertiserDeploymentName:          "599aeee0cbbfdab4ea29c642cb04a6c9a3eb90ec21b41570efb987958f99d4b1",
 		}
 
 		configChartValues = map[string]interface{}{
@@ -188,7 +188,7 @@ var _ = Describe("ValuesProvider", func() {
 
 	Describe("#GetControlPlaneExposureChartValues", func() {
 		It("should return correct control plane exposure chart values", func() {
-			serviceKey := client.ObjectKey{Namespace: namespace, Name: v1alpha1constants.DeploymentNameKubeAPIServer}
+			serviceKey := client.ObjectKey{Namespace: namespace, Name: v1beta1constants.DeploymentNameKubeAPIServer}
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), serviceKey, &corev1.Service{}).DoAndReturn(clientGet(cpService))

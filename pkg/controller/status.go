@@ -15,14 +15,14 @@
 package controller
 
 import (
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // LastOperation creates a new LastOperation from the given parameters.
-func LastOperation(t gardencorev1alpha1.LastOperationType, state gardencorev1alpha1.LastOperationState, progress int, description string) *gardencorev1alpha1.LastOperation {
-	return &gardencorev1alpha1.LastOperation{
+func LastOperation(t gardencorev1beta1.LastOperationType, state gardencorev1beta1.LastOperationState, progress int, description string) *gardencorev1beta1.LastOperation {
+	return &gardencorev1beta1.LastOperation{
 		LastUpdateTime: metav1.Now(),
 		Type:           t,
 		State:          state,
@@ -32,10 +32,10 @@ func LastOperation(t gardencorev1alpha1.LastOperationType, state gardencorev1alp
 }
 
 // LastError creates a new LastError from the given parameters.
-func LastError(description string, codes ...gardencorev1alpha1.ErrorCode) *gardencorev1alpha1.LastError {
+func LastError(description string, codes ...gardencorev1beta1.ErrorCode) *gardencorev1beta1.LastError {
 	now := metav1.Now()
 
-	return &gardencorev1alpha1.LastError{
+	return &gardencorev1beta1.LastError{
 		Description:    description,
 		Codes:          codes,
 		LastUpdateTime: &now,
@@ -43,11 +43,11 @@ func LastError(description string, codes ...gardencorev1alpha1.ErrorCode) *garde
 }
 
 // ReconcileSucceeded returns a LastOperation with state succeeded at 100 percent and a nil LastError.
-func ReconcileSucceeded(t gardencorev1alpha1.LastOperationType, description string) (*gardencorev1alpha1.LastOperation, *gardencorev1alpha1.LastError) {
-	return LastOperation(t, gardencorev1alpha1.LastOperationStateSucceeded, 100, description), nil
+func ReconcileSucceeded(t gardencorev1beta1.LastOperationType, description string) (*gardencorev1beta1.LastOperation, *gardencorev1beta1.LastError) {
+	return LastOperation(t, gardencorev1beta1.LastOperationStateSucceeded, 100, description), nil
 }
 
 // ReconcileError returns a LastOperation with state error and a LastError with the given description and codes.
-func ReconcileError(t gardencorev1alpha1.LastOperationType, description string, progress int, codes ...gardencorev1alpha1.ErrorCode) (*gardencorev1alpha1.LastOperation, *gardencorev1alpha1.LastError) {
-	return LastOperation(t, gardencorev1alpha1.LastOperationStateError, progress, description), LastError(description, codes...)
+func ReconcileError(t gardencorev1beta1.LastOperationType, description string, progress int, codes ...gardencorev1beta1.ErrorCode) (*gardencorev1beta1.LastOperation, *gardencorev1beta1.LastError) {
+	return LastOperation(t, gardencorev1beta1.LastOperationStateError, progress, description), LastError(description, codes...)
 }

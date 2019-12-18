@@ -20,18 +20,16 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionsevent "github.com/gardener/gardener-extensions/pkg/event"
 	extensionsinject "github.com/gardener/gardener-extensions/pkg/inject"
+
 	"github.com/gardener/gardener/pkg/api/extensions"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
-
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/go-logr/logr"
-
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 	"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/log"
-
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
 // Log is the logger for predicates.
@@ -77,7 +75,7 @@ func (s *shootNotFailedMapper) Map(e event.GenericEvent) bool {
 
 	lastOperation := cluster.Shoot.Status.LastOperation
 	return lastOperation != nil &&
-		lastOperation.State != gardencorev1alpha1.LastOperationStateFailed &&
+		lastOperation.State != gardencorev1beta1.LastOperationStateFailed &&
 		cluster.Shoot.Generation == cluster.Shoot.Status.ObservedGeneration
 }
 
@@ -158,7 +156,7 @@ func HasName(name string) predicate.Predicate {
 // HasOperationAnnotation is a predicate for the operation annotation.
 func HasOperationAnnotation() predicate.Predicate {
 	return FromMapper(MapperFunc(func(e event.GenericEvent) bool {
-		return e.Meta.GetAnnotations()[v1alpha1constants.GardenerOperation] == v1alpha1constants.GardenerOperationReconcile
+		return e.Meta.GetAnnotations()[v1beta1constants.GardenerOperation] == v1beta1constants.GardenerOperationReconcile
 	}), CreateTrigger, UpdateNewTrigger, GenericTrigger)
 }
 
@@ -172,7 +170,7 @@ func LastOperationNotSuccessful() predicate.Predicate {
 
 		lastOp := acc.GetExtensionStatus().GetLastOperation()
 		return lastOp == nil ||
-			lastOp.GetState() != gardencorev1alpha1.LastOperationStateSucceeded
+			lastOp.GetState() != gardencorev1beta1.LastOperationStateSucceeded
 	}
 
 	return predicate.Funcs{

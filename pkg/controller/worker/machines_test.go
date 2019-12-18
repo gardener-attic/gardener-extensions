@@ -18,7 +18,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	. "github.com/gardener/gardener-extensions/pkg/controller/worker"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -83,9 +83,9 @@ var _ = Describe("Machines", func() {
 				},
 			}
 			cluster = &extensionscontroller.Cluster{
-				Shoot: &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
-						Kubernetes: gardencorev1alpha1.Kubernetes{
+				Shoot: &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
+						Kubernetes: gardencorev1beta1.Kubernetes{
 							Version: "1.2.3",
 						},
 					},
@@ -163,9 +163,9 @@ var _ = Describe("Machines", func() {
 
 			It("when changing the kubernetes patch version", func() {
 				v, err = WorkerPoolHash(*p, &extensionscontroller.Cluster{
-					Shoot: &gardencorev1alpha1.Shoot{
-						Spec: gardencorev1alpha1.ShootSpec{
-							Kubernetes: gardencorev1alpha1.Kubernetes{
+					Shoot: &gardencorev1beta1.Shoot{
+						Spec: gardencorev1beta1.ShootSpec{
+							Kubernetes: gardencorev1beta1.Kubernetes{
 								Version: "1.2.4",
 							},
 						},
@@ -213,9 +213,9 @@ var _ = Describe("Machines", func() {
 
 			It("when changing the kubernetes major/minor version", func() {
 				v, err = WorkerPoolHash(*p, &extensionscontroller.Cluster{
-					Shoot: &gardencorev1alpha1.Shoot{
-						Spec: gardencorev1alpha1.ShootSpec{
-							Kubernetes: gardencorev1alpha1.Kubernetes{
+					Shoot: &gardencorev1beta1.Shoot{
+						Spec: gardencorev1beta1.ShootSpec{
+							Kubernetes: gardencorev1beta1.Kubernetes{
 								Version: "1.3.3",
 							},
 						},

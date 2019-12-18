@@ -24,7 +24,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	mockterraformer "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/terraformer"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -88,9 +88,9 @@ var _ = Describe("Terraform", func() {
 		}
 
 		cluster = &controller.Cluster{
-			Shoot: &gardencorev1alpha1.Shoot{
-				Spec: gardencorev1alpha1.ShootSpec{
-					Networking: gardencorev1alpha1.Networking{
+			Shoot: &gardencorev1beta1.Shoot{
+				Spec: gardencorev1beta1.ShootSpec{
+					Networking: gardencorev1beta1.Networking{
 						Pods:     &podsCIDR,
 						Services: &servicesCIDR,
 					},

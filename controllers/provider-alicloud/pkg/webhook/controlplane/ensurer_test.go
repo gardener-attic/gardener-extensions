@@ -22,10 +22,10 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/test"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
 	"github.com/coreos/go-systemd/unit"
-	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -45,9 +45,9 @@ var _ = Describe("Ensurer", func() {
 		ctrl       *gomock.Controller
 		eContext13 = genericmutator.NewInternalEnsurerContext(
 			&extensionscontroller.Cluster{
-				Shoot: &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
-						Kubernetes: gardencorev1alpha1.Kubernetes{
+				Shoot: &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
+						Kubernetes: gardencorev1beta1.Kubernetes{
 							Version: "1.13.0",
 						},
 					},
@@ -56,9 +56,9 @@ var _ = Describe("Ensurer", func() {
 		)
 		eContext14 = genericmutator.NewInternalEnsurerContext(
 			&extensionscontroller.Cluster{
-				Shoot: &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
-						Kubernetes: gardencorev1alpha1.Kubernetes{
+				Shoot: &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
+						Kubernetes: gardencorev1beta1.Kubernetes{
 							Version: "1.14.0",
 						},
 					},
@@ -80,7 +80,7 @@ var _ = Describe("Ensurer", func() {
 			var (
 				apidep = func() *appsv1.Deployment {
 					return &appsv1.Deployment{
-						ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
+						ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer},
 						Spec: appsv1.DeploymentSpec{
 							Template: corev1.PodTemplateSpec{
 								Spec: corev1.PodSpec{
@@ -117,7 +117,7 @@ var _ = Describe("Ensurer", func() {
 			var (
 				apidep = func() *appsv1.Deployment {
 					return &appsv1.Deployment{
-						ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeAPIServer},
+						ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer},
 						Spec: appsv1.DeploymentSpec{
 							Template: corev1.PodTemplateSpec{
 								Spec: corev1.PodSpec{
@@ -159,7 +159,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add missing elements to kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -186,7 +186,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of kube-controller-manager deployment", func() {
 			var (
 				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1alpha1constants.DeploymentNameKubeControllerManager},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeControllerManager},
 					Spec: appsv1.DeploymentSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{

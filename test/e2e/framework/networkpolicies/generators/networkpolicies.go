@@ -120,7 +120,7 @@ func (g *genTest) Imports(c *generator.Context) (imports []string) {
 		`. "github.com/onsi/ginkgo"`,
 		`. "github.com/onsi/gomega"`,
 		`corev1 "k8s.io/api/core/v1"`,
-		`github.com/gardener/gardener/pkg/apis/core/v1alpha1`,
+		`github.com/gardener/gardener/pkg/apis/core/v1beta1`,
 		`github.com/gardener/gardener/pkg/client/kubernetes`,
 		`github.com/gardener/gardener/pkg/logger`,
 		`github.com/gardener/gardener-extensions/test/e2e/framework/executor`,
@@ -453,7 +453,7 @@ var _ = Describe("Network Policy Testing", func() {
 				shootGardenerTest, err = gardenerframework.NewShootGardenerTest(*kubeconfig, nil, shootAppTestLogger)
 				Expect(err).NotTo(HaveOccurred())
 
-				shoot := &v1alpha1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
+				shoot := &v1beta1.Shoot{ObjectMeta: metav1.ObjectMeta{Namespace: *shootNamespace, Name: *shootName}}
 				shootTestOperations, err = gardenerframework.NewGardenTestOperationWithShoot(ctx, shootGardenerTest.GardenClient, shootAppTestLogger, shoot)
 				Expect(err).NotTo(HaveOccurred())
 			}

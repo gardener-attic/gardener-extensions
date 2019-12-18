@@ -20,12 +20,12 @@ import (
 	"reflect"
 
 	awsvalidation "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func (v *Shoot) validateShoot(ctx context.Context, shoot *gardencorev1alpha1.Shoot) error {
+func (v *Shoot) validateShoot(ctx context.Context, shoot *gardencorev1beta1.Shoot) error {
 	fldPath := field.NewPath("spec", "provider")
 
 	// InfrastructureConfig
@@ -44,7 +44,7 @@ func (v *Shoot) validateShoot(ctx context.Context, shoot *gardencorev1alpha1.Sho
 		return errList.ToAggregate()
 	}
 
-	cloudProfile := &gardencorev1alpha1.CloudProfile{}
+	cloudProfile := &gardencorev1beta1.CloudProfile{}
 	if err := v.client.Get(ctx, kutil.Key(shoot.Spec.CloudProfileName), cloudProfile); err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (v *Shoot) validateShoot(ctx context.Context, shoot *gardencorev1alpha1.Sho
 	return nil
 }
 
-func (v *Shoot) validateShootUpdate(ctx context.Context, oldShoot, shoot *gardencorev1alpha1.Shoot) error {
+func (v *Shoot) validateShootUpdate(ctx context.Context, oldShoot, shoot *gardencorev1beta1.Shoot) error {
 	fldPath := field.NewPath("spec", "provider")
 
 	// InfrastructureConfig update

@@ -21,4 +21,40 @@ source "$DIRNAME/common.sh"
 
 header_text "Generate"
 
-GO111MODULE=on GOFLAGS="-mod=vendor" go generate "${SOURCE_TREES[@]}"
+# Temporary trick avoiding the cyclic dependendies between gardener/gardener-extensions and
+# gardener/gardener (for backwards compatibility g/g needs to know the extensions APIs, but
+# the extensions need to know the gardener APIs as well).
+# Will be removed in the future agian once the deprecated garden.sapcloud.io API group is removed.
+(
+  export GO111MODULE=on
+  export GOFLAGS="-mod=vendor"
+
+  for dir in "${SOURCE_TREES[@]}"; do
+    if [[ "$(basename "$dir")" != "..." ]]; then
+      go generate "$dir"
+      continue
+    fi
+
+    found=( )
+    while IFS= read -r a; do
+      if [[ -z "$a" ]]; then
+        continue
+      fi
+
+      found=( "${found[@]}" "$a" )
+      go generate "$a/..."
+    done <<< "$(find "$(dirname "$dir")" -type d | grep 'pkg/apis$')"
+
+    find "$(dirname "$dir")" -type d | grep -v 'pkg/apis' | while IFS= read -r a; do
+      for f in "${found[@]}"; do
+        if [[ "${f##$a}" != "$f" ]]; then
+          continue 2
+        fi
+      done
+
+      if ls "$a"/*.go >/dev/null 2>&1; then
+        go generate "$a"
+      fi
+    done
+  done
+)

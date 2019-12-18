@@ -15,7 +15,7 @@
 package controller
 
 import (
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -34,9 +34,9 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("pod cidr is given", &Cluster{
-			Shoot: &gardencorev1alpha1.Shoot{
-				Spec: gardencorev1alpha1.ShootSpec{
-					Networking: gardencorev1alpha1.Networking{
+			Shoot: &gardencorev1beta1.Shoot{
+				Spec: gardencorev1beta1.ShootSpec{
+					Networking: gardencorev1beta1.Networking{
 						Pods: &cidr,
 					},
 				},
@@ -45,10 +45,10 @@ var _ = Describe("Shoot", func() {
 	)
 
 	DescribeTable("#IsHibernated",
-		func(hibernation *gardencorev1alpha1.Hibernation, expectation bool) {
+		func(hibernation *gardencorev1beta1.Hibernation, expectation bool) {
 			cluster := &Cluster{
-				Shoot: &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
+				Shoot: &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
 						Hibernation: hibernation,
 					},
 				},
@@ -58,8 +58,8 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("hibernation is nil", nil, false),
-		Entry("hibernation is not enabled", &gardencorev1alpha1.Hibernation{Enabled: &falseVar}, false),
-		Entry("hibernation is enabled", &gardencorev1alpha1.Hibernation{Enabled: &trueVar}, true),
+		Entry("hibernation is not enabled", &gardencorev1beta1.Hibernation{Enabled: &falseVar}, false),
+		Entry("hibernation is enabled", &gardencorev1beta1.Hibernation{Enabled: &trueVar}, true),
 	)
 
 	var (
@@ -69,10 +69,10 @@ var _ = Describe("Shoot", func() {
 	)
 
 	DescribeTable("#IsUnmanagedDNSProvider",
-		func(dns *gardencorev1alpha1.DNS, expectation bool) {
+		func(dns *gardencorev1beta1.DNS, expectation bool) {
 			cluster := &Cluster{
-				Shoot: &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
+				Shoot: &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
 						DNS: dns,
 					},
 				},
@@ -82,29 +82,29 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("dns is nil", nil, true),
-		Entry("dns domain is set", &gardencorev1alpha1.DNS{
+		Entry("dns domain is set", &gardencorev1beta1.DNS{
 			Domain: &dnsDomain,
 		}, false),
-		Entry("dns domain is not set and provider is not given", &gardencorev1alpha1.DNS{
-			Providers: []gardencorev1alpha1.DNSProvider{},
+		Entry("dns domain is not set and provider is not given", &gardencorev1beta1.DNS{
+			Providers: []gardencorev1beta1.DNSProvider{},
 		}, false),
-		Entry("dns domain is not set and provider is given but type is not unmanaged", &gardencorev1alpha1.DNS{
-			Providers: []gardencorev1alpha1.DNSProvider{{
+		Entry("dns domain is not set and provider is given but type is not unmanaged", &gardencorev1beta1.DNS{
+			Providers: []gardencorev1beta1.DNSProvider{{
 				Type: &dnsProviderType,
 			}},
 		}, false),
-		Entry("dns domain is not set and provider is given and type is unmanaged", &gardencorev1alpha1.DNS{
-			Providers: []gardencorev1alpha1.DNSProvider{{
+		Entry("dns domain is not set and provider is given and type is unmanaged", &gardencorev1beta1.DNS{
+			Providers: []gardencorev1beta1.DNSProvider{{
 				Type: &dnsProviderUnmanaged,
 			}},
 		}, true),
 	)
 
 	DescribeTable("#GetReplicas",
-		func(hibernation *gardencorev1alpha1.Hibernation, wokenUp, expectation int) {
+		func(hibernation *gardencorev1beta1.Hibernation, wokenUp, expectation int) {
 			cluster := &Cluster{
-				Shoot: &gardencorev1alpha1.Shoot{
-					Spec: gardencorev1alpha1.ShootSpec{
+				Shoot: &gardencorev1beta1.Shoot{
+					Spec: gardencorev1beta1.ShootSpec{
 						Hibernation: hibernation,
 					},
 				},
@@ -114,6 +114,6 @@ var _ = Describe("Shoot", func() {
 		},
 
 		Entry("hibernation is not enabled", nil, 3, 3),
-		Entry("hibernation is enabled", &gardencorev1alpha1.Hibernation{Enabled: &trueVar}, 1, 0),
+		Entry("hibernation is enabled", &gardencorev1beta1.Hibernation{Enabled: &trueVar}, 1, 0),
 	)
 })
