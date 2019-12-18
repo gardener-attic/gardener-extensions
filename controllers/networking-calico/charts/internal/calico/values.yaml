@@ -1,6 +1,7 @@
 global:
   podCIDR: ""
 config:
+  veth_mtu: 1440
   backend: bird
   ipam:
     type: "host-local"

@@ -100,6 +100,18 @@ Typha
 </tr>
 <tr>
 <td>
+<code>vethMTU</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>VethMTU settings used to configure calico port mtu</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>ipip</code></br>
 <em>
 <a href="#calico.networking.extensions.gardener.cloud/v1alpha1.IPv4PoolMode">

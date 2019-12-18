@@ -28,6 +28,7 @@ import (
 const (
 	hostLocal  = "host-local"
 	usePodCIDR = "usePodCidr"
+	defaultMTU = "1440"
 )
 
 type calicoConfig struct {
@@ -36,6 +37,7 @@ type calicoConfig struct {
 	IPv4    ipv4                   `json:"ipv4"`
 	IPAM    ipam                   `json:"ipam"`
 	Typha   typha                  `json:"typha"`
+	VethMTU string                 `json:"veth_mtu"`
 }
 
 type felix struct {
@@ -80,6 +82,7 @@ var defaultCalicoConfig = calicoConfig{
 	Typha: typha{
 		Enabled: true,
 	},
+	VethMTU: defaultMTU,
 }
 
 func newCalicoConfig() calicoConfig {
@@ -193,6 +196,10 @@ func generateChartValues(config *calicov1alpha1.NetworkConfig) (*calicoConfig, e
 
 	if config.Typha != nil {
 		c.Typha.Enabled = config.Typha.Enabled
+	}
+
+	if config.VethMTU != nil {
+		c.VethMTU = *config.VethMTU
 	}
 
 	return &c, nil
