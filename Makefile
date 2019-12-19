@@ -21,8 +21,16 @@ VERSION                     := $(shell bash -c 'source $(HACK_DIR)/common.sh && 
 LD_FLAGS                    := "-w -X github.com/gardener/gardener-extensions/pkg/version.Version=$(IMAGE_TAG)"
 VERIFY                      := true
 LEADER_ELECTION             := false
-IGNORE_OPERATION_ANNOTATION := true
-WEBHOOK_CONFIG_URL          := docker.for.mac.localhost
+IGNORE_OPERATION_ANNOTATION	:= true
+
+WEBHOOK_CONFIG_MODE	:= service
+WEBHOOK_CONFIG_URL	:= docker.for.mac.localhost
+EXTENSION_NAMESPACE	:=
+
+WEBHOOK_PARAM := --webhook-config-url=$(WEBHOOK_CONFIG_URL)
+ifeq ($(WEBHOOK_CONFIG_MODE), service)
+  WEBHOOK_PARAM := --webhook-config-namespace=$(EXTENSION_NAMESPACE)
+endif
 
 ### Build commands
 
@@ -135,8 +143,8 @@ start-provider-aws:
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-server-host=0.0.0.0 \
 		--webhook-config-server-port=8443 \
-		--webhook-config-mode=url \
-		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
+		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
+		$(WEBHOOK_PARAM)
 
 .PHONY: start-provider-azure
 start-provider-azure:
@@ -149,8 +157,8 @@ start-provider-azure:
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-server-host=0.0.0.0 \
 		--webhook-config-server-port=8443 \
-		--webhook-config-mode=url \
-		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
+		--webhook-config-namespace=$(EXTENSION_NAMESPACE)
+		$(WEBHOOK_PARAM)
 
 .PHONY: start-provider-gcp
 start-provider-gcp:
@@ -163,8 +171,8 @@ start-provider-gcp:
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-server-host=0.0.0.0 \
 		--webhook-config-server-port=8443 \
-		--webhook-config-mode=url \
-		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
+		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
+		$(WEBHOOK_PARAM)
 
 .PHONY: start-provider-openstack
 start-provider-openstack:
@@ -177,8 +185,8 @@ start-provider-openstack:
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-server-host=0.0.0.0 \
 		--webhook-config-server-port=8443 \
-		--webhook-config-mode=url \
-		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
+		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
+		$(WEBHOOK_PARAM)
 
 .PHONY: start-provider-alicloud
 start-provider-alicloud:
@@ -191,8 +199,8 @@ start-provider-alicloud:
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-server-host=0.0.0.0 \
 		--webhook-config-server-port=8443 \
-		--webhook-config-mode=url \
-		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
+		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
+		$(WEBHOOK_PARAM)
 
 .PHONY: start-provider-packet
 start-provider-packet:
@@ -205,8 +213,8 @@ start-provider-packet:
 		--leader-election=$(LEADER_ELECTION) \
 		--webhook-config-server-host=0.0.0.0 \
 		--webhook-config-server-port=8443 \
-		--webhook-config-mode=url \
-		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
+		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
+		$(WEBHOOK_PARAM)
 
 .PHONY: start-networking-calico
 start-networking-calico:
