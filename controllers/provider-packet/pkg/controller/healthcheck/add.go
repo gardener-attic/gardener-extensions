@@ -26,7 +26,7 @@ import (
 	genericworkeractuator "github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
 
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -54,10 +54,10 @@ func RegisterHealthChecks(mgr manager.Manager, opts healthcheck.DefaultAddArgs) 
 		opts,
 		normalPredicates,
 		map[healthcheck.HealthCheck]string{
-			general.CheckSeedDeployment(packet.CloudControllerManagerName):                               string(gardencorev1alpha1.ShootControlPlaneHealthy),
-			general.CheckManagedResource(genericcontrolplaneactuator.ControlPlaneShootChartResourceName): string(gardencorev1alpha1.ShootSystemComponentsHealthy),
-			general.CheckManagedResource(genericcontrolplaneactuator.StorageClassesChartResourceName):    string(gardencorev1alpha1.ShootSystemComponentsHealthy),
-			general.CheckManagedResource(genericcontrolplaneactuator.ShootWebhooksResourceName):          string(gardencorev1alpha1.ShootSystemComponentsHealthy),
+			general.CheckSeedDeployment(packet.CloudControllerManagerName):                               string(gardencorev1beta1.ShootControlPlaneHealthy),
+			general.CheckManagedResource(genericcontrolplaneactuator.ControlPlaneShootChartResourceName): string(gardencorev1beta1.ShootSystemComponentsHealthy),
+			general.CheckManagedResource(genericcontrolplaneactuator.StorageClassesChartResourceName):    string(gardencorev1beta1.ShootSystemComponentsHealthy),
+			general.CheckManagedResource(genericcontrolplaneactuator.ShootWebhooksResourceName):          string(gardencorev1beta1.ShootSystemComponentsHealthy),
 		}); err != nil {
 		return err
 	}
@@ -70,9 +70,9 @@ func RegisterHealthChecks(mgr manager.Manager, opts healthcheck.DefaultAddArgs) 
 		opts,
 		nil,
 		map[healthcheck.HealthCheck]string{
-			general.CheckManagedResource(genericworkeractuator.McmShootResourceName): string(gardencorev1alpha1.ShootSystemComponentsHealthy),
-			general.CheckSeedDeployment(packet.MachineControllerManagerName):         string(gardencorev1alpha1.ShootEveryNodeReady),
-			worker.SufficientNodesAvailable():                                        string(gardencorev1alpha1.ShootEveryNodeReady),
+			general.CheckManagedResource(genericworkeractuator.McmShootResourceName): string(gardencorev1beta1.ShootSystemComponentsHealthy),
+			general.CheckSeedDeployment(packet.MachineControllerManagerName):         string(gardencorev1beta1.ShootControlPlaneHealthy),
+			worker.SufficientNodesAvailable():                                        string(gardencorev1beta1.ShootEveryNodeReady),
 		})
 }
 

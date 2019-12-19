@@ -24,9 +24,12 @@ import (
 	"github.com/gardener/gardener/pkg/api/extensions"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
+
 	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
@@ -203,15 +206,15 @@ func AddTypePredicate(extensionType string, predicates []predicate.Predicate) []
 }
 
 // HasPurpose filters the incoming Controlplanes  for the given spec.purpose
-func HasPurpose(purpose extensions.Purpose) predicate.Predicate {
+func HasPurpose(purpose extensionsv1alpha1.Purpose) predicate.Predicate {
 	return FromMapper(MapperFunc(func(e event.GenericEvent) bool {
-		controlPlane, ok := e.Object.(*extensions.ControlPlane)
+		controlPlane, ok := e.Object.(*extensionsv1alpha1.ControlPlane)
 		if !ok {
 			return false
 		}
 
 		// needed because ControlPlane of type "normal" has the spec.purpose field not set
-		if controlPlane.Spec.Purpose == nil && purpose == extensions.Normal {
+		if controlPlane.Spec.Purpose == nil && purpose == extensionsv1alpha1.Normal {
 			return true
 		}
 

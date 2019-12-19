@@ -17,8 +17,6 @@ package infrastructure
 import (
 	"fmt"
 
-	"github.com/golang/mock/gomock"
-
 	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"

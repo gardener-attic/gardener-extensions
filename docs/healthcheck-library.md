@@ -28,12 +28,12 @@ health.DefaultRegisterExtensionForHealthCheck(
                opts, // options for the health check controller
                nil, // custom predicates
                map[extensionshealthcheckcontroller.HealthCheck]string{
-                       general.CheckManagedResource(genericactuator.McmShootResourceName): string(gardencorev1alpha1.ShootSystemComponentsHealthy),
-                       general.CheckSeedDeployment(aws.MachineControllerManagerName):      string(gardencorev1alpha1.ShootEveryNodeReady),
-                       worker.SufficientNodesAvailable():                                  string(gardencorev1alpha1.ShootEveryNodeReady),
+                       general.CheckManagedResource(genericactuator.McmShootResourceName): string(gardencorev1beta1.ShootSystemComponentsHealthy),
+                       general.CheckSeedDeployment(aws.MachineControllerManagerName):      string(gardencorev1beta1.ShootEveryNodeReady),
+                       worker.SufficientNodesAvailable():                                  string(gardencorev1beta1.ShootEveryNodeReady),
                })
 ```
-This creates a health check controller that reconciles the `extensions.gardener.cloud/v1alpha1.Worker`  resource with the spec.type 'aws'.
+This creates a health check controller that reconciles the `extensions.gardener.cloud/v1alpha1.Worker` resource with the spec.type 'aws'.
 Three health check functions are registered that are executed during reconciliation.
 Each health check is mapped to a single `HealthConditionType` that results in conditions with the same `condition.type` (see below).
 To contribute to the Shoot's health, the following can be used: `SystemComponentsHealthy`, `EveryNodeReady`, `ControlPlaneHealthy`.
@@ -58,7 +58,7 @@ type HealthCheck interface {
 
 The health check controller regularly (default: `30s`) reconciles the extension resource and executes the registered health checks for the dependent objects.
 As a result, the controller writes condition(s) to the status of the extension containing the health check result.
-In our example, two checks are mapped to `ShootEveryNodeReady` and one to `ShootSystemComponentsHealthy`, leading to conditions with two distinct `HealthConditionType` (condition.type)
+In our example, two checks are mapped to `ShootEveryNodeReady` and one to `ShootSystemComponentsHealthy`, leading to conditions with two distinct `HealthConditionTypes` (condition.type)
 
 ```yaml
 status:
