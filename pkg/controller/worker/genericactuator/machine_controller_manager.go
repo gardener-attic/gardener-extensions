@@ -77,7 +77,7 @@ func (a *genericActuator) deleteMachineControllerManager(ctx context.Context, wo
 	timeoutCtx3, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	if err := extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx3, a.client, workerObj.Namespace, mcmShootResourceName); err != nil {
-		return errors.Wrapf(err, "error while waiting for managed resource containing containing mcm for '%s' to be deleted", util.ObjectName(workerObj))
+		return errors.Wrapf(err, "error while waiting for managed resource containing mcm for '%s' to be deleted", util.ObjectName(workerObj))
 	}
 
 	if err := a.mcmSeedChart.Delete(ctx, a.client, workerObj.Namespace); err != nil {
