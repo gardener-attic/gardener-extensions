@@ -31,7 +31,6 @@ import (
 // * configName is the name of the ConfigMap containing the main Terraform file ('main.tf').
 // * variablesName is the name of the Secret containing the Terraform variables ('terraform.tfvars').
 // * stateName is the name of the ConfigMap containing the Terraform state ('terraform.tfstate').
-// * jobName (deprecated) is the name of the Job which will execute the Terraform file.
 // * variablesEnvironment is a map of environment variables which will be injected in the resulting
 //   Terraform job/pod. These variables should contain Terraform variables (i.e., must be prefixed
 //   with TF_VAR_).
@@ -50,11 +49,9 @@ type terraformer struct {
 	namespace string
 	image     string
 
-	configName    string
-	variablesName string
-	stateName     string
-	// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
-	jobName              string
+	configName           string
+	variablesName        string
+	stateName            string
 	variablesEnvironment map[string]string
 	configurationDefined bool
 
@@ -81,12 +78,6 @@ const (
 
 	// TerraformerStateSuffix is the suffix used for the ConfigMap which stores the Terraform state.
 	TerraformerStateSuffix = ".tf-state"
-
-	// TerraformerJobSuffix is the suffix used for the name of the Job which executes the Terraform configuration.
-	//
-	// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
-	// TODO: Remove after several releases.
-	TerraformerJobSuffix = ".tf-job"
 
 	// Base64Encoding denotes base64 encoding for the RawState.Data
 	Base64Encoding = "base64"

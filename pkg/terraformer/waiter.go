@@ -21,7 +21,6 @@ import (
 
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"github.com/gardener/gardener/pkg/utils/retry"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -41,38 +40,6 @@ func (t *terraformer) waitForCleanEnvironment(ctx context.Context) error {
 			labels := fmt.Sprintf("%s=%s,%s=%s", TerraformerLabelKeyName, t.name, TerraformerLabelKeyPurpose, t.purpose)
 			t.logger.Infof("Waiting until no Terraform Pods with labels '%s' exist any more in namespace '%s'...", labels, t.namespace)
 			return retry.MinorError(fmt.Errorf("terraform pods with labels '%s' still exist in namespace '%s'", labels, t.namespace))
-		}
-
-		return retry.Ok()
-	})
-}
-
-// waitForCleanEnvironmentDeprecated waits until no Terraform Job and Pod(s) exist for the current instance
-// of the Terraformer.
-//
-// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
-// TODO: Remove after several releases.
-func (t *terraformer) waitForCleanEnvironmentDeprecated(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, t.deadlineCleaning)
-	defer cancel()
-
-	return retry.Until(ctx, 5*time.Second, func(ctx context.Context) (done bool, err error) {
-		err = t.client.Get(ctx, kutil.Key(t.namespace, t.jobName), &batchv1.Job{})
-		if !apierrors.IsNotFound(err) {
-			if err != nil {
-				return retry.SevereError(err)
-			}
-			t.logger.Infof("Waiting until no Terraform Job with name '%s' exist any more...", t.jobName)
-			return retry.MinorError(fmt.Errorf("terraform job %q still exists", t.jobName))
-		}
-
-		jobPodList, err := t.listJobPods(ctx)
-		if err != nil {
-			return retry.SevereError(err)
-		}
-		if len(jobPodList.Items) != 0 {
-			t.logger.Infof("Waiting until no Terraform Pods with label 'job-name=%s' exist any more...", t.jobName)
-			return retry.MinorError(fmt.Errorf("terraform pods with label 'job-name=%s' still exist", t.jobName))
 		}
 
 		return retry.Ok()

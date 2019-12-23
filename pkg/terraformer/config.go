@@ -206,12 +206,6 @@ func (t *terraformer) prepare(ctx context.Context) (int, error) {
 		return -1, err
 	}
 
-	// Clean up possible existing job/pod artifacts from previous runs
-	// TODO: Remove after several releases.
-	if err := t.ensureCleanedUpDeprecated(); err != nil {
-		return -1, err
-	}
-
 	return numberOfExistingResources, nil
 }
 
@@ -277,24 +271,6 @@ func (t *terraformer) ensureCleanedUp(ctx context.Context) error {
 	}
 
 	return t.waitForCleanEnvironment(ctx)
-}
-
-// ensureCleanedUpDeprecated deletes the job, pods, and waits until everything has been cleaned up.
-//
-// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
-// TODO: Remove after several releases.
-func (t *terraformer) ensureCleanedUpDeprecated() error {
-	ctx := context.TODO()
-
-	jobPodList, err := t.listJobPods(ctx)
-	if err != nil {
-		return err
-	}
-	if err := t.cleanupJob(ctx, jobPodList); err != nil {
-		return err
-	}
-
-	return t.waitForCleanEnvironmentDeprecated(ctx)
 }
 
 // GenerateVariablesEnvironment takes a <secret> and a <keyValueMap> and builds an environment which

@@ -28,10 +28,8 @@ import (
 	"github.com/gardener/gardener/pkg/utils/retry"
 
 	"github.com/sirupsen/logrus"
-	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	corev1client "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -40,8 +38,6 @@ import (
 )
 
 const (
-	jobNameLabelDeprecated = "job-name"
-
 	// TerraformerLabelKeyName is a key for label on a Terraformer Pod indicating the Terraformer name.
 	TerraformerLabelKeyName = "terraformer.gardener.cloud/name"
 	// TerraformerLabelKeyPurpose is a key for label on a Terraformer Pod indicating the Terraformer purpose.
@@ -118,7 +114,6 @@ func New(
 		configName:    prefix + TerraformerConfigSuffix,
 		variablesName: prefix + TerraformerVariablesSuffix,
 		stateName:     prefix + TerraformerStateSuffix,
-		jobName:       prefix + TerraformerJobSuffix,
 
 		activeDeadlineSeconds: int64(3600),
 
@@ -427,21 +422,6 @@ func (t *terraformer) listTerraformerPods(ctx context.Context) (*corev1.PodList,
 	return podList, nil
 }
 
-// listJobPods lists all pods in the Terraformer namespace which have a label 'job-name'
-// whose value is equal to the Terraformer job name.
-//
-// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
-// TODO: Remove after several releases.
-func (t *terraformer) listJobPods(ctx context.Context) (*corev1.PodList, error) {
-	podList := &corev1.PodList{}
-	if err := t.client.List(ctx, podList,
-		client.InNamespace(t.namespace),
-		client.MatchingLabels{jobNameLabelDeprecated: t.jobName}); err != nil {
-		return nil, err
-	}
-	return podList, nil
-}
-
 // retrievePodLogs fetches the logs of the created Pods by the Terraformer and returns them as a map whose
 // keys are pod names and whose values are the corresponding logs.
 func (t *terraformer) retrievePodLogs(podList *corev1.PodList) (map[string]string, error) {
@@ -477,33 +457,6 @@ func (t *terraformer) deleteTerraformerPods(ctx context.Context, podList *corev1
 		t.logger.Infof("Deleted Terraform Pod '%s'", pod.Name)
 	}
 
-	return nil
-}
-
-// cleanupJob deletes the Terraform Job and all belonging Pods.
-//
-// Deprecated: Terraformer does no longer uses a Job. Kept for backwards compatibility.
-// TODO: Remove after several releases.
-func (t *terraformer) cleanupJob(ctx context.Context, jobPodList *corev1.PodList) error {
-	// Delete the Terraform Job
-	if err := t.client.Delete(ctx, &batchv1.Job{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.jobName}}); err == nil {
-		t.logger.Infof("Deleted Terraform Job '%s'", t.jobName)
-	} else {
-		if !apierrors.IsNotFound(err) {
-			return err
-		}
-	}
-
-	// Delete the belonging Terraform Pods
-	for _, jobPod := range jobPodList.Items {
-		if err := t.client.Delete(ctx, &corev1.Pod{ObjectMeta: metav1.ObjectMeta{Namespace: jobPod.Namespace, Name: jobPod.Name}}); err == nil {
-			t.logger.Infof("Deleted Terraform Job Pod '%s'", jobPod.Name)
-		} else {
-			if !apierrors.IsNotFound(err) {
-				return err
-			}
-		}
-	}
 	return nil
 }
 
