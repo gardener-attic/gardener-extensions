@@ -7,7 +7,7 @@ featureGates: {}
   # CustomResourceValidation: true
   # RotateKubeletServerCertificate: false
 images:
-  hyperkube: image-repository:image-tag
+  cloud-controller-manager: image-repository:image-tag
 resources:
   requests:
     cpu: 11m

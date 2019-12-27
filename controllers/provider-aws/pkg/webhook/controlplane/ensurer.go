@@ -19,13 +19,15 @@ import (
 	"context"
 	"regexp"
 
-	"github.com/coreos/go-systemd/unit"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
+
+	"github.com/coreos/go-systemd/unit"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	versionutils "github.com/gardener/gardener/pkg/utils/version"
 	"github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -56,12 +58,18 @@ func (e *ensurer) InjectClient(client client.Client) error {
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	template := &dep.Spec.Template
 	ps := &template.Spec
+
+	cluster, err := ectx.GetCluster(ctx)
+	if err != nil {
+		return err
+	}
+
 	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
 		ensureEnvVars(c)
-		ensureVolumeMounts(c)
+		ensureVolumeMounts(c, cluster.Shoot.Spec.Kubernetes.Version)
 	}
-	ensureVolumes(ps)
+	ensureVolumes(ps, cluster.Shoot.Spec.Kubernetes.Version)
 	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
@@ -69,13 +77,19 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx generi
 func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	template := &dep.Spec.Template
 	ps := &template.Spec
+
+	cluster, err := ectx.GetCluster(ctx)
+	if err != nil {
+		return err
+	}
+
 	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
 		ensureKubeControllerManagerCommandLineArgs(c)
 		ensureEnvVars(c)
-		ensureVolumeMounts(c)
+		ensureVolumeMounts(c, cluster.Shoot.Spec.Kubernetes.Version)
 	}
 	ensureKubeControllerManagerAnnotations(template)
-	ensureVolumes(ps)
+	ensureVolumes(ps, cluster.Shoot.Spec.Kubernetes.Version)
 	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
@@ -121,14 +135,22 @@ var (
 			},
 		},
 	}
-)
 
-func ensureEnvVars(c *corev1.Container) {
-	c.Env = extensionswebhook.EnsureEnvVarWithName(c.Env, accessKeyIDEnvVar)
-	c.Env = extensionswebhook.EnsureEnvVarWithName(c.Env, secretAccessKeyEnvVar)
-}
+	etcSSLName        = "etc-ssl"
+	etcSSLVolumeMount = corev1.VolumeMount{
+		Name:      etcSSLName,
+		MountPath: "/etc/ssl",
+		ReadOnly:  true,
+	}
+	etcSSLVolume = corev1.Volume{
+		Name: etcSSLName,
+		VolumeSource: corev1.VolumeSource{
+			HostPath: &corev1.HostPathVolumeSource{
+				Path: "/etc/ssl",
+			},
+		},
+	}
 
-var (
 	cloudProviderConfigVolumeMount = corev1.VolumeMount{
 		Name:      aws.CloudProviderConfigName,
 		MountPath: "/etc/kubernetes/cloudprovider",
@@ -143,12 +165,37 @@ var (
 	}
 )
 
-func ensureVolumeMounts(c *corev1.Container) {
-	c.VolumeMounts = extensionswebhook.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
+func ensureEnvVars(c *corev1.Container) {
+	c.Env = extensionswebhook.EnsureEnvVarWithName(c.Env, accessKeyIDEnvVar)
+	c.Env = extensionswebhook.EnsureEnvVarWithName(c.Env, secretAccessKeyEnvVar)
 }
 
-func ensureVolumes(ps *corev1.PodSpec) {
+func ensureVolumeMounts(c *corev1.Container, version string) {
+	c.VolumeMounts = extensionswebhook.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigVolumeMount)
+
+	if mustMountEtcSSLFolder(version) {
+		c.VolumeMounts = extensionswebhook.EnsureVolumeMountWithName(c.VolumeMounts, etcSSLVolumeMount)
+	}
+}
+
+func ensureVolumes(ps *corev1.PodSpec, version string) {
 	ps.Volumes = extensionswebhook.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigVolume)
+
+	if mustMountEtcSSLFolder(version) {
+		ps.Volumes = extensionswebhook.EnsureVolumeWithName(ps.Volumes, etcSSLVolume)
+	}
+}
+
+// Beginning with 1.17 Gardener no longer uses the hyperkube image for the Kubernetes control plane components.
+// The hyperkube image contained all the well-known root CAs, but the dedicated images don't. This is why we
+// mount the /etc/ssl folder from the host here.
+// TODO: This can be remove again once we have migrated to CSI.
+func mustMountEtcSSLFolder(version string) bool {
+	k8sVersionAtLeast117, err := versionutils.CompareVersions(version, ">=", "1.17")
+	if err != nil {
+		return false
+	}
+	return k8sVersionAtLeast117
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {
