@@ -53,10 +53,12 @@ spec:
         operator: Exists
       containers:
       - name: azure-cloud-controller-manager
-        image: {{ index .Values.images "hyperkube" }}
+        image: {{ index .Values.images "cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:
+        {{- if semverCompare "< 1.17" .Values.kubernetesVersion }}
         - /hyperkube
+        {{- end }}
         - cloud-controller-manager
         - --allocate-node-cidrs=true
         - --cloud-provider=azure
@@ -112,6 +114,9 @@ spec:
           mountPath: /var/lib/cloud-controller-manager-server
         - name: cloud-provider-config
           mountPath: /etc/kubernetes/cloudprovider
+        - name: etc-ssl
+          mountPath: /etc/ssl
+          readOnly: true
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -126,3 +131,6 @@ spec:
       - name: cloud-provider-config
         configMap:
           name: cloud-provider-config
+      - name: etc-ssl
+        hostPath:
+          path: /etc/ssl

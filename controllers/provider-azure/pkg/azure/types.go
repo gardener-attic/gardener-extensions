@@ -31,16 +31,16 @@ const (
 
 	// MachineControllerManagerName is a constant for the name of the machine-controller-manager.
 	MachineControllerManagerName = "machine-controller-manager"
-	// HyperkubeImageName is the name of the hyperkube image
-	HyperkubeImageName = "hyperkube"
+	// CloudControllerManagerImageName is the name of the cloud-controller-manager image.
+	CloudControllerManagerImageName = "cloud-controller-manager"
 
-	// SubscriptionIDKey is the key for the subscription ID
+	// SubscriptionIDKey is the key for the subscription ID.
 	SubscriptionIDKey = "subscriptionID"
-	// TenantIDKey is the key for the tenant id
+	// TenantIDKey is the key for the tenant ID.
 	TenantIDKey = "tenantID"
-	// ClientIDKey is the key for the client id
+	// ClientIDKey is the key for the client ID.
 	ClientIDKey = "clientID"
-	// ClientSecretKey is the key for the client secret
+	// ClientSecretKey is the key for the client secret.
 	ClientSecretKey = "clientSecret"
 
 	// StorageAccount is a constant for the key in a cloud provider secret and backup secret that holds the Azure account name.

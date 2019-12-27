@@ -99,7 +99,7 @@ var configChart = &chart.Chart{
 var ccmChart = &chart.Chart{
 	Name:   "cloud-controller-manager",
 	Path:   filepath.Join(internal.InternalChartsPath, "cloud-controller-manager"),
-	Images: []string{azure.HyperkubeImageName},
+	Images: []string{azure.CloudControllerManagerImageName},
 	Objects: []*chart.Object{
 		{Type: &corev1.Service{}, Name: "cloud-controller-manager"},
 		{Type: &appsv1.Deployment{}, Name: "cloud-controller-manager"},
