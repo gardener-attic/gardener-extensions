@@ -157,9 +157,9 @@ func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alph
 		return err
 	}
 
-	shootDomain := cluster.Shoot.Spec.DNS.Domain
-	if shootDomain == nil {
-		return fmt.Errorf("no domain given for shoot %s/%s", cluster.Shoot.Name, cluster.Shoot.Namespace)
+	if cluster.Shoot.Spec.DNS == nil || cluster.Shoot.Spec.DNS.Domain == nil {
+		a.logger.Info("no domain given for shoot %s/%s - aborting", cluster.Shoot.Name, cluster.Shoot.Namespace)
+		return nil
 	}
 
 	shootKubeconfig, err := a.createKubeconfigForCertManagement(ctx, namespace)
@@ -171,7 +171,7 @@ func (a *actuator) createSeedResources(ctx context.Context, ex *extensionsv1alph
 		"replicaCount": controller.GetReplicas(cluster, 1),
 		"defaultProvider": map[string]interface{}{
 			"name":    a.serviceConfig.IssuerName,
-			"domains": shootDomain,
+			"domains": cluster.Shoot.Spec.DNS.Domain,
 		},
 		"issuers":            issuers,
 		"shootClusterSecret": v1alpha1.CertManagementKubecfg,
