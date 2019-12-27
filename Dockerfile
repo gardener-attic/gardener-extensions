@@ -33,7 +33,6 @@ COPY controllers/provider-openstack/charts /controllers/provider-openstack/chart
 COPY controllers/provider-alicloud/charts /controllers/provider-alicloud/charts
 COPY controllers/provider-packet/charts /controllers/provider-packet/charts
 
-COPY controllers/extension-certificate-service/charts /controllers/extension-certificate-service/charts
 COPY controllers/extension-shoot-dns-service/charts /controllers/extension-shoot-dns-service/charts
 COPY controllers/extension-shoot-cert-service/charts /controllers/extension-shoot-cert-service/charts
 

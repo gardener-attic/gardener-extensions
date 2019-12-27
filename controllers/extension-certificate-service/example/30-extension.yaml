@@ -1,8 +1,0 @@
----
-apiVersion: extensions.gardener.cloud/v1alpha1
-kind: Extension
-metadata:
-  name: certificate-service
-  namespace: shoot--foo--bar
-spec:
-  type: certificate-service

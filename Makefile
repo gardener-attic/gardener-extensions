@@ -208,16 +208,6 @@ start-provider-packet:
 		--webhook-config-mode=url \
 		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
-.PHONY: start-certificate-service
-start-certificate-service:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./controllers/extension-certificate-service/cmd \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
-		--config=./controllers/extension-certificate-service/example/00-config.yaml
-
 .PHONY: start-networking-calico
 start-networking-calico:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
