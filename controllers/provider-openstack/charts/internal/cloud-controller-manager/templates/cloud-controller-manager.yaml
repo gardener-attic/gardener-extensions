@@ -54,7 +54,7 @@ spec:
         operator: Exists
       containers:
       - name: openstack-cloud-controller-manager
-        image: {{ index .Values.images "openstack-cloud-controller-manager" }}
+        image: {{ index .Values.images "cloud-controller-manager" }}
         imagePullPolicy: IfNotPresent
         command:
         {{- if semverCompare ">= 1.15" .Values.kubernetesVersion }}
