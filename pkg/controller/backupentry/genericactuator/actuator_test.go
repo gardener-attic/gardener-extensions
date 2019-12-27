@@ -82,9 +82,11 @@ var _ = Describe("Actuator", func() {
 
 		etcdBackupSecretKey = client.ObjectKey{Namespace: shootTechnicalID, Name: genericactuator.EtcdBackupSecretName}
 		etcdBackupSecret    = &corev1.Secret{
+			TypeMeta: metav1.TypeMeta{Kind: "Secret", APIVersion: "v1"},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      genericactuator.EtcdBackupSecretName,
-				Namespace: shootTechnicalID,
+				Name:            genericactuator.EtcdBackupSecretName,
+				Namespace:       shootTechnicalID,
+				ResourceVersion: "1",
 			},
 			Data: etcdBackupSecretData,
 		}

@@ -13,6 +13,7 @@ import (
 	reflect "reflect"
 	cache "sigs.k8s.io/controller-runtime/pkg/cache"
 	client "sigs.k8s.io/controller-runtime/pkg/client"
+	healthz "sigs.k8s.io/controller-runtime/pkg/healthz"
 	manager "sigs.k8s.io/controller-runtime/pkg/manager"
 	webhook "sigs.k8s.io/controller-runtime/pkg/webhook"
 )
@@ -52,6 +53,34 @@ func (m *MockManager) Add(arg0 manager.Runnable) error {
 func (mr *MockManagerMockRecorder) Add(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockManager)(nil).Add), arg0)
+}
+
+// AddHealthzCheck mocks base method
+func (m *MockManager) AddHealthzCheck(arg0 string, arg1 healthz.Checker) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddHealthzCheck", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddHealthzCheck indicates an expected call of AddHealthzCheck
+func (mr *MockManagerMockRecorder) AddHealthzCheck(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddHealthzCheck", reflect.TypeOf((*MockManager)(nil).AddHealthzCheck), arg0, arg1)
+}
+
+// AddReadyzCheck mocks base method
+func (m *MockManager) AddReadyzCheck(arg0 string, arg1 healthz.Checker) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddReadyzCheck", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddReadyzCheck indicates an expected call of AddReadyzCheck
+func (mr *MockManagerMockRecorder) AddReadyzCheck(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddReadyzCheck", reflect.TypeOf((*MockManager)(nil).AddReadyzCheck), arg0, arg1)
 }
 
 // GetAPIReader mocks base method

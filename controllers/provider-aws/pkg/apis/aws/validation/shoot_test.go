@@ -33,7 +33,7 @@ var _ = Describe("ValidateWorkerConfig", func() {
 
 	BeforeEach(func() {
 		workers = []gardencorev1beta1.Worker{
-			gardencorev1beta1.Worker{
+			{
 				Volume: &gardencorev1beta1.Volume{
 					Type: makeStringPointer("Volume"),
 					Size: "30G",
@@ -43,7 +43,7 @@ var _ = Describe("ValidateWorkerConfig", func() {
 					"zone2",
 				},
 			},
-			gardencorev1beta1.Worker{
+			{
 				Volume: &gardencorev1beta1.Volume{
 					Type: makeStringPointer("Volume"),
 					Size: "20G",
@@ -56,13 +56,13 @@ var _ = Describe("ValidateWorkerConfig", func() {
 		}
 
 		awsZones = []apisaws.Zone{
-			apisaws.Zone{
+			{
 				Name: "zone1",
 			},
-			apisaws.Zone{
+			{
 				Name: "zone2",
 			},
-			apisaws.Zone{
+			{
 				Name: "zone3",
 			},
 		}

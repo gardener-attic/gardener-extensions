@@ -18,8 +18,6 @@ rm -f $GOPATH/bin/*-gen
 
 PROJECT_ROOT=$(dirname $0)/../../..
 
-source "${PROJECT_ROOT}"/hack/code-generator/common.sh
-
 bash "${PROJECT_ROOT}"/vendor/k8s.io/code-generator/generate-internal-groups.sh \
   deepcopy,defaulter \
   github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/client \

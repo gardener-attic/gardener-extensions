@@ -41,8 +41,8 @@ type AddOptions struct {
 	Controller controller.Options
 	// IgnoreOperationAnnotation specifies whether to ignore the operation annotation or not.
 	IgnoreOperationAnnotation bool
-	// ShootWebhooks specifies the list of desired shoot webhooks.
-	ShootWebhooks []admissionregistrationv1beta1.Webhook
+	// ShootWebhooks specifies the list of desired Shoot MutatingWebhooks.
+	ShootWebhooks []admissionregistrationv1beta1.MutatingWebhook
 }
 
 // AddToManagerWithOptions adds a controller with the given Options to the given manager.

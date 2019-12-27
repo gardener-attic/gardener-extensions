@@ -29,7 +29,7 @@ import (
 )
 
 // RegisterWebhooks registers the given webhooks in the Kubernetes cluster targeted by the provided manager.
-func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, providerName string, port int, mode, url string, caBundle []byte, webhooks []*Webhook) (webhooksToRegisterSeed []admissionregistrationv1beta1.Webhook, webhooksToRegisterShoot []admissionregistrationv1beta1.Webhook, err error) {
+func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, providerName string, port int, mode, url string, caBundle []byte, webhooks []*Webhook) (webhooksToRegisterSeed []admissionregistrationv1beta1.MutatingWebhook, webhooksToRegisterShoot []admissionregistrationv1beta1.MutatingWebhook, err error) {
 	var (
 		fail                             = admissionregistrationv1beta1.Fail
 		ignore                           = admissionregistrationv1beta1.Ignore
@@ -46,7 +46,7 @@ func RegisterWebhooks(ctx context.Context, mgr manager.Manager, namespace, provi
 			rules = append(rules, *rule)
 		}
 
-		webhookToRegister := admissionregistrationv1beta1.Webhook{
+		webhookToRegister := admissionregistrationv1beta1.MutatingWebhook{
 			Name:              fmt.Sprintf("%s.%s.extensions.gardener.cloud", webhook.Name, strings.TrimPrefix(providerName, "provider-")),
 			NamespaceSelector: webhook.Selector,
 			Rules:             rules,

@@ -206,7 +206,7 @@ type AddToManagerConfig struct {
 
 // AddToManager instantiates all webhooks of this configuration. If there are any webhooks, it creates a
 // webhook server, registers the webhooks and adds the server to the manager. Otherwise, it is a no-op.
-func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) ([]admissionregistrationv1beta1.Webhook, []admissionregistrationv1beta1.Webhook, error) {
+func (c *AddToManagerConfig) AddToManager(mgr manager.Manager) ([]admissionregistrationv1beta1.MutatingWebhook, []admissionregistrationv1beta1.MutatingWebhook, error) {
 	ctx := context.Background()
 
 	webhooks, err := c.Switch.WebhooksFactory(mgr)

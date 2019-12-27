@@ -279,7 +279,7 @@ var _ = Describe("Actuator", func() {
 	})
 
 	DescribeTable("#Reconcile",
-		func(configName string, checksums map[string]string, webhooks []admissionregistrationv1beta1.Webhook) {
+		func(configName string, checksums map[string]string, webhooks []admissionregistrationv1beta1.MutatingWebhook) {
 			ctx := context.TODO()
 
 			// Create mock client
@@ -363,13 +363,13 @@ var _ = Describe("Actuator", func() {
 			Expect(requeue).To(Equal(false))
 			Expect(err).NotTo(HaveOccurred())
 		},
-		Entry("should deploy secrets and apply charts with correct parameters", cloudProviderConfigName, checksums, []admissionregistrationv1beta1.Webhook{{}}),
-		Entry("should deploy secrets and apply charts with correct parameters (no config)", "", checksumsNoConfig, []admissionregistrationv1beta1.Webhook{{}}),
+		Entry("should deploy secrets and apply charts with correct parameters", cloudProviderConfigName, checksums, []admissionregistrationv1beta1.MutatingWebhook{{}}),
+		Entry("should deploy secrets and apply charts with correct parameters (no config)", "", checksumsNoConfig, []admissionregistrationv1beta1.MutatingWebhook{{}}),
 		Entry("should deploy secrets and apply charts with correct parameters (no webhook)", cloudProviderConfigName, checksums, nil),
 	)
 
 	DescribeTable("#Delete",
-		func(configName string, webhooks []admissionregistrationv1beta1.Webhook) {
+		func(configName string, webhooks []admissionregistrationv1beta1.MutatingWebhook) {
 			ctx := context.TODO()
 
 			// Create mock clients
@@ -412,9 +412,9 @@ var _ = Describe("Actuator", func() {
 			err = a.Delete(ctx, cp, cluster)
 			Expect(err).NotTo(HaveOccurred())
 		},
-		Entry("should delete secrets and charts", cloudProviderConfigName, []admissionregistrationv1beta1.Webhook{{}}),
-		Entry("should delete secrets and charts (no config)", "", []admissionregistrationv1beta1.Webhook{{}}),
-		Entry("should delete secrets and charts (no webhook)", cloudProviderConfigName, []admissionregistrationv1beta1.Webhook{{}}),
+		Entry("should delete secrets and charts", cloudProviderConfigName, []admissionregistrationv1beta1.MutatingWebhook{{}}),
+		Entry("should delete secrets and charts (no config)", "", []admissionregistrationv1beta1.MutatingWebhook{{}}),
+		Entry("should delete secrets and charts (no webhook)", cloudProviderConfigName, []admissionregistrationv1beta1.MutatingWebhook{{}}),
 	)
 
 	DescribeTable("#ReconcileExposure",

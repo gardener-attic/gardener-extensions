@@ -34,7 +34,7 @@ const (
 	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
 	BucketName = "bucketName"
 
-	// AccessKeyID is a constant for the key in a cloud provider secret and backup secret that holds the Packet API token.
+	// APIToken is a constant for the key in a cloud provider secret and backup secret that holds the Packet API token.
 	APIToken = "apiToken"
 	// ProjectID is a constant for the key in a cloud provider secret and backup secret that holds the Packet project id.
 	ProjectID = "projectID"

@@ -124,7 +124,7 @@ func (c *storageClient) CreateBucketIfNotExists(ctx context.Context, bucketName 
 	}
 
 	rules := []oss.LifecycleRule{
-		oss.LifecycleRule{
+		{
 			Prefix: "",
 			Status: "Enabled",
 			AbortMultipartUpload: &oss.LifecycleAbortMultipartUpload{
