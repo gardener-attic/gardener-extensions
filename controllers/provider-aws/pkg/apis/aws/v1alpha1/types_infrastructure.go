@@ -25,6 +25,12 @@ import (
 type InfrastructureConfig struct {
 	metav1.TypeMeta `json:",inline"`
 
+	// EnableECRAccess specifies whether the IAM role policy for the worker nodes shall contain
+	// permissions to access the ECR.
+	// default: true
+	// +optional
+	EnableECRAccess *bool `json:"enableECRAccess,omitempty"`
+
 	// Networks is the AWS specific network configuration (VPC, subnets, etc.)
 	Networks Networks `json:"networks"`
 }

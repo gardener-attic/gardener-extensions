@@ -137,6 +137,11 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 		})
 	}
 
+	enableECRAccess := true
+	if v := infrastructureConfig.EnableECRAccess; v != nil {
+		enableECRAccess = *v
+	}
+
 	return map[string]interface{}{
 		"aws": map[string]interface{}{
 			"region": infrastructure.Spec.Region,
@@ -144,7 +149,8 @@ func generateTerraformInfraConfig(ctx context.Context, infrastructure *extension
 		"create": map[string]interface{}{
 			"vpc": createVPC,
 		},
-		"sshPublicKey": string(infrastructure.Spec.SSHPublicKey),
+		"enableECRAccess": enableECRAccess,
+		"sshPublicKey":    string(infrastructure.Spec.SSHPublicKey),
 		"vpc": map[string]interface{}{
 			"id":                vpcID,
 			"cidr":              vpcCIDR,

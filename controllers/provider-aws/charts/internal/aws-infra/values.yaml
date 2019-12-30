@@ -7,6 +7,7 @@ create:
 sshPublicKey: sshkey-12345
 
 clusterName: test-namespace
+enableECRAccess: true
 
 vpc:
   id: ${aws_vpc.vpc.id}

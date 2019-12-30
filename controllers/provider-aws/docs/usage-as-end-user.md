@@ -32,6 +32,7 @@ An example `InfrastructureConfig` for the AWS extension looks as follows:
 ```yaml
 apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
 kind: InfrastructureConfig
+enableECRAccess: true
 networks:
   vpc: # specify either 'id' or 'cidr'
   # id: vpc-123456
@@ -42,6 +43,9 @@ networks:
     public: 10.250.96.0/22
     workers: 10.250.0.0/19
 ```
+
+The `enableECRAccess` flag specifies whether the AWS IAM role policy attached to all worker nodes of the cluster shall contain permissions to access the Elastic Container Registry of the respective AWS account.
+If the flag is not provided it is defaulted to `true`.
 
 The `networks.vpc` section describes whether you want to create the shoot cluster in an already existing VPC or whether to create a new one:
 

@@ -42,6 +42,7 @@ spec:
   providerConfig:
     apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureConfig
+    enableECRAccess: true
     networks:
       vpc: # specify either 'id' or 'cidr'
       # id: vpc-123456
