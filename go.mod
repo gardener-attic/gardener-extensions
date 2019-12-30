@@ -13,7 +13,7 @@ require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.33.1-0.20191218064725-9a32c273cb38
+	github.com/gardener/gardener v0.33.1-0.20191230124716-a9eee9416e16
 	github.com/gardener/gardener-resource-manager v0.8.1
 	github.com/gardener/machine-controller-manager v0.25.0
 	github.com/go-logr/logr v0.1.0
@@ -23,7 +23,6 @@ require (
 	github.com/gophercloud/gophercloud v0.3.0
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/huandu/xstrings v1.2.0
-	github.com/jetstack/cert-manager v0.6.2
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
 	github.com/packethost/packngo v0.0.0-20181217122008-b3b45f1b4979

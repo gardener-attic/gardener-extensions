@@ -148,7 +148,7 @@ github.com/gardener/controller-manager-library/pkg/utils
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme
-# github.com/gardener/gardener v0.33.1-0.20191218064725-9a32c273cb38
+# github.com/gardener/gardener v0.33.1-0.20191230124716-a9eee9416e16
 github.com/gardener/gardener/pkg/api/extensions
 github.com/gardener/gardener/pkg/apis/core
 github.com/gardener/gardener/pkg/apis/core/install
@@ -205,6 +205,7 @@ github.com/gardener/gardener/pkg/utils/secrets
 github.com/gardener/gardener/pkg/utils/time
 github.com/gardener/gardener/pkg/utils/validation/cidr
 github.com/gardener/gardener/pkg/utils/validation/gomega
+github.com/gardener/gardener/pkg/utils/version
 github.com/gardener/gardener/pkg/version
 github.com/gardener/gardener/test/integration/framework
 github.com/gardener/gardener/test/integration/shoots
@@ -273,8 +274,6 @@ github.com/gobwas/glob/util/strings
 # github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/sortkeys
-# github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-github.com/golang/glog
 # github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6
 github.com/golang/groupcache/lru
 # github.com/golang/mock v1.3.1
@@ -338,9 +337,6 @@ github.com/huandu/xstrings
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/jetstack/cert-manager v0.6.2
-github.com/jetstack/cert-manager/pkg/apis/certmanager
-github.com/jetstack/cert-manager/pkg/apis/certmanager/v1alpha1
 # github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
 github.com/jmespath/go-jmespath
 # github.com/joho/godotenv v1.3.0

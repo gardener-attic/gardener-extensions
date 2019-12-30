@@ -32,6 +32,7 @@ import (
 	"github.com/gardener/gardener/pkg/operation/common"
 	"github.com/gardener/gardener/pkg/utils/kubernetes/health"
 	"github.com/gardener/gardener/pkg/utils/retry"
+	versionutils "github.com/gardener/gardener/pkg/utils/version"
 
 	"github.com/onsi/ginkgo"
 	"github.com/pkg/errors"
@@ -519,10 +520,20 @@ func (o *GardenerTestOperation) PodExecByLabel(ctx context.Context, podLabels la
 // GetDashboardPodIP gets the dashboard IP
 func (o *GardenerTestOperation) GetDashboardPodIP(ctx context.Context) (string, error) {
 	dashboardLabels := labels.SelectorFromSet(labels.Set(map[string]string{
-		"app": "kubernetes-dashboard",
+		"k8s-app": "kubernetes-dashboard",
 	}))
 
-	dashboardPod, err := o.GetFirstRunningPodWithLabels(ctx, dashboardLabels, metav1.NamespaceSystem, o.ShootClient)
+	k8sVersionLessThan116, err := versionutils.CompareVersions(o.Shoot.Spec.Kubernetes.Version, "<", "1.16")
+	if err != nil {
+		return "", err
+	}
+
+	namespace := metav1.NamespaceSystem
+	if !k8sVersionLessThan116 {
+		namespace = "kubernetes-dashboard"
+	}
+
+	dashboardPod, err := o.GetFirstRunningPodWithLabels(ctx, dashboardLabels, namespace, o.ShootClient)
 	if err != nil {
 		return "", err
 	}
