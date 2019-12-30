@@ -49,7 +49,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				Router: &api.Router{
 					ID: "hugo",
 				},
-				Worker: "10.250.0.0/16",
+				Workers: "10.250.0.0/16",
 			},
 		}
 	})
@@ -138,25 +138,25 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 		Context("CIDR", func() {
 			It("should forbid invalid workers CIDR", func() {
-				infrastructureConfig.Networks.Worker = invalidCIDR
+				infrastructureConfig.Networks.Workers = invalidCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodes)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.worker"),
+					"Field":  Equal("networks.workers"),
 					"Detail": Equal("invalid CIDR address: invalid-cidr"),
 				}))
 			})
 
 			It("should forbid workers CIDR which are not in Nodes CIDR", func() {
-				infrastructureConfig.Networks.Worker = "1.1.1.1/32"
+				infrastructureConfig.Networks.Workers = "1.1.1.1/32"
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodes)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.worker"),
+					"Field":  Equal("networks.workers"),
 					"Detail": Equal(`must be a subset of "" ("10.250.0.0/16")`),
 				}))
 			})
@@ -164,14 +164,14 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			It("should forbid non canonical CIDRs", func() {
 				nodeCIDR := "10.250.0.3/16"
 
-				infrastructureConfig.Networks.Worker = "10.250.3.8/24"
+				infrastructureConfig.Networks.Workers = "10.250.3.8/24"
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodeCIDR)
 				Expect(errorList).To(HaveLen(1))
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.worker"),
+					"Field":  Equal("networks.workers"),
 					"Detail": Equal("must be valid canonical CIDR"),
 				}))
 			})

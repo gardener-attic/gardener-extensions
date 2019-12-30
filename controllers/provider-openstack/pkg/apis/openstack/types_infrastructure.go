@@ -34,7 +34,10 @@ type Networks struct {
 	// Router indicates whether to use an existing router or create a new one.
 	Router *Router
 	// Worker is a CIDRs of a worker subnet (private) to create (used for the VMs).
+	// Deprecated - use `workers` instead.
 	Worker string
+	// Workers is a CIDRs of a worker subnet (private) to create (used for the VMs).
+	Workers string
 }
 
 // Router indicates whether to use an existing router or create a new one.

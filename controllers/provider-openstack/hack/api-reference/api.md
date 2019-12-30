@@ -975,7 +975,19 @@ string
 </em>
 </td>
 <td>
-<p>Worker is a CIDRs of a worker subnet (private) to create (used for the VMs).</p>
+<p>Worker is a CIDRs of a worker subnet (private) to create (used for the VMs).
+Deprecated - use <code>workers</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workers</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Workers is a CIDRs of a worker subnet (private) to create (used for the VMs).</p>
 </td>
 </tr>
 </tbody>

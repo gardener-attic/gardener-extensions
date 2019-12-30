@@ -38,7 +38,7 @@ floatingPoolName: MY-FLOATING-POOL
 networks:
 # router:
 #   id: 1234
-  worker: 10.250.0.0/19
+  workers: 10.250.0.0/19
 ```
 
 The `floatingPoolName` is the name of the floating pool you want to use for your shoot.
@@ -104,7 +104,7 @@ spec:
       kind: InfrastructureConfig
       floatingPoolName: MY-FLOATING-POOL
       networks:
-        worker: 10.250.0.0/19
+        workers: 10.250.0.0/19
     controlPlaneConfig:
       apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
       kind: ControlPlaneConfig

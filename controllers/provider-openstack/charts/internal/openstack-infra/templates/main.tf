@@ -31,7 +31,7 @@ resource "openstack_networking_network_v2" "cluster" {
 
 resource "openstack_networking_subnet_v2" "cluster" {
   name            = "{{ required "clusterName is required" .Values.clusterName }}"
-  cidr            = "{{ required "networks.worker is required" .Values.networks.worker }}"
+  cidr            = "{{ required "networks.workers is required" .Values.networks.workers }}"
   network_id      = "${openstack_networking_network_v2.cluster.id}"
   ip_version      = 4
   {{- if .Values.dnsServers }}

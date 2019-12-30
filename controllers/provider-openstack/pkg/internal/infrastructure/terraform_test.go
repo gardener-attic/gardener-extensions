@@ -50,7 +50,7 @@ var _ = Describe("Terraform", func() {
 				Router: &api.Router{
 					ID: "1",
 				},
-				Worker: "10.1.0.0/16",
+				Workers: "10.1.0.0/16",
 			},
 		}
 
@@ -130,7 +130,7 @@ var _ = Describe("Terraform", func() {
 				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
-					"worker": config.Networks.Worker,
+					"workers": config.Networks.Workers,
 				},
 				"outputKeys": map[string]interface{}{
 					"routerID":          TerraformOutputKeyRouterID,
@@ -168,7 +168,7 @@ var _ = Describe("Terraform", func() {
 				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
-					"worker": config.Networks.Worker,
+					"workers": config.Networks.Workers,
 				},
 				"outputKeys": map[string]interface{}{
 					"routerID":          TerraformOutputKeyRouterID,
