@@ -154,10 +154,10 @@ func (o *GardenerTestOperation) dashboardAvailableWithBasicAuth(ctx context.Cont
 func (s *ShootGardenerTest) mergePatch(ctx context.Context, oldShoot, newShoot *gardencorev1beta1.Shoot) error {
 	patchBytes, err := kutil.CreateTwoWayMergePatch(oldShoot, newShoot)
 	if err != nil {
-		return fmt.Errorf("failed to patch bytes")
+		return fmt.Errorf("failed to patch bytes: %v", err)
 	}
 
-	_, err = s.GardenClient.Garden().GardenV1beta1().Shoots(s.Shoot.Namespace).Patch(s.Shoot.Name, types.StrategicMergePatchType, patchBytes)
+	_, err = s.GardenClient.GardenCore().CoreV1beta1().Shoots(s.Shoot.Namespace).Patch(s.Shoot.Name, types.StrategicMergePatchType, patchBytes)
 	return err
 }
 
@@ -275,10 +275,7 @@ func shootIsUnschedulable(events []corev1.Event) bool {
 }
 
 func shootIsScheduledSuccessfully(newSpec *gardencorev1beta1.ShootSpec) bool {
-	if newSpec.SeedName != nil {
-		return true
-	}
-	return false
+	return newSpec.SeedName != nil
 }
 
 func setHibernation(shoot *gardencorev1beta1.Shoot, hibernated bool) {

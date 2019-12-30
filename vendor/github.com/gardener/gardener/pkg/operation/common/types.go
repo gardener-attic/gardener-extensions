@@ -15,6 +15,8 @@
 package common
 
 import (
+	"time"
+
 	v1alpha1constants "github.com/gardener/gardener/pkg/apis/core/v1alpha1/constants"
 
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -162,6 +164,15 @@ const (
 	// GrafanaUsersPrefix is a constant for a prefix used for the users Grafana instance.
 	GrafanaUsersPrefix = "gu"
 
+	// PrometheusPrefix is a constant for a prefix used for the Prometheus instance.
+	PrometheusPrefix = "p"
+
+	// AlertManagerPrefix is a constant for a prefix used for the AlertManager instance.
+	AlertManagerPrefix = "au"
+
+	// KibanaPrefix is a constant for a prefix used for the Kibana instance.
+	KibanaPrefix = "k"
+
 	// IngressPrefix is the part of a FQDN which will be used to construct the domain name for an ingress controller of
 	// a Shoot cluster. For example, when a Shoot specifies domain 'cluster.example.com', the ingress domain would be
 	// '*.<IngressPrefix>.cluster.example.com'.
@@ -253,6 +264,10 @@ const (
 	// SecretRefChecksumAnnotation is the annotation key for checksum of referred secret in resource spec.
 	SecretRefChecksumAnnotation = "checksum/secret.data"
 
+	// ShootExperimentalAddonKyma is a constant for an annotation on the shoot stating that Kyma shall be installed.
+	// TODO: Just a temporary solution. Remove this in a future version once Kyma is moved out again.
+	ShootExperimentalAddonKyma = "experimental.addons.shoot.gardener.cloud/kyma"
+
 	// ShootExpirationTimestamp is an annotation on a Shoot resource whose value represents the time when the Shoot lifetime
 	// is expired. The lifetime can be extended, but at most by the minimal value of the 'clusterLifetimeDays' property
 	// of referenced quotas.
@@ -338,8 +353,11 @@ const (
 	// NodeExporterImageName is the name of the NodeExporter image.
 	NodeExporterImageName = "node-exporter"
 
-	// KubernetesDashboardImageName is the name of the KubernetesDashboard image.
+	// KubernetesDashboardImageName is the name of the kubernetes-dashboard image.
 	KubernetesDashboardImageName = "kubernetes-dashboard"
+
+	// KubernetesDashboardMetricsScraperImageName is the name of the kubernetes-dashboard-metrics-scraper image.
+	KubernetesDashboardMetricsScraperImageName = "kubernetes-dashboard-metrics-scraper"
 
 	// BusyboxImageName is the name of the Busybox image.
 	BusyboxImageName = "busybox"
@@ -442,6 +460,22 @@ const (
 
 	// ServiceAccountSigningKeySecretDataKey is the data key of a signing key Kubernetes secret.
 	ServiceAccountSigningKeySecretDataKey = "signing-key"
+
+	// ControlPlaneWildcardCert is the value of the GardenRole key indicating type 'controlplane-cert'.
+	// It refers to a wildcard tls certificate which can be used for services exposed under the corresponding domain.
+	ControlPlaneWildcardCert = "controlplane-cert"
+
+	// AlertManagerTLS is the name of the secret resource which holds the TLS certificate for Alert Manager.
+	AlertManagerTLS = "alertmanager-tls"
+	// GrafanaTLS is the name of the secret resource which holds the TLS certificate for Grafana.
+	GrafanaTLS = "grafana-tls"
+	// PrometheusTLS is the name of the secret resource which holds the TLS certificate for Prometheus.
+	PrometheusTLS = "prometheus-tls"
+	// KibanaTLS is the name of the secret resource which holds the TLS certificate for Kibana.
+	KibanaTLS = "kibana-tls"
+
+	// EndUserCrtValidity is the time period a user facing certificate is valid.
+	EndUserCrtValidity = 730 * 24 * time.Hour // ~2 years, see https://support.apple.com/en-us/HT210176
 )
 
 var (
