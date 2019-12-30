@@ -17,7 +17,8 @@ package infrastructure
 import (
 	"path/filepath"
 
-	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
@@ -52,7 +53,7 @@ const (
 var (
 	// StatusTypeMeta is the TypeMeta of the GCP InfrastructureStatus
 	StatusTypeMeta = metav1.TypeMeta{
-		APIVersion: gcpv1alpha1.SchemeGroupVersion.String(),
+		APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
 		Kind:       "InfrastructureStatus",
 	}
 )
@@ -61,7 +62,7 @@ var (
 func ComputeTerraformerChartValues(
 	infra *extensionsv1alpha1.Infrastructure,
 	account *internal.ServiceAccount,
-	config *gcpv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 	cluster *extensionscontroller.Cluster,
 ) map[string]interface{} {
 	var (
@@ -134,7 +135,7 @@ func RenderTerraformerChart(
 	renderer chartrenderer.Interface,
 	infra *extensionsv1alpha1.Infrastructure,
 	account *internal.ServiceAccount,
-	config *gcpv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 	cluster *extensionscontroller.Cluster,
 ) (*TerraformFiles, error) {
 	values := ComputeTerraformerChartValues(infra, account, config, cluster)
@@ -175,7 +176,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*TerraformState, error) {
 	var (
 		outputKeys = []string{
 			TerraformerOutputKeyVPCName,
@@ -220,17 +221,17 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *gcpv1alpha1.Infra
 
 // StatusFromTerraformState computes an InfrastructureStatus from the given
 // Terraform variables.
-func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.InfrastructureStatus {
+func StatusFromTerraformState(state *TerraformState) *apiv1alpha1.InfrastructureStatus {
 	var (
-		status = &gcpv1alpha1.InfrastructureStatus{
+		status = &apiv1alpha1.InfrastructureStatus{
 			TypeMeta: StatusTypeMeta,
-			Networks: gcpv1alpha1.NetworkStatus{
-				VPC: gcpv1alpha1.VPC{
+			Networks: apiv1alpha1.NetworkStatus{
+				VPC: apiv1alpha1.VPC{
 					Name: state.VPCName,
 				},
-				Subnets: []gcpv1alpha1.Subnet{
+				Subnets: []apiv1alpha1.Subnet{
 					{
-						Purpose: gcpv1alpha1.PurposeNodes,
+						Purpose: apiv1alpha1.PurposeNodes,
 						Name:    state.SubnetNodes,
 					},
 				},
@@ -240,14 +241,14 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 	)
 
 	if len(state.CloudRouterName) > 0 {
-		status.Networks.VPC.CloudRouter = &gcpv1alpha1.CloudRouter{
+		status.Networks.VPC.CloudRouter = &apiv1alpha1.CloudRouter{
 			Name: state.CloudRouterName,
 		}
 	}
 
 	if state.SubnetInternal != nil {
-		status.Networks.Subnets = append(status.Networks.Subnets, gcpv1alpha1.Subnet{
-			Purpose: gcpv1alpha1.PurposeInternal,
+		status.Networks.Subnets = append(status.Networks.Subnets, apiv1alpha1.Subnet{
+			Purpose: apiv1alpha1.PurposeInternal,
 			Name:    *state.SubnetInternal,
 		})
 	}
@@ -256,7 +257,7 @@ func StatusFromTerraformState(state *TerraformState) *gcpv1alpha1.Infrastructure
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf terraformer.Terraformer, config *gcpv1alpha1.InfrastructureConfig) (*gcpv1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*apiv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

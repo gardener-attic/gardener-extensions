@@ -16,12 +16,12 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 
-	apisazure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
-	apisazurehelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
-	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/config/helper"
+	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
+
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/pkg/errors"
@@ -38,23 +38,23 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	}
 
 	var (
-		workerStatus = &apisazure.WorkerStatus{
+		workerStatus = &api.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: apisazure.SchemeGroupVersion.String(),
+				APIVersion: api.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 			MachineImages: w.machineImages,
 		}
 
-		workerStatusV1alpha1 = &azurev1alpha1.WorkerStatus{
+		workerStatusV1alpha1 = &v1alpha1.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: azurev1alpha1.SchemeGroupVersion.String(),
+				APIVersion: v1alpha1.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 		}
 	)
 
-	if err := w.scheme.Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
+	if err := w.Scheme().Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
 		return nil, err
 	}
 
@@ -62,35 +62,31 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version string) (urn *string, err error) {
-	machineImage, err := confighelper.FindImage(w.machineImageMapping, name, version)
+	machineImage, err := helper.FindImageFromCloudProfile(w.cloudProfileConfig, name, version)
 	if err == nil {
 		return machineImage.URN, nil
 	}
 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
-		workerStatus := &apisazure.WorkerStatus{}
-		if _, _, err := w.decoder.Decode(providerStatus.Raw, nil, workerStatus); err != nil {
+		workerStatus := &api.WorkerStatus{}
+		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return nil, errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apisazurehelper.FindMachineImage(workerStatus.MachineImages, name, version)
+		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
-			return nil, errorMachineImageNotFound(name, version)
+			return nil, worker.ErrorMachineImageNotFound(name, version)
 		}
 
 		return machineImage.URN, nil
 	}
 
-	return nil, errorMachineImageNotFound(name, version)
+	return nil, worker.ErrorMachineImageNotFound(name, version)
 }
 
-func errorMachineImageNotFound(name, version string) error {
-	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig nor in worker status", name, version)
-}
-
-func appendMachineImage(machineImages []apisazure.MachineImage, machineImage apisazure.MachineImage) []apisazure.MachineImage {
-	if _, err := apisazurehelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
+func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {
+	if _, err := helper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

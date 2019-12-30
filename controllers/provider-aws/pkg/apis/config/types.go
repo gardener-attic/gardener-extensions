@@ -29,29 +29,8 @@ type ControllerConfiguration struct {
 	// ClientConnection specifies the kubeconfig file and client connection
 	// settings for the proxy server to use when communicating with the apiserver.
 	ClientConnection *componentbaseconfig.ClientConnectionConfiguration
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to AWS-specific identifiers, i.e. AMIs.
-	MachineImages []MachineImage
 	// ETCD is the etcd configuration.
 	ETCD ETCD
-}
-
-// MachineImage is a mapping from logical names and versions to AWS-specific identifiers, i.e. AMIs.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string
-	// Version is the logical version of the machine image.
-	Version string
-	// Regions is a mapping to the correct AMI for the machine image in the supported regions.
-	Regions []RegionAMIMapping
-}
-
-// RegionAMIMapping is a mapping to the correct AMI for the machine image in the given region.
-type RegionAMIMapping struct {
-	// Name is the name of the region.
-	Name string
-	// AMI is the AMI for the machine image.
-	AMI string
 }
 
 // ETCD is an etcd configuration.

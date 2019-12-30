@@ -18,11 +18,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -63,7 +63,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, nil, "", nil, nil)
+		workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(nil, nil, nil), nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -88,10 +88,12 @@ var _ = Describe("Machines", func() {
 				openstackUserName   string
 				openstackPassword   string
 				region              string
+				regionWithImages    string
 
 				machineImageName    string
 				machineImageVersion string
 				machineImage        string
+				machineImageID      string
 
 				keyName           string
 				machineType       string
@@ -118,15 +120,13 @@ var _ = Describe("Machines", func() {
 				workerPoolHash1 string
 				workerPoolHash2 string
 
-				shootVersionMajorMinor             string
-				shootVersion                       string
-				machineImageToCloudProfilesMapping []config.MachineImage
-				scheme                             *runtime.Scheme
-				decoder                            runtime.Decoder
-				cloudProfileConfig                 *openstackv1alpha1.CloudProfileConfig
-				cloudProfileConfigJSON             []byte
-				cluster                            *extensionscontroller.Cluster
-				w                                  *extensionsv1alpha1.Worker
+				shootVersionMajorMinor string
+				shootVersion           string
+				scheme                 *runtime.Scheme
+				decoder                runtime.Decoder
+				clusterWithoutImages   *extensionscontroller.Cluster
+				cluster                *extensionscontroller.Cluster
+				w                      *extensionsv1alpha1.Worker
 			)
 
 			BeforeEach(func() {
@@ -134,6 +134,8 @@ var _ = Describe("Machines", func() {
 				cloudProfileName = "openstack"
 
 				region = "eu-de-1"
+				regionWithImages = "eu-de-2"
+
 				openstackAuthURL = "auth-url"
 				openstackDomainName = "domain-name"
 				openstackTenantName = "tenant-name"
@@ -143,6 +145,7 @@ var _ = Describe("Machines", func() {
 				machineImageName = "my-os"
 				machineImageVersion = "123"
 				machineImage = "my-image-in-glance"
+				machineImageID = "my-image-id"
 
 				keyName = "key-name"
 				machineType = "large"
@@ -169,24 +172,15 @@ var _ = Describe("Machines", func() {
 				shootVersionMajorMinor = "1.2"
 				shootVersion = shootVersionMajorMinor + ".3"
 
-				machineImageToCloudProfilesMapping = []config.MachineImage{
-					{
-						Name:    machineImageName,
-						Version: machineImageVersion,
-						CloudProfiles: []config.CloudProfileMapping{
-							{
-								Name:  cloudProfileName,
-								Image: machineImage,
-							},
-						},
+				cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+						Kind:       "CloudProfileConfig",
 					},
-				}
-
-				cloudProfileConfig = &openstackv1alpha1.CloudProfileConfig{
 					KeyStoneURL: openstackAuthURL,
 				}
-				cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
-				cluster = &extensionscontroller.Cluster{
+				cloudProfileConfigJSON, _ := json.Marshal(cloudProfileConfig)
+				clusterWithoutImages = &extensionscontroller.Cluster{
 					CloudProfile: &gardencorev1beta1.CloudProfile{
 						ObjectMeta: metav1.ObjectMeta{
 							Name: cloudProfileName,
@@ -211,6 +205,40 @@ var _ = Describe("Machines", func() {
 					},
 				}
 
+				cloudProfileConfig.MachineImages = []apiv1alpha1.MachineImages{
+					apiv1alpha1.MachineImages{
+						Name: machineImageName,
+						Versions: []apiv1alpha1.MachineImageVersion{
+							apiv1alpha1.MachineImageVersion{
+								Version: machineImageVersion,
+								Image:   machineImage,
+								Regions: []apiv1alpha1.RegionIDMapping{
+									{
+										Name: regionWithImages,
+										ID:   machineImageID,
+									},
+								},
+							},
+						},
+					},
+				}
+				cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
+				cluster = &extensionscontroller.Cluster{
+					CloudProfile: &gardencorev1beta1.CloudProfile{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: cloudProfileName,
+						},
+						Spec: gardencorev1beta1.CloudProfileSpec{
+							ProviderConfig: &gardencorev1beta1.ProviderConfig{
+								RawExtension: runtime.RawExtension{
+									Raw: cloudProfileConfigJSON,
+								},
+							},
+						},
+					},
+					Shoot: clusterWithoutImages.Shoot,
+				}
+
 				w = &extensionsv1alpha1.Worker{
 					ObjectMeta: metav1.ObjectMeta{
 						Namespace: namespace,
@@ -222,17 +250,17 @@ var _ = Describe("Machines", func() {
 						},
 						Region: region,
 						InfrastructureProviderStatus: &runtime.RawExtension{
-							Raw: encode(&apisopenstack.InfrastructureStatus{
-								SecurityGroups: []apisopenstack.SecurityGroup{
+							Raw: encode(&api.InfrastructureStatus{
+								SecurityGroups: []api.SecurityGroup{
 									{
-										Purpose: apisopenstack.PurposeNodes,
+										Purpose: api.PurposeNodes,
 										Name:    securityGroupName,
 									},
 								},
-								Node: apisopenstack.NodeStatus{
+								Node: api.NodeStatus{
 									KeyName: keyName,
 								},
-								Networks: apisopenstack.NetworkStatus{
+								Networks: api.NetworkStatus{
 									ID: networkID,
 								},
 							}),
@@ -277,26 +305,40 @@ var _ = Describe("Machines", func() {
 				}
 
 				scheme = runtime.NewScheme()
-				_ = apisopenstack.AddToScheme(scheme)
-				_ = openstackv1alpha1.AddToScheme(scheme)
+				_ = api.AddToScheme(scheme)
+				_ = apiv1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
 				workerPoolHash1, _ = worker.WorkerPoolHash(w.Spec.Pools[0], cluster)
 				workerPoolHash2, _ = worker.WorkerPoolHash(w.Spec.Pools[1], cluster)
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 			})
 
-			It("should return the expected machine deployments", func() {
-				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
-
-				// Test workerDelegate.DeployMachineClasses()
+			Describe("machine images", func() {
 				var (
+					defaultMachineClass map[string]interface{}
+					machineDeployments  worker.MachineDeployments
+					machineClasses      map[string]interface{}
+					workerWithRegion    *extensionsv1alpha1.Worker
+					clusterWithRegion   *extensionscontroller.Cluster
+				)
+
+				setup := func(region, name, id string) {
+					workerWithRegion = w.DeepCopy()
+					workerWithRegion.Spec.Region = region
+
+					clusterWithRegion = &extensionscontroller.Cluster{
+						CloudProfile: cluster.CloudProfile,
+						Shoot:        cluster.Shoot.DeepCopy(),
+						Seed:         cluster.Seed,
+					}
+					clusterWithRegion.Shoot.Spec.Region = region
+
 					defaultMachineClass = map[string]interface{}{
 						"region":         region,
 						"machineType":    machineType,
 						"keyName":        keyName,
-						"imageName":      machineImage,
 						"networkID":      networkID,
 						"podNetworkCidr": podCIDR,
 						"securityGroups": []string{securityGroupName},
@@ -308,108 +350,174 @@ var _ = Describe("Machines", func() {
 							"cloudConfig": string(userData),
 						},
 					}
+					if id == "" {
+						defaultMachineClass["imageName"] = name
+					} else {
+						defaultMachineClass["imageID"] = id
+					}
 
-					machineClassPool1Zone1 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone1)
-					machineClassPool1Zone2 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone2)
-					machineClassPool2Zone1 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone1)
-					machineClassPool2Zone2 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone2)
+					var (
+						machineClassPool1Zone1 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone1)
+						machineClassPool1Zone2 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone2)
+						machineClassPool2Zone1 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone1)
+						machineClassPool2Zone2 = useDefaultMachineClass(defaultMachineClass, "availabilityZone", zone2)
 
-					machineClassNamePool1Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool1)
-					machineClassNamePool1Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool1)
-					machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
-					machineClassNamePool2Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool2)
+						machineClassNamePool1Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool1)
+						machineClassNamePool1Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool1)
+						machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
+						machineClassNamePool2Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool2)
 
-					machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, workerPoolHash1)
-					machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, workerPoolHash1)
-					machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, workerPoolHash2)
-					machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, workerPoolHash2)
-				)
+						machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, workerPoolHash1)
+						machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, workerPoolHash1)
+						machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, workerPoolHash2)
+						machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, workerPoolHash2)
+					)
 
-				addNameAndSecretToMachineClass(machineClassPool1Zone1, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool1Zone1)
-				addNameAndSecretToMachineClass(machineClassPool1Zone2, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool1Zone2)
-				addNameAndSecretToMachineClass(machineClassPool2Zone1, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool2Zone1)
-				addNameAndSecretToMachineClass(machineClassPool2Zone2, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool2Zone2)
+					addNameAndSecretToMachineClass(machineClassPool1Zone1, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool1Zone1)
+					addNameAndSecretToMachineClass(machineClassPool1Zone2, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool1Zone2)
+					addNameAndSecretToMachineClass(machineClassPool2Zone1, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool2Zone1)
+					addNameAndSecretToMachineClass(machineClassPool2Zone2, openstackAuthURL, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword, machineClassWithHashPool2Zone2)
 
-				chartApplier.
-					EXPECT().
-					ApplyChart(
-						context.TODO(),
-						filepath.Join(openstack.InternalChartsPath, "machineclass"),
-						namespace,
-						"machineclass",
-						map[string]interface{}{"machineClasses": []map[string]interface{}{
-							machineClassPool1Zone1,
-							machineClassPool1Zone2,
-							machineClassPool2Zone1,
-							machineClassPool2Zone2,
-						}},
-						nil,
-					).
-					Return(nil)
+					machineClasses = map[string]interface{}{"machineClasses": []map[string]interface{}{
+						machineClassPool1Zone1,
+						machineClassPool1Zone2,
+						machineClassPool2Zone1,
+						machineClassPool2Zone2,
+					}}
 
-				err := workerDelegate.DeployMachineClasses(context.TODO())
-				Expect(err).NotTo(HaveOccurred())
-
-				// Test workerDelegate.GetMachineImages()
-				machineImages, err := workerDelegate.GetMachineImages(context.TODO())
-				Expect(machineImages).To(Equal(&openstackv1alpha1.WorkerStatus{
-					TypeMeta: metav1.TypeMeta{
-						APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
-						Kind:       "WorkerStatus",
-					},
-					MachineImages: []openstackv1alpha1.MachineImage{
+					machineDeployments = worker.MachineDeployments{
 						{
-							Name:    machineImageName,
-							Version: machineImageVersion,
-							Image:   machineImage,
+							Name:           machineClassNamePool1Zone1,
+							ClassName:      machineClassWithHashPool1Zone1,
+							SecretName:     machineClassWithHashPool1Zone1,
+							Minimum:        worker.DistributeOverZones(0, minPool1, 2),
+							Maximum:        worker.DistributeOverZones(0, maxPool1, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool1, 2, maxPool1),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool1, 2, minPool1),
 						},
-					},
-				}))
-				Expect(err).NotTo(HaveOccurred())
-
-				// Test workerDelegate.GenerateMachineDeployments()
-				machineDeployments := worker.MachineDeployments{
-					{
-						Name:           machineClassNamePool1Zone1,
-						ClassName:      machineClassWithHashPool1Zone1,
-						SecretName:     machineClassWithHashPool1Zone1,
-						Minimum:        worker.DistributeOverZones(0, minPool1, 2),
-						Maximum:        worker.DistributeOverZones(0, maxPool1, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool1, 2, maxPool1),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool1, 2, minPool1),
-					},
-					{
-						Name:           machineClassNamePool1Zone2,
-						ClassName:      machineClassWithHashPool1Zone2,
-						SecretName:     machineClassWithHashPool1Zone2,
-						Minimum:        worker.DistributeOverZones(1, minPool1, 2),
-						Maximum:        worker.DistributeOverZones(1, maxPool1, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool1, 2, maxPool1),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool1, 2, minPool1),
-					},
-					{
-						Name:           machineClassNamePool2Zone1,
-						ClassName:      machineClassWithHashPool2Zone1,
-						SecretName:     machineClassWithHashPool2Zone1,
-						Minimum:        worker.DistributeOverZones(0, minPool2, 2),
-						Maximum:        worker.DistributeOverZones(0, maxPool2, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool2, 2, maxPool2),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool2, 2, minPool2),
-					},
-					{
-						Name:           machineClassNamePool2Zone2,
-						ClassName:      machineClassWithHashPool2Zone2,
-						SecretName:     machineClassWithHashPool2Zone2,
-						Minimum:        worker.DistributeOverZones(1, minPool2, 2),
-						Maximum:        worker.DistributeOverZones(1, maxPool2, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool2, 2, maxPool2),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool2, 2, minPool2),
-					},
+						{
+							Name:           machineClassNamePool1Zone2,
+							ClassName:      machineClassWithHashPool1Zone2,
+							SecretName:     machineClassWithHashPool1Zone2,
+							Minimum:        worker.DistributeOverZones(1, minPool1, 2),
+							Maximum:        worker.DistributeOverZones(1, maxPool1, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool1, 2, maxPool1),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool1, 2, minPool1),
+						},
+						{
+							Name:           machineClassNamePool2Zone1,
+							ClassName:      machineClassWithHashPool2Zone1,
+							SecretName:     machineClassWithHashPool2Zone1,
+							Minimum:        worker.DistributeOverZones(0, minPool2, 2),
+							Maximum:        worker.DistributeOverZones(0, maxPool2, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool2, 2, maxPool2),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool2, 2, minPool2),
+						},
+						{
+							Name:           machineClassNamePool2Zone2,
+							ClassName:      machineClassWithHashPool2Zone2,
+							SecretName:     machineClassWithHashPool2Zone2,
+							Minimum:        worker.DistributeOverZones(1, minPool2, 2),
+							Maximum:        worker.DistributeOverZones(1, maxPool2, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool2, 2, maxPool2),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool2, 2, minPool2),
+						},
+					}
 				}
 
-				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(Equal(machineDeployments))
+				It("should return the expected machine deployments for profile image types", func() {
+					setup(region, machineImage, "")
+					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
+
+					expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
+
+					// Test workerDelegate.DeployMachineClasses()
+
+					chartApplier.
+						EXPECT().
+						ApplyChart(
+							context.TODO(),
+							filepath.Join(openstack.InternalChartsPath, "machineclass"),
+							namespace,
+							"machineclass",
+							machineClasses,
+							nil,
+						).
+						Return(nil)
+
+					err := workerDelegate.DeployMachineClasses(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GetMachineImages()
+					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+							Kind:       "WorkerStatus",
+						},
+						MachineImages: []apiv1alpha1.MachineImage{
+							{
+								Name:    machineImageName,
+								Version: machineImageVersion,
+								Image:   machineImage,
+							},
+						},
+					}))
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GenerateMachineDeployments()
+
+					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal(machineDeployments))
+				})
+
+				It("should return the expected machine deployments for profile image types with id", func() {
+					setup(regionWithImages, "", machineImageID)
+					workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", workerWithRegion, clusterWithRegion)
+
+					expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
+
+					// Test workerDelegate.DeployMachineClasses()
+
+					chartApplier.
+						EXPECT().
+						ApplyChart(
+							context.TODO(),
+							filepath.Join(openstack.InternalChartsPath, "machineclass"),
+							namespace,
+							"machineclass",
+							machineClasses,
+							nil,
+						).
+						Return(nil)
+
+					err := workerDelegate.DeployMachineClasses(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GetMachineImages()
+					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+							Kind:       "WorkerStatus",
+						},
+						MachineImages: []apiv1alpha1.MachineImage{
+							{
+								Name:    machineImageName,
+								Version: machineImageVersion,
+								ID:      machineImageID,
+							},
+						},
+					}))
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GenerateMachineDeployments()
+
+					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal(machineDeployments))
+				})
 			})
 
 			It("should fail because the secret cannot be read", func() {
@@ -425,8 +533,8 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				clusterWithoutImages.Shoot.Spec.Kubernetes.Version = "invalid"
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -438,7 +546,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -449,10 +557,10 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
-					Raw: encode(&apisopenstack.InfrastructureStatus{}),
+					Raw: encode(&api.InfrastructureStatus{}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -462,9 +570,9 @@ var _ = Describe("Machines", func() {
 			It("should fail because the machine image for this cloud profile cannot be found", func() {
 				expectGetSecretCallToWork(c, openstackDomainName, openstackTenantName, openstackUserName, openstackPassword)
 
-				cluster.CloudProfile.Name = "another-cloud-profile"
+				clusterWithoutImages.CloudProfile.Name = "another-cloud-profile"
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToCloudProfilesMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

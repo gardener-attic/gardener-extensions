@@ -135,7 +135,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			configFileOpts.Completed().ApplyMachineImages(&gcpworker.DefaultAddOptions.MachineImages)
 			configFileOpts.Completed().ApplyETCDStorage(&gcpcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&gcpcontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			backupBucketCtrlOpts.Completed().Apply(&gcpbackupbucket.DefaultAddOptions.Controller)

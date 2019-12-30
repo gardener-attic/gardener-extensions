@@ -6,10 +6,10 @@ metadata:
   namespace: shoot--foobar--azure
 type: Opaque
 data:
-# clientID: base64(clientID)
-# clientSecret: base64(clientSecret)
-# subscriptionID: base64(subscriptionID)
-# tenantID: base64(tenantID)
+  clientID: ZGF0YQo=
+  clientSecret: ZGF0YQo=
+  subscriptionID: ZGF0YQo=
+  tenantID: ZGF0YQo=
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -19,6 +19,15 @@ spec:
   cloudProfile:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
+    spec:
+      providerConfig:
+        apiVersion: azure.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
+        machineImages:
+          - name: coreos
+            versions:
+              - version: 2135.6.0
+                urn: azureimageurn
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
@@ -49,6 +58,8 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--azure
+  annotations:
+    gardener.cloud/operation: reconcile
 spec:
   type: azure
   region: westeurope

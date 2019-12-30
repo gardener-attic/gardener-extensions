@@ -17,8 +17,9 @@ package infrastructure
 import (
 	"path/filepath"
 
-	azurev1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
-	azurev1alpha1helper "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1/helper"
+	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
+	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
@@ -59,14 +60,14 @@ var (
 
 	// StatusTypeMeta is the TypeMeta of the Azure InfrastructureStatus
 	StatusTypeMeta = metav1.TypeMeta{
-		APIVersion: azurev1alpha1.SchemeGroupVersion.String(),
+		APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
 		Kind:       "InfrastructureStatus",
 	}
 )
 
 // ComputeTerraformerChartValues computes the values for the Azure Terraformer chart.
 func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, clientAuth *internal.ClientAuth,
-	config *azurev1alpha1.InfrastructureConfig, cluster *controller.Cluster) (map[string]interface{}, error) {
+	config *api.InfrastructureConfig, cluster *controller.Cluster) (map[string]interface{}, error) {
 	var (
 		createResourceGroup   = true
 		createVNet            = true
@@ -116,18 +117,18 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		outputKeys["availabilitySetID"] = TerraformerOutputKeyAvailabilitySetID
 		outputKeys["availabilitySetName"] = TerraformerOutputKeyAvailabilitySetName
 
-		cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(cluster.CloudProfile)
+		cloudProfileConfig, err := helper.CloudProfileConfigFromCluster(cluster)
 		if err != nil {
 			return nil, err
 		}
 
-		updateDomainCount, err := azurev1alpha1helper.FindDomainCountByRegion(cloudProfileConfig.CountUpdateDomains, infra.Spec.Region)
+		updateDomainCount, err := helper.FindDomainCountByRegion(cloudProfileConfig.CountUpdateDomains, infra.Spec.Region)
 		if err != nil {
 			return nil, err
 		}
 		azure["countUpdateDomains"] = updateDomainCount
 
-		countFaultDomains, err := azurev1alpha1helper.FindDomainCountByRegion(cloudProfileConfig.CountFaultDomains, infra.Spec.Region)
+		countFaultDomains, err := helper.FindDomainCountByRegion(cloudProfileConfig.CountFaultDomains, infra.Spec.Region)
 		if err != nil {
 			return nil, err
 		}
@@ -158,7 +159,7 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 
 // RenderTerraformerChart renders the azure-infra chart with the given values.
 func RenderTerraformerChart(renderer chartrenderer.Interface, infra *extensionsv1alpha1.Infrastructure, clientAuth *internal.ClientAuth,
-	config *azurev1alpha1.InfrastructureConfig, cluster *controller.Cluster) (*TerraformFiles, error) {
+	config *api.InfrastructureConfig, cluster *controller.Cluster) (*TerraformFiles, error) {
 	values, err := ComputeTerraformerChartValues(infra, clientAuth, config, cluster)
 	if err != nil {
 		return nil, err
@@ -204,7 +205,7 @@ type TerraformState struct {
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
-func ExtractTerraformState(tf terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*TerraformState, error) {
+func ExtractTerraformState(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*TerraformState, error) {
 	var outputKeys = []string{
 		TerraformerOutputKeyResourceGroupName,
 		TerraformerOutputKeyRouteTableName,
@@ -247,29 +248,29 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *azurev1alpha1.Inf
 
 // StatusFromTerraformState computes an InfrastructureStatus from the given
 // Terraform variables.
-func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.InfrastructureStatus {
-	var tfState = azurev1alpha1.InfrastructureStatus{
+func StatusFromTerraformState(state *TerraformState) *apiv1alpha1.InfrastructureStatus {
+	var tfState = apiv1alpha1.InfrastructureStatus{
 		TypeMeta: StatusTypeMeta,
-		ResourceGroup: azurev1alpha1.ResourceGroup{
+		ResourceGroup: apiv1alpha1.ResourceGroup{
 			Name: state.ResourceGroupName,
 		},
-		Networks: azurev1alpha1.NetworkStatus{
-			VNet: azurev1alpha1.VNetStatus{
+		Networks: apiv1alpha1.NetworkStatus{
+			VNet: apiv1alpha1.VNetStatus{
 				Name: state.VNetName,
 			},
-			Subnets: []azurev1alpha1.Subnet{
+			Subnets: []apiv1alpha1.Subnet{
 				{
-					Purpose: azurev1alpha1.PurposeNodes,
+					Purpose: apiv1alpha1.PurposeNodes,
 					Name:    state.SubnetName,
 				},
 			},
 		},
-		AvailabilitySets: []azurev1alpha1.AvailabilitySet{},
-		RouteTables: []azurev1alpha1.RouteTable{
-			{Purpose: azurev1alpha1.PurposeNodes, Name: state.RouteTableName},
+		AvailabilitySets: []apiv1alpha1.AvailabilitySet{},
+		RouteTables: []apiv1alpha1.RouteTable{
+			{Purpose: apiv1alpha1.PurposeNodes, Name: state.RouteTableName},
 		},
-		SecurityGroups: []azurev1alpha1.SecurityGroup{
-			{Name: state.SecurityGroupName, Purpose: azurev1alpha1.PurposeNodes},
+		SecurityGroups: []apiv1alpha1.SecurityGroup{
+			{Name: state.SecurityGroupName, Purpose: apiv1alpha1.PurposeNodes},
 		},
 	}
 
@@ -281,10 +282,10 @@ func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.Infrastructu
 	if state.AvailabilitySetID == "" && state.AvailabilitySetName == "" {
 		tfState.Zoned = true
 	} else {
-		tfState.AvailabilitySets = append(tfState.AvailabilitySets, azurev1alpha1.AvailabilitySet{
+		tfState.AvailabilitySets = append(tfState.AvailabilitySets, apiv1alpha1.AvailabilitySet{
 			Name:    state.AvailabilitySetName,
 			ID:      state.AvailabilitySetID,
-			Purpose: azurev1alpha1.PurposeNodes,
+			Purpose: apiv1alpha1.PurposeNodes,
 		})
 	}
 
@@ -292,7 +293,7 @@ func StatusFromTerraformState(state *TerraformState) *azurev1alpha1.Infrastructu
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf terraformer.Terraformer, config *azurev1alpha1.InfrastructureConfig) (*azurev1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*apiv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err

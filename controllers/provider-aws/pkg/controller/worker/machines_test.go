@@ -18,11 +18,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	awsv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
-	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/config"
+	api "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -42,7 +43,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Machines", func() {
@@ -64,7 +64,7 @@ var _ = Describe("Machines", func() {
 	})
 
 	Context("workerDelegate", func() {
-		workerDelegate := NewWorkerDelegate(nil, nil, nil, nil, nil, "", nil, nil)
+		workerDelegate, _ := NewWorkerDelegate(common.NewClientContext(nil, nil, nil), nil, "", nil, nil)
 
 		Describe("#MachineClassKind", func() {
 			It("should return the correct kind of the machine class", func() {
@@ -80,7 +80,8 @@ var _ = Describe("Machines", func() {
 
 		Describe("#GenerateMachineDeployments, #DeployMachineClasses", func() {
 			var (
-				namespace string
+				namespace        string
+				cloudProfileName string
 
 				awsAccessKeyID     string
 				awsSecretAccessKey string
@@ -121,17 +122,18 @@ var _ = Describe("Machines", func() {
 				workerPoolHash1 string
 				workerPoolHash2 string
 
-				shootVersionMajorMinor   string
-				shootVersion             string
-				machineImageToAMIMapping []config.MachineImage
-				scheme                   *runtime.Scheme
-				decoder                  runtime.Decoder
-				cluster                  *extensionscontroller.Cluster
-				w                        *extensionsv1alpha1.Worker
+				shootVersionMajorMinor string
+				shootVersion           string
+				scheme                 *runtime.Scheme
+				decoder                runtime.Decoder
+				clusterWithoutImages   *extensionscontroller.Cluster
+				cluster                *extensionscontroller.Cluster
+				w                      *extensionsv1alpha1.Worker
 			)
 
 			BeforeEach(func() {
 				namespace = "shoot--foobar--aws"
+				cloudProfileName = "aws"
 
 				region = "eu-west-1"
 				awsAccessKeyID = "access-key-id"
@@ -172,20 +174,7 @@ var _ = Describe("Machines", func() {
 				shootVersionMajorMinor = "1.2"
 				shootVersion = shootVersionMajorMinor + ".3"
 
-				machineImageToAMIMapping = []config.MachineImage{
-					{
-						Name:    machineImageName,
-						Version: machineImageVersion,
-						Regions: []config.RegionAMIMapping{
-							{
-								Name: region,
-								AMI:  machineImageAMI,
-							},
-						},
-					},
-				}
-
-				cluster = &extensionscontroller.Cluster{
+				clusterWithoutImages = &extensionscontroller.Cluster{
 					Shoot: &gardencorev1beta1.Shoot{
 						Spec: gardencorev1beta1.ShootSpec{
 							Kubernetes: gardencorev1beta1.Kubernetes{
@@ -193,6 +182,45 @@ var _ = Describe("Machines", func() {
 							},
 						},
 					},
+				}
+
+				cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
+					TypeMeta: metav1.TypeMeta{
+						APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+						Kind:       "CloudProfileConfig",
+					},
+					MachineImages: []apiv1alpha1.MachineImages{
+						apiv1alpha1.MachineImages{
+							Name: machineImageName,
+							Versions: []apiv1alpha1.MachineImageVersion{
+								apiv1alpha1.MachineImageVersion{
+									Version: machineImageVersion,
+									Regions: []apiv1alpha1.RegionAMIMapping{
+										apiv1alpha1.RegionAMIMapping{
+											Name: region,
+											AMI:  machineImageAMI,
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+				cloudProfileConfigJSON, _ := json.Marshal(cloudProfileConfig)
+				cluster = &extensionscontroller.Cluster{
+					CloudProfile: &gardencorev1beta1.CloudProfile{
+						ObjectMeta: metav1.ObjectMeta{
+							Name: cloudProfileName,
+						},
+						Spec: gardencorev1beta1.CloudProfileSpec{
+							ProviderConfig: &gardencorev1beta1.ProviderConfig{
+								RawExtension: runtime.RawExtension{
+									Raw: cloudProfileConfigJSON,
+								},
+							},
+						},
+					},
+					Shoot: clusterWithoutImages.Shoot,
 				}
 
 				w = &extensionsv1alpha1.Worker{
@@ -206,10 +234,10 @@ var _ = Describe("Machines", func() {
 						},
 						Region: region,
 						InfrastructureProviderStatus: &runtime.RawExtension{
-							Raw: encode(&apisaws.InfrastructureStatus{
-								VPC: apisaws.VPCStatus{
+							Raw: encode(&api.InfrastructureStatus{
+								VPC: api.VPCStatus{
 									ID: vpcID,
-									Subnets: []apisaws.Subnet{
+									Subnets: []api.Subnet{
 										{
 											ID:      subnetZone1,
 											Purpose: "nodes",
@@ -221,22 +249,22 @@ var _ = Describe("Machines", func() {
 											Zone:    zone2,
 										},
 									},
-									SecurityGroups: []apisaws.SecurityGroup{
+									SecurityGroups: []api.SecurityGroup{
 										{
 											ID:      securityGroupID,
 											Purpose: "nodes",
 										},
 									},
 								},
-								IAM: apisaws.IAM{
-									InstanceProfiles: []apisaws.InstanceProfile{
+								IAM: api.IAM{
+									InstanceProfiles: []api.InstanceProfile{
 										{
 											Name:    instanceProfileName,
 											Purpose: "nodes",
 										},
 									},
 								},
-								EC2: apisaws.EC2{
+								EC2: api.EC2{
 									KeyName: keyName,
 								},
 							}),
@@ -254,8 +282,8 @@ var _ = Describe("Machines", func() {
 									Version: machineImageVersion,
 								},
 								ProviderConfig: &runtime.RawExtension{
-									Raw: encode(&apisaws.WorkerConfig{
-										Volume: &apisaws.Volume{
+									Raw: encode(&api.WorkerConfig{
+										Volume: &api.Volume{
 											IOPS: &iops,
 										},
 									}),
@@ -296,21 +324,24 @@ var _ = Describe("Machines", func() {
 				}
 
 				scheme = runtime.NewScheme()
-				_ = apisaws.AddToScheme(scheme)
-				_ = awsv1alpha1.AddToScheme(scheme)
+				_ = api.AddToScheme(scheme)
+				_ = apiv1alpha1.AddToScheme(scheme)
 				decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
 
 				workerPoolHash1, _ = worker.WorkerPoolHash(w.Spec.Pools[0], cluster)
 				workerPoolHash2, _ = worker.WorkerPoolHash(w.Spec.Pools[1], cluster)
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 			})
 
-			It("should return the expected machine deployments", func() {
-				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
-
-				// Test workerDelegate.DeployMachineClasses()
+			Describe("machine images", func() {
 				var (
+					defaultMachineClass map[string]interface{}
+					machineDeployments  worker.MachineDeployments
+					machineClasses      map[string]interface{}
+				)
+
+				BeforeEach(func() {
 					defaultMachineClass = map[string]interface{}{
 						"secret": map[string]interface{}{
 							"cloudConfig": string(userData),
@@ -334,142 +365,157 @@ var _ = Describe("Machines", func() {
 						},
 					}
 
-					machineClassPool1Zone1 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
-						{
-							"subnetID":         subnetZone1,
-							"securityGroupIDs": []string{securityGroupID},
-						},
-					})
-					machineClassPool1Zone2 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
-						{
-							"subnetID":         subnetZone2,
-							"securityGroupIDs": []string{securityGroupID},
-						},
-					})
-					machineClassPool2Zone1 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
-						{
-							"subnetID":         subnetZone1,
-							"securityGroupIDs": []string{securityGroupID},
-						},
-					})
-					machineClassPool2Zone2 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
-						{
-							"subnetID":         subnetZone2,
-							"securityGroupIDs": []string{securityGroupID},
-						},
-					})
-
-					machineClassPool1BlockDevices = []map[string]interface{}{
-						{
-							"ebs": map[string]interface{}{
-								"volumeSize": volumeSize,
-								"volumeType": volumeType,
-								"iops":       iops,
+					var (
+						machineClassPool1Zone1 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
+							{
+								"subnetID":         subnetZone1,
+								"securityGroupIDs": []string{securityGroupID},
 							},
+						})
+						machineClassPool1Zone2 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
+							{
+								"subnetID":         subnetZone2,
+								"securityGroupIDs": []string{securityGroupID},
+							},
+						})
+						machineClassPool2Zone1 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
+							{
+								"subnetID":         subnetZone1,
+								"securityGroupIDs": []string{securityGroupID},
+							},
+						})
+						machineClassPool2Zone2 = useDefaultMachineClass(defaultMachineClass, "networkInterfaces", []map[string]interface{}{
+							{
+								"subnetID":         subnetZone2,
+								"securityGroupIDs": []string{securityGroupID},
+							},
+						})
+
+						machineClassPool1BlockDevices = []map[string]interface{}{
+							{
+								"ebs": map[string]interface{}{
+									"volumeSize": volumeSize,
+									"volumeType": volumeType,
+									"iops":       iops,
+								},
+							},
+						}
+					)
+
+					machineClassPool1Zone1["blockDevices"] = machineClassPool1BlockDevices
+					machineClassPool1Zone2["blockDevices"] = machineClassPool1BlockDevices
+
+					var (
+						machineClassNamePool1Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool1)
+						machineClassNamePool1Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool1)
+						machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
+						machineClassNamePool2Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool2)
+
+						machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, workerPoolHash1)
+						machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, workerPoolHash1)
+						machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, workerPoolHash2)
+						machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, workerPoolHash2)
+					)
+
+					addNameAndSecretToMachineClass(machineClassPool1Zone1, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool1Zone1)
+					addNameAndSecretToMachineClass(machineClassPool1Zone2, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool1Zone2)
+					addNameAndSecretToMachineClass(machineClassPool2Zone1, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool2Zone1)
+					addNameAndSecretToMachineClass(machineClassPool2Zone2, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool2Zone2)
+
+					machineClasses = map[string]interface{}{"machineClasses": []map[string]interface{}{
+						machineClassPool1Zone1,
+						machineClassPool1Zone2,
+						machineClassPool2Zone1,
+						machineClassPool2Zone2,
+					}}
+
+					machineDeployments = worker.MachineDeployments{
+						{
+							Name:           machineClassNamePool1Zone1,
+							ClassName:      machineClassWithHashPool1Zone1,
+							SecretName:     machineClassWithHashPool1Zone1,
+							Minimum:        worker.DistributeOverZones(0, minPool1, 2),
+							Maximum:        worker.DistributeOverZones(0, maxPool1, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool1, 2, maxPool1),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool1, 2, minPool1),
+						},
+						{
+							Name:           machineClassNamePool1Zone2,
+							ClassName:      machineClassWithHashPool1Zone2,
+							SecretName:     machineClassWithHashPool1Zone2,
+							Minimum:        worker.DistributeOverZones(1, minPool1, 2),
+							Maximum:        worker.DistributeOverZones(1, maxPool1, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool1, 2, maxPool1),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool1, 2, minPool1),
+						},
+						{
+							Name:           machineClassNamePool2Zone1,
+							ClassName:      machineClassWithHashPool2Zone1,
+							SecretName:     machineClassWithHashPool2Zone1,
+							Minimum:        worker.DistributeOverZones(0, minPool2, 2),
+							Maximum:        worker.DistributeOverZones(0, maxPool2, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool2, 2, maxPool2),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool2, 2, minPool2),
+						},
+						{
+							Name:           machineClassNamePool2Zone2,
+							ClassName:      machineClassWithHashPool2Zone2,
+							SecretName:     machineClassWithHashPool2Zone2,
+							Minimum:        worker.DistributeOverZones(1, minPool2, 2),
+							Maximum:        worker.DistributeOverZones(1, maxPool2, 2),
+							MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool2, 2, maxPool2),
+							MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool2, 2, minPool2),
 						},
 					}
-				)
 
-				machineClassPool1Zone1["blockDevices"] = machineClassPool1BlockDevices
-				machineClassPool1Zone2["blockDevices"] = machineClassPool1BlockDevices
+				})
 
-				var (
-					machineClassNamePool1Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool1)
-					machineClassNamePool1Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool1)
-					machineClassNamePool2Zone1 = fmt.Sprintf("%s-%s-z1", namespace, namePool2)
-					machineClassNamePool2Zone2 = fmt.Sprintf("%s-%s-z2", namespace, namePool2)
+				It("should return the expected machine deployments for profile image types", func() {
 
-					machineClassWithHashPool1Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone1, workerPoolHash1)
-					machineClassWithHashPool1Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool1Zone2, workerPoolHash1)
-					machineClassWithHashPool2Zone1 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone1, workerPoolHash2)
-					machineClassWithHashPool2Zone2 = fmt.Sprintf("%s-%s", machineClassNamePool2Zone2, workerPoolHash2)
-				)
+					workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
-				addNameAndSecretToMachineClass(machineClassPool1Zone1, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool1Zone1)
-				addNameAndSecretToMachineClass(machineClassPool1Zone2, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool1Zone2)
-				addNameAndSecretToMachineClass(machineClassPool2Zone1, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool2Zone1)
-				addNameAndSecretToMachineClass(machineClassPool2Zone2, awsAccessKeyID, awsSecretAccessKey, machineClassWithHashPool2Zone2)
+					expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
-				chartApplier.
-					EXPECT().
-					ApplyChart(
-						context.TODO(),
-						filepath.Join(aws.InternalChartsPath, "machineclass"),
-						namespace,
-						"machineclass",
-						map[string]interface{}{"machineClasses": []map[string]interface{}{
-							machineClassPool1Zone1,
-							machineClassPool1Zone2,
-							machineClassPool2Zone1,
-							machineClassPool2Zone2,
-						}},
-						nil,
-					).
-					Return(nil)
+					// Test workerDelegate.DeployMachineClasses()
 
-				err := workerDelegate.DeployMachineClasses(context.TODO())
-				Expect(err).NotTo(HaveOccurred())
+					chartApplier.
+						EXPECT().
+						ApplyChart(
+							context.TODO(),
+							filepath.Join(aws.InternalChartsPath, "machineclass"),
+							namespace,
+							"machineclass",
+							machineClasses,
+							nil,
+						).
+						Return(nil)
 
-				// Test workerDelegate.GetMachineImages()
-				machineImages, err := workerDelegate.GetMachineImages(context.TODO())
-				Expect(machineImages).To(Equal(&awsv1alpha1.WorkerStatus{
-					TypeMeta: metav1.TypeMeta{
-						APIVersion: awsv1alpha1.SchemeGroupVersion.String(),
-						Kind:       "WorkerStatus",
-					},
-					MachineImages: []awsv1alpha1.MachineImage{
-						{
-							Name:    machineImageName,
-							Version: machineImageVersion,
-							AMI:     machineImageAMI,
+					err := workerDelegate.DeployMachineClasses(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+
+					// Test workerDelegate.GetMachineImages()
+					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
+					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
+						TypeMeta: metav1.TypeMeta{
+							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+							Kind:       "WorkerStatus",
 						},
-					},
-				}))
-				Expect(err).NotTo(HaveOccurred())
+						MachineImages: []apiv1alpha1.MachineImage{
+							{
+								Name:    machineImageName,
+								Version: machineImageVersion,
+								AMI:     machineImageAMI,
+							},
+						},
+					}))
+					Expect(err).NotTo(HaveOccurred())
 
-				// Test workerDelegate.GenerateMachineDeployments()
-				machineDeployments := worker.MachineDeployments{
-					{
-						Name:           machineClassNamePool1Zone1,
-						ClassName:      machineClassWithHashPool1Zone1,
-						SecretName:     machineClassWithHashPool1Zone1,
-						Minimum:        worker.DistributeOverZones(0, minPool1, 2),
-						Maximum:        worker.DistributeOverZones(0, maxPool1, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool1, 2, maxPool1),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool1, 2, minPool1),
-					},
-					{
-						Name:           machineClassNamePool1Zone2,
-						ClassName:      machineClassWithHashPool1Zone2,
-						SecretName:     machineClassWithHashPool1Zone2,
-						Minimum:        worker.DistributeOverZones(1, minPool1, 2),
-						Maximum:        worker.DistributeOverZones(1, maxPool1, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool1, 2, maxPool1),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool1, 2, minPool1),
-					},
-					{
-						Name:           machineClassNamePool2Zone1,
-						ClassName:      machineClassWithHashPool2Zone1,
-						SecretName:     machineClassWithHashPool2Zone1,
-						Minimum:        worker.DistributeOverZones(0, minPool2, 2),
-						Maximum:        worker.DistributeOverZones(0, maxPool2, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(0, maxSurgePool2, 2, maxPool2),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(0, maxUnavailablePool2, 2, minPool2),
-					},
-					{
-						Name:           machineClassNamePool2Zone2,
-						ClassName:      machineClassWithHashPool2Zone2,
-						SecretName:     machineClassWithHashPool2Zone2,
-						Minimum:        worker.DistributeOverZones(1, minPool2, 2),
-						Maximum:        worker.DistributeOverZones(1, maxPool2, 2),
-						MaxSurge:       worker.DistributePositiveIntOrPercent(1, maxSurgePool2, 2, maxPool2),
-						MaxUnavailable: worker.DistributePositiveIntOrPercent(1, maxUnavailablePool2, 2, minPool2),
-					},
-				}
+					// Test workerDelegate.GenerateMachineDeployments()
 
-				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(result).To(Equal(machineDeployments))
+					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
+					Expect(err).NotTo(HaveOccurred())
+					Expect(result).To(Equal(machineDeployments))
+				})
 			})
 
 			It("should fail because the secret cannot be read", func() {
@@ -485,8 +531,8 @@ var _ = Describe("Machines", func() {
 			It("should fail because the version is invalid", func() {
 				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
-				cluster.Shoot.Spec.Kubernetes.Version = "invalid"
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				clusterWithoutImages.Shoot.Spec.Kubernetes.Version = "invalid"
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -498,7 +544,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -509,10 +555,10 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
-					Raw: encode(&apisaws.InfrastructureStatus{}),
+					Raw: encode(&api.InfrastructureStatus{}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -523,9 +569,9 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
-					Raw: encode(&apisaws.InfrastructureStatus{
-						IAM: apisaws.IAM{
-							InstanceProfiles: []apisaws.InstanceProfile{
+					Raw: encode(&api.InfrastructureStatus{
+						IAM: api.IAM{
+							InstanceProfiles: []api.InstanceProfile{
 								{
 									Name:    instanceProfileName,
 									Purpose: "nodes",
@@ -535,7 +581,7 @@ var _ = Describe("Machines", func() {
 					}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -547,7 +593,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.Region = "another-region"
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -558,18 +604,18 @@ var _ = Describe("Machines", func() {
 				expectGetSecretCallToWork(c, awsAccessKeyID, awsSecretAccessKey)
 
 				w.Spec.InfrastructureProviderStatus = &runtime.RawExtension{
-					Raw: encode(&apisaws.InfrastructureStatus{
-						VPC: apisaws.VPCStatus{
-							Subnets: []apisaws.Subnet{},
-							SecurityGroups: []apisaws.SecurityGroup{
+					Raw: encode(&api.InfrastructureStatus{
+						VPC: api.VPCStatus{
+							Subnets: []api.Subnet{},
+							SecurityGroups: []api.SecurityGroup{
 								{
 									ID:      securityGroupID,
 									Purpose: "nodes",
 								},
 							},
 						},
-						IAM: apisaws.IAM{
-							InstanceProfiles: []apisaws.InstanceProfile{
+						IAM: api.IAM{
+							InstanceProfiles: []api.InstanceProfile{
 								{
 									Name:    instanceProfileName,
 									Purpose: "nodes",
@@ -579,7 +625,7 @@ var _ = Describe("Machines", func() {
 					}),
 				}
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())
@@ -591,7 +637,7 @@ var _ = Describe("Machines", func() {
 
 				w.Spec.Pools[0].Volume.Size = "not-decodeable"
 
-				workerDelegate = NewWorkerDelegate(c, scheme, decoder, machineImageToAMIMapping, chartApplier, "", w, cluster)
+				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
 
 				result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
 				Expect(err).To(HaveOccurred())

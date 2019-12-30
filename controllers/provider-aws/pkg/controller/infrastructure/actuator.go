@@ -16,6 +16,7 @@ package infrastructure
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"time"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
@@ -31,22 +32,13 @@ import (
 	"github.com/go-logr/logr"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"k8s.io/client-go/rest"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 type actuator struct {
 	logger logr.Logger
-
-	restConfig *rest.Config
-
-	client  client.Client
-	scheme  *runtime.Scheme
-	decoder runtime.Decoder
+	common.ChartRendererContext
 }
 
 // NewActuator creates a new Actuator that updates the status of the handled Infrastructure resources.
@@ -54,22 +46,6 @@ func NewActuator() infrastructure.Actuator {
 	return &actuator{
 		logger: log.Log.WithName("infrastructure-actuator"),
 	}
-}
-
-func (a *actuator) InjectScheme(scheme *runtime.Scheme) error {
-	a.scheme = scheme
-	a.decoder = serializer.NewCodecFactory(a.scheme).UniversalDecoder()
-	return nil
-}
-
-func (a *actuator) InjectClient(client client.Client) error {
-	a.client = client
-	return nil
-}
-
-func (a *actuator) InjectConfig(config *rest.Config) error {
-	a.restConfig = config
-	return nil
 }
 
 func (a *actuator) Reconcile(ctx context.Context, config *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
@@ -83,7 +59,7 @@ func (a *actuator) Delete(ctx context.Context, config *extensionsv1alpha1.Infras
 // Helper functions
 
 func (a *actuator) newTerraformer(purpose, namespace, name string) (terraformer.Terraformer, error) {
-	tf, err := terraformer.NewForConfig(glogger.NewLogger("info"), a.restConfig, purpose, namespace, name, imagevector.TerraformerImage())
+	tf, err := terraformer.NewForConfig(glogger.NewLogger("info"), a.RESTConfig(), purpose, namespace, name, imagevector.TerraformerImage())
 	if err != nil {
 		return nil, err
 	}

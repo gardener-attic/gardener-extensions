@@ -18,7 +18,8 @@ import (
 	"context"
 	"time"
 
-	gcpv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/client"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/infrastructure"
@@ -31,7 +32,7 @@ import (
 
 func (a *actuator) cleanupKubernetesFirewallRules(
 	ctx context.Context,
-	config *gcpv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 	client gcpclient.Interface,
 	tf terraformer.Terraformer,
 	account *internal.ServiceAccount,
@@ -50,7 +51,7 @@ func (a *actuator) cleanupKubernetesFirewallRules(
 
 func (a *actuator) cleanupKubernetesRoutes(
 	ctx context.Context,
-	config *gcpv1alpha1.InfrastructureConfig,
+	config *api.InfrastructureConfig,
 	client gcpclient.Interface,
 	tf terraformer.Terraformer,
 	account *internal.ServiceAccount,
@@ -69,12 +70,12 @@ func (a *actuator) cleanupKubernetesRoutes(
 
 // Delete implements infrastructure.Actuator.
 func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *controller.Cluster) error {
-	config, err := internal.InfrastructureConfigFromInfrastructure(infra)
+	config, err := helper.InfrastructureConfigFromInfrastructure(infra)
 	if err != nil {
 		return err
 	}
 
-	serviceAccount, err := internal.GetServiceAccount(ctx, a.client, infra.Spec.SecretRef)
+	serviceAccount, err := internal.GetServiceAccount(ctx, a.Client(), infra.Spec.SecretRef)
 	if err != nil {
 		return err
 	}
@@ -84,7 +85,7 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 		return err
 	}
 
-	tf, err := internal.NewTerraformer(a.restConfig, serviceAccount, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
+	tf, err := internal.NewTerraformer(a.RESTConfig(), serviceAccount, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
 	if err != nil {
 		return err
 	}

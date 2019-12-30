@@ -29,21 +29,8 @@ type ControllerConfiguration struct {
 	// ClientConnection specifies the kubeconfig file and client connection
 	// settings for the proxy server to use when communicating with the apiserver.
 	ClientConnection *componentbaseconfig.ClientConnectionConfiguration
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to Packet-specific identifiers.
-	MachineImages []MachineImage
 	// ETCD is the etcd configuration.
 	ETCD ETCD
-}
-
-// MachineImage is a mapping from logical names and versions to Packet-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string
-	// Version is the logical version of the machine image.
-	Version string
-	// ID is the id of the image.
-	ID string
 }
 
 // ETCD is an etcd configuration.

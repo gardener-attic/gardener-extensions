@@ -96,5 +96,15 @@ type MachineImageVersion struct {
 	// Version is the version of the image.
 	Version string `json:"version"`
 	// Image is the name of the image.
-	Image string `json:"image"`
+	Image string `json:"image,omitempty"`
+	// Regions is an optional mapping to the correct Image ID for the machine image in the supported regions.
+	Regions []RegionIDMapping `json:"regions,omitempty"`
+}
+
+// RegionIDMapping is a mapping to the correct ID for the machine image in the given region.
+type RegionIDMapping struct {
+	// Name is the name of the region.
+	Name string `json:"name"`
+	// ID is the ID for the machine image in the given region.
+	ID string `json:"id"`
 }

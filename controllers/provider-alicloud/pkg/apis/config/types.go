@@ -30,32 +30,11 @@ type ControllerConfiguration struct {
 	// ClientConnection specifies the kubeconfig file and client connection
 	// settings for the proxy server to use when communicating with the apiserver.
 	ClientConnection *componentbaseconfig.ClientConnectionConfiguration
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to Alicloud-specific identifiers.
-	MachineImages []MachineImage
 	// MachineImageOwnerSecretRef is the secret reference which contains credential of AliCloud subaccount for customized images.
 	// We currently assume multiple customized images should always be under this account.
 	MachineImageOwnerSecretRef *corev1.SecretReference
 	// ETCD is the etcd configuration.
 	ETCD ETCD
-}
-
-// MachineImage is a mapping from logical names and versions to Alicloud-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string
-	// Version is the logical version of the machine image.
-	Version string
-	// Regions is a mapping to the correct IDs for the machine image in the supported regions.
-	Regions []RegionImageMapping
-}
-
-// RegionImageMapping is a mapping from Region name to supported machine image id for a specific OS version.
-type RegionImageMapping struct {
-	// Region is the ID of the region.
-	Region string
-	// ImageID is the ID for the machine image.
-	ImageID string
 }
 
 // ETCD is an etcd configuration.

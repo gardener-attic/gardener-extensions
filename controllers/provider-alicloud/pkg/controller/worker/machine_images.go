@@ -16,12 +16,12 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 
-	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
-	apisalicloudhelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
-	alicloudv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
-	confighelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config/helper"
+	api "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
+	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
+
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/pkg/errors"
@@ -38,59 +38,55 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 	}
 
 	var (
-		workerStatus = &apisalicloud.WorkerStatus{
+		workerStatus = &api.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: apisalicloud.SchemeGroupVersion.String(),
+				APIVersion: api.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 			MachineImages: w.machineImages,
 		}
 
-		workerStatusV1alpha1 = &alicloudv1alpha1.WorkerStatus{
+		workerStatusV1alpha1 = &v1alpha1.WorkerStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: alicloudv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: v1alpha1.SchemeGroupVersion.String(),
 				Kind:       "WorkerStatus",
 			},
 		}
 	)
 
-	if err := w.scheme.Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
+	if err := w.Scheme().Convert(workerStatus, workerStatusV1alpha1, nil); err != nil {
 		return nil, err
 	}
 
 	return workerStatusV1alpha1, nil
 }
 
-func (w *workerDelegate) findMachineImageForRegion(name, version, region string) (string, error) {
-	machineImageID, err := confighelper.FindImageForRegion(w.machineImageMapping, name, version, region)
+func (w *workerDelegate) findMachineImageForRegion(name, version string) (string, error) {
+	machineImageID, err := helper.FindImageFromCloudProfile(w.cloudProfileConfig, name, version)
 	if err == nil {
 		return machineImageID, nil
 	}
 
 	// Try to look up machine image in worker provider status as it was not found in componentconfig.
 	if providerStatus := w.worker.Status.ProviderStatus; providerStatus != nil {
-		workerStatus := &apisalicloud.WorkerStatus{}
-		if _, _, err := w.decoder.Decode(providerStatus.Raw, nil, workerStatus); err != nil {
+		workerStatus := &api.WorkerStatus{}
+		if _, _, err := w.Decoder().Decode(providerStatus.Raw, nil, workerStatus); err != nil {
 			return "", errors.Wrapf(err, "could not decode worker status of worker '%s'", util.ObjectName(w.worker))
 		}
 
-		machineImage, err := apisalicloudhelper.FindMachineImage(workerStatus.MachineImages, name, version)
+		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
-			return "", errorMachineImageNotFound(name, version)
+			return "", worker.ErrorMachineImageNotFound(name, version)
 		}
 
 		return machineImage.ID, nil
 	}
 
-	return "", errorMachineImageNotFound(name, version)
+	return "", worker.ErrorMachineImageNotFound(name, version)
 }
 
-func errorMachineImageNotFound(name, version string) error {
-	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig nor in worker status", name, version)
-}
-
-func appendMachineImage(machineImages []apisalicloud.MachineImage, machineImage apisalicloud.MachineImage) []apisalicloud.MachineImage {
-	if _, err := apisalicloudhelper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
+func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {
+	if _, err := helper.FindMachineImage(machineImages, machineImage.Name, machineImage.Version); err != nil {
 		return append(machineImages, machineImage)
 	}
 	return machineImages

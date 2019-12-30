@@ -16,6 +16,7 @@ package controlplane
 
 import (
 	"context"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
@@ -36,10 +37,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apiserver/pkg/authentication/user"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // Object names
@@ -171,21 +169,8 @@ func NewValuesProvider(logger logr.Logger) genericactuator.ValuesProvider {
 // valuesProvider is a ValuesProvider that provides AWS-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
 	genericactuator.NoopValuesProvider
-	decoder runtime.Decoder
-	client  client.Client
-	logger  logr.Logger
-}
-
-// InjectScheme injects the given scheme into the valuesProvider.
-func (vp *valuesProvider) InjectScheme(scheme *runtime.Scheme) error {
-	vp.decoder = serializer.NewCodecFactory(scheme).UniversalDecoder()
-	return nil
-}
-
-// InjectClient injects the given client into the valuesProvider.
-func (vp *valuesProvider) InjectClient(client client.Client) error {
-	vp.client = client
-	return nil
+	common.ClientContext
+	logger logr.Logger
 }
 
 // GetConfigChartValues returns the values for the config chart applied by the generic actuator.
@@ -197,7 +182,7 @@ func (vp *valuesProvider) GetConfigChartValues(
 	// Decode infrastructureProviderStatus
 	infraStatus := &apisaws.InfrastructureStatus{}
 	if cp.Spec.InfrastructureProviderStatus != nil {
-		if _, _, err := vp.decoder.Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
+		if _, _, err := vp.Decoder().Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
 			return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 		}
 	}
@@ -217,7 +202,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	// Decode providerConfig
 	cpConfig := &apisaws.ControlPlaneConfig{}
 	if cp.Spec.ProviderConfig != nil {
-		if _, _, err := vp.decoder.Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
+		if _, _, err := vp.Decoder().Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 			return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 		}
 	}
@@ -235,7 +220,7 @@ func (vp *valuesProvider) GetControlPlaneExposureChartValues(
 ) (map[string]interface{}, error) {
 
 	// Get load balancer address of the kube-apiserver service
-	address, err := kutil.GetLoadBalancerIngress(ctx, vp.client, cp.Namespace, v1beta1constants.DeploymentNameKubeAPIServer)
+	address, err := kutil.GetLoadBalancerIngress(ctx, vp.Client(), cp.Namespace, v1beta1constants.DeploymentNameKubeAPIServer)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get kube-apiserver service load balancer address")
 	}

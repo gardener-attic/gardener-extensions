@@ -6,8 +6,8 @@ metadata:
   namespace: shoot--foobar--alicloud
 type: Opaque
 data:
-  accessKeyID: AAAA # base64(accessKeyID)
-  accessKeySecret: AAAA # base64(accessKeySecret)
+  accessKeyID: ZGF0YQo= # base64(accessKeyID)
+  accessKeySecret: ZGF0YQo= # base64(accessKeySecret)
 ---
 apiVersion: extensions.gardener.cloud/v1alpha1
 kind: Cluster
@@ -17,6 +17,17 @@ spec:
   cloudProfile:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: CloudProfile
+    spec:
+      providerConfig:
+        apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
+        kind: CloudProfileConfig
+        machineImages:
+          - name: coreos
+            versions:
+            - version: 2135.6.0
+              id: alicloudimageid2135
+            - version: 2023.5.0
+              id: alicloudimageid2023
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed
@@ -38,6 +49,8 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--alicloud
+  annotations:
+    gardener.cloud/operation: reconcile
 spec:
   type: alicloud
   region: cn-beijing
@@ -48,10 +61,15 @@ spec:
     apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
     kind: InfrastructureStatus
     vpc:
-      cidr: 10.250.0.0/16
       id: vpc-gw879zodzt6z1cupe3ps4
+      vswitches:
+      - purpose: nodes 
+        id: vs-001
+        zone: cn-beijing-f
+      securityGroups: 
+      - purpose: nodes
+        id: sg-gw8efawapk7dhq6q5z24
     keyPairName: shoot--foobar--alicloud-ssh-publickey
-    securityGroupId: sg-gw8efawapk7dhq6q5z24
   pools:
   - name: cpu-worker
     machineType: ecs.sn2ne.xlarge

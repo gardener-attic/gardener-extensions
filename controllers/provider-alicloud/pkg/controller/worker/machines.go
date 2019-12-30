@@ -61,7 +61,7 @@ func (w *workerDelegate) GenerateMachineDeployments(ctx context.Context) (worker
 }
 
 func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (map[string][]byte, error) {
-	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, w.client, &w.worker.Spec.SecretRef)
+	credentials, err := alicloud.ReadCredentialsFromSecretRef(ctx, w.Client(), &w.worker.Spec.SecretRef)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	infrastructureStatus := &alicloudapi.InfrastructureStatus{}
-	if _, _, err := w.decoder.Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
+	if _, _, err := w.Decoder().Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
 		return err
 	}
 
@@ -102,7 +102,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 
-		machineImageID, err := w.findMachineImageForRegion(pool.MachineImage.Name, pool.MachineImage.Version, w.worker.Spec.Region)
+		machineImageID, err := w.findMachineImageForRegion(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}

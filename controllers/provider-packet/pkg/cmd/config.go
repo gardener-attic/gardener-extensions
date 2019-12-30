@@ -70,11 +70,6 @@ func (c *Config) Apply(cfg *config.ControllerConfiguration) {
 	*cfg = *c.Config
 }
 
-// ApplyMachineImages sets the given machine images to those of this Config.
-func (c *Config) ApplyMachineImages(machineImages *[]config.MachineImage) {
-	*machineImages = c.Config.MachineImages
-}
-
 // ApplyETCDStorage sets the given etcd storage configuration to that of this Config.
 func (c *Config) ApplyETCDStorage(etcdStorage *config.ETCDStorage) {
 	*etcdStorage = c.Config.ETCD.Storage

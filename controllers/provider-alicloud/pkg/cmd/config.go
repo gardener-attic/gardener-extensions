@@ -71,11 +71,6 @@ func (c *Config) Apply(cfg *config.ControllerConfiguration) {
 	*cfg = *c.Config
 }
 
-// ApplyMachineImages sets the given machine images to those of this Config.
-func (c *Config) ApplyMachineImages(machineImages *[]config.MachineImage) {
-	*machineImages = c.Config.MachineImages
-}
-
 // ApplyMachineImageOwnerSecretRef sets the given machine image owener secret reference to those of this Config.
 func (c *Config) ApplyMachineImageOwnerSecretRef(secretRef **corev1.SecretReference) {
 	if c.Config.MachineImageOwnerSecretRef != nil {

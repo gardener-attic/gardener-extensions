@@ -17,11 +17,14 @@ package genericactuator
 import (
 	"context"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 
 // NoopValuesProvider provides no-op implementation of ValuesProvider. This can be anonymously composed by actual ValuesProviders for convenience.
-type NoopValuesProvider struct{}
+type NoopValuesProvider struct {
+	common.ClientContext
+}
 
 // GetConfigChartValues returns the values for the config chart applied by this actuator.
 func (vp *NoopValuesProvider) GetConfigChartValues(context.Context, *extensionsv1alpha1.ControlPlane, *extensionscontroller.Cluster) (map[string]interface{}, error) {

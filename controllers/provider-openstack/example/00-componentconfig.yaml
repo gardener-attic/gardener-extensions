@@ -6,12 +6,6 @@ clientConnection:
   contentType: application/json
   qps: 100
   burst: 130
-machineImages:
-- name: coreos
-  version: 2135.6.0
-  cloudProfiles:
-  - name: eu-de-1
-    image: coreos-2135.6.0
 etcd:
   storage:
     className: gardener.cloud-fast

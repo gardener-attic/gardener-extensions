@@ -15,7 +15,7 @@
 package helper_test
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
+	api "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/helper"
 
 	. "github.com/onsi/ginkgo"
@@ -23,37 +23,76 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const profileImage = "project/path/to/profile/image"
+
 var _ = Describe("Helper", func() {
 	var (
-		purpose      gcp.SubnetPurpose = "foo"
-		purposeWrong gcp.SubnetPurpose = "baz"
+		purpose      api.SubnetPurpose = "foo"
+		purposeWrong api.SubnetPurpose = "baz"
 	)
 
 	DescribeTable("#FindSubnetByPurpose",
-		func(subnets []gcp.Subnet, purpose gcp.SubnetPurpose, expectedSubnet *gcp.Subnet, expectErr bool) {
+		func(subnets []api.Subnet, purpose api.SubnetPurpose, expectedSubnet *api.Subnet, expectErr bool) {
 			subnet, err := FindSubnetByPurpose(subnets, purpose)
 			expectResults(subnet, expectedSubnet, err, expectErr)
 		},
 
 		Entry("list is nil", nil, purpose, nil, true),
-		Entry("empty list", []gcp.Subnet{}, purpose, nil, true),
-		Entry("entry not found", []gcp.Subnet{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
-		Entry("entry exists", []gcp.Subnet{{Name: "bar", Purpose: purpose}}, purpose, &gcp.Subnet{Name: "bar", Purpose: purpose}, false),
+		Entry("empty list", []api.Subnet{}, purpose, nil, true),
+		Entry("entry not found", []api.Subnet{{Name: "bar", Purpose: purposeWrong}}, purpose, nil, true),
+		Entry("entry exists", []api.Subnet{{Name: "bar", Purpose: purpose}}, purpose, &api.Subnet{Name: "bar", Purpose: purpose}, false),
 	)
 
 	DescribeTable("#FindMachineImage",
-		func(machineImages []gcp.MachineImage, name, version string, expectedMachineImage *gcp.MachineImage, expectErr bool) {
+		func(machineImages []api.MachineImage, name, version string, expectedMachineImage *api.MachineImage, expectErr bool) {
 			machineImage, err := FindMachineImage(machineImages, name, version)
 			expectResults(machineImage, expectedMachineImage, err, expectErr)
 		},
 
 		Entry("list is nil", nil, "foo", "1.2.3", nil, true),
-		Entry("empty list", []gcp.MachineImage{}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no name)", []gcp.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.3", nil, true),
-		Entry("entry not found (no version)", []gcp.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.4", nil, true),
-		Entry("entry exists", []gcp.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "bar", "1.2.3", &gcp.MachineImage{Name: "bar", Version: "1.2.3", Image: "image123"}, false),
+		Entry("empty list", []api.MachineImage{}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no name)", []api.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.3", nil, true),
+		Entry("entry not found (no version)", []api.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.4", nil, true),
+		Entry("entry exists", []api.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "bar", "1.2.3", &api.MachineImage{Name: "bar", Version: "1.2.3", Image: "image123"}, false),
+	)
+
+	DescribeTable("#FindImage",
+		func(profileImages []api.MachineImages, imageName, version string, expectedImage string) {
+			cfg := &api.CloudProfileConfig{}
+			cfg.MachineImages = profileImages
+			image, err := FindImageFromCloudProfile(cfg, imageName, version)
+
+			Expect(image).To(Equal(expectedImage))
+			if expectedImage != "" {
+				Expect(err).NotTo(HaveOccurred())
+			} else {
+				Expect(err).To(HaveOccurred())
+			}
+		},
+
+		Entry("list is nil", nil, "ubuntu", "1", ""),
+
+		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", ""),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1"), "ubuntu", "1", ""),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1"), "ubuntu", "1", profileImage),
 	)
 })
+
+func makeProfileMachineImages(name, version string) []api.MachineImages {
+	var versions []api.MachineImageVersion
+	versions = append(versions, api.MachineImageVersion{
+		Version: version,
+		Image:   profileImage,
+	})
+
+	return []api.MachineImages{
+		{
+			Name:     name,
+			Versions: versions,
+		},
+	}
+}
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {
 	if !expectErr {

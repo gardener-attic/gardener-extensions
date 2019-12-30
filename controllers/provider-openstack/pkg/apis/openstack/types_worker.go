@@ -40,4 +40,6 @@ type MachineImage struct {
 	Version string
 	// Image is the name of the image.
 	Image string
+	// ID is the id of the image. (one of Image or ID must be set)
+	ID string
 }

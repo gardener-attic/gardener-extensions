@@ -18,6 +18,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal/infrastructure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -28,12 +29,12 @@ import (
 )
 
 func (a *actuator) reconcile(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
-	config, err := internal.InfrastructureConfigFromInfrastructure(infra)
+	config, err := helper.InfrastructureConfigFromInfrastructure(infra)
 	if err != nil {
 		return err
 	}
 
-	creds, err := infrastructure.GetCredentialsFromInfrastructure(ctx, a.client, infra)
+	creds, err := infrastructure.GetCredentialsFromInfrastructure(ctx, a.Client(), infra)
 	if err != nil {
 		return err
 	}
@@ -43,18 +44,18 @@ func (a *actuator) reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
-	terraformFiles, err := infrastructure.RenderTerraformerChart(a.chartRenderer, infra, creds, config, cluster)
+	terraformFiles, err := infrastructure.RenderTerraformerChart(a.ChartRenderer(), infra, creds, config, cluster)
 	if err != nil {
 		return err
 	}
 
-	tf, err := internal.NewTerraformer(a.restConfig, creds, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
+	tf, err := internal.NewTerraformer(a.RESTConfig(), creds, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
 	if err != nil {
 		return err
 	}
 
 	if err := tf.
-		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars, terraformState.Data)).
+		InitializeWith(terraformer.DefaultInitializer(a.Client(), terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars, terraformState.Data)).
 		Apply(); err != nil {
 
 		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infra.Name)

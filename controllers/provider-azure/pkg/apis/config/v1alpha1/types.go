@@ -31,22 +31,8 @@ type ControllerConfiguration struct {
 	// settings for the proxy server to use when communicating with the apiserver.
 	// +optional
 	ClientConnection *componentbaseconfigv1alpha1.ClientConnectionConfiguration `json:"clientConnection,omitempty"`
-	// MachineImages is the list of machine images that are understood by the controller. It maps
-	// logical names and versions to Azure-specific identifiers.
-	MachineImages []MachineImage `json:"machineImages,omitempty"`
 	// ETCD is the etcd configuration.
 	ETCD ETCD `json:"etcd"`
-}
-
-// MachineImage is a mapping from logical names and versions to Azure-specific identifiers.
-type MachineImage struct {
-	// Name is the logical name of the machine image.
-	Name string `json:"name"`
-	// Version is the logical version of the machine image.
-	Version string `json:"version"`
-	// URN is the uniform resource name, it has the format 'publisher:offer:sku:version'
-	// +optional
-	URN *string `json:"urn,omitempty"`
 }
 
 // ETCD is an etcd configuration.

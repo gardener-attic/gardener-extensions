@@ -17,7 +17,8 @@ package infrastructure
 import (
 	"encoding/json"
 
-	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 
@@ -32,21 +33,19 @@ import (
 
 var _ = Describe("Terraform", func() {
 	var (
-		infra                  *extensionsv1alpha1.Infrastructure
-		cloudProfileConfig     *openstackv1alpha1.CloudProfileConfig
-		cloudProfileConfigJSON []byte
-		config                 *openstackv1alpha1.InfrastructureConfig
-		cluster                *controller.Cluster
-		credentials            *internal.Credentials
+		infra       *extensionsv1alpha1.Infrastructure
+		config      *api.InfrastructureConfig
+		cluster     *controller.Cluster
+		credentials *internal.Credentials
 
 		keystoneURL = "foo-bar.com"
 		dnsServers  = []string{"a", "b"}
 	)
 
 	BeforeEach(func() {
-		config = &openstackv1alpha1.InfrastructureConfig{
-			Networks: openstackv1alpha1.Networks{
-				Router: &openstackv1alpha1.Router{
+		config = &api.InfrastructureConfig{
+			Networks: api.Networks{
+				Router: &api.Router{
 					ID: "1",
 				},
 				Worker: "10.1.0.0/16",
@@ -74,11 +73,15 @@ var _ = Describe("Terraform", func() {
 		podsCIDR := "11.0.0.0/16"
 		servicesCIDR := "12.0.0.0/16"
 
-		cloudProfileConfig = &openstackv1alpha1.CloudProfileConfig{
+		cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
+			TypeMeta: metav1.TypeMeta{
+				APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+				Kind:       "CloudProfileConfig",
+			},
 			DNSServers:  dnsServers,
 			KeyStoneURL: keystoneURL,
 		}
-		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
+		cloudProfileConfigJSON, _ := json.Marshal(cloudProfileConfig)
 		cluster = &controller.Cluster{
 			CloudProfile: &gardencorev1beta1.CloudProfile{
 				Spec: gardencorev1beta1.CloudProfileSpec{
@@ -214,34 +217,34 @@ var _ = Describe("Terraform", func() {
 		It("should correctly compute the status", func() {
 			status := StatusFromTerraformState(state)
 
-			Expect(status).To(Equal(&openstackv1alpha1.InfrastructureStatus{
+			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: metav1.TypeMeta{
-					APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+					APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
 					Kind:       "InfrastructureStatus",
 				},
-				Networks: openstackv1alpha1.NetworkStatus{
+				Networks: apiv1alpha1.NetworkStatus{
 					ID: state.NetworkID,
-					Router: openstackv1alpha1.RouterStatus{
+					Router: apiv1alpha1.RouterStatus{
 						ID: state.RouterID,
 					},
-					FloatingPool: openstackv1alpha1.FloatingPoolStatus{
+					FloatingPool: apiv1alpha1.FloatingPoolStatus{
 						ID: FloatingNetworkID,
 					},
-					Subnets: []openstackv1alpha1.Subnet{
+					Subnets: []apiv1alpha1.Subnet{
 						{
-							Purpose: openstackv1alpha1.PurposeNodes,
+							Purpose: apiv1alpha1.PurposeNodes,
 							ID:      state.SubnetID,
 						},
 					},
 				},
-				SecurityGroups: []openstackv1alpha1.SecurityGroup{
+				SecurityGroups: []apiv1alpha1.SecurityGroup{
 					{
-						Purpose: openstackv1alpha1.PurposeNodes,
+						Purpose: apiv1alpha1.PurposeNodes,
 						ID:      state.SecurityGroupID,
 						Name:    state.SecurityGroupName,
 					},
 				},
-				Node: openstackv1alpha1.NodeStatus{
+				Node: apiv1alpha1.NodeStatus{
 					KeyName: state.SSHKeyName,
 				},
 			}))

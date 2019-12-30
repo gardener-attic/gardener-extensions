@@ -18,6 +18,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/internal/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
@@ -29,12 +30,12 @@ import (
 
 // Reconcile implements infrastructure.Actuator.
 func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *controller.Cluster) error {
-	config, err := internal.InfrastructureConfigFromInfrastructure(infra)
+	config, err := helper.InfrastructureConfigFromInfrastructure(infra)
 	if err != nil {
 		return err
 	}
 
-	serviceAccount, err := infrastructure.GetServiceAccountFromInfrastructure(ctx, a.client, infra)
+	serviceAccount, err := infrastructure.GetServiceAccountFromInfrastructure(ctx, a.Client(), infra)
 	if err != nil {
 		return err
 	}
@@ -44,18 +45,18 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
-	terraformFiles, err := infrastructure.RenderTerraformerChart(a.chartRenderer, infra, serviceAccount, config, cluster)
+	terraformFiles, err := infrastructure.RenderTerraformerChart(a.ChartRenderer(), infra, serviceAccount, config, cluster)
 	if err != nil {
 		return err
 	}
 
-	tf, err := internal.NewTerraformer(a.restConfig, serviceAccount, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
+	tf, err := internal.NewTerraformer(a.RESTConfig(), serviceAccount, infrastructure.TerraformerPurpose, infra.Namespace, infra.Name)
 	if err != nil {
 		return err
 	}
 
 	if err := tf.
-		InitializeWith(terraformer.DefaultInitializer(a.client, terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars, terraformState.Data)).
+		InitializeWith(terraformer.DefaultInitializer(a.Client(), terraformFiles.Main, terraformFiles.Variables, terraformFiles.TFVars, terraformState.Data)).
 		Apply(); err != nil {
 
 		a.logger.Error(err, "failed to apply the terraform config", "infrastructure", infra.Name)

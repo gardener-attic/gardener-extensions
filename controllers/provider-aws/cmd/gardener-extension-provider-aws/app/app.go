@@ -135,7 +135,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			configFileOpts.Completed().ApplyMachineImages(&awsworker.DefaultAddOptions.MachineImagesToAMIMapping)
 			configFileOpts.Completed().ApplyETCDStorage(&awscontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&awscontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			backupBucketCtrlOpts.Completed().Apply(&awsbackupbucket.DefaultAddOptions.Controller)

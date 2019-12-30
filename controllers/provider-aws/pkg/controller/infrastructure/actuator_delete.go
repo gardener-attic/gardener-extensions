@@ -57,7 +57,7 @@ func (a *actuator) delete(ctx context.Context, infrastructure *extensionsv1alpha
 	vpcID := stateVariables[aws.VPCIDKey]
 
 	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(infrastructure.Spec.SecretRef.Namespace, infrastructure.Spec.SecretRef.Name), providerSecret); err != nil {
+	if err := a.Client().Get(ctx, kutil.Key(infrastructure.Spec.SecretRef.Namespace, infrastructure.Spec.SecretRef.Name), providerSecret); err != nil {
 		return err
 	}
 

@@ -31,7 +31,6 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/chartrenderer"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 
 	corev1 "k8s.io/api/core/v1"
@@ -42,12 +41,12 @@ import (
 
 func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1alpha1.Infrastructure, cluster *extensionscontroller.Cluster) error {
 	infrastructureConfig := &awsapi.InfrastructureConfig{}
-	if _, _, err := a.decoder.Decode(infrastructure.Spec.ProviderConfig.Raw, nil, infrastructureConfig); err != nil {
+	if _, _, err := a.Decoder().Decode(infrastructure.Spec.ProviderConfig.Raw, nil, infrastructureConfig); err != nil {
 		return fmt.Errorf("could not decode provider config: %+v", err)
 	}
 
 	providerSecret := &corev1.Secret{}
-	if err := a.client.Get(ctx, kutil.Key(infrastructure.Spec.SecretRef.Namespace, infrastructure.Spec.SecretRef.Name), providerSecret); err != nil {
+	if err := a.Client().Get(ctx, kutil.Key(infrastructure.Spec.SecretRef.Namespace, infrastructure.Spec.SecretRef.Name), providerSecret); err != nil {
 		return err
 	}
 
@@ -61,12 +60,7 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 		return err
 	}
 
-	chartRenderer, err := chartrenderer.NewForConfig(a.restConfig)
-	if err != nil {
-		return fmt.Errorf("could not create chart renderer: %+v", err)
-	}
-
-	release, err := chartRenderer.Render(filepath.Join(aws.InternalChartsPath, "aws-infra"), "aws-infra", infrastructure.Namespace, terraformConfig)
+	release, err := a.ChartRenderer().Render(filepath.Join(aws.InternalChartsPath, "aws-infra"), "aws-infra", infrastructure.Namespace, terraformConfig)
 	if err != nil {
 		return fmt.Errorf("could not render Terraform chart: %+v", err)
 	}
@@ -79,7 +73,7 @@ func (a *actuator) reconcile(ctx context.Context, infrastructure *extensionsv1al
 	if err := tf.
 		SetVariablesEnvironment(generateTerraformInfraVariablesEnvironment(providerSecret)).
 		InitializeWith(terraformer.DefaultInitializer(
-			a.client,
+			a.Client(),
 			release.FileContent("main.tf"),
 			release.FileContent("variables.tf"),
 			[]byte(release.FileContent("terraform.tfvars")),
@@ -200,7 +194,7 @@ func (a *actuator) updateProviderStatus(ctx context.Context, tf terraformer.Terr
 		return err
 	}
 
-	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.client, infrastructure, func() error {
+	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, a.Client(), infrastructure, func() error {
 		infrastructure.Status.ProviderStatus = &runtime.RawExtension{
 			Object: &awsv1alpha1.InfrastructureStatus{
 				TypeMeta: metav1.TypeMeta{

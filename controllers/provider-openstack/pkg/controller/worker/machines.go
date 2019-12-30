@@ -21,6 +21,7 @@ import (
 
 	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	openstackapi "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	openstackapihelper "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -62,12 +63,12 @@ func (w *workerDelegate) GenerateMachineDeployments(ctx context.Context) (worker
 }
 
 func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (map[string][]byte, error) {
-	credentials, err := internal.GetCredentials(ctx, w.client, w.worker.Spec.SecretRef)
+	credentials, err := internal.GetCredentials(ctx, w.Client(), w.worker.Spec.SecretRef)
 	if err != nil {
 		return nil, err
 	}
 
-	cloudProfileConfig, err := internal.CloudProfileConfigFromCloudProfile(w.cluster.CloudProfile)
+	cloudProfileConfig, err := helper.CloudProfileConfigFromCluster(w.cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +96,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	}
 
 	infrastructureStatus := &openstackapi.InfrastructureStatus{}
-	if _, _, err := w.decoder.Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
+	if _, _, err := w.Decoder().Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
 		return err
 	}
 
@@ -112,15 +113,11 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			return err
 		}
 
-		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version, w.cluster.CloudProfile.Name)
+		machineImage, err := w.findMachineImage(pool.MachineImage.Name, pool.MachineImage.Version)
 		if err != nil {
 			return err
 		}
-		machineImages = appendMachineImage(machineImages, apisopenstack.MachineImage{
-			Name:    pool.MachineImage.Name,
-			Version: pool.MachineImage.Version,
-			Image:   machineImage,
-		})
+		machineImages = appendMachineImage(machineImages, *machineImage)
 
 		for zoneIndex, zone := range pool.Zones {
 			machineClassSpec := map[string]interface{}{
@@ -128,7 +125,6 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"availabilityZone": zone,
 				"machineType":      pool.MachineType,
 				"keyName":          infrastructureStatus.Node.KeyName,
-				"imageName":        machineImage,
 				"networkID":        infrastructureStatus.Networks.ID,
 				"podNetworkCidr":   extensionscontroller.GetPodNetwork(w.cluster),
 				"securityGroups":   []string{nodesSecurityGroup.Name},
@@ -141,6 +137,12 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				},
 			}
 
+			if machineImage.ID != "" {
+				machineClassSpec["imageID"] = machineImage.ID
+
+			} else {
+				machineClassSpec["imageName"] = machineImage.Image
+			}
 			var (
 				deploymentName = fmt.Sprintf("%s-%s-z%d", w.worker.Namespace, pool.Name, zoneIndex+1)
 				className      = fmt.Sprintf("%s-%s", deploymentName, workerPoolHash)
