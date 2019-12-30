@@ -99,6 +99,12 @@ func ComputeTerraformerChartValues(
 		}
 	}
 
+	workersCIDR := config.Networks.Workers
+	// Backwards compatibility - remove this code in a future version.
+	if workersCIDR == "" {
+		workersCIDR = config.Networks.Worker
+	}
+
 	return map[string]interface{}{
 		"google": map[string]interface{}{
 			"region":  infra.Spec.Region,
@@ -113,7 +119,7 @@ func ComputeTerraformerChartValues(
 		"networks": map[string]interface{}{
 			"pods":     extensionscontroller.GetPodNetwork(cluster),
 			"services": extensionscontroller.GetServiceNetwork(cluster),
-			"worker":   config.Networks.Worker,
+			"workers":  workersCIDR,
 			"internal": config.Networks.Internal,
 			"cloudNAT": map[string]interface{}{
 				"minPortsPerVM": minPortsPerVM,

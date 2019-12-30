@@ -18,8 +18,8 @@ networks:
     minPortsPerVM: 2048
   services: 100.64.0.0/13
   pods: 100.96.0.0/11
-  worker: 10.250.0.0/19
-#  internal: 10.250.112.0/22
+  workers: 10.250.0.0/19
+# internal: 10.250.112.0/22
 
 outputKeys:
   vpcName: vpc_name

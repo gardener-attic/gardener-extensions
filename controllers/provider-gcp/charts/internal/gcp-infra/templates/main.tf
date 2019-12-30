@@ -26,7 +26,7 @@ resource "google_compute_network" "network" {
 
 resource "google_compute_subnetwork" "subnetwork-nodes" {
   name          = "{{ required "clusterName is required" .Values.clusterName }}-nodes"
-  ip_cidr_range = "{{ required "networks.worker is required" .Values.networks.worker }}"
+  ip_cidr_range = "{{ required "networks.workers is required" .Values.networks.workers }}"
   network       = "{{ required "vpc.name is required" .Values.vpc.name }}"
   region        = "{{ required "google.region is required" .Values.google.region }}"
 }

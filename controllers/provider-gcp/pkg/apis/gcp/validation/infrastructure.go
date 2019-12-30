@@ -43,13 +43,21 @@ func ValidateInfrastructureConfig(infra *apisgcp.InfrastructureConfig, nodesCIDR
 	}
 
 	networksPath := field.NewPath("networks")
-	if len(infra.Networks.Worker) == 0 {
-		allErrs = append(allErrs, field.Required(networksPath.Child("worker"), "must specify the network range for the worker network"))
+	if len(infra.Networks.Worker) == 0 && len(infra.Networks.Workers) == 0 {
+		allErrs = append(allErrs, field.Required(networksPath.Child("workers"), "must specify the network range for the worker network"))
 	}
 
-	workerCIDR := cidrvalidation.NewCIDR(infra.Networks.Worker, networksPath.Child("worker"))
-	allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(workerCIDR)...)
-	allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("worker"), infra.Networks.Worker)...)
+	var workerCIDR cidrvalidation.CIDR
+	if infra.Networks.Worker != "" {
+		workerCIDR = cidrvalidation.NewCIDR(infra.Networks.Worker, networksPath.Child("worker"))
+		allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(workerCIDR)...)
+		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("worker"), infra.Networks.Worker)...)
+	}
+	if infra.Networks.Workers != "" {
+		workerCIDR = cidrvalidation.NewCIDR(infra.Networks.Workers, networksPath.Child("workers"))
+		allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(workerCIDR)...)
+		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(networksPath.Child("workers"), infra.Networks.Workers)...)
+	}
 
 	if infra.Networks.Internal != nil {
 		internalCIDR := cidrvalidation.NewCIDR(*infra.Networks.Internal, networksPath.Child("internal"))

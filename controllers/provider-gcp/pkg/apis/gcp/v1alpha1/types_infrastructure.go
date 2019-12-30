@@ -40,8 +40,11 @@ type NetworkConfig struct {
 	// Internal is a private subnet (used for internal load balancers).
 	// +optional
 	Internal *string `json:"internal,omitempty"`
-	// Workers is the worker subnet range to create (used for the VMs).
+	// Worker is the worker subnet range to create (used for the VMs).
+	// Deprecated - use `workers` instead.
 	Worker string `json:"worker"`
+	// Workers is the worker subnet range to create (used for the VMs).
+	Workers string `json:"workers"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

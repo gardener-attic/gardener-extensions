@@ -36,7 +36,7 @@ networks:
 #   name: my-vpc
 #   cloudRouter:
 #     name: my-cloudrouter
-  worker: 10.250.0.0/16
+  workers: 10.250.0.0/16
 # internal: 10.251.0.0/16
 # cloudNAT:
 #   minPortsPerVM: 2048
@@ -108,7 +108,7 @@ spec:
       apiVersion: gcp.provider.extensions.gardener.cloud/v1alpha1
       kind: InfrastructureConfig
       networks:
-        worker: 10.250.0.0/16
+        workers: 10.250.0.0/16
     controlPlaneConfig:
       apiVersion: gcp.provider.extensions.gardener.cloud/v1alpha1
       kind: ControlPlaneConfig

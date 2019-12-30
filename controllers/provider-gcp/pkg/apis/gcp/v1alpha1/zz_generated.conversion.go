@@ -413,6 +413,7 @@ func autoConvert_v1alpha1_NetworkConfig_To_gcp_NetworkConfig(in *NetworkConfig, 
 	out.CloudNAT = (*gcp.CloudNAT)(unsafe.Pointer(in.CloudNAT))
 	out.Internal = (*string)(unsafe.Pointer(in.Internal))
 	out.Worker = in.Worker
+	out.Workers = in.Workers
 	return nil
 }
 
@@ -426,6 +427,7 @@ func autoConvert_gcp_NetworkConfig_To_v1alpha1_NetworkConfig(in *gcp.NetworkConf
 	out.CloudNAT = (*CloudNAT)(unsafe.Pointer(in.CloudNAT))
 	out.Internal = (*string)(unsafe.Pointer(in.Internal))
 	out.Worker = in.Worker
+	out.Workers = in.Workers
 	return nil
 }
 

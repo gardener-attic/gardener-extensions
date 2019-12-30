@@ -43,7 +43,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 					Name: "hugo",
 				},
 				Internal: &internal,
-				Worker:   "10.250.0.0/16",
+				Workers:  "10.250.0.0/16",
 			},
 		}
 	})
@@ -51,13 +51,13 @@ var _ = Describe("InfrastructureConfig validation", func() {
 	Describe("#ValidateInfrastructureConfig", func() {
 		Context("CIDR", func() {
 			It("should forbid invalid worker CIDRs", func() {
-				infrastructureConfig.Networks.Worker = invalidCIDR
+				infrastructureConfig.Networks.Workers = invalidCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.worker"),
+					"Field":  Equal("networks.workers"),
 					"Detail": Equal("invalid CIDR address: invalid-cidr"),
 				}))
 			})
@@ -76,13 +76,13 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			})
 
 			It("should forbid workers CIDR which are not in Nodes CIDR", func() {
-				infrastructureConfig.Networks.Worker = "1.1.1.1/32"
+				infrastructureConfig.Networks.Workers = "1.1.1.1/32"
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.worker"),
+					"Field":  Equal("networks.workers"),
 					"Detail": Equal(`must be a subset of "" ("10.250.0.0/16")`),
 				}))
 			})
@@ -90,7 +90,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			It("should forbid Internal CIDR to overlap with Node - and Worker CIDR", func() {
 				overlappingCIDR := "10.250.1.0/30"
 				infrastructureConfig.Networks.Internal = &overlappingCIDR
-				infrastructureConfig.Networks.Worker = overlappingCIDR
+				infrastructureConfig.Networks.Workers = overlappingCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &overlappingCIDR, &pods, &services)
 
@@ -101,7 +101,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				}, Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
 					"Field":  Equal("networks.internal"),
-					"Detail": Equal(`must not be a subset of "networks.worker" ("10.250.1.0/30")`),
+					"Detail": Equal(`must not be a subset of "networks.workers" ("10.250.1.0/30")`),
 				}))
 			})
 
@@ -111,7 +111,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				serviceCIDR := "100.64.0.5/13"
 				internal := "10.10.0.4/24"
 				infrastructureConfig.Networks.Internal = &internal
-				infrastructureConfig.Networks.Worker = "10.250.3.8/24"
+				infrastructureConfig.Networks.Workers = "10.250.3.8/24"
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodeCIDR, &podCIDR, &serviceCIDR)
 
@@ -122,7 +122,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 					"Detail": Equal("must be valid canonical CIDR"),
 				}, Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
-					"Field":  Equal("networks.worker"),
+					"Field":  Equal("networks.workers"),
 					"Detail": Equal("must be valid canonical CIDR"),
 				}))
 			})

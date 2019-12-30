@@ -17,10 +17,11 @@ package main
 
 import (
 	"flag"
-	"github.com/pkg/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"reflect"
+
+	"github.com/pkg/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/v1alpha1"
 	"github.com/gardener/gardener-extensions/test/tm/generator"
@@ -52,7 +53,7 @@ func main() {
 			Kind:       reflect.TypeOf(v1alpha1.InfrastructureConfig{}).Name(),
 		},
 		Networks: v1alpha1.NetworkConfig{
-			Worker: *networkWorkerCidr,
+			Workers: *networkWorkerCidr,
 		},
 	}
 
