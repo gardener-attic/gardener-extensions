@@ -91,7 +91,10 @@ type Zone struct {
 	// Name is the name of a zone.
 	Name string `json:"name"`
 	// Worker specifies the worker CIDR to use.
+	// Deprecated - use `workers` instead.
 	Worker string `json:"worker"`
+	// Workers specifies the worker CIDR to use.
+	Workers string `json:"workers"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

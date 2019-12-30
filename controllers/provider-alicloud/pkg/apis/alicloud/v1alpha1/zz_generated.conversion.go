@@ -511,6 +511,7 @@ func Convert_alicloud_WorkerStatus_To_v1alpha1_WorkerStatus(in *alicloud.WorkerS
 func autoConvert_v1alpha1_Zone_To_alicloud_Zone(in *Zone, out *alicloud.Zone, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Worker = in.Worker
+	out.Workers = in.Workers
 	return nil
 }
 
@@ -522,6 +523,7 @@ func Convert_v1alpha1_Zone_To_alicloud_Zone(in *Zone, out *alicloud.Zone, s conv
 func autoConvert_alicloud_Zone_To_v1alpha1_Zone(in *alicloud.Zone, out *Zone, s conversion.Scope) error {
 	out.Name = in.Name
 	out.Worker = in.Worker
+	out.Workers = in.Workers
 	return nil
 }
 

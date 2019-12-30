@@ -17,10 +17,11 @@ package main
 
 import (
 	"flag"
-	"github.com/pkg/errors"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"reflect"
+
+	"github.com/pkg/errors"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	"github.com/gardener/gardener-extensions/test/tm/generator"
@@ -58,8 +59,8 @@ func main() {
 			},
 			Zones: []v1alpha1.Zone{
 				{
-					Name:   *zone,
-					Worker: *networkWorkerCidr,
+					Name:    *zone,
+					Workers: *networkWorkerCidr,
 				},
 			},
 		},

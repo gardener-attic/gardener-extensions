@@ -38,7 +38,7 @@ networks:
     cidr: 10.250.0.0/16
   zones:
   - name: eu-central-1a
-    worker: 10.250.1.0/24
+    workers: 10.250.1.0/24
 ```
 
 The `networks.vpc` section describes whether you want to create the shoot cluster in an already existing VPC or whether to create a new one:
@@ -51,7 +51,7 @@ You can freely choose a private CIDR range.
 The `networks.zones` section describes which subnets you want to create in availability zones.
 For every zone, the Alicloud extension creates one subnet:
 
-* The `worker` subnet is used for all shoot worker nodes, i.e., VMs which later run your applications.
+* The `workers` subnet is used for all shoot worker nodes, i.e., VMs which later run your applications.
 
 For every subnet, you have to specify a CIDR range contained in the VPC CIDR specified above, or the VPC CIDR of your already existing VPC.
 You can freely choose these CIDR and it is your responsibility to properly design the network layout to suit your needs.
@@ -108,7 +108,7 @@ spec:
           cidr: 10.250.0.0/16
         zones:
         - name: eu-central-1a
-          worker: 10.250.0.0/19
+          workers: 10.250.0.0/19
     controlPlaneConfig:
       apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
       kind: ControlPlaneConfig
@@ -164,9 +164,9 @@ spec:
           cidr: 10.250.0.0/16
         zones:
         - name: eu-central-1a
-          worker: 10.250.0.0/26
+          workers: 10.250.0.0/26
         - name: eu-central-1b
-          worker: 10.250.0.64/26
+          workers: 10.250.0.64/26
     controlPlaneConfig:
       apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
       kind: ControlPlaneConfig

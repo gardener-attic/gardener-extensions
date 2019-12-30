@@ -58,10 +58,15 @@ func (terraformOps) ComputeChartValues(
 ) map[string]interface{} {
 	zones := make([]map[string]interface{}, 0, len(config.Networks.Zones))
 	for _, zone := range config.Networks.Zones {
+		workersCIDR := zone.Workers
+		// Backwards compatibility - remove this code in a future version.
+		if workersCIDR == "" {
+			workersCIDR = zone.Worker
+		}
 		zones = append(zones, map[string]interface{}{
 			"name": zone.Name,
 			"cidr": map[string]interface{}{
-				"worker": string(zone.Worker),
+				"workers": string(workersCIDR),
 			},
 		})
 	}

@@ -53,10 +53,19 @@ func ValidateInfrastructureConfig(infra *apisalicloud.InfrastructureConfig, node
 	)
 
 	for i, zone := range infra.Networks.Zones {
-		workerPath := networksPath.Child("zones").Index(i).Child("workers")
-		cidrs = append(cidrs, cidrvalidation.NewCIDR(zone.Worker, workerPath))
-		allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(workerPath, zone.Worker)...)
-		workerCIDRs = append(workerCIDRs, cidrvalidation.NewCIDR(zone.Worker, workerPath))
+		if zone.Worker != "" {
+			workerPath := networksPath.Child("zones").Index(i).Child("worker")
+			cidrs = append(cidrs, cidrvalidation.NewCIDR(zone.Worker, workerPath))
+			allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(workerPath, zone.Worker)...)
+			workerCIDRs = append(workerCIDRs, cidrvalidation.NewCIDR(zone.Worker, workerPath))
+		}
+
+		if zone.Workers != "" {
+			workerPath := networksPath.Child("zones").Index(i).Child("workers")
+			cidrs = append(cidrs, cidrvalidation.NewCIDR(zone.Workers, workerPath))
+			allErrs = append(allErrs, cidrvalidation.ValidateCIDRIsCanonical(workerPath, zone.Workers)...)
+			workerCIDRs = append(workerCIDRs, cidrvalidation.NewCIDR(zone.Workers, workerPath))
+		}
 	}
 
 	allErrs = append(allErrs, cidrvalidation.ValidateCIDRParse(cidrs...)...)
