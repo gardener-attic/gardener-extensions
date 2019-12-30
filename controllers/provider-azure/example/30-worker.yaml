@@ -58,6 +58,8 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--azure
+  annotations:
+    gardener.cloud/operation: reconcile
 spec:
   type: azure
   region: westeurope

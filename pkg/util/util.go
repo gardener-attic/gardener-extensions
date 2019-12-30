@@ -53,3 +53,7 @@ func ObjectName(obj runtime.Object) string {
 	}
 	return k.String()
 }
+
+// Use can be used to mark go elements as used to temporaryly avoid compiler
+// errors due to unused elements.
+func Use(_ ...interface{}) {}

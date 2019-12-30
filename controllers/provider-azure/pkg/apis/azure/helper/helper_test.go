@@ -23,6 +23,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var (
+	profileURN = "publisher:offer:sku:1.2.4"
+)
+
 var _ = Describe("Helper", func() {
 	var (
 		purpose      api.Purpose = "foo"
@@ -102,13 +106,7 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found", []api.DomainCount{{Region: "bar", Count: 1}}, "foo", 0, true),
 		Entry("entry exists", []api.DomainCount{{Region: "bar", Count: 1}}, "bar", 1, false),
 	)
-})
 
-var (
-	profileURN = "publisher:offer:sku:1.2.4"
-)
-
-var _ = Describe("Helper", func() {
 	DescribeTable("#FindImage",
 		func(profileImages []api.MachineImages, imageName, version string, expectedImage *api.MachineImage) {
 			cfg := &api.CloudProfileConfig{}

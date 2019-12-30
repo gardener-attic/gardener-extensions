@@ -48,7 +48,6 @@ metadata:
   name: worker
   namespace: shoot--foobar--packet
   annotations:
-    xgardener.cloud/operation: reconcile
     gardener.cloud/operation: reconcile
 spec:
   type: packet

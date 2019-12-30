@@ -49,6 +49,8 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--alicloud
+  annotations:
+    gardener.cloud/operation: reconcile
 spec:
   type: alicloud
   region: cn-beijing

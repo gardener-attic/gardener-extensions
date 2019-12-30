@@ -17,7 +17,7 @@ package worker
 import (
 	"context"
 
-	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	api "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/imagevector"
@@ -89,13 +89,13 @@ type workerDelegate struct {
 	seedChartApplier gardener.ChartApplier
 	serverVersion    string
 
-	profileConfig *apisaws.CloudProfileConfig
-	cluster       *extensionscontroller.Cluster
-	worker        *extensionsv1alpha1.Worker
+	cloudProfileConfig *api.CloudProfileConfig
+	cluster            *extensionscontroller.Cluster
+	worker             *extensionsv1alpha1.Worker
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
-	machineImages      []apisaws.MachineImage
+	machineImages      []api.MachineImage
 }
 
 // NewWorkerDelegate creates a new context for a worker reconciliation.
@@ -118,8 +118,8 @@ func NewWorkerDelegate(
 		seedChartApplier: seedChartApplier,
 		serverVersion:    serverVersion,
 
-		profileConfig: config,
-		cluster:       cluster,
-		worker:        worker,
+		cloudProfileConfig: config,
+		cluster:            cluster,
+		worker:             worker,
 	}, nil
 }

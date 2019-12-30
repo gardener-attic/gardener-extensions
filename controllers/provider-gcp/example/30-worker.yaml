@@ -47,7 +47,6 @@ metadata:
   name: worker
   namespace: shoot--foobar--gcp
   annotations:
-    xgardener.cloud/operation: reconcile
     gardener.cloud/operation: reconcile
 spec:
   type: gcp

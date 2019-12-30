@@ -85,9 +85,7 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found (no version)", []api.MachineImage{{Name: "bar", Version: "1.2.3"}}, "foo", "1.2.3", nil, true),
 		Entry("entry exists", []api.MachineImage{{Name: "bar", Version: "1.2.3"}}, "bar", "1.2.3", &api.MachineImage{Name: "bar", Version: "1.2.3"}, false),
 	)
-})
 
-var _ = Describe("Helper", func() {
 	DescribeTable("#FindAMIForRegion",
 		func(profileImages []api.MachineImages, imageName, version, regionName, expectedAMI string) {
 			cfg := &api.CloudProfileConfig{}

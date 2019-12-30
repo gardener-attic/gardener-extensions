@@ -16,6 +16,7 @@ package worker
 
 import (
 	"context"
+
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/imagevector"
@@ -89,9 +90,9 @@ type workerDelegate struct {
 	seedChartApplier gardener.ChartApplier
 	serverVersion    string
 
-	profileConfig *api.CloudProfileConfig
-	cluster       *extensionscontroller.Cluster
-	worker        *extensionsv1alpha1.Worker
+	cloudProfileConfig *api.CloudProfileConfig
+	cluster            *extensionscontroller.Cluster
+	worker             *extensionsv1alpha1.Worker
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
@@ -118,8 +119,8 @@ func NewWorkerDelegate(
 		seedChartApplier: seedChartApplier,
 		serverVersion:    serverVersion,
 
-		profileConfig: config,
-		cluster:       cluster,
-		worker:        worker,
+		cloudProfileConfig: config,
+		cluster:            cluster,
+		worker:             worker,
 	}, nil
 }

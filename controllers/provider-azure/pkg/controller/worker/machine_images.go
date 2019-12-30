@@ -16,7 +16,7 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 
 	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/helper"
@@ -62,7 +62,7 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version string) (urn *string, err error) {
-	machineImage, err := helper.FindImageFromCloudProfile(w.profileConfig, name, version)
+	machineImage, err := helper.FindImageFromCloudProfile(w.cloudProfileConfig, name, version)
 	if err == nil {
 		return machineImage.URN, nil
 	}
@@ -76,17 +76,13 @@ func (w *workerDelegate) findMachineImage(name, version string) (urn *string, er
 
 		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
-			return nil, errorMachineImageNotFound(name, version)
+			return nil, worker.ErrorMachineImageNotFound(name, version)
 		}
 
 		return machineImage.URN, nil
 	}
 
-	return nil, errorMachineImageNotFound(name, version)
-}
-
-func errorMachineImageNotFound(name, version string) error {
-	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig nor in worker status", name, version)
+	return nil, worker.ErrorMachineImageNotFound(name, version)
 }
 
 func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {

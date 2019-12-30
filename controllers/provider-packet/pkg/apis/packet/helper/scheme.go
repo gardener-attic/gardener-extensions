@@ -55,7 +55,6 @@ func InfrastructureConfigFromInfrastructure(infra *extensionsv1alpha1.Infrastruc
 		if _, _, err := decoder.Decode(infra.Spec.ProviderConfig.Raw, nil, config); err != nil {
 			return nil, err
 		}
-
 		return config, nil
 	}
 	return nil, fmt.Errorf("provider config is not set on the infrastructure resource")
@@ -68,7 +67,6 @@ func CloudProfileConfigFromCluster(cluster *controller.Cluster) (*api.CloudProfi
 		cloudProfileConfig = &api.CloudProfileConfig{}
 		if _, _, err := decoder.Decode(cluster.CloudProfile.Spec.ProviderConfig.Raw, nil, cloudProfileConfig); err != nil {
 			return nil, errors.Wrapf(err, "could not decode providerConfig of cloudProfile for '%s'", util.ObjectName(cluster.CloudProfile))
-
 		}
 	}
 	return cloudProfileConfig, nil

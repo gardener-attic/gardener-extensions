@@ -18,7 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
-	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
+	api "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/imagevector"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -89,13 +89,13 @@ type workerDelegate struct {
 	seedChartApplier gardener.ChartApplier
 	serverVersion    string
 
-	profileConfig *apisalicloud.CloudProfileConfig
-	cluster       *extensionscontroller.Cluster
-	worker        *extensionsv1alpha1.Worker
+	cloudProfileConfig *api.CloudProfileConfig
+	cluster            *extensionscontroller.Cluster
+	worker             *extensionsv1alpha1.Worker
 
 	machineClasses     []map[string]interface{}
 	machineDeployments worker.MachineDeployments
-	machineImages      []apisalicloud.MachineImage
+	machineImages      []api.MachineImage
 }
 
 // NewWorkerDelegate creates a new context for a worker reconciliation.
@@ -118,8 +118,8 @@ func NewWorkerDelegate(
 		seedChartApplier: seedChartApplier,
 		serverVersion:    serverVersion,
 
-		profileConfig: config,
-		cluster:       cluster,
-		worker:        worker,
+		cloudProfileConfig: config,
+		cluster:            cluster,
+		worker:             worker,
 	}, nil
 }

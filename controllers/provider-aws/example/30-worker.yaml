@@ -51,6 +51,8 @@ kind: Worker
 metadata:
   name: worker
   namespace: shoot--foobar--aws
+  annotations:
+    gardener.cloud/operation: reconcile
 spec:
   type: aws
   region: eu-west-1

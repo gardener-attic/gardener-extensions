@@ -23,6 +23,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const profileImage = "project/path/to/profile/image"
+
 var _ = Describe("Helper", func() {
 	var (
 		purpose      api.SubnetPurpose = "foo"
@@ -53,11 +55,7 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found (no version)", []api.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "foo", "1.2.4", nil, true),
 		Entry("entry exists", []api.MachineImage{{Name: "bar", Version: "1.2.3", Image: "image123"}}, "bar", "1.2.3", &api.MachineImage{Name: "bar", Version: "1.2.3", Image: "image123"}, false),
 	)
-})
 
-const profileImage = "project/path/to/profile/image"
-
-var _ = Describe("Helper", func() {
 	DescribeTable("#FindImage",
 		func(profileImages []api.MachineImages, imageName, version string, expectedImage string) {
 			cfg := &api.CloudProfileConfig{}

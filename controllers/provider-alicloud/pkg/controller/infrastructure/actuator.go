@@ -324,13 +324,15 @@ func (a *actuator) shareCustomizedImages(ctx context.Context, infra *extensionsv
 	if err != nil {
 		return nil, err
 	}
-	cfg, err := helper.CloudProfileConfigFromCluster(cluster)
+
+	cloudProfileConfig, err := helper.CloudProfileConfigFromCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
+
 	a.logger.Info("Sharing customized image with Shoot's Alicloud account from Seed", "infrastructure", infra.Name)
 	for _, worker := range cluster.Shoot.Spec.Provider.Workers {
-		imageID, err := helper.FindImageFromCloudProfile(cfg, worker.Machine.Image.Name, worker.Machine.Image.Version)
+		imageID, err := helper.FindImageFromCloudProfile(cloudProfileConfig, worker.Machine.Image.Name, worker.Machine.Image.Version)
 		if err != nil {
 			if providerStatus := infra.Status.ProviderStatus; providerStatus != nil {
 				infrastructureStatus := &apisalicloud.InfrastructureStatus{}

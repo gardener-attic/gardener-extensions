@@ -16,7 +16,7 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
@@ -62,7 +62,7 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version string) (*api.MachineImage, error) {
-	image, err := helper.FindImageFromCloudProfile(w.profileConfig, name, version, w.cluster.Shoot.Spec.Region)
+	image, err := helper.FindImageFromCloudProfile(w.cloudProfileConfig, name, version, w.cluster.Shoot.Spec.Region)
 	if err == nil {
 		return image, nil
 	}
@@ -76,17 +76,13 @@ func (w *workerDelegate) findMachineImage(name, version string) (*api.MachineIma
 
 		machineImage, err := helper.FindMachineImage(workerStatus.MachineImages, name, version)
 		if err != nil {
-			return nil, errorMachineImageNotFound(name, version)
+			return nil, worker.ErrorMachineImageNotFound(name, version)
 		}
 
 		return machineImage, nil
 	}
 
-	return nil, errorMachineImageNotFound(name, version)
-}
-
-func errorMachineImageNotFound(name, version string) error {
-	return fmt.Errorf("could not find machine image for %s/%s neither in componentconfig nor in worker status", name, version)
+	return nil, worker.ErrorMachineImageNotFound(name, version)
 }
 
 func appendMachineImage(machineImages []api.MachineImage, machineImage api.MachineImage) []api.MachineImage {

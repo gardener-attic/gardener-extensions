@@ -93,9 +93,9 @@ func FindDomainCountByRegion(domainCounts []api.DomainCount, region string) (int
 // FindImageFromCloudProfile takes a list of machine images, and the desired image name and version. It tries
 // to find the image with the given name and version. If it cannot be found then an error
 // is returned.
-func FindImageFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion string) (*api.MachineImage, error) {
-	if profileConfig != nil {
-		for _, machineImage := range profileConfig.MachineImages {
+func FindImageFromCloudProfile(cloudProfileConfig *api.CloudProfileConfig, imageName, imageVersion string) (*api.MachineImage, error) {
+	if cloudProfileConfig != nil {
+		for _, machineImage := range cloudProfileConfig.MachineImages {
 			if machineImage.Name != imageName {
 				continue
 			}

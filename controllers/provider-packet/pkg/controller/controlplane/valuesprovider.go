@@ -19,7 +19,6 @@ import (
 	"encoding/base64"
 	"path/filepath"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
@@ -177,12 +176,6 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	checksums map[string]string,
 	scaledDown bool,
 ) (map[string]interface{}, error) {
-	// Decode providerConfig
-	_, err := helper.CloudProfileConfigFromCluster(cluster)
-	if err != nil {
-		return nil, err
-	}
-
 	// Get control plane chart values
 	return getControlPlaneChartValues(cp, cluster, checksums, scaledDown)
 }

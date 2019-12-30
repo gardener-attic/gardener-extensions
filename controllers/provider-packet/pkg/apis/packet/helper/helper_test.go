@@ -23,6 +23,9 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const configImage = "some-uuid"
+const profileImage = "some-other-uuid"
+
 var _ = Describe("Helper", func() {
 	DescribeTable("#FindMachineImage",
 		func(machineImages []api.MachineImage, name, version string, expectedMachineImage *api.MachineImage, expectErr bool) {
@@ -36,12 +39,7 @@ var _ = Describe("Helper", func() {
 		Entry("entry not found (no version)", []api.MachineImage{{Name: "bar", Version: "1.2.3", ID: "1234"}}, "foo", "1.2.4", nil, true),
 		Entry("entry exists", []api.MachineImage{{Name: "bar", Version: "1.2.3", ID: "1234"}}, "bar", "1.2.3", &api.MachineImage{Name: "bar", Version: "1.2.3", ID: "1234"}, false),
 	)
-})
 
-const configImage = "some-uuid"
-const profileImage = "some-other-uuid"
-
-var _ = Describe("Helper", func() {
 	DescribeTable("#FindImage",
 		func(profileImages []api.MachineImages, imageName, version string, expectedImage string) {
 			cfg := &api.CloudProfileConfig{}

@@ -45,8 +45,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func dummyUse(interface{}) {}
-
 var _ = Describe("Machines", func() {
 	var (
 		ctrl         *gomock.Controller
@@ -332,8 +330,6 @@ var _ = Describe("Machines", func() {
 
 				workerPoolHash1, _ = worker.WorkerPoolHash(w.Spec.Pools[0], cluster)
 				workerPoolHash2, _ = worker.WorkerPoolHash(w.Spec.Pools[1], cluster)
-
-				dummyUse(cluster)
 
 				workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, clusterWithoutImages)
 			})

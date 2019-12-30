@@ -59,7 +59,6 @@ metadata:
   name: worker
   namespace: shoot--foobar--openstack
   annotations:
-    xgardener.cloud/operation: reconcile
     gardener.cloud/operation: reconcile
 spec:
   type: openstack

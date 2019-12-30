@@ -95,9 +95,9 @@ func FindMachineImage(machineImages []api.MachineImage, name, version string) (*
 // FindAMIForRegionFromCloudProfile takes a list of machine images, and the desired image name, version, and region. It tries
 // to find the image with the given name and version in the desired region. If it cannot be found then an error
 // is returned.
-func FindAMIForRegionFromCloudProfile(profileConfig *api.CloudProfileConfig, imageName, imageVersion, regionName string) (string, error) {
-	if profileConfig != nil {
-		for _, machineImage := range profileConfig.MachineImages {
+func FindAMIForRegionFromCloudProfile(cloudProfileConfig *api.CloudProfileConfig, imageName, imageVersion, regionName string) (string, error) {
+	if cloudProfileConfig != nil {
+		for _, machineImage := range cloudProfileConfig.MachineImages {
 			if machineImage.Name != imageName {
 				continue
 			}

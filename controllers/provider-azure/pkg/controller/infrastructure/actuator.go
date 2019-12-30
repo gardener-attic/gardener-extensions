@@ -60,6 +60,7 @@ func (a *actuator) updateProviderStatus(
 	if err != nil {
 		return err
 	}
+
 	stateByte, err := state.Marshal()
 	if err != nil {
 		return err
