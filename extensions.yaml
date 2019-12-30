@@ -34,9 +34,6 @@ extensions:
 - name: provider-packet
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-packet
-- name: extension-certificate-service
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/extension-certificate-service
 - name: dns-external
   gitHubRepo: https://github.com/gardener/external-dns-management
   examplePath: examples/gardener-controllerregistration.yaml
