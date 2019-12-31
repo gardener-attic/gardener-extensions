@@ -15,6 +15,8 @@ webhooks:
     resources:
     - shoots
   failurePolicy: Fail
+  objectSelector: {}
+  namespaceSelector: {}
   clientConfig:
     {{- if .Values.global.virtualGarden.enabled }}
     url: {{ printf "https://gardener-extensions-validator-aws.%s/webhooks/validate-shoot-aws" .Release.Namespace }}

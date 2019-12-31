@@ -23,6 +23,8 @@ spec:
     spec:
       {{- if .Values.global.kubeconfig }}
       automountServiceAccountToken: false
+      {{- else }}
+      serviceAccountName: {{ include "name" . }}
       {{- end }}
       containers:
       - name: {{ include "name" . }}
@@ -58,7 +60,6 @@ spec:
           mountPath: /etc/gardener-extensions-validator-aws/kubeconfig
           readOnly: true
         {{- end }}
-      serviceAccountName: {{ include "name" . }}
       volumes:
       - name: gardener-extensions-validator-aws-cert
         secret:
