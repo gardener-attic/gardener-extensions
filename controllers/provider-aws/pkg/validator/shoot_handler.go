@@ -19,12 +19,13 @@ import (
 	"net/http"
 
 	provideraws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/gardener/gardener-extensions/pkg/util"
+	"github.com/gardener/gardener/pkg/apis/garden"
+
 	"github.com/go-logr/logr"
+	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
-
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -38,10 +39,8 @@ type Shoot struct {
 
 // Handle implements Handler.Handle
 func (v *Shoot) Handle(ctx context.Context, req admission.Request) admission.Response {
-	shoot := &gardencorev1beta1.Shoot{}
-
-	_, _, err := v.decoder.Decode(req.Object.Raw, nil, shoot)
-	if err != nil {
+	shoot := &garden.Shoot{}
+	if err := util.Decode(v.decoder, req.Object.Raw, shoot); err != nil {
 		v.Logger.Error(err, "failed to decode shoot", string(req.Object.Raw))
 		return admission.Errored(http.StatusBadRequest, err)
 	}
@@ -57,9 +56,8 @@ func (v *Shoot) Handle(ctx context.Context, req admission.Request) admission.Res
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 	case admissionv1beta1.Update:
-		oldShoot := &gardencorev1beta1.Shoot{}
-		_, _, err := v.decoder.Decode(req.OldObject.Raw, nil, oldShoot)
-		if err != nil {
+		oldShoot := &garden.Shoot{}
+		if err := util.Decode(v.decoder, req.Object.Raw, oldShoot); err != nil {
 			v.Logger.Error(err, "failed to decode old shoot", string(req.OldObject.Raw))
 			return admission.Errored(http.StatusBadRequest, err)
 		}
