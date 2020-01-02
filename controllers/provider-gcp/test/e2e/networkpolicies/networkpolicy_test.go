@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
+Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the LICENSE file
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -851,6 +851,7 @@ var _ = Describe("Network Policy Testing", func() {
 
 			By(fmt.Sprintf("Creating Pod %s/%s", sourcePod.Namespace, sourcePod.Name))
 			err := shootTestOperations.SeedClient.Client().Create(ctx, pod)
+			Expect(err).NotTo(HaveOccurred())
 
 			By(fmt.Sprintf("Waiting foo Pod %s/%s to be running", sourcePod.Namespace, sourcePod.Name))
 			err = shootTestOperations.WaitUntilPodIsRunning(ctx, pod.GetName(), sourcePod.Namespace, shootTestOperations.SeedClient)
