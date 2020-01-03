@@ -641,6 +641,7 @@ var setBody = `
 
 			By(fmt.Sprintf("Creating Pod %s/%s", sourcePod.Namespace, sourcePod.Name))
 			err := shootTestOperations.SeedClient.Client().Create(ctx, pod)
+			Expect(err).NotTo(HaveOccurred())
 
 			By(fmt.Sprintf("Waiting foo Pod %s/%s to be running", sourcePod.Namespace, sourcePod.Name))
 			err = shootTestOperations.WaitUntilPodIsRunning(ctx, pod.GetName(), sourcePod.Namespace, shootTestOperations.SeedClient)
