@@ -21,11 +21,13 @@ import (
 
 	awsvalidation "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/gardener/gardener/pkg/apis/garden"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
+
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func (v *Shoot) validateShoot(ctx context.Context, shoot *gardencorev1beta1.Shoot) error {
+func (v *Shoot) validateShoot(ctx context.Context, shoot *garden.Shoot) error {
 	fldPath := field.NewPath("spec", "provider")
 
 	// InfrastructureConfig
@@ -90,7 +92,7 @@ func (v *Shoot) validateShoot(ctx context.Context, shoot *gardencorev1beta1.Shoo
 	return nil
 }
 
-func (v *Shoot) validateShootUpdate(ctx context.Context, oldShoot, shoot *gardencorev1beta1.Shoot) error {
+func (v *Shoot) validateShootUpdate(ctx context.Context, oldShoot, shoot *garden.Shoot) error {
 	fldPath := field.NewPath("spec", "provider")
 
 	// InfrastructureConfig update

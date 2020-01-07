@@ -17,7 +17,7 @@ package validation_test
 import (
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	"github.com/gardener/gardener/pkg/apis/garden"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -27,14 +27,14 @@ import (
 
 var _ = Describe("ValidateWorkerConfig", func() {
 	var (
-		workers  []gardencorev1beta1.Worker
+		workers  []garden.Worker
 		awsZones []apisaws.Zone
 	)
 
 	BeforeEach(func() {
-		workers = []gardencorev1beta1.Worker{
+		workers = []garden.Worker{
 			{
-				Volume: &gardencorev1beta1.Volume{
+				Volume: &garden.Volume{
 					Type: makeStringPointer("Volume"),
 					Size: "30G",
 				},
@@ -44,7 +44,7 @@ var _ = Describe("ValidateWorkerConfig", func() {
 				},
 			},
 			{
-				Volume: &gardencorev1beta1.Volume{
+				Volume: &garden.Volume{
 					Type: makeStringPointer("Volume"),
 					Size: "20G",
 				},

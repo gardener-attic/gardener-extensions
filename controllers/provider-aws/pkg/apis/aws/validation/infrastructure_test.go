@@ -18,12 +18,13 @@ import (
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"k8s.io/apimachinery/pkg/util/validation/field"
-
+	"github.com/gardener/gardener/pkg/apis/garden"
 	. "github.com/gardener/gardener/pkg/utils/validation/gomega"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 var _ = Describe("InfrastructureConfig validation", func() {
@@ -67,7 +68,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 	Describe("#ValidateInfrastructureConfigAgainstCloudProfile", func() {
 		var (
 			cloudProfile *gardencorev1beta1.CloudProfile
-			shoot        *gardencorev1beta1.Shoot
+			shoot        *garden.Shoot
 			region       = "eu-west"
 			region2      = "us-west"
 		)
@@ -101,8 +102,8 @@ var _ = Describe("InfrastructureConfig validation", func() {
 						},
 					},
 				}
-				shoot = &gardencorev1beta1.Shoot{
-					Spec: gardencorev1beta1.ShootSpec{
+				shoot = &garden.Shoot{
+					Spec: garden.ShootSpec{
 						Region: region,
 					},
 				}
