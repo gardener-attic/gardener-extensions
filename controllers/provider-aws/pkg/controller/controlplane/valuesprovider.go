@@ -16,13 +16,14 @@ package controlplane
 
 import (
 	"context"
-	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/controller/controlplane/genericactuator"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -216,11 +217,15 @@ func (vp *valuesProvider) GetControlPlaneExposureChartValues(
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,
 ) (map[string]interface{}, error) {
+	var address string
 
-	// Get load balancer address of the kube-apiserver service
-	address, err := kutil.GetLoadBalancerIngress(ctx, vp.Client(), cp.Namespace, v1beta1constants.DeploymentNameKubeAPIServer)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not get kube-apiserver service load balancer address")
+	if !controller.IsHibernated(cluster) {
+		// Get load balancer address of the kube-apiserver service
+		var err error
+		address, err = kutil.GetLoadBalancerIngress(ctx, vp.Client(), cp.Namespace, v1beta1constants.DeploymentNameKubeAPIServer)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not get kube-apiserver service load balancer address")
+		}
 	}
 
 	return map[string]interface{}{
