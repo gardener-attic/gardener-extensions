@@ -26,8 +26,8 @@ const (
 	MachineControllerManagerImageName = "machine-controller-manager"
 	// TerraformerImageName is the name of the Terraformer image.
 	TerraformerImageName = "terraformer"
-	// HyperkubeImageName is the name of the hyperkube image.
-	HyperkubeImageName = "hyperkube"
+	// CloudControllerManagerImageName is the name of the cloud-controller-manager image.
+	CloudControllerManagerImageName = "cloud-controller-manager"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
 	ETCDBackupRestoreImageName = "etcd-backup-restore"
 	// AWSLBReadvertiserImageName is the name of the AWSLBReadvertiser image.

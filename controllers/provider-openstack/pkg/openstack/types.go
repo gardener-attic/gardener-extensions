@@ -25,7 +25,7 @@ const (
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
 	// CloudControllerImageName is the name of the external OpenStackCloudProvider image.
-	CloudControllerImageName = "openstack-cloud-controller-manager"
+	CloudControllerImageName = "cloud-controller-manager"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
 	ETCDBackupRestoreImageName = "etcd-backup-restore"
 

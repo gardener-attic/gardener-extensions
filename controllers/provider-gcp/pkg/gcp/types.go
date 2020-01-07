@@ -22,8 +22,8 @@ const (
 	// StorageProviderName is the name of the GCP storage provider.
 	StorageProviderName = "GCS"
 
-	// HyperkubeImageName is the name of the hyperkube image.
-	HyperkubeImageName = "hyperkube"
+	// CloudControllerManagerImageName is the name of the cloud-controller-manager image.
+	CloudControllerManagerImageName = "cloud-controller-manager"
 	// MachineControllerManagerImageName is the name of the MachineControllerManager image.
 	MachineControllerManagerImageName = "machine-controller-manager"
 	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
