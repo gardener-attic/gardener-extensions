@@ -727,7 +727,19 @@ string
 </em>
 </td>
 <td>
-<p>Worker specifies the worker CIDR to use.</p>
+<p>Worker specifies the worker CIDR to use.
+Deprecated - use <code>workers</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workers</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<p>Workers specifies the worker CIDR to use.</p>
 </td>
 </tr>
 </tbody>

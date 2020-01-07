@@ -62,5 +62,5 @@ spec:
     networks:
     # router:
     #   id: 1234
-      worker: 10.250.0.0/19
+      workers: 10.250.0.0/19
   sshPublicKey: AAAA

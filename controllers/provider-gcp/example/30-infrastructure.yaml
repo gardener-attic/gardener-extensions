@@ -55,7 +55,7 @@ spec:
     #   name: my-vpc
     #   cloudRouter:
     #     name: my-cloudrouter
-      worker: 10.242.0.0/19
+      workers: 10.242.0.0/19
     # internal: 10.243.0.0/19
     # cloudNAT:
     #   minPortsPerVM: 2048

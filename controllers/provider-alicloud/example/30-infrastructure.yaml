@@ -59,4 +59,4 @@ spec:
         cidr: 10.250.0.0/16
       zones:
       - name: eu-central-1a
-        worker: 10.250.1.0/24
+        workers: 10.250.1.0/24

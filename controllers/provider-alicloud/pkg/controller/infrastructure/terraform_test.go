@@ -119,12 +119,12 @@ var _ = Describe("TerraformChartOps", func() {
 					Networks: v1alpha1.Networks{
 						Zones: []v1alpha1.Zone{
 							{
-								Name:   zone1Name,
-								Worker: zone1Worker,
+								Name:    zone1Name,
+								Workers: zone1Worker,
 							},
 							{
-								Name:   zone2Name,
-								Worker: zone2Worker,
+								Name:    zone2Name,
+								Workers: zone2Worker,
 							},
 						},
 					},
@@ -165,13 +165,13 @@ var _ = Describe("TerraformChartOps", func() {
 					{
 						"name": zone1Name,
 						"cidr": map[string]interface{}{
-							"worker": zone1Worker,
+							"workers": zone1Worker,
 						},
 					},
 					{
 						"name": zone2Name,
 						"cidr": map[string]interface{}{
-							"worker": zone2Worker,
+							"workers": zone2Worker,
 						},
 					},
 				},

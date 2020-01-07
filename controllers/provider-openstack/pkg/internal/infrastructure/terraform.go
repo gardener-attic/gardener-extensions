@@ -89,6 +89,12 @@ func ComputeTerraformerChartValues(
 		return nil, err
 	}
 
+	workersCIDR := config.Networks.Workers
+	// Backwards compatibility - remove this code in a future version.
+	if workersCIDR == "" {
+		workersCIDR = config.Networks.Worker
+	}
+
 	return map[string]interface{}{
 		"openstack": map[string]interface{}{
 			"authURL":          keyStoneURL,
@@ -107,7 +113,7 @@ func ComputeTerraformerChartValues(
 		},
 		"clusterName": infra.Namespace,
 		"networks": map[string]interface{}{
-			"worker": config.Networks.Worker,
+			"workers": workersCIDR,
 		},
 		"outputKeys": map[string]interface{}{
 			"routerID":          TerraformOutputKeyRouterID,

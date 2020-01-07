@@ -18,10 +18,10 @@ vpc:
 zones:
 - name: cn-beijing-a
   cidr:
-    worker: 10.250.0.0/19
+    workers: 10.250.0.0/19
 - name: cn-beijing-b
   cidr:
-    worker: 10.250.32.0/19
+    workers: 10.250.32.0/19
 
 names:
   configuration: shoot.tf-config

@@ -29,7 +29,7 @@ resource "alicloud_nat_gateway" "nat_gateway" {
 resource "alicloud_vswitch" "vsw_z{{ $index }}" {
   name              = "{{ required "clusterName is required" $.Values.clusterName }}-{{ required "zone.name is required" $zone.name }}-vsw"
   vpc_id            = "{{ required "vpc.id is required" $.Values.vpc.id }}"
-  cidr_block        = "{{ required "zone.cidr.worker is required" $zone.cidr.worker }}"
+  cidr_block        = "{{ required "zone.cidr.workers is required" $zone.cidr.workers }}"
   availability_zone = "{{ required "zone.name is required" $zone.name }}"
 }
 

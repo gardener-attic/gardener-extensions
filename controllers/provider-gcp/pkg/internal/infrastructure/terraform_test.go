@@ -66,7 +66,7 @@ var _ = Describe("Terraform", func() {
 					},
 				},
 				Internal: &internalCIDR,
-				Worker:   "10.1.0.0/16",
+				Workers:  "10.1.0.0/16",
 			},
 		}
 
@@ -79,7 +79,7 @@ var _ = Describe("Terraform", func() {
 					},
 				},
 				Internal: &internalCIDR,
-				Worker:   "10.1.0.0/16",
+				Workers:  "10.1.0.0/16",
 			},
 		}
 
@@ -127,7 +127,7 @@ var _ = Describe("Terraform", func() {
 							Name:        "vpc",
 							CloudRouter: &api.CloudRouter{Name: cloudRouterName},
 						},
-						Worker: "10.1.0.0/16",
+						Workers: "10.1.0.0/16",
 					},
 				}
 
@@ -174,7 +174,7 @@ var _ = Describe("Terraform", func() {
 						VPC: &api.VPC{
 							Name: "vpc",
 						},
-						Worker: "10.1.0.0/16",
+						Workers: "10.1.0.0/16",
 					},
 				}
 
@@ -232,7 +232,7 @@ var _ = Describe("Terraform", func() {
 				"networks": map[string]interface{}{
 					"pods":     podsCIDR,
 					"services": servicesCIDR,
-					"worker":   config.Networks.Worker,
+					"workers":  config.Networks.Workers,
 					"internal": config.Networks.Internal,
 					"cloudNAT": map[string]interface{}{
 						"minPortsPerVM": minPortsPerVM,
@@ -269,7 +269,7 @@ var _ = Describe("Terraform", func() {
 				"networks": map[string]interface{}{
 					"pods":     podsCIDR,
 					"services": servicesCIDR,
-					"worker":   config.Networks.Worker,
+					"workers":  config.Networks.Workers,
 					"internal": config.Networks.Internal,
 					"cloudNAT": map[string]interface{}{
 						"minPortsPerVM": minPortsPerVM,

@@ -498,6 +498,18 @@ string
 </em>
 </td>
 <td>
+<p>Worker is the worker subnet range to create (used for the VMs).
+Deprecated - use <code>workers</code> instead.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>workers</code></br>
+<em>
+string
+</em>
+</td>
+<td>
 <p>Workers is the worker subnet range to create (used for the VMs).</p>
 </td>
 </tr>

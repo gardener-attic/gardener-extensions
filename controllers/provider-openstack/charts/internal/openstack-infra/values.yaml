@@ -19,7 +19,7 @@ dnsServers:
 clusterName: test-namespace
 
 networks:
-  worker: 10.250.0.0/19
+  workers: 10.250.0.0/19
 
 outputKeys:
   routerID: router_id

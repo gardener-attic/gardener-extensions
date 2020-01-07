@@ -44,8 +44,8 @@ var _ = Describe("InfrastructureConfig validation", func() {
 				},
 				Zones: []apisalicloud.Zone{
 					{
-						Name:   "zone1",
-						Worker: "10.250.3.0/24",
+						Name:    "zone1",
+						Workers: "10.250.3.0/24",
 					},
 				},
 			},
@@ -67,7 +67,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			})
 
 			It("should forbid invalid workers CIDR", func() {
-				infrastructureConfig.Networks.Zones[0].Worker = invalidCIDR
+				infrastructureConfig.Networks.Zones[0].Workers = invalidCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
 
@@ -79,7 +79,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			})
 
 			It("should forbid workers CIDR which are not in Nodes CIDR", func() {
-				infrastructureConfig.Networks.Zones[0].Worker = "1.1.1.1/32"
+				infrastructureConfig.Networks.Zones[0].Workers = "1.1.1.1/32"
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
 
@@ -96,7 +96,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 			It("should forbid Node which are not in VPC CIDR", func() {
 				notOverlappingCIDR := "1.1.1.1/32"
-				infrastructureConfig.Networks.Zones[0].Worker = notOverlappingCIDR
+				infrastructureConfig.Networks.Zones[0].Workers = notOverlappingCIDR
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &notOverlappingCIDR, &pods, &services)
 
@@ -143,7 +143,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 					serviceCIDR = "100.64.0.5/13"
 				)
 
-				infrastructureConfig.Networks.Zones[0].Worker = "10.250.3.8/24"
+				infrastructureConfig.Networks.Zones[0].Workers = "10.250.3.8/24"
 				infrastructureConfig.Networks.VPC = apisalicloud.VPC{CIDR: &vpcCIDR}
 
 				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodeCIDR, &podCIDR, &serviceCIDR)
