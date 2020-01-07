@@ -29,6 +29,13 @@ resource "google_compute_subnetwork" "subnetwork-nodes" {
   ip_cidr_range = "{{ required "networks.workers is required" .Values.networks.workers }}"
   network       = "{{ required "vpc.name is required" .Values.vpc.name }}"
   region        = "{{ required "google.region is required" .Values.google.region }}"
+{{- if .Values.networks.flowLogs }}
+  log_config {
+    {{ if .Values.networks.flowLogs.aggregationInterval }}aggregation_interval = "{{ .Values.networks.flowLogs.aggregationInterval }}"{{ end }}
+    {{ if .Values.networks.flowLogs.flowSampling }}flow_sampling        = "{{ .Values.networks.flowLogs.flowSampling }}"{{ end }}
+    {{ if .Values.networks.flowLogs.metadata }}metadata             = "{{ .Values.networks.flowLogs.metadata }}"{{ end }}
+  }
+{{- end }}
 }
 
 {{ if .Values.create.cloudRouter -}}

@@ -248,6 +248,72 @@ var _ = Describe("Terraform", func() {
 			}))
 		})
 
+		It("should correctly compute the terraformer chart values with vpc flow logs", func() {
+			internalCIDR := "192.168.0.0/16"
+			aggregationInterval := "INTERVAL_30_SEC"
+			metadata := "INCLUDE_ALL_METADATA"
+			flowSampling := float32(0.5)
+			config = &api.InfrastructureConfig{
+				Networks: api.NetworkConfig{
+					VPC: &api.VPC{
+						Name: "vpc",
+						CloudRouter: &api.CloudRouter{
+							Name: "cloudrouter",
+						},
+					},
+					FlowLogs: &api.FlowLogs{
+						AggregationInterval: &aggregationInterval,
+						FlowSampling:        &flowSampling,
+						Metadata:            &metadata,
+					},
+					Internal: &internalCIDR,
+					Workers:  "10.1.0.0/16",
+				},
+			}
+
+			values := ComputeTerraformerChartValues(infra, serviceAccount, config, cluster)
+
+			Expect(values).To(Equal(map[string]interface{}{
+				"google": map[string]interface{}{
+					"region":  infra.Spec.Region,
+					"project": projectID,
+				},
+				"create": map[string]interface{}{
+					"vpc":         false,
+					"cloudRouter": false,
+				},
+				"vpc": map[string]interface{}{
+					"name": config.Networks.VPC.Name,
+					"cloudRouter": map[string]interface{}{
+						"name": "cloudrouter",
+					},
+				},
+				"clusterName": infra.Namespace,
+				"networks": map[string]interface{}{
+					"pods":     podsCIDR,
+					"services": servicesCIDR,
+					"workers":  config.Networks.Workers,
+					"internal": config.Networks.Internal,
+					"cloudNAT": map[string]interface{}{
+						"minPortsPerVM": minPortsPerVM,
+					},
+					"flowLogs": map[string]interface{}{
+						"aggregationInterval": *config.Networks.FlowLogs.AggregationInterval,
+						"flowSampling":        *config.Networks.FlowLogs.FlowSampling,
+						"metadata":            *config.Networks.FlowLogs.Metadata,
+					},
+				},
+				"outputKeys": map[string]interface{}{
+					"vpcName":             TerraformerOutputKeyVPCName,
+					"cloudNAT":            TerraformOutputKeyCloudNAT,
+					"cloudRouter":         TerraformOutputKeyCloudRouter,
+					"serviceAccountEmail": TerraformerOutputKeyServiceAccountEmail,
+					"subnetNodes":         TerraformerOutputKeySubnetNodes,
+					"subnetInternal":      TerraformerOutputKeySubnetInternal,
+				},
+			}))
+		})
+
 		It("should correctly compute the terraformer chart values with vpc creation", func() {
 			config.Networks.VPC = nil
 			values := ComputeTerraformerChartValues(infra, serviceAccount, config, cluster)
