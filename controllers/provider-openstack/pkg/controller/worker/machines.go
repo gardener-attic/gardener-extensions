@@ -19,10 +19,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	openstackapi "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
-	openstackapihelper "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
@@ -73,8 +71,13 @@ func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (ma
 		return nil, err
 	}
 
+	keyStoneURL, err := helper.FindKeyStoneURL(cloudProfileConfig.KeyStoneURLs, cloudProfileConfig.KeyStoneURL, w.worker.Spec.Region)
+	if err != nil {
+		return nil, err
+	}
+
 	return map[string][]byte{
-		machinev1alpha1.OpenStackAuthURL:    []byte(cloudProfileConfig.KeyStoneURL),
+		machinev1alpha1.OpenStackAuthURL:    []byte(keyStoneURL),
 		machinev1alpha1.OpenStackInsecure:   []byte("true"),
 		machinev1alpha1.OpenStackDomainName: []byte(credentials.DomainName),
 		machinev1alpha1.OpenStackTenantName: []byte(credentials.TenantName),
@@ -87,7 +90,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 	var (
 		machineDeployments = worker.MachineDeployments{}
 		machineClasses     []map[string]interface{}
-		machineImages      []apisopenstack.MachineImage
+		machineImages      []api.MachineImage
 	)
 
 	machineClassSecretData, err := w.generateMachineClassSecretData(ctx)
@@ -95,12 +98,12 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		return err
 	}
 
-	infrastructureStatus := &openstackapi.InfrastructureStatus{}
+	infrastructureStatus := &api.InfrastructureStatus{}
 	if _, _, err := w.Decoder().Decode(w.worker.Spec.InfrastructureProviderStatus.Raw, nil, infrastructureStatus); err != nil {
 		return err
 	}
 
-	nodesSecurityGroup, err := openstackapihelper.FindSecurityGroupByPurpose(infrastructureStatus.SecurityGroups, openstackapi.PurposeNodes)
+	nodesSecurityGroup, err := helper.FindSecurityGroupByPurpose(infrastructureStatus.SecurityGroups, api.PurposeNodes)
 	if err != nil {
 		return err
 	}

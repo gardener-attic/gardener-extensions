@@ -91,3 +91,20 @@ func FindImageFromCloudProfile(cloudProfileConfig *api.CloudProfileConfig, image
 
 	return nil, fmt.Errorf("could not find an image for name %q in version %q for region %q", imageName, imageVersion, regionName)
 }
+
+// FindKeyStoneURL takes a list of keystone URLs and tries to find the first entry
+// whose region matches with the given region. If no such entry is found then it tries to use the non-regional
+// keystone URL. If this is not specified then an error will be returned.
+func FindKeyStoneURL(keyStoneURLs []api.KeyStoneURL, keystoneURL, region string) (string, error) {
+	for _, keyStoneURL := range keyStoneURLs {
+		if keyStoneURL.Region == region {
+			return keyStoneURL.URL, nil
+		}
+	}
+
+	if len(keystoneURL) > 0 {
+		return keystoneURL, nil
+	}
+
+	return "", fmt.Errorf("cannot find keystone URL for region %q", region)
+}

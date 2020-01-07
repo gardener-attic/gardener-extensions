@@ -17,21 +17,17 @@ package infrastructure
 import (
 	"context"
 
-	"github.com/gardener/gardener-extensions/pkg/controller/common"
-	"k8s.io/client-go/util/retry"
-
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	infrainternal "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal/infrastructure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	"github.com/go-logr/logr"
-
 	"k8s.io/apimachinery/pkg/runtime"
-
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 

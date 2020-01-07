@@ -35,7 +35,11 @@ type CloudProfileConfig struct {
 	// +optional
 	DHCPDomain *string `json:"dhcpDomain,omitempty"`
 	// KeyStoneURL is the URL for auth{n,z} in OpenStack (pointing to KeyStone).
-	KeyStoneURL string `json:"keystoneURL"`
+	// +optional
+	KeyStoneURL string `json:"keystoneURL,omitempty"`
+	// KeyStoneURLs is a region-URL mapping for auth{n,z} in OpenStack (pointing to KeyStone).
+	// +optional
+	KeyStoneURLs []KeyStoneURL `json:"keystoneURLs,omitempty"`
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to provider-specific identifiers.
 	MachineImages []MachineImages `json:"machineImages"`
@@ -56,9 +60,20 @@ type Constraints struct {
 type FloatingPool struct {
 	// Name is the name of the floating pool.
 	Name string `json:"name"`
+	// Region is the region name.
+	// +optional
+	Region *string `json:"region,omitempty"`
 	// LoadBalancerClasses contains a list of supported labeled load balancer network settings.
 	// +optional
 	LoadBalancerClasses []LoadBalancerClass `json:"loadBalancerClasses,omitempty"`
+}
+
+// KeyStoneURL is a region-URL mapping for auth{n,z} in OpenStack (pointing to KeyStone).
+type KeyStoneURL struct {
+	// Region is the name of the region.
+	Region string `json:"region"`
+	// URL is the keystone URL.
+	URL string `json:"url"`
 }
 
 // LoadBalancerClass defines a restricted network setting for generic LoadBalancer classes.
@@ -81,6 +96,9 @@ type LoadBalancerClass struct {
 type LoadBalancerProvider struct {
 	// Name is the name of the load balancer provider.
 	Name string `json:"name"`
+	// Region is the region name.
+	// +optional
+	Region *string `json:"region,omitempty"`
 }
 
 // MachineImages is a mapping from logical names and versions to provider-specific identifiers.

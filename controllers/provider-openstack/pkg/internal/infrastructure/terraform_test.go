@@ -33,10 +33,12 @@ import (
 
 var _ = Describe("Terraform", func() {
 	var (
-		infra       *extensionsv1alpha1.Infrastructure
-		config      *api.InfrastructureConfig
-		cluster     *controller.Cluster
-		credentials *internal.Credentials
+		infra                  *extensionsv1alpha1.Infrastructure
+		cloudProfileConfig     *api.CloudProfileConfig
+		cloudProfileConfigJSON []byte
+		config                 *api.InfrastructureConfig
+		cluster                *controller.Cluster
+		credentials            *internal.Credentials
 
 		keystoneURL = "foo-bar.com"
 		dnsServers  = []string{"a", "b"}
@@ -73,15 +75,15 @@ var _ = Describe("Terraform", func() {
 		podsCIDR := "11.0.0.0/16"
 		servicesCIDR := "12.0.0.0/16"
 
-		cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
+		cloudProfileConfig = &api.CloudProfileConfig{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: api.SchemeGroupVersion.String(),
 				Kind:       "CloudProfileConfig",
 			},
 			DNSServers:  dnsServers,
 			KeyStoneURL: keystoneURL,
 		}
-		cloudProfileConfigJSON, _ := json.Marshal(cloudProfileConfig)
+		cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
 		cluster = &controller.Cluster{
 			CloudProfile: &gardencorev1beta1.CloudProfile{
 				Spec: gardencorev1beta1.CloudProfileSpec{

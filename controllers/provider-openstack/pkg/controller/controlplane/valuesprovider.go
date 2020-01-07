@@ -16,9 +16,10 @@ package controlplane
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	openstacktypes "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
@@ -135,14 +136,14 @@ func (vp *valuesProvider) GetConfigChartValues(
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
-	cpConfig := &apisopenstack.ControlPlaneConfig{}
+	cpConfig := &api.ControlPlaneConfig{}
 	if cp.Spec.ProviderConfig != nil {
 		if _, _, err := vp.Decoder().Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 			return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
 		}
 	}
 
-	infraStatus := &apisopenstack.InfrastructureStatus{}
+	infraStatus := &api.InfrastructureStatus{}
 	if _, _, err := vp.Decoder().Decode(cp.Spec.InfrastructureProviderStatus.Raw, nil, infraStatus); err != nil {
 		return nil, errors.Wrapf(err, "could not decode infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
@@ -171,7 +172,7 @@ func (vp *valuesProvider) GetControlPlaneChartValues(
 	scaledDown bool,
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
-	cpConfig := &apisopenstack.ControlPlaneConfig{}
+	cpConfig := &api.ControlPlaneConfig{}
 	if cp.Spec.ProviderConfig != nil {
 		if _, _, err := vp.Decoder().Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 			return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
@@ -189,7 +190,7 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	// Decode providerConfig
-	cpConfig := &apisopenstack.ControlPlaneConfig{}
+	cpConfig := &api.ControlPlaneConfig{}
 	if cp.Spec.ProviderConfig != nil {
 		if _, _, err := vp.Decoder().Decode(cp.Spec.ProviderConfig.Raw, nil, cpConfig); err != nil {
 			return nil, errors.Wrapf(err, "could not decode providerConfig of controlplane '%s'", util.ObjectName(cp))
@@ -203,15 +204,15 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 
 // getConfigChartValues collects and returns the configuration chart values.
 func getConfigChartValues(
-	cpConfig *apisopenstack.ControlPlaneConfig,
-	infraStatus *apisopenstack.InfrastructureStatus,
-	cloudProfileConfig *apisopenstack.CloudProfileConfig,
+	cpConfig *api.ControlPlaneConfig,
+	infraStatus *api.InfrastructureStatus,
+	cloudProfileConfig *api.CloudProfileConfig,
 	cp *extensionsv1alpha1.ControlPlane,
 	c *internal.Credentials,
 	cluster *extensionscontroller.Cluster,
 ) (map[string]interface{}, error) {
 	// Get the first subnet with purpose "nodes"
-	subnet, err := helper.FindSubnetByPurpose(infraStatus.Networks.Subnets, apisopenstack.PurposeNodes)
+	subnet, err := helper.FindSubnetByPurpose(infraStatus.Networks.Subnets, api.PurposeNodes)
 	if err != nil {
 		return nil, errors.Wrapf(err, "could not determine subnet from infrastructureProviderStatus of controlplane '%s'", util.ObjectName(cp))
 	}
@@ -222,10 +223,16 @@ func getConfigChartValues(
 		requestTimeout *string
 	)
 
-	if cloudProfileConfig != nil {
-		keyStoneURL = cloudProfileConfig.KeyStoneURL
-		dhcpDomain = cloudProfileConfig.DHCPDomain
-		requestTimeout = cloudProfileConfig.RequestTimeout
+	if cloudProfileConfig == nil {
+		return nil, fmt.Errorf("cloud profile config is nil - cannot determine keystone URL and other parameters")
+	}
+
+	dhcpDomain = cloudProfileConfig.DHCPDomain
+	requestTimeout = cloudProfileConfig.RequestTimeout
+
+	keyStoneURL, err = helper.FindKeyStoneURL(cloudProfileConfig.KeyStoneURLs, cloudProfileConfig.KeyStoneURL, cp.Spec.Region)
+	if err != nil {
+		return nil, err
 	}
 
 	// Collect config chart values
@@ -244,18 +251,27 @@ func getConfigChartValues(
 	}
 
 	if cpConfig.LoadBalancerClasses == nil {
-		if cloudProfileConfig != nil {
-			for _, pool := range cloudProfileConfig.Constraints.FloatingPools {
-				if pool.Name == infraStatus.Networks.FloatingPool.Name {
-					cpConfig.LoadBalancerClasses = pool.LoadBalancerClasses
-					break
-				}
+		var fallback *api.FloatingPool
+
+		for _, pool := range cloudProfileConfig.Constraints.FloatingPools {
+			if pool.Region == nil && fallback == nil {
+				v := pool
+				fallback = &v
 			}
+
+			if pool.Region != nil && *pool.Region == cp.Spec.Region && pool.Name == infraStatus.Networks.FloatingPool.Name {
+				cpConfig.LoadBalancerClasses = pool.LoadBalancerClasses
+				break
+			}
+		}
+
+		if cpConfig.LoadBalancerClasses == nil && fallback != nil {
+			cpConfig.LoadBalancerClasses = fallback.LoadBalancerClasses
 		}
 	}
 
 	for _, class := range cpConfig.LoadBalancerClasses {
-		if class.Name == apisopenstack.DefaultLoadBalancerClass {
+		if class.Name == api.DefaultLoadBalancerClass {
 			utils.SetStringValue(values, "floatingNetworkID", class.FloatingNetworkID)
 			utils.SetStringValue(values, "floatingSubnetID", class.FloatingSubnetID)
 			utils.SetStringValue(values, "subnetID", class.SubnetID)
@@ -263,7 +279,7 @@ func getConfigChartValues(
 		}
 	}
 	for _, class := range cpConfig.LoadBalancerClasses {
-		if class.Name == apisopenstack.PrivateLoadBalancerClass {
+		if class.Name == api.PrivateLoadBalancerClass {
 			utils.SetStringValue(values, "subnetID", class.SubnetID)
 			break
 		}
@@ -292,7 +308,7 @@ func getConfigChartValues(
 
 // getCCMChartValues collects and returns the CCM chart values.
 func getCCMChartValues(
-	cpConfig *apisopenstack.ControlPlaneConfig,
+	cpConfig *api.ControlPlaneConfig,
 	cp *extensionsv1alpha1.ControlPlane,
 	cluster *extensionscontroller.Cluster,
 	checksums map[string]string,

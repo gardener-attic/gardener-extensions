@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
@@ -26,6 +25,7 @@ import (
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
@@ -124,6 +124,8 @@ var _ = Describe("Machines", func() {
 				shootVersion           string
 				scheme                 *runtime.Scheme
 				decoder                runtime.Decoder
+				cloudProfileConfig     *api.CloudProfileConfig
+				cloudProfileConfigJSON []byte
 				clusterWithoutImages   *extensionscontroller.Cluster
 				cluster                *extensionscontroller.Cluster
 				w                      *extensionsv1alpha1.Worker
@@ -172,14 +174,15 @@ var _ = Describe("Machines", func() {
 				shootVersionMajorMinor = "1.2"
 				shootVersion = shootVersionMajorMinor + ".3"
 
-				cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
+				cloudProfileConfig = &api.CloudProfileConfig{
 					TypeMeta: metav1.TypeMeta{
-						APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
+						APIVersion: api.SchemeGroupVersion.String(),
 						Kind:       "CloudProfileConfig",
 					},
 					KeyStoneURL: openstackAuthURL,
 				}
-				cloudProfileConfigJSON, _ := json.Marshal(cloudProfileConfig)
+				cloudProfileConfigJSON, _ = json.Marshal(cloudProfileConfig)
+
 				clusterWithoutImages = &extensionscontroller.Cluster{
 					CloudProfile: &gardencorev1beta1.CloudProfile{
 						ObjectMeta: metav1.ObjectMeta{
@@ -205,14 +208,14 @@ var _ = Describe("Machines", func() {
 					},
 				}
 
-				cloudProfileConfig.MachineImages = []apiv1alpha1.MachineImages{
-					apiv1alpha1.MachineImages{
+				cloudProfileConfig.MachineImages = []api.MachineImages{
+					api.MachineImages{
 						Name: machineImageName,
-						Versions: []apiv1alpha1.MachineImageVersion{
-							apiv1alpha1.MachineImageVersion{
+						Versions: []api.MachineImageVersion{
+							api.MachineImageVersion{
 								Version: machineImageVersion,
 								Image:   machineImage,
-								Regions: []apiv1alpha1.RegionIDMapping{
+								Regions: []api.RegionIDMapping{
 									{
 										Name: regionWithImages,
 										ID:   machineImageID,

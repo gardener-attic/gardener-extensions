@@ -18,8 +18,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
-	openstacktypes "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/openstack"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -49,16 +49,17 @@ var requestTimeout = util.StringPtr("2s")
 func defaultControlPlane() *extensionsv1alpha1.ControlPlane {
 	return controlPlane(
 		"floating-network-id",
-		&openstack.ControlPlaneConfig{
+		&api.ControlPlaneConfig{
 			LoadBalancerProvider: "load-balancer-provider",
-			CloudControllerManager: &openstack.CloudControllerManagerConfig{
+			CloudControllerManager: &api.CloudControllerManagerConfig{
 				FeatureGates: map[string]bool{
 					"CustomResourceValidation": true,
 				},
 			},
 		})
 }
-func controlPlane(floatingPoolID string, cfg *openstack.ControlPlaneConfig) *extensionsv1alpha1.ControlPlane {
+
+func controlPlane(floatingPoolID string, cfg *api.ControlPlaneConfig) *extensionsv1alpha1.ControlPlane {
 	return &extensionsv1alpha1.ControlPlane{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "control-plane",
@@ -73,15 +74,15 @@ func controlPlane(floatingPoolID string, cfg *openstack.ControlPlaneConfig) *ext
 				Raw: encode(cfg),
 			},
 			InfrastructureProviderStatus: &runtime.RawExtension{
-				Raw: encode(&openstack.InfrastructureStatus{
-					Networks: openstack.NetworkStatus{
-						FloatingPool: openstack.FloatingPoolStatus{
+				Raw: encode(&api.InfrastructureStatus{
+					Networks: api.NetworkStatus{
+						FloatingPool: api.FloatingPoolStatus{
 							ID: floatingPoolID,
 						},
-						Subnets: []openstack.Subnet{
+						Subnets: []api.Subnet{
 							{
 								ID:      "subnet-acbd1234",
-								Purpose: openstack.PurposeNodes,
+								Purpose: api.PurposeNodes,
 							},
 						},
 					},
@@ -97,12 +98,12 @@ var _ = Describe("ValuesProvider", func() {
 
 		// Build scheme
 		scheme = runtime.NewScheme()
-		_      = openstack.AddToScheme(scheme)
+		_      = api.AddToScheme(scheme)
 
 		cp = defaultControlPlane()
 
 		cidr               = "10.250.0.0/19"
-		cloudProfileConfig = &openstack.CloudProfileConfig{
+		cloudProfileConfig = &api.CloudProfileConfig{
 			KeyStoneURL:    authURL,
 			DHCPDomain:     dhcpDomain,
 			RequestTimeout: requestTimeout,
@@ -146,10 +147,10 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		checksums = map[string]string{
-			v1beta1constants.SecretNameCloudProvider:                     "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
-			"cloud-controller-manager":                                   "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
-			"cloud-controller-manager-server":                            "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
-			openstacktypes.CloudProviderConfigCloudControllerManagerName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
+			v1beta1constants.SecretNameCloudProvider:                "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
+			"cloud-controller-manager":                              "3d791b164a808638da9a8df03924be2a41e34cd664e42231c00fe369e3588272",
+			"cloud-controller-manager-server":                       "6dff2a2e6f14444b66d8e4a351c049f7e89ee24ba3eaab95dbec40ba6bdebb52",
+			openstack.CloudProviderConfigCloudControllerManagerName: "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
 		}
 
 		configChartValues = map[string]interface{}{
@@ -240,17 +241,17 @@ var _ = Describe("ValuesProvider", func() {
 			err = vp.(inject.Client).InjectClient(client)
 			Expect(err).NotTo(HaveOccurred())
 
-			fnid := "4711"
-			fnid2 := "pub"
+			floatingNetworkID := "4711"
+			floatingNetworkID2 := "pub"
 			fsid := "0815"
-			fsid2 := "pub0815"
-			psid := "priv"
-			dfsid := "default-floating-subnet-id"
+			floatingSubnetID2 := "pub0815"
+			subnetID := "priv"
+			floatingSubnetID := "default-floating-subnet-id"
 			cp := controlPlane(
-				fnid,
-				&openstack.ControlPlaneConfig{
+				floatingNetworkID,
+				&api.ControlPlaneConfig{
 					LoadBalancerProvider: "load-balancer-provider",
-					LoadBalancerClasses: []openstack.LoadBalancerClass{
+					LoadBalancerClasses: []api.LoadBalancerClass{
 						{
 							Name:             "test",
 							FloatingSubnetID: &fsid,
@@ -258,21 +259,21 @@ var _ = Describe("ValuesProvider", func() {
 						},
 						{
 							Name:             "default",
-							FloatingSubnetID: &dfsid,
+							FloatingSubnetID: &floatingSubnetID,
 							SubnetID:         nil,
 						},
 						{
 							Name:              "public",
-							FloatingSubnetID:  &fsid2,
-							FloatingNetworkID: &fnid2,
+							FloatingSubnetID:  &floatingSubnetID2,
+							FloatingNetworkID: &floatingNetworkID2,
 							SubnetID:          nil,
 						},
 						{
 							Name:     "other",
-							SubnetID: &psid,
+							SubnetID: &subnetID,
 						},
 					},
-					CloudControllerManager: &openstack.CloudControllerManagerConfig{
+					CloudControllerManager: &api.CloudControllerManagerConfig{
 						FeatureGates: map[string]bool{
 							"CustomResourceValidation": true,
 						},
@@ -288,27 +289,27 @@ var _ = Describe("ValuesProvider", func() {
 				"password":          "password",
 				"subnetID":          "subnet-acbd1234",
 				"lbProvider":        "load-balancer-provider",
-				"floatingNetworkID": fnid,
-				"floatingSubnetID":  dfsid,
+				"floatingNetworkID": floatingNetworkID,
+				"floatingSubnetID":  floatingSubnetID,
 				"floatingClasses": []map[string]interface{}{
 					{
 						"name":              "test",
-						"floatingNetworkID": fnid,
+						"floatingNetworkID": floatingNetworkID,
 						"floatingSubnetID":  fsid,
 					},
 					{
 						"name":              "default",
-						"floatingNetworkID": fnid,
-						"floatingSubnetID":  dfsid,
+						"floatingNetworkID": floatingNetworkID,
+						"floatingSubnetID":  floatingSubnetID,
 					},
 					{
 						"name":              "public",
-						"floatingNetworkID": fnid2,
-						"floatingSubnetID":  fsid2,
+						"floatingNetworkID": floatingNetworkID2,
+						"floatingSubnetID":  floatingSubnetID2,
 					},
 					{
 						"name":     "other",
-						"subnetID": psid,
+						"subnetID": subnetID,
 					},
 				},
 				"authUrl":        authURL,

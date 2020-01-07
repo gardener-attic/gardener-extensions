@@ -15,7 +15,7 @@
 package validation
 
 import (
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 
 	cidrvalidation "github.com/gardener/gardener/pkg/utils/validation/cidr"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
@@ -23,12 +23,12 @@ import (
 )
 
 // ValidateInfrastructureConfig validates a InfrastructureConfig object.
-func ValidateInfrastructureConfig(infra *apisopenstack.InfrastructureConfig, constraints apisopenstack.Constraints, nodesCIDR *string) field.ErrorList {
+func ValidateInfrastructureConfig(infra *api.InfrastructureConfig, constraints api.Constraints, region string, nodesCIDR *string) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if len(infra.FloatingPoolName) == 0 {
 		allErrs = append(allErrs, field.Required(field.NewPath("floatingPoolName"), "must provide the name of a floating pool"))
-	} else if ok, validFloatingPoolNames := validateFloatingPoolNameConstraints(constraints.FloatingPools, infra.FloatingPoolName, ""); !ok {
+	} else if ok, validFloatingPoolNames := validateFloatingPoolNameConstraints(constraints.FloatingPools, region, infra.FloatingPoolName, ""); !ok {
 		allErrs = append(allErrs, field.NotSupported(field.NewPath("floatingPoolName"), infra.FloatingPoolName, validFloatingPoolNames))
 	}
 
@@ -58,7 +58,7 @@ func ValidateInfrastructureConfig(infra *apisopenstack.InfrastructureConfig, con
 }
 
 // ValidateInfrastructureConfigUpdate validates a InfrastructureConfig object.
-func ValidateInfrastructureConfigUpdate(oldConfig, newConfig *apisopenstack.InfrastructureConfig, constraints apisopenstack.Constraints, nodesCIDR *string) field.ErrorList {
+func ValidateInfrastructureConfigUpdate(oldConfig, newConfig *api.InfrastructureConfig, constraints api.Constraints, nodesCIDR *string) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Networks, oldConfig.Networks, field.NewPath("networks"))...)
@@ -66,16 +66,40 @@ func ValidateInfrastructureConfigUpdate(oldConfig, newConfig *apisopenstack.Infr
 	return allErrs
 }
 
-func validateFloatingPoolNameConstraints(names []apisopenstack.FloatingPool, name, oldName string) (bool, []string) {
+func validateFloatingPoolNameConstraints(names []api.FloatingPool, region string, name, oldName string) (bool, []string) {
 	if name == oldName {
 		return true, nil
 	}
 
-	validValues := []string{}
+	var (
+		validValues = []string{}
+		fallback    *api.FloatingPool
+	)
 
 	for _, n := range names {
-		validValues = append(validValues, n.Name)
-		if n.Name == name {
+		// store the first non-regional image for fallback value if no floating pool for the given
+		// region was found
+		if n.Region == nil && fallback == nil {
+			v := n
+			fallback = &v
+			continue
+		}
+
+		// floating pool for the given region found, validate it
+		if n.Region != nil && *n.Region == region {
+			validValues = append(validValues, n.Name)
+			if n.Name == name {
+				return true, nil
+			} else {
+				return false, validValues
+			}
+		}
+	}
+
+	// no floating pool for the given region found yet, check if the non-regional fallback is used
+	if fallback != nil {
+		validValues = append(validValues, fallback.Name)
+		if fallback.Name == name {
 			return true, nil
 		}
 	}

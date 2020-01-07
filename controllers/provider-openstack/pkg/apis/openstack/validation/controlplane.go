@@ -15,7 +15,7 @@
 package validation
 
 import (
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
@@ -23,12 +23,12 @@ import (
 )
 
 // ValidateControlPlaneConfig validates a ControlPlaneConfig object.
-func ValidateControlPlaneConfig(controlPlaneConfig *apisopenstack.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region, constraints apisopenstack.Constraints) field.ErrorList {
+func ValidateControlPlaneConfig(controlPlaneConfig *api.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region, constraints api.Constraints) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if len(controlPlaneConfig.LoadBalancerProvider) == 0 {
 		allErrs = append(allErrs, field.Required(field.NewPath("loadBalancerProvider"), "must provide the name of a load balancer provider"))
-	} else if ok, validLoadBalancerProviders := validateLoadBalancerProviderConstraints(constraints.LoadBalancerProviders, controlPlaneConfig.LoadBalancerProvider, ""); !ok {
+	} else if ok, validLoadBalancerProviders := validateLoadBalancerProviderConstraints(constraints.LoadBalancerProviders, region, controlPlaneConfig.LoadBalancerProvider, ""); !ok {
 		allErrs = append(allErrs, field.NotSupported(field.NewPath("loadBalancerProvider"), controlPlaneConfig.LoadBalancerProvider, validLoadBalancerProviders))
 	}
 
@@ -42,7 +42,7 @@ func ValidateControlPlaneConfig(controlPlaneConfig *apisopenstack.ControlPlaneCo
 }
 
 // ValidateControlPlaneConfigUpdate validates a ControlPlaneConfig object.
-func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisopenstack.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region, constraints apisopenstack.Constraints) field.ErrorList {
+func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *api.ControlPlaneConfig, region string, regions []gardencorev1beta1.Region, constraints api.Constraints) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	allErrs = append(allErrs, apivalidation.ValidateImmutableField(newConfig.Zone, oldConfig.Zone, field.NewPath("zone"))...)
@@ -50,16 +50,40 @@ func ValidateControlPlaneConfigUpdate(oldConfig, newConfig *apisopenstack.Contro
 	return allErrs
 }
 
-func validateLoadBalancerProviderConstraints(providers []apisopenstack.LoadBalancerProvider, provider, oldProvider string) (bool, []string) {
+func validateLoadBalancerProviderConstraints(providers []api.LoadBalancerProvider, region, provider, oldProvider string) (bool, []string) {
 	if provider == oldProvider {
 		return true, nil
 	}
 
-	validValues := []string{}
+	var (
+		validValues = []string{}
+		fallback    *api.LoadBalancerProvider
+	)
 
 	for _, p := range providers {
-		validValues = append(validValues, p.Name)
-		if p.Name == provider {
+		// store the first non-regional image for fallback value if no load balancer provider for the given
+		// region was found
+		if p.Region == nil && fallback == nil {
+			v := p
+			fallback = &v
+			continue
+		}
+
+		// load balancer provider for the given region found, validate it
+		if p.Region != nil && *p.Region == region {
+			validValues = append(validValues, p.Name)
+			if p.Name == provider {
+				return true, nil
+			} else {
+				return false, validValues
+			}
+		}
+	}
+
+	// no load balancer provider for the given region found yet, check if the non-regional fallback is used
+	if fallback != nil {
+		validValues = append(validValues, fallback.Name)
+		if fallback.Name == provider {
 			return true, nil
 		}
 	}

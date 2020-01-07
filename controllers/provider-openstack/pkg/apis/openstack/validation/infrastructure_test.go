@@ -15,7 +15,7 @@
 package validation_test
 
 import (
-	apisopenstack "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
+	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	. "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/validation"
 
 	. "github.com/gardener/gardener/pkg/utils/validation/gomega"
@@ -28,24 +28,25 @@ import (
 var _ = Describe("InfrastructureConfig validation", func() {
 	var (
 		floatingPoolName1 = "foo"
+		region            = "europe"
 
-		constraints = apisopenstack.Constraints{
-			FloatingPools: []apisopenstack.FloatingPool{
+		constraints = api.Constraints{
+			FloatingPools: []api.FloatingPool{
 				{Name: floatingPoolName1},
 			},
 		}
 
-		infrastructureConfig *apisopenstack.InfrastructureConfig
+		infrastructureConfig *api.InfrastructureConfig
 
 		nodes       = "10.250.0.0/16"
 		invalidCIDR = "invalid-cidr"
 	)
 
 	BeforeEach(func() {
-		infrastructureConfig = &apisopenstack.InfrastructureConfig{
+		infrastructureConfig = &api.InfrastructureConfig{
 			FloatingPoolName: floatingPoolName1,
-			Networks: apisopenstack.Networks{
-				Router: &apisopenstack.Router{
+			Networks: api.Networks{
+				Router: &api.Router{
 					ID: "hugo",
 				},
 				Worker: "10.250.0.0/16",
@@ -57,7 +58,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 		It("should forbid invalid floating pool name configuration", func() {
 			infrastructureConfig.FloatingPoolName = ""
 
-			errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, &nodes)
+			errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodes)
 
 			Expect(errorList).To(ConsistOfFields(Fields{
 				"Type":  Equal(field.ErrorTypeRequired),
@@ -65,11 +66,81 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			}))
 		})
 
+		It("should forbid using a floating pool name for different region", func() {
+			differentRegion := "asia"
+			constraints := api.Constraints{
+				FloatingPools: []api.FloatingPool{
+					{
+						Name:   floatingPoolName1,
+						Region: &region,
+					},
+					{
+						Name:   "other",
+						Region: &differentRegion,
+					},
+				},
+			}
+			infrastructureConfig.FloatingPoolName = floatingPoolName1
+
+			errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, differentRegion, &nodes)
+
+			Expect(errorList).To(ConsistOfFields(Fields{
+				"Type":  Equal(field.ErrorTypeNotSupported),
+				"Field": Equal("floatingPoolName"),
+			}))
+		})
+
+		It("should forbid using the non-regional floating pool name if region is specified", func() {
+			floatingPoolName2 := "fp2"
+
+			constraints := api.Constraints{
+				FloatingPools: []api.FloatingPool{
+					{
+						Name: floatingPoolName2,
+					},
+					{
+						Name:   floatingPoolName1,
+						Region: &region,
+					},
+				},
+			}
+			infrastructureConfig.FloatingPoolName = floatingPoolName2
+
+			errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodes)
+
+			Expect(errorList).To(ConsistOfFields(Fields{
+				"Type":  Equal(field.ErrorTypeNotSupported),
+				"Field": Equal("floatingPoolName"),
+			}))
+		})
+
+		It("should allow using the non-regional floating pool name if region not specified", func() {
+			differentRegion := "asia"
+			floatingPoolName2 := "fp2"
+
+			constraints := api.Constraints{
+				FloatingPools: []api.FloatingPool{
+					{
+						Name: floatingPoolName2,
+					},
+					{
+						Name:   floatingPoolName1,
+						Region: &region,
+					},
+				},
+			}
+			infrastructureConfig.FloatingPoolName = floatingPoolName2
+
+			errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, differentRegion, &nodes)
+
+			Expect(errorList).To(BeEmpty())
+		})
+
 		Context("CIDR", func() {
 			It("should forbid invalid workers CIDR", func() {
 				infrastructureConfig.Networks.Worker = invalidCIDR
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, &nodes)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodes)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -81,7 +152,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 			It("should forbid workers CIDR which are not in Nodes CIDR", func() {
 				infrastructureConfig.Networks.Worker = "1.1.1.1/32"
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, &nodes)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodes)
 
 				Expect(errorList).To(ConsistOfFields(Fields{
 					"Type":   Equal(field.ErrorTypeInvalid),
@@ -95,7 +166,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 				infrastructureConfig.Networks.Worker = "10.250.3.8/24"
 
-				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, &nodeCIDR)
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, constraints, region, &nodeCIDR)
 				Expect(errorList).To(HaveLen(1))
 
 				Expect(errorList).To(ConsistOfFields(Fields{
@@ -114,7 +185,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 
 		It("should forbid changing the network section", func() {
 			newInfrastructureConfig := infrastructureConfig.DeepCopy()
-			newInfrastructureConfig.Networks.Router = &apisopenstack.Router{ID: "name"}
+			newInfrastructureConfig.Networks.Router = &api.Router{ID: "name"}
 
 			errorList := ValidateInfrastructureConfigUpdate(infrastructureConfig, newInfrastructureConfig, constraints, &nodes)
 

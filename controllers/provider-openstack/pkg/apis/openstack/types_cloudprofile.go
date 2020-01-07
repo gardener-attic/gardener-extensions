@@ -33,6 +33,8 @@ type CloudProfileConfig struct {
 	DHCPDomain *string
 	// KeyStoneURL is the URL for auth{n,z} in OpenStack (pointing to KeyStone).
 	KeyStoneURL string
+	// KeyStoneURLs is a region-URL mapping for auth{n,z} in OpenStack (pointing to KeyStone).
+	KeyStoneURLs []KeyStoneURL
 	// MachineImages is the list of machine images that are understood by the controller. It maps
 	// logical names and versions to provider-specific identifiers.
 	MachineImages []MachineImages
@@ -52,8 +54,18 @@ type Constraints struct {
 type FloatingPool struct {
 	// Name is the name of the floating pool.
 	Name string
+	// Region is the region name.
+	Region *string
 	// LoadBalancerClasses contains a list of supported labeled load balancer network settings.
 	LoadBalancerClasses []LoadBalancerClass
+}
+
+// KeyStoneURL is a region-URL mapping for auth{n,z} in OpenStack (pointing to KeyStone).
+type KeyStoneURL struct {
+	// Region is the name of the region.
+	Region string
+	// URL is the keystone URL.
+	URL string
 }
 
 // LoadBalancerClass defines a restricted network setting for generic LoadBalancer classes.
@@ -73,6 +85,8 @@ type LoadBalancerClass struct {
 type LoadBalancerProvider struct {
 	// Name is the name of the load balancer provider.
 	Name string
+	// Region is the region name.
+	Region *string
 }
 
 // MachineImages is a mapping from logical names and versions to provider-specific identifiers.

@@ -19,14 +19,13 @@ import (
 
 	api "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/helper"
-	openstackv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
+	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/openstack/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -58,7 +57,7 @@ var (
 	InternalChartsPath = filepath.Join(ChartsPath, "internal")
 	// StatusTypeMeta is the TypeMeta of the GCP InfrastructureStatus
 	StatusTypeMeta = metav1.TypeMeta{
-		APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+		APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
 		Kind:       "InfrastructureStatus",
 	}
 )
@@ -71,8 +70,8 @@ func ComputeTerraformerChartValues(
 	cluster *controller.Cluster,
 ) (map[string]interface{}, error) {
 	var (
-		routerID     = DefaultRouterID
 		createRouter = true
+		routerID     = DefaultRouterID
 	)
 
 	if router := config.Networks.Router; router != nil {
@@ -80,17 +79,15 @@ func ComputeTerraformerChartValues(
 		routerID = router.ID
 	}
 
-	var (
-		keyStoneURL string
-		dnsServers  []string
-	)
-
 	cloudProfileConfig, err := helper.CloudProfileConfigFromCluster(cluster)
 	if err != nil {
 		return nil, err
 	}
-	keyStoneURL = cloudProfileConfig.KeyStoneURL
-	dnsServers = cloudProfileConfig.DNSServers
+
+	keyStoneURL, err := helper.FindKeyStoneURL(cloudProfileConfig.KeyStoneURLs, cloudProfileConfig.KeyStoneURL, infra.Spec.Region)
+	if err != nil {
+		return nil, err
+	}
 
 	return map[string]interface{}{
 		"openstack": map[string]interface{}{
@@ -103,7 +100,7 @@ func ComputeTerraformerChartValues(
 		"create": map[string]interface{}{
 			"router": createRouter,
 		},
-		"dnsServers":   dnsServers,
+		"dnsServers":   cloudProfileConfig.DNSServers,
 		"sshPublicKey": string(infra.Spec.SSHPublicKey),
 		"router": map[string]interface{}{
 			"id": routerID,
@@ -205,36 +202,36 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *api.Infrastructur
 
 // StatusFromTerraformState computes an InfrastructureStatus from the given
 // Terraform variables.
-func StatusFromTerraformState(state *TerraformState) *openstackv1alpha1.InfrastructureStatus {
+func StatusFromTerraformState(state *TerraformState) *apiv1alpha1.InfrastructureStatus {
 	var (
-		status = &openstackv1alpha1.InfrastructureStatus{
+		status = &apiv1alpha1.InfrastructureStatus{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: openstackv1alpha1.SchemeGroupVersion.String(),
+				APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
 				Kind:       "InfrastructureStatus",
 			},
-			Networks: openstackv1alpha1.NetworkStatus{
+			Networks: apiv1alpha1.NetworkStatus{
 				ID: state.NetworkID,
-				FloatingPool: openstackv1alpha1.FloatingPoolStatus{
+				FloatingPool: apiv1alpha1.FloatingPoolStatus{
 					ID: state.FloatingNetworkID,
 				},
-				Router: openstackv1alpha1.RouterStatus{
+				Router: apiv1alpha1.RouterStatus{
 					ID: state.RouterID,
 				},
-				Subnets: []openstackv1alpha1.Subnet{
+				Subnets: []apiv1alpha1.Subnet{
 					{
-						Purpose: openstackv1alpha1.PurposeNodes,
+						Purpose: apiv1alpha1.PurposeNodes,
 						ID:      state.SubnetID,
 					},
 				},
 			},
-			SecurityGroups: []openstackv1alpha1.SecurityGroup{
+			SecurityGroups: []apiv1alpha1.SecurityGroup{
 				{
-					Purpose: openstackv1alpha1.PurposeNodes,
+					Purpose: apiv1alpha1.PurposeNodes,
 					ID:      state.SecurityGroupID,
 					Name:    state.SecurityGroupName,
 				},
 			},
-			Node: openstackv1alpha1.NodeStatus{
+			Node: apiv1alpha1.NodeStatus{
 				KeyName: state.SSHKeyName,
 			},
 		}
@@ -244,7 +241,7 @@ func StatusFromTerraformState(state *TerraformState) *openstackv1alpha1.Infrastr
 }
 
 // ComputeStatus computes the status based on the Terraformer and the given InfrastructureConfig.
-func ComputeStatus(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*openstackv1alpha1.InfrastructureStatus, error) {
+func ComputeStatus(tf terraformer.Terraformer, config *api.InfrastructureConfig) (*apiv1alpha1.InfrastructureStatus, error) {
 	state, err := ExtractTerraformState(tf, config)
 	if err != nil {
 		return nil, err
