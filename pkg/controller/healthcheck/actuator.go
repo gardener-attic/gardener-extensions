@@ -42,7 +42,7 @@ import (
 // RegisterExtension returns the extension object that should be registered with the health check controller
 type RegisterExtension = func() runtime.Object
 
-// Actuator acts upon registered resources.
+// HealthCheckActuator acts upon registered resources.
 type HealthCheckActuator interface {
 	// ExecuteHealthCheckFunctions is regularly called by the health check controller
 	// Executes all registered Health Checks and aggregates the result

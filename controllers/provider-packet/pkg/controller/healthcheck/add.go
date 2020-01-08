@@ -57,7 +57,6 @@ func RegisterHealthChecks(mgr manager.Manager, opts healthcheck.DefaultAddArgs) 
 			general.CheckSeedDeployment(packet.CloudControllerManagerName):                               string(gardencorev1beta1.ShootControlPlaneHealthy),
 			general.CheckManagedResource(genericcontrolplaneactuator.ControlPlaneShootChartResourceName): string(gardencorev1beta1.ShootSystemComponentsHealthy),
 			general.CheckManagedResource(genericcontrolplaneactuator.StorageClassesChartResourceName):    string(gardencorev1beta1.ShootSystemComponentsHealthy),
-			general.CheckManagedResource(genericcontrolplaneactuator.ShootWebhooksResourceName):          string(gardencorev1beta1.ShootSystemComponentsHealthy),
 		}); err != nil {
 		return err
 	}

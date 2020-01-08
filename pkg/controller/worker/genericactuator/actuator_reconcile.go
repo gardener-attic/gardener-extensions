@@ -164,6 +164,11 @@ func (a *genericActuator) Reconcile(ctx context.Context, worker *extensionsv1alp
 		return errors.Wrapf(err, "failed to cleanup the orphaned machine class secrets")
 	}
 
+	// Delete MachineSets having number of desired and actual replicas equaling 0
+	if err := a.cleanupMachineSets(ctx, worker.Namespace); err != nil {
+		return errors.Wrapf(err, "failed to cleanup the machine sets")
+	}
+
 	// Scale down machine-controller-manager if shoot is hibernated.
 	if controller.IsHibernated(cluster) {
 		deployment := &appsv1.Deployment{}
