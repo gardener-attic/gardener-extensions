@@ -237,8 +237,8 @@ start-shoot-cert-service:
 		--leader-election=$(LEADER_ELECTION) \
 		--config=./controllers/extension-shoot-cert-service/example/00-config.yaml
 
-.PHONY: validator-aws
-validator-aws:
+.PHONY: start-validator-aws
+start-validator-aws:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
 		-mod=vendor \
 		-ldflags $(LD_FLAGS) \

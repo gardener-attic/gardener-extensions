@@ -18,10 +18,10 @@ import (
 	"context"
 	"net/http"
 
-	provideraws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	"github.com/gardener/gardener/pkg/apis/garden"
 
+	"github.com/gardener/gardener/pkg/apis/garden"
 	"github.com/go-logr/logr"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -45,7 +45,7 @@ func (v *Shoot) Handle(ctx context.Context, req admission.Request) admission.Res
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if shoot.Spec.Provider.Type != provideraws.Type {
+	if shoot.Spec.Provider.Type != aws.Type {
 		return admission.Allowed("webhook not responsible for this provider")
 	}
 

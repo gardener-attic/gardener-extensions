@@ -25,116 +25,145 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-var _ = Describe("ValidateWorkerConfig", func() {
-	var (
-		workers  []garden.Worker
-		awsZones []apisaws.Zone
-	)
+var _ = Describe("Shoot validation", func() {
+	Describe("#ValidateNetworking", func() {
+		var networkingPath = field.NewPath("spec", "networking")
 
-	BeforeEach(func() {
-		workers = []garden.Worker{
-			{
-				Volume: &garden.Volume{
-					Type: makeStringPointer("Volume"),
-					Size: "30G",
-				},
-				Zones: []string{
-					"zone1",
-					"zone2",
-				},
-			},
-			{
-				Volume: &garden.Volume{
-					Type: makeStringPointer("Volume"),
-					Size: "20G",
-				},
-				Zones: []string{
-					"zone2",
-					"zone3",
-				},
-			},
-		}
+		It("should return no error because nodes CIDR was provided", func() {
+			networking := garden.Networking{
+				Nodes: makeStringPointer("1.2.3.4/5"),
+			}
 
-		awsZones = []apisaws.Zone{
-			{
-				Name: "zone1",
-			},
-			{
-				Name: "zone2",
-			},
-			{
-				Name: "zone3",
-			},
-		}
-	})
-
-	Describe("#ValidateWorkers", func() {
-		It("should pass because workers are configured correctly", func() {
-			errorList := ValidateWorkers(workers, awsZones, field.NewPath(""))
+			errorList := ValidateNetworking(networking, networkingPath)
 
 			Expect(errorList).To(BeEmpty())
 		})
 
-		It("should forbid because volume is not configured", func() {
-			workers[1].Volume = nil
+		It("should return an error because no nodes CIDR was provided", func() {
+			networking := garden.Networking{}
 
-			errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+			errorList := ValidateNetworking(networking, networkingPath)
 
 			Expect(errorList).To(ConsistOf(
 				PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
-					"Field": Equal("workers[1].volume"),
+					"Field": Equal("spec.networking.nodes"),
 				})),
 			))
 		})
+	})
 
-		It("should forbid because volume type and size are not configured", func() {
-			workers[0].Volume.Type = nil
-			workers[0].Volume.Size = ""
+	Describe("#ValidateWorkerConfig", func() {
+		var (
+			workers  []garden.Worker
+			awsZones []apisaws.Zone
+		)
 
-			errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+		BeforeEach(func() {
+			workers = []garden.Worker{
+				{
+					Volume: &garden.Volume{
+						Type: makeStringPointer("Volume"),
+						Size: "30G",
+					},
+					Zones: []string{
+						"zone1",
+						"zone2",
+					},
+				},
+				{
+					Volume: &garden.Volume{
+						Type: makeStringPointer("Volume"),
+						Size: "20G",
+					},
+					Zones: []string{
+						"zone2",
+						"zone3",
+					},
+				},
+			}
 
-			Expect(errorList).To(ConsistOf(
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":  Equal(field.ErrorTypeRequired),
-					"Field": Equal("workers[0].volume.type"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":  Equal(field.ErrorTypeRequired),
-					"Field": Equal("workers[0].volume.size"),
-				})),
-			))
+			awsZones = []apisaws.Zone{
+				{
+					Name: "zone1",
+				},
+				{
+					Name: "zone2",
+				},
+				{
+					Name: "zone3",
+				},
+			}
 		})
 
-		It("should forbid because worker does not specify a zone", func() {
-			workers[0].Zones = nil
+		Describe("#ValidateWorkers", func() {
+			It("should pass because workers are configured correctly", func() {
+				errorList := ValidateWorkers(workers, awsZones, field.NewPath(""))
 
-			errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+				Expect(errorList).To(BeEmpty())
+			})
 
-			Expect(errorList).To(ConsistOf(
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":  Equal(field.ErrorTypeRequired),
-					"Field": Equal("workers[0].zones"),
-				})),
-			))
-		})
+			It("should forbid because volume is not configured", func() {
+				workers[1].Volume = nil
 
-		It("should forbid because worker use zones which are not available", func() {
-			workers[0].Zones[0] = ""
-			workers[1].Zones[1] = "not-available"
+				errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
 
-			errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+				Expect(errorList).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":  Equal(field.ErrorTypeRequired),
+						"Field": Equal("workers[1].volume"),
+					})),
+				))
+			})
 
-			Expect(errorList).To(ConsistOf(
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":  Equal(field.ErrorTypeInvalid),
-					"Field": Equal("workers[0].zones[0]"),
-				})),
-				PointTo(MatchFields(IgnoreExtras, Fields{
-					"Type":  Equal(field.ErrorTypeInvalid),
-					"Field": Equal("workers[1].zones[1]"),
-				})),
-			))
+			It("should forbid because volume type and size are not configured", func() {
+				workers[0].Volume.Type = nil
+				workers[0].Volume.Size = ""
+
+				errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+
+				Expect(errorList).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":  Equal(field.ErrorTypeRequired),
+						"Field": Equal("workers[0].volume.type"),
+					})),
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":  Equal(field.ErrorTypeRequired),
+						"Field": Equal("workers[0].volume.size"),
+					})),
+				))
+			})
+
+			It("should forbid because worker does not specify a zone", func() {
+				workers[0].Zones = nil
+
+				errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+
+				Expect(errorList).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":  Equal(field.ErrorTypeRequired),
+						"Field": Equal("workers[0].zones"),
+					})),
+				))
+			})
+
+			It("should forbid because worker use zones which are not available", func() {
+				workers[0].Zones[0] = ""
+				workers[1].Zones[1] = "not-available"
+
+				errorList := ValidateWorkers(workers, awsZones, field.NewPath("workers"))
+
+				Expect(errorList).To(ConsistOf(
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":  Equal(field.ErrorTypeInvalid),
+						"Field": Equal("workers[0].zones[0]"),
+					})),
+					PointTo(MatchFields(IgnoreExtras, Fields{
+						"Type":  Equal(field.ErrorTypeInvalid),
+						"Field": Equal("workers[1].zones[1]"),
+					})),
+				))
+			})
 		})
 	})
 })

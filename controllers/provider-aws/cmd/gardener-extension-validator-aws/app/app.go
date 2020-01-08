@@ -34,7 +34,7 @@ import (
 
 var log = logf.Log.WithName("gardener-extensions-validator-aws")
 
-// NewValidatorCommand creates a new command for running a AWS shoot validator.
+// NewValidatorCommand creates a new command for running an AWS validator.
 func NewValidatorCommand(ctx context.Context) *cobra.Command {
 	var (
 		restOpts = &controllercmd.RESTOptions{}
