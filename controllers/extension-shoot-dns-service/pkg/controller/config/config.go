@@ -56,6 +56,6 @@ type HealthCheckConfig struct {
 
 // Health contains configuration for the health check controller
 type Health struct {
-	// HealthCheckSyncPeriod
+	// HealthCheckSyncPeriod configured how often health checks are being executed. Defaults to '30s'
 	HealthCheckSyncPeriod metav1.Duration
 }

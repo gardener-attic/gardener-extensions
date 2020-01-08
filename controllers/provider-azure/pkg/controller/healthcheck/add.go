@@ -54,7 +54,7 @@ func RegisterHealthChecks(mgr manager.Manager, opts healthcheck.DefaultAddArgs) 
 		opts,
 		normalPredicates,
 		map[healthcheck.HealthCheck]string{
-			general.CheckSeedDeployment(azure.CloudControllerManagerName):                                string(gardencorev1beta1.ShootControlPlaneHealthy),
+			general.NewSeedDeploymentHealthChecker(azure.CloudControllerManagerName):                     string(gardencorev1beta1.ShootControlPlaneHealthy),
 			general.CheckManagedResource(genericcontrolplaneactuator.ControlPlaneShootChartResourceName): string(gardencorev1beta1.ShootSystemComponentsHealthy),
 			general.CheckManagedResource(genericcontrolplaneactuator.StorageClassesChartResourceName):    string(gardencorev1beta1.ShootSystemComponentsHealthy),
 		}); err != nil {
@@ -69,9 +69,9 @@ func RegisterHealthChecks(mgr manager.Manager, opts healthcheck.DefaultAddArgs) 
 		opts,
 		nil,
 		map[healthcheck.HealthCheck]string{
-			general.CheckManagedResource(genericworkeractuator.McmShootResourceName): string(gardencorev1beta1.ShootSystemComponentsHealthy),
-			general.CheckSeedDeployment(azure.MachineControllerManagerName):          string(gardencorev1beta1.ShootControlPlaneHealthy),
-			worker.SufficientNodesAvailable():                                        string(gardencorev1beta1.ShootEveryNodeReady),
+			general.CheckManagedResource(genericworkeractuator.McmShootResourceName):   string(gardencorev1beta1.ShootSystemComponentsHealthy),
+			general.NewSeedDeploymentHealthChecker(azure.MachineControllerManagerName): string(gardencorev1beta1.ShootControlPlaneHealthy),
+			worker.NewSufficientNodesChecker():                                         string(gardencorev1beta1.ShootEveryNodeReady),
 		})
 }
 

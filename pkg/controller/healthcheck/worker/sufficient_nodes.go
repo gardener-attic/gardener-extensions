@@ -38,9 +38,9 @@ type DefaultHealthChecker struct {
 	shootClient client.Client
 }
 
-// SufficientNodesAvailable is a healthCheck function to check if there are a sufficient amount of nodes registered in the cluster
+// NewSufficientNodesChecker is a health check function which checks if there is a sufficient amount of nodes registered in the cluster.
 // Checks if all machines created by the machine deployment joinend the cluster
-func SufficientNodesAvailable() healthcheck.HealthCheck {
+func NewSufficientNodesChecker() healthcheck.HealthCheck {
 	return &DefaultHealthChecker{}
 }
 

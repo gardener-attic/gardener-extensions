@@ -50,7 +50,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 
 		// options for the health care controller
-		healthCareCtrlOpts = &controllercmd.ControllerOptions{
+		healthCheckCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -60,7 +60,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			restOpts,
 			mgrOpts,
 			calicoCtrlOpts,
-			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
+			controllercmd.PrefixOption("healthcheck-", healthCheckCtrlOpts),
 			reconcileOpts,
 			configFileOpts,
 		)
@@ -90,7 +90,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 			reconcileOpts.Completed().Apply(&calicocontroller.DefaultAddOptions.IgnoreOperationAnnotation)
 			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.AddOptions.HealthCheckConfig)
-			healthCareCtrlOpts.Completed().Apply(&healthcheck.AddOptions.Controller)
+			healthCheckCtrlOpts.Completed().Apply(&healthcheck.AddOptions.Controller)
 
 			if err := calicocontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")

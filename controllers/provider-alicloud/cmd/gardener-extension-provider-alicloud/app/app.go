@@ -66,7 +66,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 
 		// options for the health care controller
-		healthCareCtrlOpts = &controllercmd.ControllerOptions{
+		healthCheckCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -107,7 +107,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
-			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
+			controllercmd.PrefixOption("healthcheck-", healthCheckCtrlOpts),
 			configFileOpts,
 			controllerSwitches,
 			reconcileOpts,
@@ -155,7 +155,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyETCDStorage(&alicloudcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&alicloudcontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
-			healthCareCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
+			healthCheckCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&alicloudbackupbucket.DefaultAddOptions.Controller)
 			backupEntryCtrlOpts.Completed().Apply(&alicloudbackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&alicloudcontrolplane.DefaultAddOptions.Controller)

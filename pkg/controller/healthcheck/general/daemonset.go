@@ -30,16 +30,34 @@ import (
 
 // DaemonSetHealthChecker contains all the information for the DaemonSet HealthCheck
 type DaemonSetHealthChecker struct {
-	logger         logr.Logger
-	seedClient     client.Client
-	shootClient    client.Client
-	deploymentName string
+	logger      logr.Logger
+	seedClient  client.Client
+	shootClient client.Client
+	name        string
+	checkType   DaemonSetCheckType
 }
 
-// CheckStatefulSet is a healthCheck function to check DaemonSets
-func CheckDaemonSet(name string) healthcheck.HealthCheck {
+// DeploymentCheckType in which cluster the check will be executed
+type DaemonSetCheckType string
+
+const (
+	DaemonSetCheckTypeSeed  DaemonSetCheckType = "Seed"
+	DaemonSetCheckTypeShoot DaemonSetCheckType = "Shoot"
+)
+
+// CheckSeedDaemonSetSeed is a healthCheck function to check DaemonSets
+func NewSeedDaemonSetHealthChecker(name string) healthcheck.HealthCheck {
 	return &DaemonSetHealthChecker{
-		deploymentName: name,
+		name:      name,
+		checkType: DaemonSetCheckTypeSeed,
+	}
+}
+
+// CheckStatefulSetShoot is a healthCheck function to check DaemonSets
+func NewShootDaemonSetHealthChecker(name string) healthcheck.HealthCheck {
+	return &DaemonSetHealthChecker{
+		name:      name,
+		checkType: DaemonSetCheckTypeShoot,
 	}
 }
 
@@ -61,8 +79,14 @@ func (healthChecker *DaemonSetHealthChecker) SetLoggerSuffix(provider, extension
 // Check executes the health check
 func (healthChecker *DaemonSetHealthChecker) Check(ctx context.Context, request types.NamespacedName) (*healthcheck.SingleCheckResult, error) {
 	daemonSet := &v1.DaemonSet{}
-	if err := healthChecker.seedClient.Get(ctx, client.ObjectKey{Namespace: request.Namespace, Name: healthChecker.deploymentName}, daemonSet); err != nil {
-		err := fmt.Errorf("failed to retrieve DeamonSet '%s' in namespace '%s': %v", healthChecker.deploymentName, request.Namespace, err)
+	var err error
+	if healthChecker.checkType == DaemonSetCheckTypeSeed {
+		err = healthChecker.seedClient.Get(ctx, client.ObjectKey{Namespace: request.Namespace, Name: healthChecker.name}, daemonSet)
+	} else {
+		err = healthChecker.shootClient.Get(ctx, client.ObjectKey{Namespace: request.Namespace, Name: healthChecker.name}, daemonSet)
+	}
+	if err != nil {
+		err := fmt.Errorf("failed to retrieve DeamonSet '%s' in namespace '%s': %v", healthChecker.name, request.Namespace, err)
 		healthChecker.logger.Error(err, "Health check failed")
 		return nil, err
 	}
@@ -82,7 +106,7 @@ func (healthChecker *DaemonSetHealthChecker) Check(ctx context.Context, request 
 
 func DaemonSetIsHealthy(daemonSet *v1.DaemonSet) (bool, *string, error) {
 	if err := health.CheckDaemonSet(daemonSet); err != nil {
-		reason := "DeploymentUnhealthy"
+		reason := "DeamonSetUnhealthy"
 		err := fmt.Errorf("daemonSet %s in namespace %s is unhealthy: %v", daemonSet.Name, daemonSet.Namespace, err)
 		return false, &reason, err
 	}

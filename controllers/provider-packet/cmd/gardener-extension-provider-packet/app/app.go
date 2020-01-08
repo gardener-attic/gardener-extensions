@@ -73,7 +73,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		workerCtrlOptsUnprefixed = controllercmd.NewOptionAggregator(workerCtrlOpts, workerReconcileOpts)
 
 		// options for the health care controller
-		healthCareCtrlOpts = &controllercmd.ControllerOptions{
+		healthCheckCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 1,
 		}
 
@@ -92,7 +92,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
-			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
+			controllercmd.PrefixOption("healthcheck-", healthCheckCtrlOpts),
 			controllerSwitches,
 			configFileOpts,
 			reconcileOpts,
@@ -140,7 +140,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyETCDStorage(&packetcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
 			controlPlaneCtrlOpts.Completed().Apply(&packetcontrolplane.DefaultAddOptions.Controller)
-			healthCareCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
+			healthCheckCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			infraCtrlOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.Controller)
 			reconcileOpts.Completed().Apply(&packetinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)
 			reconcileOpts.Completed().Apply(&packetcontrolplane.DefaultAddOptions.IgnoreOperationAnnotation)

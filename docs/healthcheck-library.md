@@ -5,7 +5,7 @@
 Typically an extension reconciles a specific resource (Custom Resource Definitions (CRDs)) and creates/modifies resources in the cluster (via helm, managed resources, kubectl, ...).
 We call these API Objects 'dependent objects' - as they are bound to the lifecycle of the extension.
 
-**The goal of this library is to enable extensions to setup health checks for their 'dependent objects' with minimal effort.**
+The goal of this library is to enable extensions to setup health checks for their 'dependent objects' with minimal effort.
 
 ## Usage
 
@@ -62,7 +62,7 @@ In our example, two checks are mapped to `ShootEveryNodeReady` and one to `Shoot
 
 ```yaml
 status:
-    conditions:
+  conditions:
     - lastTransitionTime: "20XX-10-28T08:17:21Z"
       lastUpdateTime: "20XX-11-28T08:17:21Z"
       message: (1/1) Health checks successful

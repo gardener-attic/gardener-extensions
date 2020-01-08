@@ -76,7 +76,7 @@ func (o *DNSServiceOptions) Completed() *DNSServiceConfig {
 	return o.config
 }
 
-// Completed
+// Completed returns the completed HealthOptions. Only call this if `Complete` was successful.
 func (o *HealthOptions) Completed() *HealthConfig {
 	return o.config
 }

@@ -30,16 +30,34 @@ import (
 
 // StatefulSetHealthChecker contains all the information for the StatefulSet HealthCheck
 type StatefulSetHealthChecker struct {
-	logger         logr.Logger
-	seedClient     client.Client
-	shootClient    client.Client
-	deploymentName string
+	logger      logr.Logger
+	seedClient  client.Client
+	shootClient client.Client
+	name        string
+	checkType   StatefulSetCheckType
 }
 
-// CheckStatefulSet is a healthCheck function to check StatefulSets
-func CheckStatefulSet(name string) healthcheck.HealthCheck {
+// DeploymentCheckType in which cluster the check will be executed
+type StatefulSetCheckType string
+
+const (
+	StatefulSetCheckTypeSeed  StatefulSetCheckType = "Seed"
+	StatefulSetCheckTypeShoot StatefulSetCheckType = "Shoot"
+)
+
+// NewSeedStatefulSetChecker is a healthCheck function to check StatefulSets
+func NewSeedStatefulSetChecker(name string) healthcheck.HealthCheck {
 	return &StatefulSetHealthChecker{
-		deploymentName: name,
+		name:      name,
+		checkType: StatefulSetCheckTypeSeed,
+	}
+}
+
+// NewShootStatefulSetChecker is a healthCheck function to check StatefulSets
+func NewShootStatefulSetChecker(name string) healthcheck.HealthCheck {
+	return &StatefulSetHealthChecker{
+		name:      name,
+		checkType: StatefulSetCheckTypeShoot,
 	}
 }
 
@@ -61,8 +79,15 @@ func (healthChecker *StatefulSetHealthChecker) SetLoggerSuffix(provider, extensi
 // Check executes the health check
 func (healthChecker *StatefulSetHealthChecker) Check(ctx context.Context, request types.NamespacedName) (*healthcheck.SingleCheckResult, error) {
 	statefulSet := &v1.StatefulSet{}
-	if err := healthChecker.seedClient.Get(ctx, client.ObjectKey{Namespace: request.Namespace, Name: healthChecker.deploymentName}, statefulSet); err != nil {
-		err := fmt.Errorf("failed to retrieve StatefulSet '%s' in namespace '%s': %v", healthChecker.deploymentName, request.Namespace, err)
+
+	var err error
+	if healthChecker.checkType == StatefulSetCheckTypeSeed {
+		err = healthChecker.seedClient.Get(ctx, client.ObjectKey{Namespace: request.Namespace, Name: healthChecker.name}, statefulSet)
+	} else {
+		err = healthChecker.shootClient.Get(ctx, client.ObjectKey{Namespace: request.Namespace, Name: healthChecker.name}, statefulSet)
+	}
+	if err != nil {
+		err := fmt.Errorf("failed to retrieve StatefulSet '%s' in namespace '%s': %v", healthChecker.name, request.Namespace, err)
 		healthChecker.logger.Error(err, "Health check failed")
 		return nil, err
 	}
@@ -82,7 +107,7 @@ func (healthChecker *StatefulSetHealthChecker) Check(ctx context.Context, reques
 
 func statefulSetIsHealthy(statefulSet *v1.StatefulSet) (bool, *string, error) {
 	if err := health.CheckStatefulSet(statefulSet); err != nil {
-		reason := "DeploymentUnhealthy"
+		reason := "StatefulSetUnhealthy"
 		err := fmt.Errorf("statefulSet %s in namespace %s is unhealthy: %v", statefulSet.Name, statefulSet.Namespace, err)
 		return false, &reason, err
 	}

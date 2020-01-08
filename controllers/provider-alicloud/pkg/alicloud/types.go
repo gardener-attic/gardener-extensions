@@ -62,9 +62,9 @@ const (
 	BackupSecretName = "etcd-backup"
 	// StorageEndpoint is the data field in a secret where the storage endpoint is stored at.
 	StorageEndpoint = "storageEndpoint"
-	//CloudControllerManagerDeploymentName is the a constant for the name of the CloudController.
+	//CloudControllerManagerName is the a constant for the name of the CloudController.
 	CloudControllerManagerName = "cloud-controller-manager"
-	//CsiPluginController is the a constant for the name of the CSI Plugin controller
+	// CsiPluginController is the a constant for the name of the CSI Plugin controller
 	CsiPluginController = "csi-plugin-controller"
 )
 

@@ -66,7 +66,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 		}
 
 		// options for the health care controller
-		healthCareCtrlOpts = &controllercmd.ControllerOptions{
+		healthCheckCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -107,7 +107,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
-			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
+			controllercmd.PrefixOption("healthcheck-", healthCheckCtrlOpts),
 			configFileOpts,
 			controllerSwitches,
 			reconcileOpts,
@@ -155,7 +155,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			configFileOpts.Completed().ApplyETCDStorage(&azurecontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&azurecontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
-			healthCareCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
+			healthCheckCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&azurebackupbucket.DefaultAddOptions.Controller)
 			backupEntryCtrlOpts.Completed().Apply(&azurebackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&azurecontrolplane.DefaultAddOptions.Controller)
