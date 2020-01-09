@@ -213,6 +213,11 @@ func getConfigChartValues(
 		return nil, errors.Wrapf(err, "could not determine subnet, availability set, route table or security group name from infrastructureStatus of controlplane '%s'", util.ObjectName(cp))
 	}
 
+	var maxNodes int32
+	for _, worker := range cluster.Shoot.Spec.Provider.Workers {
+		maxNodes = maxNodes + worker.Maximum
+	}
+
 	// Collect config chart values.
 	values := map[string]interface{}{
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
@@ -226,6 +231,7 @@ func getConfigChartValues(
 		"routeTableName":    routeTableName,
 		"securityGroupName": securityGroupName,
 		"region":            cp.Spec.Region,
+		"maxNodes":          maxNodes,
 	}
 
 	if infraStatus.Networks.VNet.ResourceGroup != nil {
