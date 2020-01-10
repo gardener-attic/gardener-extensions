@@ -38,7 +38,8 @@ import (
 )
 
 const (
-	namespace = "test"
+	namespace       = "test"
+	maxNodes  int32 = 0
 )
 
 var _ = Describe("ValuesProvider", func() {
@@ -450,6 +451,7 @@ var _ = Describe("ValuesProvider", func() {
 			"routeTableName":      "route-table-name",
 			"securityGroupName":   "security-group-name-workers",
 			"kubernetesVersion":   "1.13.4",
+			"maxNodes":            maxNodes,
 		}
 
 		configZonedClusterChartValues = map[string]interface{}{
@@ -464,6 +466,7 @@ var _ = Describe("ValuesProvider", func() {
 			"routeTableName":    "route-table-name",
 			"securityGroupName": "security-group-name-workers",
 			"kubernetesVersion": "1.13.4",
+			"maxNodes":          maxNodes,
 		}
 
 		ccmChartValues = map[string]interface{}{
