@@ -21,6 +21,7 @@ limitations under the License.
 package config
 
 import (
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -50,6 +51,11 @@ func (in *Configuration) DeepCopyInto(out *Configuration) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
 	in.ACME.DeepCopyInto(&out.ACME)
+	if in.HealthCheckConfig != nil {
+		in, out := &in.HealthCheckConfig, &out.HealthCheckConfig
+		*out = new(healthcheckconfig.HealthCheckConfig)
+		**out = **in
+	}
 	return
 }
 

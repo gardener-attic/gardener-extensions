@@ -20,6 +20,7 @@ import (
 	"text/template"
 
 	template_gen "github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/template"
+
 	"github.com/gobuffalo/packr/v2"
 )
 

@@ -16,6 +16,7 @@ package coreos_test
 
 import (
 	"github.com/gardener/gardener-extensions/controllers/os-coreos/pkg/coreos"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -20,9 +20,9 @@ import (
 
 	gcpclient "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp/client"
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
-
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

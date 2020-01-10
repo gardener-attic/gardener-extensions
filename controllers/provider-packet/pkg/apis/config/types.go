@@ -15,6 +15,8 @@
 package config
 
 import (
+	healthcheck "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	componentbaseconfig "k8s.io/component-base/config"
@@ -31,6 +33,8 @@ type ControllerConfiguration struct {
 	ClientConnection *componentbaseconfig.ClientConnectionConfiguration
 	// ETCD is the etcd configuration.
 	ETCD ETCD
+	// HealthCheckConfig is the config for the health check controller
+	HealthCheckConfig *healthcheck.HealthCheckConfig
 }
 
 // ETCD is an etcd configuration.

@@ -30,6 +30,7 @@ type Options struct {
 	restOptions        *controllercmd.RESTOptions
 	managerOptions     *controllercmd.ManagerOptions
 	controllerOptions  *controllercmd.ControllerOptions
+	healthOptions      *controllercmd.ControllerOptions
 	controllerSwitches *controllercmd.SwitchOptions
 	reconcileOptions   *controllercmd.ReconcilerOptions
 	optionAggregator   controllercmd.OptionAggregator
@@ -50,6 +51,10 @@ func NewOptions() *Options {
 			// This is a default value.
 			MaxConcurrentReconciles: 5,
 		},
+		healthOptions: &controllercmd.ControllerOptions{
+			// This is a default value.
+			MaxConcurrentReconciles: 5,
+		},
 		controllerSwitches: certificateservicecmd.ControllerSwitches(),
 		reconcileOptions:   &controllercmd.ReconcilerOptions{},
 	}
@@ -59,6 +64,7 @@ func NewOptions() *Options {
 		options.managerOptions,
 		options.controllerOptions,
 		options.certOptions,
+		controllercmd.PrefixOption("healthcheck-", options.healthOptions),
 		options.controllerSwitches,
 		options.reconcileOptions,
 	)

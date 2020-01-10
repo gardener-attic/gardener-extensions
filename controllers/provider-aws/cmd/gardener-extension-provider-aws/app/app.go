@@ -25,6 +25,7 @@ import (
 	awsbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/backupbucket"
 	awsbackupentry "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/backupentry"
 	awscontrolplane "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/healthcheck"
 	awsinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/infrastructure"
 	awsworker "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/controller/worker"
 	awscontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/webhook/controlplanebackup"
@@ -35,7 +36,9 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
 
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -59,6 +62,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 
 		// options for the backupentry controller
 		backupEntryCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		// options for the health care controller
+		healthCheckCtrlOpts = &controllercmd.ControllerOptions{
 			MaxConcurrentReconciles: 5,
 		}
 
@@ -99,6 +107,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("healthcheck-", healthCheckCtrlOpts),
 			configFileOpts,
 			controllerSwitches,
 			reconcileOpts,
@@ -121,22 +130,31 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 					controllercmd.LogErrAndExit(err, "Error ensuring the machine CRDs")
 				}
 			}
-
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
 			}
 
-			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
+			scheme := mgr.GetScheme()
+			if err := controller.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := awsinstall.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := awsinstall.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
+
+			// add common meta types to schema for controller-runtime to use v1.ListOptions
+			metav1.AddToGroupVersion(scheme, machinev1alpha1.SchemeGroupVersion)
+			// add types required for AWS Health check
+			scheme.AddKnownTypes(machinev1alpha1.SchemeGroupVersion,
+				&machinev1alpha1.MachineDeploymentList{},
+			)
 
 			configFileOpts.Completed().ApplyETCDStorage(&awscontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyETCDBackup(&awscontrolplanebackup.DefaultAddOptions.ETCDBackup)
+			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
+			healthCheckCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&awsbackupbucket.DefaultAddOptions.Controller)
 			backupEntryCtrlOpts.Completed().Apply(&awsbackupentry.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&awscontrolplane.DefaultAddOptions.Controller)

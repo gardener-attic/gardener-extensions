@@ -42,9 +42,7 @@ import (
 
 // Object names
 const (
-	cloudControllerManagerDeploymentName = "cloud-controller-manager"
-	cloudControllerManagerServerName     = "cloud-controller-manager-server"
-	awsLBReadvertiserDeploymentName      = "aws-lb-readvertiser"
+	cloudControllerManagerServerName = "cloud-controller-manager-server"
 )
 
 var controlPlaneSecrets = &secrets.Secrets{
@@ -59,7 +57,7 @@ var controlPlaneSecrets = &secrets.Secrets{
 		return []secrets.ConfigInterface{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
-					Name:         cloudControllerManagerDeploymentName,
+					Name:         aws.CloudControllerManagerName,
 					CommonName:   "system:cloud-controller-manager",
 					Organization: []string{user.SystemPrivilegedGroup},
 					CertType:     secrets.ClientCert,
@@ -73,8 +71,8 @@ var controlPlaneSecrets = &secrets.Secrets{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
 					Name:       cloudControllerManagerServerName,
-					CommonName: cloudControllerManagerDeploymentName,
-					DNSNames:   controlplane.DNSNamesForService(cloudControllerManagerDeploymentName, clusterName),
+					CommonName: aws.CloudControllerManagerName,
+					DNSNames:   controlplane.DNSNamesForService(aws.CloudControllerManagerName, clusterName),
 					CertType:   secrets.ServerCert,
 					SigningCA:  cas[v1beta1constants.SecretNameCACluster],
 				},
@@ -95,8 +93,8 @@ var controlPlaneExposureSecrets = &secrets.Secrets{
 		return []secrets.ConfigInterface{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
-					Name:         awsLBReadvertiserDeploymentName,
-					CommonName:   awsLBReadvertiserDeploymentName,
+					Name:         aws.LBReadvertiserDeploymentName,
+					CommonName:   aws.LBReadvertiserDeploymentName,
 					Organization: []string{user.SystemPrivilegedGroup},
 					DNSNames:     nil,
 					IPAddresses:  nil,
@@ -229,7 +227,7 @@ func (vp *valuesProvider) GetControlPlaneExposureChartValues(
 		"domain":   address,
 		"replicas": extensionscontroller.GetReplicas(cluster, 1),
 		"podAnnotations": map[string]interface{}{
-			"checksum/secret-aws-lb-readvertiser": checksums[awsLBReadvertiserDeploymentName],
+			"checksum/secret-aws-lb-readvertiser": checksums[aws.LBReadvertiserDeploymentName],
 		},
 	}, nil
 }
@@ -268,7 +266,7 @@ func getCCMChartValues(
 		"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 		"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 		"podAnnotations": map[string]interface{}{
-			"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
+			"checksum/secret-cloud-controller-manager":        checksums[aws.CloudControllerManagerName],
 			"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
 			"checksum/secret-cloudprovider":                   checksums[v1beta1constants.SecretNameCloudProvider],
 			"checksum/configmap-cloud-provider-config":        checksums[aws.CloudProviderConfigName],

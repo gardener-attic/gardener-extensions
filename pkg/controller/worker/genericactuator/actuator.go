@@ -20,6 +20,7 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardenerkubernetes "github.com/gardener/gardener/pkg/client/kubernetes"
@@ -184,5 +185,26 @@ func (a *genericActuator) cleanupMachineClassSecrets(ctx context.Context, namesp
 		}
 	}
 
+	return nil
+}
+
+// cleanupMachineClassSecrets deletes MachineSets having number of desired and actual replicas equaling 0
+func (a *genericActuator) cleanupMachineSets(ctx context.Context, namespace string) error {
+	machineSetList := &machinev1alpha1.MachineSetList{}
+	if err := a.client.List(ctx, machineSetList, client.InNamespace(namespace)); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	for _, machineSet := range machineSetList.Items {
+		if machineSet.Spec.Replicas == 0 && machineSet.Status.Replicas == 0 {
+			a.logger.Info("Deleting MachineSet as the number of desired and actual replicas is 0.", "name", machineSet.Name)
+			if err := a.client.Delete(ctx, machineSet.DeepCopy()); client.IgnoreNotFound(err) != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }

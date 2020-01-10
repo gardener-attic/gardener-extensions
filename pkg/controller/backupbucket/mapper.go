@@ -18,16 +18,15 @@ import (
 	"context"
 
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
-	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
 type secretToBackupBucketMapper struct {

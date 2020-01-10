@@ -29,6 +29,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -177,18 +178,28 @@ func (r *reconciler) delete(ctx context.Context, cp *extensionsv1alpha1.ControlP
 }
 
 func (r *reconciler) updateStatusProcessing(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1beta1.LastOperationType, description string) error {
-	cp.Status.LastOperation = extensionscontroller.LastOperation(lastOperationType, gardencorev1beta1.LastOperationStateProcessing, 1, description)
-	return r.client.Status().Update(ctx, cp)
+	lastOperation := extensionscontroller.LastOperation(lastOperationType, gardencorev1beta1.LastOperationStateProcessing, 1, description)
+	return r.updateStatus(ctx, cp, lastOperation, nil, nil)
 }
 
 func (r *reconciler) updateStatusError(ctx context.Context, err error, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1beta1.LastOperationType, description string) error {
 	cp.Status.ObservedGeneration = cp.Generation
-	cp.Status.LastOperation, cp.Status.LastError = extensionscontroller.ReconcileError(lastOperationType, gardencorev1beta1helper.FormatLastErrDescription(fmt.Errorf("%s: %v", description, err)), 50, gardencorev1beta1helper.ExtractErrorCodes(err)...)
-	return r.client.Status().Update(ctx, cp)
+	lastOperation, lastError := extensionscontroller.ReconcileError(lastOperationType, gardencorev1beta1helper.FormatLastErrDescription(fmt.Errorf("%s: %v", description, err)), 50, gardencorev1beta1helper.ExtractErrorCodes(err)...)
+	return r.updateStatus(ctx, cp, lastOperation, lastError, &cp.Generation)
 }
 
 func (r *reconciler) updateStatusSuccess(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperationType gardencorev1beta1.LastOperationType, description string) error {
-	cp.Status.ObservedGeneration = cp.Generation
-	cp.Status.LastOperation, cp.Status.LastError = extensionscontroller.ReconcileSucceeded(lastOperationType, description)
-	return r.client.Status().Update(ctx, cp)
+	lastOperation, lastError := extensionscontroller.ReconcileSucceeded(lastOperationType, description)
+	return r.updateStatus(ctx, cp, lastOperation, lastError, &cp.Generation)
+}
+
+func (r *reconciler) updateStatus(ctx context.Context, cp *extensionsv1alpha1.ControlPlane, lastOperation *gardencorev1beta1.LastOperation, lastError *gardencorev1beta1.LastError, observedGen *int64) error {
+	return extensionscontroller.TryUpdateStatus(ctx, retry.DefaultBackoff, r.client, cp, func() error {
+		cp.Status.LastOperation = lastOperation
+		if lastError != nil {
+			cp.Status.ObservedGeneration = *observedGen
+			cp.Status.LastError = lastError
+		}
+		return nil
+	})
 }

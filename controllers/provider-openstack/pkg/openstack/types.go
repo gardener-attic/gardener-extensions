@@ -61,6 +61,8 @@ const (
 	// BackupSecretName defines the name of the secret containing the credentials which are required to
 	// authenticate against the respective cloud provider (required to store the backups of Shoot clusters).
 	BackupSecretName = "etcd-backup"
+	// CloudControllerManagerName is a constant for the name of the CloudController deployed by the worker controller.
+	CloudControllerManagerName = "cloud-controller-manager"
 )
 
 var (

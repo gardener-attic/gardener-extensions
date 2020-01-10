@@ -74,6 +74,11 @@ const (
 	MachineControllerManagerMonitoringConfigName = "machine-controller-manager-monitoring-config"
 	// BackupSecretName is the name of the secret containing the credentials for storing the backups of Shoot clusters.
 	BackupSecretName = "etcd-backup"
+
+	// CloudControllerManagerName is the constant for the name of the CloudController deployed by the control plane controller.
+	CloudControllerManagerName = "cloud-controller-manager"
+	// LBReadvertiserDeploymentName is the constant for the name of the AWS LB Readvertiser deployment
+	LBReadvertiserDeploymentName = "aws-lb-readvertiser"
 )
 
 var (

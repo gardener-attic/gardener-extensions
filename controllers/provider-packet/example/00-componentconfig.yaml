@@ -10,3 +10,5 @@ etcd:
   storage:
     className: gardener.cloud-fast
     capacity: 25Gi
+#healthCheckConfig:
+#  syncPeriod: 30s

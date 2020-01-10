@@ -17,18 +17,17 @@ package genericactuator_test
 import (
 	"context"
 
-	"k8s.io/client-go/kubernetes/scheme"
-
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry"
 	"github.com/gardener/gardener-extensions/pkg/controller/backupentry/genericactuator"
 	mockgenericactuator "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/controller/backupentry/genericactuator"
+
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	fakeclient "sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"sigs.k8s.io/controller-runtime/pkg/log"

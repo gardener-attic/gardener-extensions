@@ -19,6 +19,7 @@ import (
 
 	serviceinstall "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service/install"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller"
+	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/healthcheck"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
 	"github.com/gardener/gardener-extensions/pkg/util"
@@ -70,9 +71,10 @@ func (o *Options) run(ctx context.Context) {
 	}
 
 	ctrlConfig := o.certOptions.Completed()
-
+	ctrlConfig.ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
 	ctrlConfig.Apply(&controller.DefaultAddOptions.ServiceConfig)
 	o.controllerOptions.Completed().Apply(&controller.DefaultAddOptions.ControllerOptions)
+	o.healthOptions.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 	o.reconcileOptions.Completed().Apply(&controller.DefaultAddOptions.IgnoreOperationAnnotation)
 
 	if err := o.controllerSwitches.Completed().AddToManager(mgr); err != nil {

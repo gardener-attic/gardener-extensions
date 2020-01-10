@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/gardener/gardener-extensions/test/e2e/framework/networkpolicies"
+
 	"github.com/huandu/xstrings"
 	"k8s.io/gengo/args"
 	"k8s.io/gengo/generator"

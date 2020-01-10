@@ -27,19 +27,22 @@ const ExtensionName = service.ExtensionServiceName
 
 // Options holds configuration passed to the DNS Service controller.
 type Options struct {
-	serviceOptions     *dnsservicecmd.DNSServiceOptions
-	restOptions        *controllercmd.RESTOptions
-	managerOptions     *controllercmd.ManagerOptions
-	controllerOptions  *controllercmd.ControllerOptions
-	controllerSwitches *controllercmd.SwitchOptions
-	reconcileOptions   *controllercmd.ReconcilerOptions
-	optionAggregator   controllercmd.OptionAggregator
+	serviceOptions          *dnsservicecmd.DNSServiceOptions
+	healthOptions           *dnsservicecmd.HealthOptions
+	restOptions             *controllercmd.RESTOptions
+	managerOptions          *controllercmd.ManagerOptions
+	controllerOptions       *controllercmd.ControllerOptions
+	healthControllerOptions *controllercmd.ControllerOptions
+	controllerSwitches      *controllercmd.SwitchOptions
+	reconcileOptions        *controllercmd.ReconcilerOptions
+	optionAggregator        controllercmd.OptionAggregator
 }
 
 // NewOptions creates a new Options instance.
 func NewOptions() *Options {
 	options := &Options{
 		serviceOptions: &dnsservicecmd.DNSServiceOptions{},
+		healthOptions:  &dnsservicecmd.HealthOptions{},
 		restOptions:    &controllercmd.RESTOptions{},
 		managerOptions: &controllercmd.ManagerOptions{
 			// These are default values.
@@ -51,15 +54,21 @@ func NewOptions() *Options {
 			// This is a default value.
 			MaxConcurrentReconciles: 5,
 		},
+		healthControllerOptions: &controllercmd.ControllerOptions{
+			// This is a default value.
+			MaxConcurrentReconciles: 5,
+		},
 		controllerSwitches: dnsservicecmd.ControllerSwitches(),
 		reconcileOptions:   &controllercmd.ReconcilerOptions{},
 	}
 
 	options.optionAggregator = controllercmd.NewOptionAggregator(
 		options.serviceOptions,
+		options.healthOptions,
 		options.restOptions,
 		options.managerOptions,
 		options.controllerOptions,
+		controllercmd.PrefixOption("healthcheck-", options.healthControllerOptions),
 		options.controllerSwitches,
 		options.reconcileOptions,
 	)

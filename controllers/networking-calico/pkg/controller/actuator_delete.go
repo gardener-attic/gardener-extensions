@@ -19,8 +19,8 @@ import (
 	"time"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
-	resourcemanager "github.com/gardener/gardener-resource-manager/pkg/manager"
 
+	resourcemanager "github.com/gardener/gardener-resource-manager/pkg/manager"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 )
 
@@ -28,18 +28,18 @@ import (
 func (a *actuator) Delete(ctx context.Context, network *extensionsv1alpha1.Network, cluster *extensionscontroller.Cluster) error {
 	if err := resourcemanager.
 		NewSecret(a.client).
-		WithNamespacedName(network.Namespace, calicoConfigSecretName).
+		WithNamespacedName(network.Namespace, CalicoConfigSecretName).
 		Delete(ctx); err != nil {
 		return err
 	}
 	if err := resourcemanager.
 		NewManagedResource(a.client).
-		WithNamespacedName(network.Namespace, calicoConfigSecretName).
+		WithNamespacedName(network.Namespace, CalicoConfigSecretName).
 		Delete(ctx); err != nil {
 		return err
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
-	return extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, network.Namespace, calicoConfigSecretName)
+	return extensionscontroller.WaitUntilManagedResourceDeleted(timeoutCtx, a.client, network.Namespace, CalicoConfigSecretName)
 }

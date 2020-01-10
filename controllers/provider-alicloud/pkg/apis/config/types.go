@@ -15,6 +15,8 @@
 package config
 
 import (
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +37,8 @@ type ControllerConfiguration struct {
 	MachineImageOwnerSecretRef *corev1.SecretReference
 	// ETCD is the etcd configuration.
 	ETCD ETCD
+	// HealthCheckConfig is the config for the health check controller
+	HealthCheckConfig *healthcheckconfig.HealthCheckConfig
 }
 
 // ETCD is an etcd configuration.

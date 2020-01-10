@@ -17,9 +17,9 @@ package backupentry
 import (
 	extensionshandler "github.com/gardener/gardener-extensions/pkg/handler"
 	extensionspredicate "github.com/gardener/gardener-extensions/pkg/predicate"
-	corev1 "k8s.io/api/core/v1"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"

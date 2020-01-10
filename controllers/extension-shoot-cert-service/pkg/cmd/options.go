@@ -18,13 +18,15 @@ import (
 	"errors"
 	"io/ioutil"
 
-	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
-
 	apisconfig "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/config/validation"
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller"
 	controllerconfig "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/config"
+	healthcheckcontroller "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/controller/healthcheck"
+	"github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	extensionshealthcheckcontroller "github.com/gardener/gardener-extensions/pkg/controller/healthcheck"
+	healthcheckconfig "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/config"
 
 	"github.com/spf13/pflag"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -102,5 +104,12 @@ func (c *CertificateServiceConfig) Apply(config *controllerconfig.Config) {
 func ControllerSwitches() *cmd.SwitchOptions {
 	return cmd.NewSwitchOptions(
 		cmd.Switch(controller.ControllerName, controller.AddToManager),
+		cmd.Switch(extensionshealthcheckcontroller.ControllerName, healthcheckcontroller.AddToManager),
 	)
+}
+
+func (c *CertificateServiceConfig) ApplyHealthCheckConfig(config *healthcheckconfig.HealthCheckConfig) {
+	if c.config.HealthCheckConfig != nil {
+		*config = *c.config.HealthCheckConfig
+	}
 }

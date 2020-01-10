@@ -17,14 +17,13 @@ package infrastructure
 import (
 	"context"
 	"github.com/gardener/gardener-extensions/pkg/controller/common"
+	"github.com/go-logr/logr"
 
 	api "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure"
 	infrainternal "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal/infrastructure"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
-
-	"github.com/go-logr/logr"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 

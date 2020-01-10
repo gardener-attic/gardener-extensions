@@ -62,6 +62,8 @@ const (
 	MachineControllerManagerVpaName = "machine-controller-manager-vpa"
 	// MachineControllerManagerMonitoringConfigName is the name of the ConfigMap containing monitoring stack configurations for machine-controller-manager.
 	MachineControllerManagerMonitoringConfigName = "machine-controller-manager-monitoring-config"
+	// CloudControllerManagerName is a constant for the name of the CloudController deployed by the worker controller.
+	CloudControllerManagerName = "cloud-controller-manager"
 )
 
 var (

@@ -19,14 +19,14 @@ import (
 	"fmt"
 	"os"
 
-	calicocontroller "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
-
-	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
-
 	calicoinstall "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/install"
+	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
+	calicocmd "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/cmd"
+	calicocontroller "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
+	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/healthcheck"
 	"github.com/gardener/gardener-extensions/pkg/controller"
-
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
+	"github.com/gardener/gardener-extensions/pkg/util"
 
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -49,11 +49,20 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			IgnoreOperationAnnotation: true,
 		}
 
+		// options for the health care controller
+		healthCheckCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
+
+		configFileOpts = &calicocmd.ConfigOptions{}
+
 		aggOption = controllercmd.NewOptionAggregator(
 			restOpts,
 			mgrOpts,
 			calicoCtrlOpts,
+			controllercmd.PrefixOption("healthcheck-", healthCheckCtrlOpts),
 			reconcileOpts,
+			configFileOpts,
 		)
 	)
 
@@ -64,6 +73,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			if err := aggOption.Complete(); err != nil {
 				controllercmd.LogErrAndExit(err, "Error completing options")
 			}
+			util.ApplyClientConnectionConfigurationToRESTConfig(configFileOpts.Completed().Config.ClientConnection, restOpts.Completed().Config)
 
 			mgr, err := manager.New(restOpts.Completed().Config, mgrOpts.Completed().Options())
 			if err != nil {
@@ -79,9 +89,15 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			reconcileOpts.Completed().Apply(&calicocontroller.DefaultAddOptions.IgnoreOperationAnnotation)
+			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.AddOptions.HealthCheckConfig)
+			healthCheckCtrlOpts.Completed().Apply(&healthcheck.AddOptions.Controller)
 
 			if err := calicocontroller.AddToManager(mgr); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not add controllers to manager")
+			}
+
+			if err := healthcheck.AddToManager(mgr); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not add health check controller to manager")
 			}
 
 			if err := mgr.Start(ctx.Done()); err != nil {

@@ -21,7 +21,6 @@ import (
 
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/gobuffalo/packr/v2"
-
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 

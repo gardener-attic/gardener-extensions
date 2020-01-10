@@ -20,9 +20,9 @@ import (
 	"strings"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/aws"
+
 	"github.com/gardener/gardener/pkg/utils/imagevector"
 	"github.com/gobuffalo/packr/v2"
-
 	"k8s.io/apimachinery/pkg/util/runtime"
 )
 

@@ -15,11 +15,11 @@
 package backupentry_test
 
 import (
+	. "github.com/gardener/gardener-extensions/pkg/controller/backupentry"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-
-	. "github.com/gardener/gardener-extensions/pkg/controller/backupentry"
 )
 
 var _ = Describe("Util", func() {

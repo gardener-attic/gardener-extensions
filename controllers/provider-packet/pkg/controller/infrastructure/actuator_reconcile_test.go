@@ -15,14 +15,12 @@
 package infrastructure_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	. "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/infrastructure"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

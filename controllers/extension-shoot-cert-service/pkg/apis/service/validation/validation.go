@@ -18,8 +18,8 @@ import (
 	"net/url"
 
 	"github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/pkg/apis/service"
-	"github.com/gardener/gardener/pkg/utils"
 
+	"github.com/gardener/gardener/pkg/utils"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )

@@ -20,10 +20,11 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/gobuffalo/packr/v2"
-	"k8s.io/apimachinery/pkg/util/runtime"
 	"path"
 	"text/template"
+
+	"github.com/gobuffalo/packr/v2"
+	"k8s.io/apimachinery/pkg/util/runtime"
 )
 
 var cloudInitTemplate *template.Template

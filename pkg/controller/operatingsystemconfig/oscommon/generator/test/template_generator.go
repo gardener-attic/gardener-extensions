@@ -16,6 +16,7 @@ package test
 
 import (
 	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/generator"
+
 	"github.com/gobuffalo/packr"
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
