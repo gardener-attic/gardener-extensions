@@ -49,10 +49,6 @@ config:
     enabled: true
     updatePolicy:
       updateMode: "Auto"
-  machineImages:
-  - name: coreos
-    version: 2135.6.0
-    image: projects/coreos-cloud/global/images/coreos-stable-2135-6-0-v20190801
   etcd:
     storage:
       className: gardener.cloud-fast

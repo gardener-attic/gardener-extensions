@@ -190,13 +190,13 @@ var _ = Describe("Machines", func() {
 						Kind:       "CloudProfileConfig",
 					},
 					MachineImages: []apiv1alpha1.MachineImages{
-						apiv1alpha1.MachineImages{
+						{
 							Name: machineImageName,
 							Versions: []apiv1alpha1.MachineImageVersion{
-								apiv1alpha1.MachineImageVersion{
+								{
 									Version: machineImageVersion,
 									Regions: []apiv1alpha1.RegionAMIMapping{
-										apiv1alpha1.RegionAMIMapping{
+										{
 											Name: region,
 											AMI:  machineImageAMI,
 										},

@@ -209,10 +209,10 @@ var _ = Describe("Machines", func() {
 				}
 
 				cloudProfileConfig.MachineImages = []api.MachineImages{
-					api.MachineImages{
+					{
 						Name: machineImageName,
 						Versions: []api.MachineImageVersion{
-							api.MachineImageVersion{
+							{
 								Version: machineImageVersion,
 								Image:   machineImage,
 								Regions: []api.RegionIDMapping{
