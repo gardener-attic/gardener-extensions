@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/config"
+	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
@@ -54,6 +55,15 @@ func (e *ensurer) InjectClient(client client.Client) error {
 
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
+	cluster, err := controller.GetCluster(ctx, e.client, dep.Namespace)
+	if err != nil {
+		return err
+	}
+
+	if controller.IsHibernated(cluster) {
+		return nil
+	}
+
 	// Get load balancer address of the kube-apiserver service
 	address, err := kutil.GetLoadBalancerIngress(ctx, e.client, dep.Namespace, v1beta1constants.DeploymentNameKubeAPIServer)
 	if err != nil {

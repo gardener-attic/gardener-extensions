@@ -16,7 +16,11 @@ package controlplaneexposure
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
+
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-openstack/pkg/apis/config"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
@@ -69,6 +73,13 @@ var _ = Describe("Ensurer", func() {
 				},
 			},
 		}
+		cluster = &extensionsv1alpha1.Cluster{
+			Spec: extensionsv1alpha1.ClusterSpec{
+				Shoot: runtime.RawExtension{
+					Raw: encode(&gardencorev1beta1.Shoot{}),
+				},
+			},
+		}
 	)
 
 	BeforeEach(func() {
@@ -99,12 +110,13 @@ var _ = Describe("Ensurer", func() {
 			)
 
 			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
+			c := mockclient.NewMockClient(ctrl)
+			c.EXPECT().Get(context.TODO(), client.ObjectKey{Name: namespace}, &extensionsv1alpha1.Cluster{}).DoAndReturn(clientGet(cluster))
+			c.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
 
 			// Create ensurer
 			ensurer := NewEnsurer(etcdStorage, logger)
-			err := ensurer.(inject.Client).InjectClient(client)
+			err := ensurer.(inject.Client).InjectClient(c)
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
@@ -133,12 +145,13 @@ var _ = Describe("Ensurer", func() {
 			)
 
 			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
+			c := mockclient.NewMockClient(ctrl)
+			c.EXPECT().Get(context.TODO(), client.ObjectKey{Name: namespace}, &extensionsv1alpha1.Cluster{}).DoAndReturn(clientGet(cluster))
+			c.EXPECT().Get(context.TODO(), svcKey, &corev1.Service{}).DoAndReturn(clientGet(svc))
 
 			// Create ensurer
 			ensurer := NewEnsurer(etcdStorage, logger)
-			err := ensurer.(inject.Client).InjectClient(client)
+			err := ensurer.(inject.Client).InjectClient(c)
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call EnsureKubeAPIServerDeployment method and check the result
@@ -269,7 +282,14 @@ func clientGet(result runtime.Object) interface{} {
 		switch obj.(type) {
 		case *corev1.Service:
 			*obj.(*corev1.Service) = *result.(*corev1.Service)
+		case *extensionsv1alpha1.Cluster:
+			*obj.(*extensionsv1alpha1.Cluster) = *result.(*extensionsv1alpha1.Cluster)
 		}
 		return nil
 	}
+}
+
+func encode(obj runtime.Object) []byte {
+	data, _ := json.Marshal(obj)
+	return data
 }
