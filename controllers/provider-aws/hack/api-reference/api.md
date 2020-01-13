@@ -145,6 +145,20 @@ string
 </tr>
 <tr>
 <td>
+<code>enableECRAccess</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>EnableECRAccess specifies whether the IAM role policy for the worker nodes shall contain
+permissions to access the ECR.
+default: true</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>networks</code></br>
 <em>
 <a href="#aws.provider.extensions.gardener.cloud/v1alpha1.Networks">

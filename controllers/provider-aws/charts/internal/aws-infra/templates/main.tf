@@ -312,7 +312,7 @@ resource "aws_iam_role_policy" "nodes" {
       "Resource": [
         "*"
       ]
-    },
+    }{{ if .Values.enableECRAccess }},
     {
       "Effect": "Allow",
       "Action": [
@@ -327,7 +327,7 @@ resource "aws_iam_role_policy" "nodes" {
       "Resource": [
         "*"
       ]
-    }
+    }{{ end }}
   ]
 }
 EOF

@@ -155,6 +155,11 @@ func (in *IAM) DeepCopy() *IAM {
 func (in *InfrastructureConfig) DeepCopyInto(out *InfrastructureConfig) {
 	*out = *in
 	out.TypeMeta = in.TypeMeta
+	if in.EnableECRAccess != nil {
+		in, out := &in.EnableECRAccess, &out.EnableECRAccess
+		*out = new(bool)
+		**out = **in
+	}
 	in.Networks.DeepCopyInto(&out.Networks)
 	return
 }
