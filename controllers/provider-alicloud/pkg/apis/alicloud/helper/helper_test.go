@@ -94,7 +94,7 @@ var _ = Describe("Helper", func() {
 
 func makeProfileMachineImages(name, version string) []api.MachineImages {
 	versions := []api.MachineImageVersion{
-		api.MachineImageVersion{
+		{
 			Version: version,
 			ID:      profileImageID,
 		},

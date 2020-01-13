@@ -111,7 +111,7 @@ var _ = Describe("Helper", func() {
 
 func makeProfileMachineImages(name, version, region, ami string) []api.MachineImages {
 	versions := []api.MachineImageVersion{
-		api.MachineImageVersion{
+		{
 			Version: version,
 			Regions: []api.RegionAMIMapping{
 				{
