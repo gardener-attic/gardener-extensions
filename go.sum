@@ -190,8 +190,8 @@ github.com/gardener/gardener v0.0.0-20190830053951-194cf8abb797/go.mod h1:UjyQiG
 github.com/gardener/gardener v0.0.0-20190913144920-5b4adb9f114d/go.mod h1:8LOLWzproKzfww5LdDo0/7FyVQR7gR1QA5LQc5buDzQ=
 github.com/gardener/gardener v0.0.0-20191004085047-5707d498b40c/go.mod h1:zvajWsteDY43oECil7ADr4NNp88CMltFEutUp1jX+zA=
 github.com/gardener/gardener v0.0.0-20191028054636-32cb0027c126/go.mod h1:Ow7vOXQYgQeHTRFn2HdbEIptelrSB5NLmVFIt2rgNeY=
-github.com/gardener/gardener v0.33.1-0.20191230124716-a9eee9416e16 h1:jaa6GiBdHbJPmBK2WX8sMZ2XQauVko0vwX1PZ/DPYOE=
-github.com/gardener/gardener v0.33.1-0.20191230124716-a9eee9416e16/go.mod h1:OsrX8Fhrn6qYaHaFJhvZYsSQVpo6/pfX+5WpzWzniHY=
+github.com/gardener/gardener v0.33.1-0.20200113112721-c615c97d3d35 h1:qlXuE6+FHkDsi7VZH2ggO2fXX1t4SkA9j2Hctu0E7m0=
+github.com/gardener/gardener v0.33.1-0.20200113112721-c615c97d3d35/go.mod h1:HjEN8ISscE7/yoBGhezBDLOz5KlBuJJnYeUkA7/z5Fo=
 github.com/gardener/gardener-extensions v0.0.0-20190725050243-a80ef643c64b/go.mod h1:uXjtl3KeVdQXuGIP26+84wJY1Kwru67l0FXm7A5DiME=
 github.com/gardener/gardener-extensions v0.0.0-20190820050625-a15de8a82f6b/go.mod h1:q69+1cUGSfQ8gSMWzU7GFz/R8K8MpOLQBT2wJJcCjEA=
 github.com/gardener/gardener-extensions v0.0.0-20190906160200-5c329d46ae81/go.mod h1:OBUAbab8OMm8pvzr/1/cdwIQnQYuMoGDTNR2c+i9nYo=
@@ -714,7 +714,6 @@ golang.org/x/net v0.0.0-20190620200207-3b0461eec859/go.mod h1:z5CRVTTTmAJ677TzLL
 golang.org/x/net v0.0.0-20190724013045-ca1201d0de80/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc h1:gkKoSkUmnU6bpS/VhkuO27bzQeSA51uaEfbOW5dNb68=
 golang.org/x/net v0.0.0-20190812203447-cdfb69ac37fc/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
-golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 h1:fHDIZ2oxGnUZRN6WgWFCbYBjH9uqVPRCUVUDhs0wnbA=
 golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
 golang.org/x/net v0.0.0-20190912160710-24e19bdeb0f2 h1:4dVFTC832rPn4pomLSz1vA+are2+dU19w1H8OngV7nc=
 golang.org/x/net v0.0.0-20190912160710-24e19bdeb0f2/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
@@ -765,7 +764,6 @@ golang.org/x/sys v0.0.0-20190624142023-c5567b49c5d0/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190801041406-cbf593c0f2f3 h1:4y9KwBHBgBNwDbtu44R5o1fdOCQUEXhbk/P4A9WmJq0=
 golang.org/x/sys v0.0.0-20190801041406-cbf593c0f2f3/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa h1:KIDDMLT1O0Nr7TSxp8xM5tJcdn8tgyAONntO829og1M=
 golang.org/x/sys v0.0.0-20190804053845-51ab0e2deafa/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8 h1:41hwlulw1prEMBxLQSlMSux1zxJf07B3WPsdjJlKZxE=
 golang.org/x/sys v0.0.0-20190912141932-bc967efca4b8/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
@@ -917,7 +915,6 @@ k8s.io/autoscaler v0.0.0-20190805135949-100e91ba756e/go.mod h1:QEXezc9uKPT91dwqh
 k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90 h1:mLmhKUm1X+pXu0zXMEzNsOF5E2kKFGe5o6BZBIIqA6A=
 k8s.io/client-go v0.0.0-20190918160344-1fbdaa4c8d90/go.mod h1:J69/JveO6XESwVgG53q3Uz5OSfgsv4uxpScmmyYOOlk=
 k8s.io/cluster-bootstrap v0.0.0-20190314002537-50662da99b70/go.mod h1:iBSm2nwo3OaiuW8VDvc3ySDXK5SKfUrxwPvBloKG7zg=
-k8s.io/cluster-bootstrap v0.0.0-20190816225014-88e17f53ad9d h1:AhNKa+4ZiwOLxzC+LJVaBP4fRj+IxzgzOun7pmhgyUs=
 k8s.io/cluster-bootstrap v0.0.0-20190816225014-88e17f53ad9d/go.mod h1:iBSm2nwo3OaiuW8VDvc3ySDXK5SKfUrxwPvBloKG7zg=
 k8s.io/cluster-bootstrap v0.0.0-20190918163108-da9fdfce26bb h1:VzoOqe8drBisvQPShYY6dfaIfAZkE3+irTlPGgGHI0A=
 k8s.io/cluster-bootstrap v0.0.0-20190918163108-da9fdfce26bb/go.mod h1:mQVbtFRxlw/BzBqBaQwIMzjDTST1KrGtzWaR4CGlsTU=

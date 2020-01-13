@@ -24,6 +24,17 @@ import (
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
+// ValidateNetworking validates the network settings of a Shoot.
+func ValidateNetworking(networking garden.Networking, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+
+	if networking.Nodes == nil {
+		allErrs = append(allErrs, field.Required(fldPath.Child("nodes"), "a nodes CIDR must be provided for AWS shoots"))
+	}
+
+	return allErrs
+}
+
 // ValidateWorkers validates the workers of a Shoot.
 func ValidateWorkers(workers []garden.Worker, zones []apisaws.Zone, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}

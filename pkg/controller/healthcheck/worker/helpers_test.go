@@ -34,7 +34,7 @@ var _ = Describe("health", func() {
 	Context("CheckMachineDeployment", func() {
 		DescribeTable("machine deployments",
 			func(machineDeployment *gardenv1alpha1.MachineDeployment, matcher types.GomegaMatcher) {
-				err := checkMachineDeployment(machineDeployment)
+				err := CheckMachineDeployment(machineDeployment)
 				Expect(err).To(matcher)
 			},
 			Entry("healthy", &gardenv1alpha1.MachineDeployment{

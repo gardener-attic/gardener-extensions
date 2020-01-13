@@ -28,10 +28,19 @@ import (
 )
 
 func (v *Shoot) validateShoot(ctx context.Context, shoot *garden.Shoot) error {
+	// Network validation
+	networkPath := field.NewPath("spec", "networking")
+
+	if errList := awsvalidation.ValidateNetworking(shoot.Spec.Networking, networkPath); len(errList) != 0 {
+		return errList.ToAggregate()
+	}
+
+	// Provider validation
 	fldPath := field.NewPath("spec", "provider")
 
 	// InfrastructureConfig
 	infraConfigFldPath := fldPath.Child("infrastructureConfig")
+
 	if shoot.Spec.Provider.InfrastructureConfig == nil {
 		return field.Required(infraConfigFldPath, "InfrastructureConfig must be set for AWS shoots")
 	}
@@ -41,8 +50,7 @@ func (v *Shoot) validateShoot(ctx context.Context, shoot *garden.Shoot) error {
 		return err
 	}
 
-	errList := awsvalidation.ValidateInfrastructureConfig(infraConfig, &shoot.Spec.Networking.Nodes, shoot.Spec.Networking.Pods, shoot.Spec.Networking.Services)
-	if len(errList) != 0 {
+	if errList := awsvalidation.ValidateInfrastructureConfig(infraConfig, shoot.Spec.Networking.Nodes, shoot.Spec.Networking.Pods, shoot.Spec.Networking.Services); len(errList) != 0 {
 		return errList.ToAggregate()
 	}
 
@@ -51,15 +59,13 @@ func (v *Shoot) validateShoot(ctx context.Context, shoot *garden.Shoot) error {
 		return err
 	}
 
-	errList = awsvalidation.ValidateInfrastructureConfigAgainstCloudProfile(infraConfig, shoot, cloudProfile, infraConfigFldPath)
-	if len(errList) != 0 {
+	if errList := awsvalidation.ValidateInfrastructureConfigAgainstCloudProfile(infraConfig, shoot, cloudProfile, infraConfigFldPath); len(errList) != 0 {
 		return errList.ToAggregate()
 	}
 
 	// ControlPlaneConfig
 	if shoot.Spec.Provider.ControlPlaneConfig != nil {
-		_, err = decodeControlPlaneConfig(v.decoder, shoot.Spec.Provider.ControlPlaneConfig, fldPath.Child("controlPlaneConfig"))
-		if err != nil {
+		if _, err := decodeControlPlaneConfig(v.decoder, shoot.Spec.Provider.ControlPlaneConfig, fldPath.Child("controlPlaneConfig")); err != nil {
 			return err
 		}
 	}
@@ -77,18 +83,18 @@ func (v *Shoot) validateShoot(ctx context.Context, shoot *garden.Shoot) error {
 			if worker.Volume != nil {
 				volumeType = worker.Volume.Type
 			}
-			errList := awsvalidation.ValidateWorkerConfig(workerConfig, volumeType)
-			if len(errList) != 0 {
+
+			if errList := awsvalidation.ValidateWorkerConfig(workerConfig, volumeType); len(errList) != 0 {
 				return errList.ToAggregate()
 			}
 		}
 	}
 
 	// Shoot workers
-	errList = awsvalidation.ValidateWorkers(shoot.Spec.Provider.Workers, infraConfig.Networks.Zones, fldPath)
-	if len(errList) != 0 {
+	if errList := awsvalidation.ValidateWorkers(shoot.Spec.Provider.Workers, infraConfig.Networks.Zones, fldPath); len(errList) != 0 {
 		return errList.ToAggregate()
 	}
+
 	return nil
 }
 
@@ -115,8 +121,7 @@ func (v *Shoot) validateShootUpdate(ctx context.Context, oldShoot, shoot *garden
 	}
 
 	if !reflect.DeepEqual(oldInfraConfig, infraConfig) {
-		errList := awsvalidation.ValidateInfrastructureConfigUpdate(oldInfraConfig, infraConfig)
-		if len(errList) != 0 {
+		if errList := awsvalidation.ValidateInfrastructureConfigUpdate(oldInfraConfig, infraConfig); len(errList) != 0 {
 			return errList.ToAggregate()
 		}
 	}

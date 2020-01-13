@@ -21,6 +21,7 @@ import (
 
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	workerhealthcheck "github.com/gardener/gardener-extensions/pkg/controller/healthcheck/worker"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 
@@ -29,7 +30,6 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	extensionsv1alpha1helper "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1/helper"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
-	"github.com/gardener/gardener/pkg/utils/kubernetes/health"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -325,7 +325,7 @@ func (a *genericActuator) waitUntilMachineDeploymentsAvailable(ctx context.Conte
 			// replicas as desired (specified in the .spec.replicas).
 			for _, machineDeployment := range wantedMachineDeployments {
 				if machineDeployment.Name == existingMachineDeployment.Name {
-					if health.CheckMachineDeployment(&existingMachineDeployment) == nil {
+					if workerhealthcheck.CheckMachineDeployment(&existingMachineDeployment) == nil {
 						numHealthyDeployments++
 					}
 					numDesired += existingMachineDeployment.Spec.Replicas

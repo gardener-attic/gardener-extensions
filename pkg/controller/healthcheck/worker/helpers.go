@@ -61,7 +61,7 @@ func getDesiredMachineCount(machineDeploymentList []machinev1alpha1.MachineDeplo
 
 func machineDeploymentsAreHealthy(machineDeployments []machinev1alpha1.MachineDeployment) (bool, *string, error) {
 	for _, deployment := range machineDeployments {
-		if err := checkMachineDeployment(&deployment); err != nil {
+		if err := CheckMachineDeployment(&deployment); err != nil {
 			reason := "MachineDeploymentUnhealthy"
 			err := fmt.Errorf("machine deployment %s in namespace %s is unhealthy: %v", deployment.Name, deployment.Namespace, err)
 			return false, &reason, err
@@ -73,7 +73,7 @@ func machineDeploymentsAreHealthy(machineDeployments []machinev1alpha1.MachineDe
 // CheckMachineDeployment checks whether the given MachineDeployment is healthy.
 // A MachineDeployment is considered healthy if its controller observed its current revision and if
 // its desired number of replicas is equal to its updated replicas.
-func checkMachineDeployment(deployment *machinev1alpha1.MachineDeployment) error {
+func CheckMachineDeployment(deployment *machinev1alpha1.MachineDeployment) error {
 	if deployment.Status.ObservedGeneration < deployment.Generation {
 		return fmt.Errorf("observed generation outdated (%d/%d)", deployment.Status.ObservedGeneration, deployment.Generation)
 	}
