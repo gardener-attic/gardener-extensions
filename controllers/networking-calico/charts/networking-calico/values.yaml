@@ -21,3 +21,10 @@ resources: {}
 controller:
   concurrentSyncs: 5
   ignoreOperationAnnotation: false
+
+config:
+  clientConnection:
+    acceptContentTypes: application/json
+    contentType: application/json
+    qps: 100
+    burst: 130
