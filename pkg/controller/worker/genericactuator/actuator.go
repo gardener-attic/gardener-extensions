@@ -38,6 +38,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
 )
 
+// GardenPurposeMachineClass is a constant for the 'machineclass' value in a label.
+const GardenPurposeMachineClass = "machineclass"
+
 type genericActuator struct {
 	logger logr.Logger
 
@@ -158,7 +161,7 @@ func (a *genericActuator) listMachineClassSecrets(ctx context.Context, namespace
 	var (
 		secretList = &corev1.SecretList{}
 		labels     = map[string]string{
-			v1beta1constants.GardenPurpose: v1beta1constants.GardenPurposeMachineClass,
+			v1beta1constants.GardenPurpose: GardenPurposeMachineClass,
 		}
 	)
 

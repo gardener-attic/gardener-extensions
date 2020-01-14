@@ -24,7 +24,9 @@ import (
 	apisalicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud"
 	alicloudapihelper "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/helper"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	genericworkeractuator "github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
 
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -172,6 +174,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			})
 
 			machineClassSpec["name"] = className
+			machineClassSpec["labels"] = map[string]string{
+				v1beta1constants.GardenPurpose: genericworkeractuator.GardenPurposeMachineClass,
+			}
 			machineClassSpec["secret"].(map[string]interface{})[alicloud.AccessKeyID] = string(machineClassSecretData[machinev1alpha1.AlicloudAccessKeyID])
 			machineClassSpec["secret"].(map[string]interface{})[alicloud.AccessKeySecret] = string(machineClassSecretData[machinev1alpha1.AlicloudAccessKeySecret])
 

@@ -5,8 +5,10 @@ kind: Secret
 metadata:
   name: {{ $machineClass.name }}
   namespace: {{ $.Release.Namespace }}
+{{- if $machineClass.labels }}
   labels:
-    garden.sapcloud.io/purpose: machineclass
+{{ toYaml $machineClass.labels | indent 4 }}
+{{- end }}
 type: Opaque
 data:
   userData: {{ $machineClass.secret.cloudConfig | b64enc }}
