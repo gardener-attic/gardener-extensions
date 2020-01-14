@@ -76,6 +76,12 @@ func (healthChecker *DeploymentHealthChecker) SetLoggerSuffix(provider, extensio
 	healthChecker.logger = log.Log.WithName(fmt.Sprintf("%s-%s-healthcheck-deployment", provider, extension))
 }
 
+// DeepCopy clones the healthCheck struct by making a copy and returning the pointer to that new copy
+func (healthChecker *DeploymentHealthChecker) DeepCopy() healthcheck.HealthCheck {
+	copy := *healthChecker
+	return &copy
+}
+
 // Check executes the health check
 func (healthChecker *DeploymentHealthChecker) Check(ctx context.Context, request types.NamespacedName) (*healthcheck.SingleCheckResult, error) {
 	deployment := &appsv1.Deployment{}

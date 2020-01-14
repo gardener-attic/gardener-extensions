@@ -92,6 +92,8 @@ type HealthCheck interface {
 	InjectShootClient(client.Client)
 	// SetLoggerSuffix injects the logger
 	SetLoggerSuffix(string, string)
+	// DeepCopy clones the healthCheck
+	DeepCopy() HealthCheck
 }
 
 // SingleCheckResult is the result for a health check
