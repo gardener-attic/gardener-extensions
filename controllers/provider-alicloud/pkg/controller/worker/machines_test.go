@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"path/filepath"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
@@ -26,11 +25,14 @@ import (
 	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/alicloud/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/controller/worker"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
+	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	genericworkeractuator "github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
@@ -601,6 +603,9 @@ func useDefaultMachineClass(def map[string]interface{}, keyValues ...interface{}
 
 func addNameAndSecretToMachineClass(class map[string]interface{}, alicloudAccessKeyID, alicloudAccessKeySecret, name string) {
 	class["name"] = name
+	class["labels"] = map[string]string{
+		v1beta1constants.GardenPurpose: genericworkeractuator.GardenPurposeMachineClass,
+	}
 	class["secret"].(map[string]interface{})[alicloud.AccessKeyID] = alicloudAccessKeyID
 	class["secret"].(map[string]interface{})[alicloud.AccessKeySecret] = alicloudAccessKeySecret
 }

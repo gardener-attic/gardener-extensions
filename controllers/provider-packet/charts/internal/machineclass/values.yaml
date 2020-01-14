@@ -1,5 +1,7 @@
 machineClasses:
 - name: class-1
+# labels:
+#   foo: bar
   projectID: abcd-1234-fff
   OS: alpine_3
   billingCycle: hourly

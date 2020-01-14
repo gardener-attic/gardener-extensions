@@ -1,5 +1,7 @@
 # machineClasses:
 # - name: class-1
+#   labels:
+#     foo: bar
 #   imageID: coreos_1745_7_0_64_30G_alibase_20180705.vhd
 #   instanceType: ecs.n1.medium
 #   region: cn-hangzhou

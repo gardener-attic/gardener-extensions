@@ -1,5 +1,7 @@
 machineClasses:
 - name: class-1-zone
+# labels:
+#   foo: bar
   region: westeurope
   resourceGroup: my-resource-group
   vnetName: my-vnet

@@ -1,5 +1,7 @@
 machineClasses:
 - name: class-1
+# labels:
+#   foo: bar
   region: europe-west1
   zone: europe-west1-b
   canIpForward: true

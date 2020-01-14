@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	api "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet"
 	apiv1alpha1 "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/v1alpha1"
 	. "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/worker"
@@ -25,13 +26,14 @@ import (
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/common"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	genericworkeractuator "github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
+
 	"path/filepath"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
@@ -40,7 +42,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ = Describe("Machines", func() {
@@ -453,5 +457,8 @@ func copyMachineClass(def map[string]interface{}) map[string]interface{} {
 
 func addNameAndSecretToMachineClass(class map[string]interface{}, packetAPIToken, name string) {
 	class["name"] = name
+	class["labels"] = map[string]string{
+		v1beta1constants.GardenPurpose: genericworkeractuator.GardenPurposeMachineClass,
+	}
 	class["secret"].(map[string]interface{})[packet.APIToken] = packetAPIToken
 }

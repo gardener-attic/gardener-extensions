@@ -25,7 +25,9 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/internal"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
+	genericworkeractuator "github.com/gardener/gardener-extensions/pkg/controller/worker/genericactuator"
 
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -213,6 +215,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			machineDeployment.SecretName = className
 
 			machineClassSpec["name"] = className
+			machineClassSpec["labels"] = map[string]string{
+				v1beta1constants.GardenPurpose: genericworkeractuator.GardenPurposeMachineClass,
+			}
 			machineClassSpec["secret"].(map[string]interface{})[azure.ClientIDKey] = string(machineClassSecretData[machinev1alpha1.AzureClientID])
 			machineClassSpec["secret"].(map[string]interface{})[azure.ClientSecretKey] = string(machineClassSecretData[machinev1alpha1.AzureClientSecret])
 			machineClassSpec["secret"].(map[string]interface{})[azure.SubscriptionIDKey] = string(machineClassSecretData[machinev1alpha1.AzureSubscriptionID])
