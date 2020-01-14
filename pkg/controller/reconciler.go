@@ -68,19 +68,27 @@ func (o *operationAnnotationWrapper) Reconcile(request reconcile.Request) (recon
 		return reconcile.Result{}, err
 	}
 
-	acc, err := meta.Accessor(obj)
-	if err != nil {
+	if err := o.removeOperationAnnotation(obj, v1beta1constants.GardenerOperation, v1beta1constants.GardenerOperationReconcile, v1beta1constants.GardenerOperationRestore); err != nil {
 		return reconcile.Result{}, err
 	}
 
+	return o.Reconciler.Reconcile(request)
+}
+
+func (o *operationAnnotationWrapper) removeOperationAnnotation(obj runtime.Object, key string, values ...string) error {
+	acc, err := meta.Accessor(obj)
+	if err != nil {
+		return err
+	}
+
 	annotations := acc.GetAnnotations()
-	if annotations[v1beta1constants.GardenerOperation] == v1beta1constants.GardenerOperationReconcile {
-		withOpAnnotation := obj.DeepCopyObject()
-		delete(annotations, v1beta1constants.GardenerOperation)
-		acc.SetAnnotations(annotations)
-		if err := o.client.Patch(o.ctx, obj, client.MergeFrom(withOpAnnotation)); err != nil {
-			return reconcile.Result{}, err
+	for _, value := range values {
+		if annotations[key] == value {
+			objWithOpAnnotation := obj.DeepCopyObject()
+			delete(annotations, key)
+			acc.SetAnnotations(annotations)
+			return o.client.Patch(o.ctx, obj, client.MergeFrom(objWithOpAnnotation))
 		}
 	}
-	return o.Reconciler.Reconcile(request)
+	return nil
 }
