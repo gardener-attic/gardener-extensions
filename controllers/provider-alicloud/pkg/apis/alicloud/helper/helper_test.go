@@ -70,10 +70,10 @@ var _ = Describe("Helper", func() {
 	)
 
 	DescribeTable("#FindImageForRegion",
-		func(profileImages []api.MachineImages, imageName, version string, expectedImage string) {
+		func(profileImages []api.MachineImages, imageName, version, region string, expectedImage string) {
 			cfg := &api.CloudProfileConfig{}
 			cfg.MachineImages = profileImages
-			image, err := FindImageFromCloudProfile(cfg, imageName, version)
+			image, err := FindImageForRegionFromCloudProfile(cfg, imageName, version, region)
 
 			Expect(image).To(Equal(expectedImage))
 			if expectedImage != "" {
@@ -83,20 +83,26 @@ var _ = Describe("Helper", func() {
 			}
 		},
 
-		Entry("list is nil", nil, "ubuntu", "1", ""),
+		Entry("list is nil", nil, "ubuntu", "1", "china", ""),
 
-		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", ""),
-		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1"), "ubuntu", "1", ""),
-		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
-		Entry("profile entry", makeProfileMachineImages("ubuntu", "1"), "ubuntu", "1", profileImageID),
+		Entry("profile empty list", []api.MachineImages{}, "ubuntu", "1", "china", ""),
+		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "china"), "ubuntu", "1", "china", ""),
+		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "china"), "ubuntu", "1", "china", ""),
+		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "china"), "ubuntu", "1", "china", profileImageID),
+		Entry("profile non matching region", makeProfileMachineImages("ubuntu", "1", "china"), "ubuntu", "1", "eu", ""),
 	)
 })
 
-func makeProfileMachineImages(name, version string) []api.MachineImages {
+func makeProfileMachineImages(name, version, region string) []api.MachineImages {
 	versions := []api.MachineImageVersion{
 		{
 			Version: version,
-			ID:      profileImageID,
+			Regions: []api.RegionIDMapping{
+				{
+					Name: region,
+					ID:   profileImageID,
+				},
+			},
 		},
 	}
 

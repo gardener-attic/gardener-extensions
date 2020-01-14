@@ -25,9 +25,13 @@ spec:
           - name: coreos
             versions:
             - version: 2135.6.0
-              id: alicloudimageid2135
+              regions:
+              - name: cn-beijing
+                id: alicloudimageid2135
             - version: 2023.5.0
-              id: alicloudimageid2023
+              regions:
+              - name: cn-beijing
+                id: alicloudimageid2023
   seed:
     apiVersion: core.gardener.cloud/v1alpha1
     kind: Seed

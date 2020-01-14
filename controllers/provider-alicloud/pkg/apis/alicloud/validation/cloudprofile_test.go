@@ -36,7 +36,12 @@ var _ = Describe("CloudProfileConfig validation", func() {
 						Versions: []apisalicloud.MachineImageVersion{
 							{
 								Version: "1.2.3",
-								ID:      "some-image-id",
+								Regions: []apisalicloud.RegionIDMapping{
+									{
+										Name: "china",
+										ID:   "some-image-id",
+									},
+								},
 							},
 						},
 					},
@@ -85,7 +90,31 @@ var _ = Describe("CloudProfileConfig validation", func() {
 					"Field": Equal("machineImages[0].versions[0].version"),
 				})), PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
-					"Field": Equal("machineImages[0].versions[0].id"),
+					"Field": Equal("machineImages[0].versions[0].regions"),
+				}))))
+			})
+
+			It("should forbid unsupported machine image region configuration", func() {
+				cloudProfileConfig.MachineImages = []apisalicloud.MachineImages{
+					{
+						Name: "abc",
+						Versions: []apisalicloud.MachineImageVersion{
+							{
+								Version: "1.2.3",
+								Regions: []apisalicloud.RegionIDMapping{{}},
+							},
+						},
+					},
+				}
+
+				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
+
+				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("machineImages[0].versions[0].regions[0].name"),
+				})), PointTo(MatchFields(IgnoreExtras, Fields{
+					"Type":  Equal(field.ErrorTypeRequired),
+					"Field": Equal("machineImages[0].versions[0].regions[0].id"),
 				}))))
 			})
 		})
