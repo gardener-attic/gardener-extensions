@@ -20,8 +20,12 @@ DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd
 source "$DIRNAME/common.sh"
 
 # Network policies tests must only be ran separately.
-SKIP_TESTS=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack,packet,vsphere}/test/e2e/networkpolicies | sed 's/ /,/g')
+SKIP_NETWORKPOLICY_TESTS=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack,packet,vsphere}/test/e2e/networkpolicies | sed 's/ /,/g')
+
+#skip integration tests
+SKIP_INTEGRATION_TESTS+=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack,packet,vsphere}/test/integration controllers/extension-shoot-{cert-service,dns-service}/test/integration controllers/networking-calico| sed 's/ /,/g')
 
 header_text "Test"
+echo ${SKIP_INTEGRATION_TESTS}
 
-GO111MODULE=on ginkgo -mod=vendor --skipPackage="${SKIP_TESTS}" -r "${SOURCE_TREES[@]}"
+GO111MODULE=on ginkgo -mod=vendor --skipPackage="${SKIP_NETWORKPOLICY_TESTS},${SKIP_INTEGRATION_TESTS}" -r "${SOURCE_TREES[@]}"

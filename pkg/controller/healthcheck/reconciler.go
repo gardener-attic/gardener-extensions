@@ -51,6 +51,12 @@ type reconciler struct {
 	syncPeriod          metav1.Duration
 }
 
+// HealthCheckUnsuccessful is the reason phrase for the health check condition if one or more of its tests failed
+var HealthCheckUnsuccessful = "HealthCheckUnsuccessful"
+
+// HealthCheckUnsuccessful is the reason phrase for the health check condition if all tests are successful
+var HealthCheckSuccessful = "HealthCheckSuccessful"
+
 // NewReconciler creates a new performHealthCheck.Reconciler that reconciles
 // the registered extension resources (Gardener's `extensions.gardener.cloud` API group).
 func NewReconciler(mgr manager.Manager, actuator HealthCheckActuator, registeredExtension RegisteredExtension, syncPeriod metav1.Duration) reconcile.Reconciler {
@@ -167,12 +173,12 @@ func (r *reconciler) updateExtensionConditionToConditionCheckError(ctx context.C
 
 func (r *reconciler) updateExtensionConditionToError(ctx context.Context, extensionResource extensionsv1alpha1.Object, extension *unstructured.Unstructured, condition gardencorev1beta1.Condition, healthCheckResult Result) error {
 	detail := fmt.Sprintf("Health check for %d/%d component(s) unsuccessful. ", healthCheckResult.UnsuccessfulChecks, healthCheckResult.UnsuccessfulChecks+healthCheckResult.SuccessfulChecks)
-	healthCondition := gardencorev1beta1helper.UpdatedCondition(condition, gardencorev1beta1.ConditionFalse, "HealthCheckUnsuccessful", detail+healthCheckResult.GetDetails())
+	healthCondition := gardencorev1beta1helper.UpdatedCondition(condition, gardencorev1beta1.ConditionFalse, HealthCheckUnsuccessful, detail+healthCheckResult.GetDetails())
 	return r.updateExtensionCondition(ctx, extension, condition, extensionResource, healthCondition)
 }
 
 func (r *reconciler) updateExtensionConditionToSuccessful(ctx context.Context, extensionResource extensionsv1alpha1.Object, extension *unstructured.Unstructured, condition gardencorev1beta1.Condition, healthCheckResult Result) error {
-	healthCondition := gardencorev1beta1helper.UpdatedCondition(condition, gardencorev1beta1.ConditionTrue, "HealthCheckSuccessful", fmt.Sprintf("(%d/%d) Health checks successful", healthCheckResult.SuccessfulChecks, healthCheckResult.SuccessfulChecks))
+	healthCondition := gardencorev1beta1helper.UpdatedCondition(condition, gardencorev1beta1.ConditionTrue, HealthCheckSuccessful, fmt.Sprintf("(%d/%d) Health checks successful", healthCheckResult.SuccessfulChecks, healthCheckResult.SuccessfulChecks))
 	return r.updateExtensionCondition(ctx, extension, condition, extensionResource, healthCondition)
 }
 
