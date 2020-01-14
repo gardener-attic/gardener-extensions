@@ -41,6 +41,14 @@ type MachineImages struct {
 type MachineImageVersion struct {
 	// Version is the version of the image.
 	Version string
+	// Regions is a mapping to the correct ID for the machine image in the supported regions.
+	Regions []RegionIDMapping
+}
+
+// RegionIDMapping is a mapping to the correct ID for the machine image in the given region.
+type RegionIDMapping struct {
+	// Name is the name of the region.
+	Name string
 	// ID is the id of the image.
 	ID string
 }

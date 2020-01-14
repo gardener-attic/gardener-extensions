@@ -200,7 +200,12 @@ var _ = Describe("Machines", func() {
 							Versions: []apiv1alpha1.MachineImageVersion{
 								{
 									Version: machineImageVersion,
-									ID:      machineImageID,
+									Regions: []apiv1alpha1.RegionIDMapping{
+										{
+											Name: region,
+											ID:   machineImageID,
+										},
+									},
 								},
 							},
 						},

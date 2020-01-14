@@ -45,7 +45,7 @@ metadata:
   name: alicloud-infra
 spec:
   type: alicloud
-  region: eu-central-1
+  region: cn-beijing
   secretRef:
     namespace: shoot--foobar--alicloud
     name: cloudprovider
@@ -58,5 +58,5 @@ spec:
       # id: my-vpc
         cidr: 10.250.0.0/16
       zones:
-      - name: eu-central-1a
+      - name: cn-beijing-f
         workers: 10.250.1.0/24
