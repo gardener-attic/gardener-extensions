@@ -89,21 +89,20 @@ var _ = Describe("Helper", func() {
 		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "china"), "ubuntu", "1", "china", ""),
 		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "china"), "ubuntu", "1", "china", ""),
 		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "china"), "ubuntu", "1", "china", profileImageID),
+		Entry("profile non matching region", makeProfileMachineImages("ubuntu", "1", "china"), "ubuntu", "1", "eu", ""),
 	)
 })
 
 func makeProfileMachineImages(name, version, region string) []api.MachineImages {
-	regions := []api.RegionIDMapping{
-		{
-			Name: region,
-			ID:   profileImageID,
-		},
-	}
-
 	versions := []api.MachineImageVersion{
 		{
 			Version: version,
-			Regions: regions,
+			Regions: []api.RegionIDMapping{
+				{
+					Name: region,
+					ID:   profileImageID,
+				},
+			},
 		},
 	}
 

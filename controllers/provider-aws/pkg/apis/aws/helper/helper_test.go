@@ -106,6 +106,7 @@ var _ = Describe("Helper", func() {
 		Entry("profile entry not found (image does not exist)", makeProfileMachineImages("debian", "1", "europe", "0"), "ubuntu", "1", "europe", ""),
 		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2", "europe", "0"), "ubuntu", "1", "europe", ""),
 		Entry("profile entry", makeProfileMachineImages("ubuntu", "1", "europe", "ami-1234"), "ubuntu", "1", "europe", "ami-1234"),
+		Entry("profile non matching region", makeProfileMachineImages("ubuntu", "1", "europe", "ami-1234"), "ubuntu", "1", "china", ""),
 	)
 })
 
