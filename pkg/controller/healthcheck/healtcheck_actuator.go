@@ -38,7 +38,6 @@ type Actuator struct {
 	restConfig *rest.Config
 
 	seedClient          client.Client
-	shootClient         client.Client
 	scheme              *runtime.Scheme
 	decoder             runtime.Decoder
 	provider            string
@@ -92,7 +91,8 @@ type checkResultForConditionType struct {
 // ExecuteHealthCheckFunctions executes all the health check functions, injects clients and logger & aggregates the results.
 // returns an Result for each HealthConditionTyp (e.g  ControlPlaneHealthy)
 func (a *Actuator) ExecuteHealthCheckFunctions(ctx context.Context, request types.NamespacedName) (*[]Result, error) {
-	if err := a.createShootClient(ctx, request); err != nil {
+	_, shootClient, err := util.NewClientForShoot(ctx, a.seedClient, request.Namespace, client.Options{})
+	if err != nil {
 		msg := fmt.Sprintf("failed to create shoot client in namespace '%s'", request.Namespace)
 		a.logger.Error(err, msg)
 		return nil, fmt.Errorf(msg)
@@ -100,20 +100,21 @@ func (a *Actuator) ExecuteHealthCheckFunctions(ctx context.Context, request type
 	channel := make(chan channelResult)
 	var wg sync.WaitGroup
 	wg.Add(len(a.healthCheckMappings))
-
 	for healthCheck, healthConditionType := range a.healthCheckMappings {
-		healthCheck.InjectSeedClient(a.seedClient)
-		healthCheck.InjectShootClient(a.shootClient)
-		healthCheck.SetLoggerSuffix(a.provider, a.extensionKind)
-		go func(ctx context.Context, request types.NamespacedName, healthCheck HealthCheck, healthConditionType string) {
+		// clone to avoid problems during parallel execution
+		check := healthCheck.DeepCopy()
+		check.InjectSeedClient(a.seedClient)
+		check.InjectShootClient(shootClient)
+		check.SetLoggerSuffix(a.provider, a.extensionKind)
+		go func(ctx context.Context, request types.NamespacedName, check HealthCheck, healthConditionType string) {
 			defer wg.Done()
-			healthCheckResult, err := healthCheck.Check(ctx, request)
+			healthCheckResult, err := check.Check(ctx, request)
 			channel <- channelResult{
 				healthCheckResult:   healthCheckResult,
 				error:               err,
 				healthConditionType: healthConditionType,
 			}
-		}(ctx, request, healthCheck, healthConditionType)
+		}(ctx, request, check, healthConditionType)
 	}
 
 	// close channel when wait group has 0 counter
@@ -173,15 +174,4 @@ func (a *Actuator) ExecuteHealthCheckFunctions(ctx context.Context, request type
 		})
 	}
 	return &checkResults, nil
-}
-
-func (a *Actuator) createShootClient(ctx context.Context, request types.NamespacedName) error {
-	if a.shootClient == nil {
-		_, shootClient, err := util.NewClientForShoot(ctx, a.seedClient, request.Namespace, client.Options{})
-		if err != nil {
-			return err
-		}
-		a.shootClient = shootClient
-	}
-	return nil
 }

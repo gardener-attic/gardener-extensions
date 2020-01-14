@@ -58,6 +58,12 @@ func (healthChecker *ManagedResourceHealthChecker) SetLoggerSuffix(provider, ext
 	healthChecker.logger = log.Log.WithName(fmt.Sprintf("%s-%s-healthcheck-managed-resource", provider, extension))
 }
 
+// DeepCopy clones the healthCheck struct by making a copy and returning the pointer to that new copy
+func (healthChecker *ManagedResourceHealthChecker) DeepCopy() healthcheck.HealthCheck {
+	copy := *healthChecker
+	return &copy
+}
+
 // Check executes the health check
 func (healthChecker *ManagedResourceHealthChecker) Check(ctx context.Context, request types.NamespacedName) (*healthcheck.SingleCheckResult, error) {
 	mcmDeployment := &resourcesv1alpha1.ManagedResource{}
