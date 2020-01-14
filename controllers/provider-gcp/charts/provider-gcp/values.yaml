@@ -21,6 +21,7 @@ controllers:
 
 disableControllers: []
 disableWebhooks: []
+ignoreResources: false
 
 # imageVectorOverwrite: |
 #   images:
