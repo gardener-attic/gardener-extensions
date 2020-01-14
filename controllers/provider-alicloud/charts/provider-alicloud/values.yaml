@@ -5,6 +5,10 @@ image:
 
 replicaCount: 1
 resources: {}
+vpa:
+  enabled: true
+  updatePolicy:
+    updateMode: "Auto"
 
 controllers:
   backupbucket:
@@ -22,6 +26,7 @@ controllers:
 disableControllers: []
 disableWebhooks: []
 ignoreResources: false
+
 # imageVectorOverwrite: |
 #   images:
 #   - name: pause-container
@@ -45,20 +50,16 @@ config:
     contentType: application/json
     qps: 100
     burst: 130
-  vpa:
-    enabled: true
-    updatePolicy:
-      updateMode: "Auto"
   etcd:
     storage:
       className: gardener.cloud-fast
       capacity: 25Gi
 #   backup:
 #     schedule: "0 */24 * * *"
-  # machineImageOwnerSecret:
-  #   name: machine-image-owner
-  #   accessKeyID: ZHVtbXk=
-  #   accessKeySecret: ZHVtbXk=
+# machineImageOwnerSecret:
+#   name: machine-image-owner
+#   accessKeyID: ZHVtbXk=
+#   accessKeySecret: ZHVtbXk=
 
 gardener:
   seed:
