@@ -5,9 +5,9 @@ kind: Secret
 metadata:
   name: {{ $machineClass.name }}
   namespace: {{ $.Release.Namespace }}
-{{- if $machineClass.labels }}
+{{- if $machineClass.resourceLabels }}
   labels:
-{{ toYaml $machineClass.labels | indent 4 }}
+{{ toYaml $machineClass.resourceLabels | indent 4 }}
 {{- end }}
 type: Opaque
 data:
