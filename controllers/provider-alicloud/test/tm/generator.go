@@ -59,8 +59,9 @@ func main() {
 			},
 			Zones: []v1alpha1.Zone{
 				{
-					Name:    *zone,
-					Workers: *networkWorkerCidr,
+					Name: *zone,
+					// TODO: change this to `Workers` once garden.sapcloud.io API group is removed
+					Worker: *networkWorkerCidr,
 				},
 			},
 		},

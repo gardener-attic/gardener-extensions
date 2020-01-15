@@ -53,7 +53,8 @@ func main() {
 			Kind:       reflect.TypeOf(v1alpha1.InfrastructureConfig{}).Name(),
 		},
 		Networks: v1alpha1.NetworkConfig{
-			Workers: *networkWorkerCidr,
+			// TODO: change this to `Workers` once garden.sapcloud.io API group is removed
+			Worker: *networkWorkerCidr,
 		},
 	}
 
