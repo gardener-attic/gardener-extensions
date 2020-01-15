@@ -56,7 +56,8 @@ func main() {
 		},
 		FloatingPoolName: *floatingPoolName,
 		Networks: v1alpha1.Networks{
-			Workers: *networkWorkerCidr,
+			// TODO: change this to `Workers` once garden.sapcloud.io API group is removed
+			Worker: *networkWorkerCidr,
 		},
 	}
 
