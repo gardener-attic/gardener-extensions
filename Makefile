@@ -223,7 +223,8 @@ start-networking-calico:
 		-ldflags $(LD_FLAGS) \
 		./controllers/networking-calico/cmd/gardener-extension-networking-calico \
 		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION)
+		--leader-election=$(LEADER_ELECTION) \
+		--config-file=./controllers/networking-calico/example/00-componentconfig.yaml
 
 .PHONY: start-shoot-dns-service
 start-shoot-dns-service:
