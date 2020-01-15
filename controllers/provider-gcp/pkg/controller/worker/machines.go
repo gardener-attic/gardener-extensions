@@ -196,7 +196,7 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 			})
 
 			machineClassSpec["name"] = className
-			machineClassSpec["labels"] = map[string]string{
+			machineClassSpec["resourceLabels"] = map[string]string{
 				v1beta1constants.GardenPurpose: genericworkeractuator.GardenPurposeMachineClass,
 			}
 			machineClassSpec["secret"].(map[string]interface{})[gcp.ServiceAccountJSONMCM] = string(machineClassSecretData[machinev1alpha1.GCPServiceAccountJSON])

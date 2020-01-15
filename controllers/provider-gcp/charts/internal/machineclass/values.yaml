@@ -1,6 +1,6 @@
 machineClasses:
 - name: class-1
-# labels:
+# resourceLabels:
 #   foo: bar
   region: europe-west1
   zone: europe-west1-b

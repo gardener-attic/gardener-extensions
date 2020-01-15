@@ -633,7 +633,7 @@ func useDefaultMachineClass(def map[string]interface{}, key string, value interf
 
 func addNameAndSecretToMachineClass(class map[string]interface{}, serviceAccountJSON, name string) {
 	class["name"] = name
-	class["labels"] = map[string]string{
+	class["resourceLabels"] = map[string]string{
 		v1beta1constants.GardenPurpose: genericworkeractuator.GardenPurposeMachineClass,
 	}
 	class["secret"].(map[string]interface{})[gcp.ServiceAccountJSONMCM] = serviceAccountJSON
