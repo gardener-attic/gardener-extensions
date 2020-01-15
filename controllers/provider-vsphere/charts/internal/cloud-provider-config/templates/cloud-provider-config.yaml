@@ -33,6 +33,7 @@ data:
     [LoadBalancer]
     ipPoolName = "{{ .Values.loadbalancer.ipPoolName }}"
     size = {{ .Values.loadbalancer.size }}
+    logicalRouterId = "{{ .Values.loadbalancer.logicalRouterId }}"
 
     {{- range $i, $class := .Values.loadbalancer.classes }}
     [LoadBalancerClass {{ $class.name | quote }}]
@@ -51,4 +52,3 @@ data:
     password = "{{ .Values.nsxt.password }}"
     host = "{{ .Values.nsxt.host }}"
     insecure-flag = "{{ .Values.nsxt.insecureFlag }}"
-    logicalRouterId = "{{ .Values.nsxt.logicalRouterId }}"

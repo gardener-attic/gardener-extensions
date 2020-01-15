@@ -39,8 +39,6 @@ type ControllerConfiguration struct {
 type ETCD struct {
 	// ETCDStorage is the etcd storage configuration.
 	Storage ETCDStorage
-	// ETCDBackup is the etcd backup configuration.
-	Backup ETCDBackup
 }
 
 // ETCDStorage is an etcd storage configuration.
@@ -49,10 +47,4 @@ type ETCDStorage struct {
 	ClassName *string
 	// Capacity is the storage capacity used in etcd-main volume claims.
 	Capacity *resource.Quantity
-}
-
-// ETCDBackup is an etcd backup configuration.
-type ETCDBackup struct {
-	// Schedule is the etcd backup schedule.
-	Schedule *string
 }

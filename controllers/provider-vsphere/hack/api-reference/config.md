@@ -113,50 +113,6 @@ ETCDStorage
 <p>ETCDStorage is the etcd storage configuration.</p>
 </td>
 </tr>
-<tr>
-<td>
-<code>backup</code></br>
-<em>
-<a href="#vsphere.provider.extensions.config.gardener.cloud/v1alpha1.ETCDBackup">
-ETCDBackup
-</a>
-</em>
-</td>
-<td>
-<p>ETCDBackup is the etcd backup configuration.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="vsphere.provider.extensions.config.gardener.cloud/v1alpha1.ETCDBackup">ETCDBackup
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#vsphere.provider.extensions.config.gardener.cloud/v1alpha1.ETCD">ETCD</a>)
-</p>
-<p>
-<p>ETCDBackup is an etcd backup configuration.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>schedule</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<em>(Optional)</em>
-<p>Schedule is the etcd backup schedule.</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="vsphere.provider.extensions.config.gardener.cloud/v1alpha1.ETCDStorage">ETCDStorage

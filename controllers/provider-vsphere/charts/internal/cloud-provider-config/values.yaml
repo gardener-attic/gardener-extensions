@@ -15,7 +15,8 @@ datacenters: dc
 loadbalancer:
   ipPoolName: gardener_lb_ip_pool
   size: MEDIUM
-
+  logicalRouterId: my.logical.t1.router
+  
   classes:
     - name: public
     - name: private
@@ -26,4 +27,3 @@ nsxt:
   username: admin
   password: super-secret
   insecureFlag: 1
-  logicalRouterId: my.logical.t1.router

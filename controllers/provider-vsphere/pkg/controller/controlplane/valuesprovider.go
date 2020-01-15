@@ -399,6 +399,9 @@ outer:
 		"size":       cloudProfileConfig.Constraints.LoadBalancerConfig.Size,
 		"classes":    loadBalancersClasses,
 	}
+	if infraStatus.LogicalRouterId != "" {
+		loadBalancers["logicalRouterId"] = infraStatus.LogicalRouterId
+	}
 
 	// Collect config chart values
 	values := map[string]interface{}{
@@ -417,9 +420,6 @@ outer:
 		},
 	}
 
-	if infraStatus.LogicalRouterId != "" {
-		values["nsxt"].(map[string]interface{})["logicalRouterId"] = infraStatus.LogicalRouterId
-	}
 	if region.CaFile != "" {
 		values["caFile"] = region.CaFile
 	}

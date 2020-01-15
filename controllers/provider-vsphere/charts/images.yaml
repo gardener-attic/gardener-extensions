@@ -38,7 +38,8 @@ images:
 - name: nsxt-lb-provider-manager
   sourceRepository: github.com/gardener/nsxt-lb-provider
   repository: eu.gcr.io/gardener-project/gardener/nsxt-lb-provider-manager
-  tag: v0.1.1
+  # tag: v0.1.2
+  tag: v0.2.0-dev-ecf49f4969b414483c0ef3849c9bfeb3af444c84
 - name: vsphere-csi-controller
   #sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
   sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
