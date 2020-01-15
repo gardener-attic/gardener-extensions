@@ -24,7 +24,7 @@ echo "Executing check-generate"
 "$DIRNAME"/check-generate.sh
 
 echo "Executing golangci-lint"
-golangci-lint run --deadline 7m "${SOURCE_TREES[@]}"
+golangci-lint run -c "$DIRNAME"/../.golangci.yaml "${SOURCE_TREES[@]}"
 
 echo "Checking for format issues with gofmt"
 unformatted_files="$(gofmt -l controllers pkg)"
