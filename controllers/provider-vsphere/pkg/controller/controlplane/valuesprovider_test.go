@@ -58,7 +58,7 @@ var _ = Describe("ValuesProvider", func() {
 					"CustomResourceValidation": true,
 				},
 			},
-			LoadBalancerClassNames: []string{"private"},
+			LoadBalancerClasses: []apisvsphere.CPLoadBalancerClass{{Name: "private"}},
 		}
 
 		cp = &extensionsv1alpha1.ControlPlane{

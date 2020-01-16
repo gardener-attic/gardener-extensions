@@ -26,12 +26,19 @@ type ControlPlaneConfig struct {
 
 	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
 	CloudControllerManager *CloudControllerManagerConfig
-	// LoadBalancerClassNames lists the load balancer classes to be used.
-	LoadBalancerClassNames []string
+	// LoadBalancerClasses lists the load balancer classes to be used.
+	LoadBalancerClasses []CPLoadBalancerClass
 }
 
 // CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.
 type CloudControllerManagerConfig struct {
 	// FeatureGates contains information about enabled feature gates.
 	FeatureGates map[string]bool
+}
+
+// CPLoadBalancerClass provides the name of a load balancer
+type CPLoadBalancerClass struct {
+	Name string
+	// IPPoolName is the name of the NSX-T IP pool.
+	IPPoolName string
 }

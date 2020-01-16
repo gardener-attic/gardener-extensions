@@ -28,9 +28,9 @@ type ControlPlaneConfig struct {
 	// CloudControllerManager contains configuration settings for the cloud-controller-manager.
 	// +optional
 	CloudControllerManager *CloudControllerManagerConfig `json:"cloudControllerManager,omitempty"`
-	// LoadBalancerClassNames lists the load balancer classes to be used.
+	// LoadBalancerClasses lists the load balancer classes to be used.
 	// +optional
-	LoadBalancerClassNames []string `json:"loadBalancerClassNames,omitempty"`
+	LoadBalancerClasses []CPLoadBalancerClass `json:"loadBalancerClasses,omitempty"`
 }
 
 // CloudControllerManagerConfig contains configuration settings for the cloud-controller-manager.
@@ -38,4 +38,12 @@ type CloudControllerManagerConfig struct {
 	// FeatureGates contains information about enabled feature gates.
 	// +optional
 	FeatureGates map[string]bool `json:"featureGates,omitempty"`
+}
+
+// CPLoadBalancerClass provides the name of a load balancer
+type CPLoadBalancerClass struct {
+	Name string `json:"name"`
+	// IPPoolName is the name of the NSX-T IP pool.
+	// +optional
+	IPPoolName string `json:"ipPoolName,omitempty"`
 }

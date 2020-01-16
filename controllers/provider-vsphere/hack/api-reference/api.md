@@ -195,14 +195,16 @@ CloudControllerManagerConfig
 </tr>
 <tr>
 <td>
-<code>loadBalancerClassNames</code></br>
+<code>loadBalancerClasses</code></br>
 <em>
-[]string
+<a href="#vsphere.provider.extensions.gardener.cloud/v1alpha1.CPLoadBalancerClass">
+[]CPLoadBalancerClass
+</a>
 </em>
 </td>
 <td>
 <em>(Optional)</em>
-<p>LoadBalancerClassNames lists the load balancer classes to be used.</p>
+<p>LoadBalancerClasses lists the load balancer classes to be used.</p>
 </td>
 </tr>
 </tbody>
@@ -298,6 +300,47 @@ gets the mapping from name/version to the provider-specific machine image data i
 a version that is still in use gets removed from this componentconfig it cannot reconcile anymore existing <code>Worker</code>
 resources that are still using this version. Hence, it stores the used versions in the provider status to ensure
 reconciliation is possible.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="vsphere.provider.extensions.gardener.cloud/v1alpha1.CPLoadBalancerClass">CPLoadBalancerClass
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#vsphere.provider.extensions.gardener.cloud/v1alpha1.ControlPlaneConfig">ControlPlaneConfig</a>)
+</p>
+<p>
+<p>CPLoadBalancerClass provides the name of a load balancer</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>ipPoolName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>IPPoolName is the name of the NSX-T IP pool.</p>
 </td>
 </tr>
 </tbody>

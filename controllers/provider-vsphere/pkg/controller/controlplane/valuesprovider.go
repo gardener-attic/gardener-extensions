@@ -364,8 +364,8 @@ func (vp *valuesProvider) getConfigChartValues(
 
 	var defaultClass *apisvsphere.LoadBalancerClass
 	loadBalancersClasses := []map[string]interface{}{}
-	if len(cpConfig.LoadBalancerClassNames) == 0 {
-		cpConfig.LoadBalancerClassNames = []string{apisvsphere.LoadBalancerDefaultClassName}
+	if len(cpConfig.LoadBalancerClasses) == 0 {
+		cpConfig.LoadBalancerClasses = []apisvsphere.CPLoadBalancerClass{{Name: apisvsphere.LoadBalancerDefaultClassName}}
 	}
 	for i, class := range cloudProfileConfig.Constraints.LoadBalancerConfig.Classes {
 		if i == 0 || class.Name == apisvsphere.LoadBalancerDefaultClassName {
@@ -374,20 +374,25 @@ func (vp *valuesProvider) getConfigChartValues(
 		}
 	}
 outer:
-	for _, name := range cpConfig.LoadBalancerClassNames {
-		for _, class := range cloudProfileConfig.Constraints.LoadBalancerConfig.Classes {
-			if class.Name == name {
-				lbClass := map[string]interface{}{
-					"name": class.Name,
-				}
-				if class.IPPoolName != "" {
-					lbClass["ipPoolName"] = class.IPPoolName
-				}
-				loadBalancersClasses = append(loadBalancersClasses, lbClass)
-				continue outer
-			}
+	for _, cpClass := range cpConfig.LoadBalancerClasses {
+		lbClass := map[string]interface{}{
+			"name": cpClass.Name,
 		}
-		return nil, fmt.Errorf("load balancer class %q not found in cloud profile", name)
+		if cpClass.IPPoolName == "" {
+			for _, class := range cloudProfileConfig.Constraints.LoadBalancerConfig.Classes {
+				if class.Name == cpClass.Name {
+					if class.IPPoolName != "" {
+						lbClass["ipPoolName"] = class.IPPoolName
+					}
+					loadBalancersClasses = append(loadBalancersClasses, lbClass)
+					continue outer
+				}
+			}
+			return nil, fmt.Errorf("load balancer class %q not found in cloud profile", cpClass.Name)
+		} else {
+			lbClass["ipPoolName"] = cpClass.IPPoolName
+			loadBalancersClasses = append(loadBalancersClasses, lbClass)
+		}
 	}
 
 	if defaultClass.IPPoolName == "" {

@@ -61,17 +61,20 @@ An example `ControlPlaneConfig` for the vSphere extension looks as follows:
 ```yaml
 apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
 kind: ControlPlaneConfig
-loadBalancerClassNames:
-  - mypubliclbclass
-  - myprivatelbclass
+loadBalancerClasses:
+  - name: mypubliclbclass
+  - name: myprivatelbclass
+    ipPoolName: pool42 # optional overwrite
 cloudControllerManager:
   featureGates:
     CustomResourceValidation: true
 ```
 
-The `loadBalancerClassNames` optionally defines which load balancer classes should be used. This list is optional.
+The `loadBalancerClasses` optionally defines the load balancer classes to be used.
 The specified names must be defined in the constraints section of the cloud profile.
-If not specified the default load balancer class is used as defined in the cloud profile.
+If the list contains a load balancer named "default", it is used as the default load balancer.
+Otherwise the first one is also the default.
+If no classes are specified the default load balancer class is used as defined in the cloud profile constraints section.
 
 The `cloudControllerManager.featureGates` contains an optional map of explicitly enabled or disabled feature gates.
 For production usage it's not recommend to use this field at all as you can enable alpha features or disable beta/stable features, potentially impacting the cluster stability.
@@ -102,8 +105,8 @@ spec:
     #controlPlaneConfig:
     #  apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
     #  kind: ControlPlaneConfig
-    #  loadBalancerClassNames:
-    #  - mylbclass
+    #  loadBalancerClasses:
+    #  - name: mylbclass
     workers:
     - name: worker-xoluy
       machine:
