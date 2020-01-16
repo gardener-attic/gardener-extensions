@@ -33,7 +33,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockkubernetes "github.com/gardener/gardener-extensions/pkg/mock/gardener/client/kubernetes"
-	gardencorev1alpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 	"github.com/golang/mock/gomock"
@@ -528,26 +528,26 @@ func createCluster(cloudProfileName, shootVersion string, images []apiv1alpha1.M
 	}
 	cloudProfileConfigJSON, _ := json.Marshal(cloudProfileConfig)
 	cluster := &extensionscontroller.Cluster{
-		CloudProfile: &gardencorev1alpha1.CloudProfile{
+		CloudProfile: &gardencorev1beta1.CloudProfile{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: cloudProfileName,
 			},
-			Spec: gardencorev1alpha1.CloudProfileSpec{
-				ProviderConfig: &gardencorev1alpha1.ProviderConfig{
+			Spec: gardencorev1beta1.CloudProfileSpec{
+				ProviderConfig: &gardencorev1beta1.ProviderConfig{
 					RawExtension: runtime.RawExtension{
 						Raw: cloudProfileConfigJSON,
 					},
 				},
-				Regions: []gardencorev1alpha1.Region{
+				Regions: []gardencorev1beta1.Region{
 					{
 						Name: "testregion",
-						Zones: []gardencorev1alpha1.AvailabilityZone{
+						Zones: []gardencorev1beta1.AvailabilityZone{
 							{Name: "testregion-a"},
 							{Name: "testregion-b"},
 						},
 					},
 				},
-				MachineTypes: []gardencorev1alpha1.MachineType{
+				MachineTypes: []gardencorev1beta1.MachineType{
 					{
 						Name:   "mt1",
 						Memory: resource.MustParse("4096Mi"),
@@ -556,10 +556,10 @@ func createCluster(cloudProfileName, shootVersion string, images []apiv1alpha1.M
 				},
 			},
 		},
-		Shoot: &gardencorev1alpha1.Shoot{
-			Spec: gardencorev1alpha1.ShootSpec{
+		Shoot: &gardencorev1beta1.Shoot{
+			Spec: gardencorev1beta1.ShootSpec{
 				Region: "testregion",
-				Kubernetes: gardencorev1alpha1.Kubernetes{
+				Kubernetes: gardencorev1beta1.Kubernetes{
 					Version: shootVersion,
 				},
 			},

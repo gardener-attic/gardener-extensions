@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestvSphere(t *testing.T) {
+func TestVsphere(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "vSphere Suite")
 }

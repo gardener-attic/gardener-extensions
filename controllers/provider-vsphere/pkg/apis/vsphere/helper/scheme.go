@@ -21,20 +21,15 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/apis/vsphere/install"
 
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 )
 
 var (
-	// Scheme is a scheme with the types relevant for OpenStack actuators.
+	// Scheme is a scheme with the types relevant for vSphere actuators.
 	Scheme *runtime.Scheme
-
-	decoder runtime.Decoder
 )
 
 func init() {
 	Scheme = runtime.NewScheme()
 	utilruntime.Must(install.AddToScheme(Scheme))
-
-	decoder = serializer.NewCodecFactory(Scheme).UniversalDecoder()
 }

@@ -19,6 +19,7 @@ package worker
 import (
 	"context"
 	"fmt"
+	"github.com/pkg/errors"
 	"path/filepath"
 	"strconv"
 
@@ -126,6 +127,9 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		})
 
 		numCpus, memoryInMB, systenDiskSizeInGB, err := w.extractMachineValues(pool.MachineType)
+		if err != nil {
+			return errors.Wrap(err, "extracting machine values failed")
+		}
 
 		for zoneIndex, zone := range pool.Zones {
 			zoneConfig, ok := infrastructureStatus.VsphereConfig.ZoneConfigs[zone]

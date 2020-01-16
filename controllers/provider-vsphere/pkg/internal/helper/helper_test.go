@@ -21,7 +21,7 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/apis/vsphere/install"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/common"
-	gardencorevalpha1 "github.com/gardener/gardener/pkg/apis/core/v1alpha1"
+	gardencorevbeta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -47,13 +47,13 @@ var _ = Describe("Helper", func() {
 		}
 
 		cluster = &controller.Cluster{
-			Shoot: &gardencorevalpha1.Shoot{
+			Shoot: &gardencorevbeta1.Shoot{
 				ObjectMeta: v1.ObjectMeta{Name: "test"},
 			},
-			CloudProfile: &gardencorevalpha1.CloudProfile{
-				Spec: gardencorevalpha1.CloudProfileSpec{
-					ProviderConfig: &gardencorevalpha1.ProviderConfig{
-						runtime.RawExtension{Raw: []byte(`
+			CloudProfile: &gardencorevbeta1.CloudProfile{
+				Spec: gardencorevbeta1.CloudProfileSpec{
+					ProviderConfig: &gardencorevbeta1.ProviderConfig{
+						RawExtension: runtime.RawExtension{Raw: []byte(`
 apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
 kind: CloudProfileConfig
 defaultClassStoragePolicyName: "vSAN Default Storage Policy"
