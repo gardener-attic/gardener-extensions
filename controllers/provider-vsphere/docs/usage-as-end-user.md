@@ -28,6 +28,8 @@ data:
   nsxtInsecureSSL: base64("true"|"false")
 ```
 
+Here `base64(...)` are only a placeholders for the Base64 encoded values.
+
 ## `InfrastructureConfig`
 
 The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a latter step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
@@ -42,19 +44,12 @@ infrastructureConfig:
     worker: 10.250.0.0/19
 ```
 
-The `floatingPoolName` is the name of the floating pool you want to use for your shoot.
-If you don't know which floating pools are available look it up in the respective `CloudProfile`.
-
-The `networks.router` section describes whether you want to create the shoot cluster in an already existing router or whether to create a new one:
-
-* If `networks.router.name` is given then you have to specify the router name of the existing router that was created by other means (manually, other tooling, ...).
-If you want to get a fresh router for the shoot then just omit the `networks.router` field.
-
 The `networks.workers` section describes the CIDR for a subnet that is used for all shoot worker nodes, i.e., VMs which later run your applications.
 
 You can freely choose these CIDRs and it is your responsibility to properly design the network layout to suit your needs.
 
-Apart from the router and the worker subnet the vSphere extension will also create a network, router interfaces, security groups, and a key pair.
+The infrastructure controller will create several network objects using NSX-T. A logical switch to be used as the network
+for the VMs (nodes), a tier-1 router, a DHCP server, and a SNAT for the nodes. 
 
 ## `ControlPlaneConfig`
 
@@ -66,12 +61,19 @@ An example `ControlPlaneConfig` for the vSphere extension looks as follows:
 ```yaml
 apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
 kind: ControlPlaneConfig
+loadBalancerClassNames:
+  - mypubliclbclass
+  - myprivatelbclass
 cloudControllerManager:
   featureGates:
     CustomResourceValidation: true
 ```
 
-The `cloudControllerManager.featureGates` contains a map of explicitly enabled or disabled feature gates.
+The `loadBalancerClassNames` optionally defines which load balancer classes should be used. This list is optional.
+The specified names must be defined in the constraints section of the cloud profile.
+If not specified the default load balancer class is used as defined in the cloud profile.
+
+The `cloudControllerManager.featureGates` contains an optional map of explicitly enabled or disabled feature gates.
 For production usage it's not recommend to use this field at all as you can enable alpha features or disable beta/stable features, potentially impacting the cluster stability.
 If you don't want to configure anything for the `cloudControllerManager` simply omit the key in the YAML specification.
 
@@ -96,9 +98,12 @@ spec:
       kind: InfrastructureConfig
       networks:
         worker: 10.250.0.0/19
-    controlPlaneConfig:
-      apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
-      kind: ControlPlaneConfig
+    ## uncomment the following lines if you have optional parameters for the ControlPlaneConfig
+    #controlPlaneConfig:
+    #  apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
+    #  kind: ControlPlaneConfig
+    #  loadBalancerClassNames:
+    #  - mylbclass
     workers:
     - name: worker-xoluy
       machine:
