@@ -18,26 +18,17 @@ import (
 	apisgcp "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp"
 	. "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/validation"
 
-	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 var _ = Describe("ControlPlaneConfig validation", func() {
 	var (
-		region = "foo"
-		zone   = "some-zone"
-
-		regions = []gardencorev1beta1.Region{
-			{
-				Name: region,
-				Zones: []gardencorev1beta1.AvailabilityZone{
-					{Name: zone},
-				},
-			},
-		}
+		zone         = "some-zone"
+		allowedZones = sets.NewString("zone1", "zone2", "some-zone")
 
 		controlPlane *apisgcp.ControlPlaneConfig
 	)
@@ -50,13 +41,13 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 
 	Describe("#ValidateControlPlaneConfig", func() {
 		It("should return no errors for a valid configuration", func() {
-			Expect(ValidateControlPlaneConfig(controlPlane, region, regions)).To(BeEmpty())
+			Expect(ValidateControlPlaneConfig(controlPlane, allowedZones)).To(BeEmpty())
 		})
 
 		It("should require the name of a zone", func() {
 			controlPlane.Zone = ""
 
-			errorList := ValidateControlPlaneConfig(controlPlane, region, regions)
+			errorList := ValidateControlPlaneConfig(controlPlane, allowedZones)
 
 			Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":  Equal(field.ErrorTypeRequired),
@@ -67,7 +58,7 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 		It("should require a name of a zone that is part of the regions", func() {
 			controlPlane.Zone = "bar"
 
-			errorList := ValidateControlPlaneConfig(controlPlane, region, regions)
+			errorList := ValidateControlPlaneConfig(controlPlane, allowedZones)
 
 			Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":  Equal(field.ErrorTypeNotSupported),
@@ -78,14 +69,14 @@ var _ = Describe("ControlPlaneConfig validation", func() {
 
 	Describe("#ValidateControlPlaneConfigUpdate", func() {
 		It("should return no errors for an unchanged config", func() {
-			Expect(ValidateControlPlaneConfigUpdate(controlPlane, controlPlane, region, regions)).To(BeEmpty())
+			Expect(ValidateControlPlaneConfigUpdate(controlPlane, controlPlane)).To(BeEmpty())
 		})
 
 		It("should forbid changing the zone", func() {
 			newControlPlane := controlPlane.DeepCopy()
 			newControlPlane.Zone = "foo"
 
-			errorList := ValidateControlPlaneConfigUpdate(controlPlane, newControlPlane, region, regions)
+			errorList := ValidateControlPlaneConfigUpdate(controlPlane, newControlPlane)
 
 			Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 				"Type":  Equal(field.ErrorTypeInvalid),
