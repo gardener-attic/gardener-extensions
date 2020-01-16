@@ -417,55 +417,6 @@ var _ = Describe("Machines", func() {
 						},
 					}
 				}
-
-				It("should return the expected machine deployments when disableExternal IP is false for profile image types", func() {
-
-					workerDelegate, _ = NewWorkerDelegate(common.NewClientContext(c, scheme, decoder), chartApplier, "", w, cluster)
-
-					expectGetSecretCallToWork(c, serviceAccountJSON)
-
-					// Test workerDelegate.DeployMachineClasses()
-					setup(false)
-
-					chartApplier.
-						EXPECT().
-						ApplyChart(
-							context.TODO(),
-							filepath.Join(gcp.InternalChartsPath, "machineclass"),
-							namespace,
-							"machineclass",
-							machineClasses,
-							nil,
-						).
-						Return(nil)
-
-					err := workerDelegate.DeployMachineClasses(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GetMachineImages()
-					machineImages, err := workerDelegate.GetMachineImages(context.TODO())
-					Expect(machineImages).To(Equal(&apiv1alpha1.WorkerStatus{
-						TypeMeta: metav1.TypeMeta{
-							APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
-							Kind:       "WorkerStatus",
-						},
-						MachineImages: []apiv1alpha1.MachineImage{
-							{
-								Name:    machineImageName,
-								Version: machineImageVersion,
-								Image:   machineImage,
-							},
-						},
-					}))
-					Expect(err).NotTo(HaveOccurred())
-
-					// Test workerDelegate.GenerateMachineDeployments()
-
-					result, err := workerDelegate.GenerateMachineDeployments(context.TODO())
-					Expect(err).NotTo(HaveOccurred())
-					Expect(result).To(Equal(machineDeployments))
-				})
-
 				It("should return the expected machine deployments when disableExternal IP is true with profile image types", func() {
 					expectGetSecretCallToWork(c, serviceAccountJSON)
 
