@@ -27,10 +27,11 @@ images:
   repository: gcr.io/cloud-provider-vsphere/cpi/release/manager
   tag: v1.0.0
 - name: machine-controller-manager
-  sourceRepository: github.com/gardener/machine-controller-manager
+  #sourceRepository: github.com/gardener/machine-controller-manager
+  sourceRepository: github.com/MartinWeindel/machine-controller-manager
   repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager
-  # latest from cmi-client branch
-  tag: v0.26.0-dev-46ff955ddf33554472cefacbc8da7e74a549ac6c
+  # "prelease" from cmi-client branch
+  tag: v0.26.0-cmiclient1
 - name: machine-controller-manager-provider-vsphere
   sourceRepository: github.com/gardener/machine-controller-manager-provider-vsphere
   repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager-provider-vsphere
