@@ -34,12 +34,11 @@ images:
 - name: machine-controller-manager-provider-vsphere
   sourceRepository: github.com/gardener/machine-controller-manager-provider-vsphere
   repository: eu.gcr.io/gardener-project/gardener/machine-controller-manager-provider-vsphere
-  tag: "v0.2.0"
+  tag: v0.2.0
 - name: nsxt-lb-provider-manager
   sourceRepository: github.com/gardener/nsxt-lb-provider
   repository: eu.gcr.io/gardener-project/gardener/nsxt-lb-provider-manager
-  # tag: v0.1.2
-  tag: v0.2.0-dev-3229454143d9a8fac0b401779388fe33cbc18478
+  tag: v0.2.0
 - name: vsphere-csi-controller
   #sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
   sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
