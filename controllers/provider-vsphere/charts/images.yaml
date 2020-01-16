@@ -42,14 +42,14 @@ images:
   tag: v0.2.0
 - name: vsphere-csi-controller
   #sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
-  sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
   #repository: gcr.io/cloud-provider-vsphere/csi/release/driver
+  sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
   repository: eu.gcr.io/gardener-project/patches/vsphere-csi-driver/driver
   tag: v1.0.1-gardener1
 - name: vsphere-csi-syncer
-  #sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
-  sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
+  #sourceRepository: github.com/kubernetes-sigs/vsphere-csi-driver
   #repository: gcr.io/cloud-provider-vsphere/csi/release/syncer
+  sourceRepository: github.com/MartinWeindel/vsphere-csi-driver
   repository: eu.gcr.io/gardener-project/patches/vsphere-csi-driver/syncer
   tag: v1.0.1-gardener1
 - name: vsphere-csi-node
