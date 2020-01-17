@@ -296,6 +296,7 @@ func (vp *valuesProvider) GetControlPlaneShootChartValues(
 type cloudConfig struct {
 	Global struct {
 		KubernetesClusterTag string
+		ClusterID            string `json:"clusterID"`
 		UID                  string `json:"uid"`
 		VpcID                string `json:"vpcid"`
 		Region               string `json:"region"`
@@ -323,6 +324,7 @@ func getConfigChartValues(
 	// Initialize cloud config
 	cfg := &cloudConfig{}
 	cfg.Global.KubernetesClusterTag = cp.Namespace
+	cfg.Global.ClusterID = cp.Namespace
 	cfg.Global.VpcID = infraStatus.VPC.ID
 	cfg.Global.ZoneID = vswitch.Zone
 	cfg.Global.VswitchID = vswitch.ID

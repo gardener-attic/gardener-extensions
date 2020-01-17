@@ -128,7 +128,7 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		configChartValues = map[string]interface{}{
-			"cloudConfig": `{"Global":{"KubernetesClusterTag":"test","uid":"","vpcid":"vpc-1234","region":"eu-central-1","zoneid":"eu-central-1a","vswitchid":"vswitch-acbd1234","accessKeyID":"Zm9v","accessKeySecret":"YmFy"}}`,
+			"cloudConfig": `{"Global":{"KubernetesClusterTag":"test","clusterID":"test","uid":"","vpcid":"vpc-1234","region":"eu-central-1","zoneid":"eu-central-1a","vswitchid":"vswitch-acbd1234","accessKeyID":"Zm9v","accessKeySecret":"YmFy"}}`,
 		}
 
 		controlPlaneChartValues = map[string]interface{}{

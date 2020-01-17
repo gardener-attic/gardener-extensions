@@ -77,11 +77,11 @@ func (client *Client) CreatePhysicalConnectionSetupOrderWithCallback(request *Cr
 type CreatePhysicalConnectionSetupOrderRequest struct {
 	*requests.RpcRequest
 	AccessPointId                 string           `position:"Query" name:"AccessPointId"`
-	RedundantPhysicalConnectionId string           `position:"Query" name:"RedundantPhysicalConnectionId"`
 	ResourceOwnerId               requests.Integer `position:"Query" name:"ResourceOwnerId"`
 	PortType                      string           `position:"Query" name:"PortType"`
-	AutoPay                       requests.Boolean `position:"Query" name:"AutoPay"`
 	ClientToken                   string           `position:"Query" name:"ClientToken"`
+	RedundantPhysicalConnectionId string           `position:"Query" name:"RedundantPhysicalConnectionId"`
+	AutoPay                       requests.Boolean `position:"Query" name:"AutoPay"`
 	ResourceOwnerAccount          string           `position:"Query" name:"ResourceOwnerAccount"`
 	OwnerAccount                  string           `position:"Query" name:"OwnerAccount"`
 	OwnerId                       requests.Integer `position:"Query" name:"OwnerId"`
@@ -91,8 +91,9 @@ type CreatePhysicalConnectionSetupOrderRequest struct {
 // CreatePhysicalConnectionSetupOrderResponse is the response struct for api CreatePhysicalConnectionSetupOrder
 type CreatePhysicalConnectionSetupOrderResponse struct {
 	*responses.BaseResponse
-	RequestId string `json:"RequestId" xml:"RequestId"`
-	OrderId   string `json:"OrderId" xml:"OrderId"`
+	RequestId            string `json:"RequestId" xml:"RequestId"`
+	OrderId              string `json:"OrderId" xml:"OrderId"`
+	PhysicalConnectionId string `json:"PhysicalConnectionId" xml:"PhysicalConnectionId"`
 }
 
 // CreateCreatePhysicalConnectionSetupOrderRequest creates a request to invoke CreatePhysicalConnectionSetupOrder API

@@ -38,6 +38,7 @@ type VPC interface {
 type ClientFactory interface {
 	NewECSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (ECS, error)
 	NewSTSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (STS, error)
+	NewSLBClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (SLB, error)
 }
 
 // STS is an interface which must be implemented by alicloud sts clients.
@@ -49,6 +50,13 @@ type STS interface {
 type ECS interface {
 	CheckIfImageExists(ctx context.Context, imageID string) (bool, error)
 	ShareImageToAccount(ctx context.Context, regionID, imageID, accountID string) error
+}
+
+// SLB is an interface which must be implemented by alicloud slb clients.
+type SLB interface {
+	GetLoadBalancerIDs(ctx context.Context, region string) ([]string, error)
+	GetFirstVServerGroupName(ctx context.Context, region, loadBalancerID string) (string, error)
+	DeleteLoadBalancer(ctx context.Context, region, loadBalancerID string) error
 }
 
 // Factory is the factory to instantiate Alicloud clients.

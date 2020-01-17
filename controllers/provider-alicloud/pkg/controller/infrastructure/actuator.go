@@ -37,6 +37,7 @@ import (
 	chartutil "github.com/gardener/gardener-extensions/pkg/util/chart"
 
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	"github.com/gardener/gardener/pkg/utils/flow"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -429,6 +430,45 @@ func (a *actuator) Reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 	})
 }
 
+func (a *actuator) cleanupServiceLoadBalancers(ctx context.Context, infra *extensionsv1alpha1.Infrastructure) error {
+	_, shootCloudProviderCredentials, err := a.getConfigAndCredentialsForInfra(ctx, infra)
+	if err != nil {
+		return err
+	}
+	a.logger.Info("Creating Alicloud SLB client for Shoot", "infrastructure", infra.Name)
+	shootAlicloudSLBClient, err := a.newClientFactory.NewSLBClient(ctx, infra.Spec.Region, shootCloudProviderCredentials.AccessKeyID, shootCloudProviderCredentials.AccessKeySecret)
+	if err != nil {
+		return err
+	}
+
+	loadBalancerIDs, err := shootAlicloudSLBClient.GetLoadBalancerIDs(ctx, infra.Spec.Region)
+	if err != nil {
+		return err
+	}
+	// SLBs created by Alicloud CCM do not have assocation with VPCs, so can only be iterated to check
+	// if one SLB is related to this specific Shoot.
+	for _, loadBalancerID := range loadBalancerIDs {
+		vServerGroupName, err := shootAlicloudSLBClient.GetFirstVServerGroupName(ctx, infra.Spec.Region, loadBalancerID)
+		if err != nil {
+			return err
+		}
+		if vServerGroupName == "" {
+			continue
+		}
+
+		// Get the last slice of VServerGroupName string divided by '/' which is the clusterid.
+		slices := strings.Split(vServerGroupName, "/")
+		clusterID := slices[len(slices)-1]
+		if clusterID == infra.Namespace {
+			err = shootAlicloudSLBClient.DeleteLoadBalancer(ctx, infra.Spec.Region, loadBalancerID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 // Delete implements infrastructure.Actuator.
 func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrastructure, cluster *extensioncontroller.Cluster) error {
 	_, credentials, err := a.getConfigAndCredentialsForInfra(ctx, infra)
@@ -449,5 +489,27 @@ func (a *actuator) Delete(ctx context.Context, infra *extensionsv1alpha1.Infrast
 		return nil
 	}
 
-	return tf.Destroy()
+	var (
+		g = flow.NewGraph("Alicloud infrastructure destruction")
+
+		destroyServiceLoadBalancers = g.Add(flow.Task{
+			Name: "Destroying service load balancers",
+			Fn: flow.TaskFn(func(ctx context.Context) error {
+				return a.cleanupServiceLoadBalancers(ctx, infra)
+			}).RetryUntilTimeout(10*time.Second, 5*time.Minute),
+		})
+
+		_ = g.Add(flow.Task{
+			Name:         "Destroying Shoot infrastructure",
+			Fn:           flow.SimpleTaskFn(tf.Destroy),
+			Dependencies: flow.NewTaskIDs(destroyServiceLoadBalancers),
+		})
+
+		f = g.Compile()
+	)
+
+	if err := f.Run(flow.Opts{Context: ctx}); err != nil {
+		return flow.Causes(err)
+	}
+	return nil
 }
