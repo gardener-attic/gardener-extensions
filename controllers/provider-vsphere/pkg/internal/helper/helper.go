@@ -69,5 +69,5 @@ func GetInfrastructureConfig(ctx *common.ClientContext, cluster *controller.Clus
 		}
 		return config, nil
 	}
-	return nil, fmt.Errorf("infrastructure config is not set on the infrastructure resource")
+	return config, nil
 }

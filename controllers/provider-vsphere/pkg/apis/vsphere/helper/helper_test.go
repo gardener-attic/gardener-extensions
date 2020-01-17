@@ -62,6 +62,32 @@ var _ = Describe("Helper", func() {
 		Entry("profile entry not found (version does not exist)", makeProfileMachineImages("ubuntu", "2"), "ubuntu", "1", ""),
 		Entry("profile entry", makeProfileMachineImages("ubuntu", "1"), "ubuntu", "1", somePath),
 	)
+
+	DescribeTable("#CollectDatacenters",
+		func(regionSpec api.RegionSpec, expectedDatacenters []string) {
+			datacenters := CollectDatacenters(&regionSpec)
+
+			Expect(datacenters).To(Equal(expectedDatacenters))
+		},
+
+		Entry("DCs defined in region", api.RegionSpec{
+			Name:       "test",
+			Datacenter: "dc1",
+			Zones: []api.ZoneSpec{
+				{Name: "zone1"},
+				{Name: "zone2"},
+			},
+		}, []string{"dc1"}),
+		Entry("DCs defined in zones", api.RegionSpec{
+			Name:       "test",
+			Datacenter: "dc1",
+			Zones: []api.ZoneSpec{
+				{Name: "zone1", Datacenter: "dcz1"},
+				{Name: "zone2", Datacenter: "dcz2"},
+				{Name: "zone3", Datacenter: "dcz2"},
+			},
+		}, []string{"dc1", "dcz1", "dcz2"}),
+	)
 })
 
 func expectResults(result, expected interface{}, err error, expectErr bool) {

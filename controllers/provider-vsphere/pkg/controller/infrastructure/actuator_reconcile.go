@@ -51,7 +51,7 @@ func (a *actuator) reconcile(ctx context.Context, infra *extensionsv1alpha1.Infr
 		return err
 	}
 
-	terraformFiles, err := infrastructure.RenderTerraformerChart(a.ChartRenderer(), infra, config, cloudProfileConfig)
+	terraformFiles, err := infrastructure.RenderTerraformerChart(a.ChartRenderer(), infra, config, cloudProfileConfig, cluster.Shoot.Spec.Networking)
 	if err != nil {
 		return err
 	}

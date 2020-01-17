@@ -21,7 +21,9 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/apis/vsphere"
+	corev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,16 +34,13 @@ var _ = Describe("Terraform", func() {
 		infra              *extensionsv1alpha1.Infrastructure
 		cloudProfileConfig *vsphere.CloudProfileConfig
 		config             *vsphere.InfrastructureConfig
+		networking         corev1beta1.Networking
 
 		dnsServers = []string{"a", "b"}
 	)
 
 	BeforeEach(func() {
-		config = &vsphere.InfrastructureConfig{
-			Networks: vsphere.Networks{
-				Worker: "10.1.0.0/16",
-			},
-		}
+		config = &vsphere.InfrastructureConfig{}
 
 		infra = &extensionsv1alpha1.Infrastructure{
 			ObjectMeta: metav1.ObjectMeta{
@@ -59,6 +58,11 @@ var _ = Describe("Terraform", func() {
 					Object: config,
 				},
 			},
+		}
+
+		cidr := "10.1.0.0/16"
+		networking = corev1beta1.Networking{
+			Nodes: &cidr,
 		}
 
 		cloudProfileConfig = &vsphere.CloudProfileConfig{
@@ -112,7 +116,7 @@ var _ = Describe("Terraform", func() {
 
 	Describe("#ComputeTerraformerChartValues", func() {
 		It("should correctly compute the terraformer chart values", func() {
-			values, err := ComputeTerraformerChartValues(infra, config, cloudProfileConfig)
+			values, err := ComputeTerraformerChartValues(infra, config, cloudProfileConfig, networking)
 			Expect(err).To(BeNil())
 
 			Expect(values).To(Equal(map[string]interface{}{
@@ -129,7 +133,7 @@ var _ = Describe("Terraform", func() {
 				"sshPublicKey": string(infra.Spec.SSHPublicKey),
 				"clusterName":  infra.Namespace,
 				"networks": map[string]interface{}{
-					"worker": config.Networks.Worker,
+					"worker": *networking.Nodes,
 				},
 			}))
 		})

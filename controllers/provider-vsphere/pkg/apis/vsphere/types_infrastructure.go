@@ -23,14 +23,6 @@ import (
 // InfrastructureConfig infrastructure configuration resource
 type InfrastructureConfig struct {
 	metav1.TypeMeta
-	// Networks is the vSphere specific network configuration
-	Networks Networks
-}
-
-// Networks holds information about the Kubernetes and infrastructure networks.
-type Networks struct {
-	// Worker is a CIDRs of a worker subnet (private) to create (used for the VMs).
-	Worker string
 }
 
 // VsphereConfig holds information about vSphere resources to use.

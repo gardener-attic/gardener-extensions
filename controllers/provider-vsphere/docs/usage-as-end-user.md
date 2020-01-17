@@ -32,21 +32,16 @@ Here `base64(...)` are only a placeholders for the Base64 encoded values.
 
 ## `InfrastructureConfig`
 
-The infrastructure configuration mainly describes how the network layout looks like in order to create the shoot worker nodes in a latter step, thus, prepares everything relevant to create VMs, load balancers, volumes, etc.
+The infrastructure configuration is currently not used. Nodes on all zones are using IP addresses from the common nodes
+network as the network is managed by NSX-T.
 
-An example `InfrastructureConfig` for the vSphere extension looks as follows:
+An example `InfrastructureConfig` for the vSphere extension looks as follows (currently always empty):
 
 ```yaml
 infrastructureConfig:
   apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
   kind: InfrastructureConfig
-  networks:
-    worker: 10.250.0.0/19
 ```
-
-The `networks.workers` section describes the CIDR for a subnet that is used for all shoot worker nodes, i.e., VMs which later run your applications.
-
-You can freely choose these CIDRs and it is your responsibility to properly design the network layout to suit your needs.
 
 The infrastructure controller will create several network objects using NSX-T. A logical switch to be used as the network
 for the VMs (nodes), a tier-1 router, a DHCP server, and a SNAT for the nodes. 
@@ -96,17 +91,19 @@ spec:
   secretBindingName: core-vsphere
   provider:
     type: vsphere
-    infrastructureConfig:
-      apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
-      kind: InfrastructureConfig
-      networks:
-        worker: 10.250.0.0/19
-    ## uncomment the following lines if you have optional parameters for the ControlPlaneConfig
+   
+    ## infrastructureConfig is currently unused
+    #infrastructureConfig:
+    #  apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
+    #  kind: InfrastructureConfig
+
+    ## controlPlaneConfig has only optional parameters. Uncomment the following lines if needed
     #controlPlaneConfig:
     #  apiVersion: vsphere.provider.extensions.gardener.cloud/v1alpha1
     #  kind: ControlPlaneConfig
     #  loadBalancerClasses:
     #  - name: mylbclass
+
     workers:
     - name: worker-xoluy
       machine:

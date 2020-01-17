@@ -23,6 +23,7 @@ import (
 	vsphere "github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/apis/vsphere"
 	"github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/apis/vsphere/helper"
 	"github.com/gardener/gardener-extensions/pkg/terraformer"
+	corev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/gardener/gardener/pkg/chartrenderer"
 
@@ -50,6 +51,7 @@ func ComputeTerraformerChartValues(
 	infra *extensionsv1alpha1.Infrastructure,
 	config *vsphere.InfrastructureConfig,
 	cloudProfileConfig *vsphere.CloudProfileConfig,
+	networking corev1beta1.Networking,
 ) (map[string]interface{}, error) {
 	region := helper.FindRegion(infra.Spec.Region, cloudProfileConfig)
 	if region == nil {
@@ -77,7 +79,7 @@ func ComputeTerraformerChartValues(
 		"sshPublicKey": string(infra.Spec.SSHPublicKey),
 		"clusterName":  infra.Namespace,
 		"networks": map[string]interface{}{
-			"worker": config.Networks.Worker,
+			"worker": *networking.Nodes,
 		},
 	}, nil
 }
@@ -88,8 +90,9 @@ func RenderTerraformerChart(
 	infra *extensionsv1alpha1.Infrastructure,
 	config *vsphere.InfrastructureConfig,
 	cloudProfileConfig *vsphere.CloudProfileConfig,
+	networking corev1beta1.Networking,
 ) (*TerraformFiles, error) {
-	values, err := ComputeTerraformerChartValues(infra, config, cloudProfileConfig)
+	values, err := ComputeTerraformerChartValues(infra, config, cloudProfileConfig, networking)
 	if err != nil {
 		return nil, err
 	}

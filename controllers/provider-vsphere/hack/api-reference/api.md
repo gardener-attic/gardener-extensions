@@ -239,19 +239,6 @@ string
 </td>
 <td><code>InfrastructureConfig</code></td>
 </tr>
-<tr>
-<td>
-<code>networks</code></br>
-<em>
-<a href="#vsphere.provider.extensions.gardener.cloud/v1alpha1.Networks">
-Networks
-</a>
-</em>
-</td>
-<td>
-<p>Networks is the vSphere specific network configuration</p>
-</td>
-</tr>
 </tbody>
 </table>
 <h3 id="vsphere.provider.extensions.gardener.cloud/v1alpha1.WorkerStatus">WorkerStatus
@@ -747,36 +734,6 @@ string
 </td>
 <td>
 <p>Versions contains versions and a provider-specific identifier.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<h3 id="vsphere.provider.extensions.gardener.cloud/v1alpha1.Networks">Networks
-</h3>
-<p>
-(<em>Appears on:</em>
-<a href="#vsphere.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig</a>)
-</p>
-<p>
-<p>Networks holds information about the Kubernetes and infrastructure networks.</p>
-</p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-<code>worker</code></br>
-<em>
-string
-</em>
-</td>
-<td>
-<p>Worker is a CIDRs of a worker subnet (private) to create (used for the VMs).</p>
 </td>
 </tr>
 </tbody>
