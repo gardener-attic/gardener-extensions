@@ -9,7 +9,7 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
 	github.com/Masterminds/semver v1.4.2
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.5
-	github.com/aliyun/alibaba-cloud-sdk-go v0.0.0-20190723075400-e63e3f9dd712
+	github.com/aliyun/alibaba-cloud-sdk-go v1.60.340
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
@@ -23,6 +23,7 @@ require (
 	github.com/gophercloud/gophercloud v0.3.0
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/huandu/xstrings v1.2.0
+	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0
 	github.com/packethost/packngo v0.0.0-20181217122008-b3b45f1b4979
@@ -38,6 +39,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.0.1
 	google.golang.org/api v0.7.0
 	google.golang.org/grpc v1.23.1 // indirect
+	gopkg.in/ini.v1 v1.51.1 // indirect
 	gopkg.in/yaml.v2 v2.2.4
 	k8s.io/api v0.0.0-20191004102349-159aefb8556b
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783

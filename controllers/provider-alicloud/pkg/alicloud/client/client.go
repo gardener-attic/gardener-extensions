@@ -21,7 +21,9 @@ import (
 
 	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/ecs"
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/slb"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/sts"
 	alicloudvpc "github.com/aliyun/alibaba-cloud-sdk-go/services/vpc"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
@@ -179,6 +181,10 @@ type stsClient struct {
 	client *sts.Client
 }
 
+type slbClient struct {
+	client *slb.Client
+}
+
 // NewECSClient creates a new ECS client with given region, AccessKeyID, and AccessKeySecret
 func (f *clientFactory) NewECSClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (ECS, error) {
 	client, err := ecs.NewClientWithAccessKey(region, accessKeyID, accessKeySecret)
@@ -235,4 +241,72 @@ func (c *stsClient) GetAccountIDFromCallerIdentity(ctx context.Context) (string,
 		return "", err
 	}
 	return response.AccountId, nil
+}
+
+// NewSLBClient creates a new SLB client with given region, AccessKeyID, and AccessKeySecret
+func (f *clientFactory) NewSLBClient(ctx context.Context, region, accessKeyID, accessKeySecret string) (SLB, error) {
+	client, err := slb.NewClientWithAccessKey(region, accessKeyID, accessKeySecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return &slbClient{
+		client: client,
+	}, nil
+}
+
+// GetLoadBalancerIDs gets LoadBalancerIDs from all LoadBalancers in the given region
+func (c *slbClient) GetLoadBalancerIDs(ctx context.Context, region string) ([]string, error) {
+	var (
+		loadBalancerIDs []string
+		pageNumber      = 1
+		pageSize        = 100
+		request         = slb.CreateDescribeLoadBalancersRequest()
+	)
+	request.SetScheme("HTTPS")
+	request.RegionId = region
+	request.PageSize = requests.NewInteger(pageSize)
+
+	for {
+		request.PageNumber = requests.NewInteger(pageNumber)
+		response, err := c.client.DescribeLoadBalancers(request)
+		if err != nil {
+			return nil, err
+		}
+		for _, loadBalancer := range response.LoadBalancers.LoadBalancer {
+			loadBalancerIDs = append(loadBalancerIDs, loadBalancer.LoadBalancerId)
+		}
+
+		if pageNumber*pageSize >= response.TotalCount {
+			break
+		}
+		pageNumber++
+	}
+	return loadBalancerIDs, nil
+}
+
+// GetFirstVServerGroupName gets the VServerGroupName of the first VServerGroup in the LoadBalancer with given region and loadBalancerID
+func (c *slbClient) GetFirstVServerGroupName(ctx context.Context, region, loadBalancerID string) (string, error) {
+	request := slb.CreateDescribeVServerGroupsRequest()
+	request.SetScheme("HTTPS")
+	request.RegionId = region
+	request.LoadBalancerId = loadBalancerID
+	response, err := c.client.DescribeVServerGroups(request)
+	if err != nil {
+		return "", err
+	}
+	if len(response.VServerGroups.VServerGroup) == 0 {
+		return "", nil
+	}
+	return response.VServerGroups.VServerGroup[0].VServerGroupName, nil
+}
+
+// DeleteLoadBalancer deletes the LoadBalancer with given region and loadBalancerID
+func (c *slbClient) DeleteLoadBalancer(ctx context.Context, region, loadBalancerID string) error {
+	request := slb.CreateDeleteLoadBalancerRequest()
+	request.SetScheme("HTTPS")
+	request.RegionId = region
+	request.LoadBalancerId = loadBalancerID
+	_, err := c.client.DeleteLoadBalancer(request)
+	return err
 }

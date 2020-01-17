@@ -82,6 +82,7 @@ type DescribeNetworkInterfacesRequest struct {
 	Type                 string                          `position:"Query" name:"Type"`
 	PageNumber           requests.Integer                `position:"Query" name:"PageNumber"`
 	ResourceGroupId      string                          `position:"Query" name:"ResourceGroupId"`
+	NextToken            string                          `position:"Query" name:"NextToken"`
 	PageSize             requests.Integer                `position:"Query" name:"PageSize"`
 	Tag                  *[]DescribeNetworkInterfacesTag `position:"Query" name:"Tag"  type:"Repeated"`
 	NetworkInterfaceName string                          `position:"Query" name:"NetworkInterfaceName"`
@@ -89,9 +90,11 @@ type DescribeNetworkInterfacesRequest struct {
 	OwnerAccount         string                          `position:"Query" name:"OwnerAccount"`
 	OwnerId              requests.Integer                `position:"Query" name:"OwnerId"`
 	VSwitchId            string                          `position:"Query" name:"VSwitchId"`
+	PrivateIpAddress     *[]string                       `position:"Query" name:"PrivateIpAddress"  type:"Repeated"`
 	InstanceId           string                          `position:"Query" name:"InstanceId"`
 	VpcId                string                          `position:"Query" name:"VpcId"`
 	PrimaryIpAddress     string                          `position:"Query" name:"PrimaryIpAddress"`
+	MaxResults           requests.Integer                `position:"Query" name:"MaxResults"`
 	NetworkInterfaceId   *[]string                       `position:"Query" name:"NetworkInterfaceId"  type:"Repeated"`
 }
 
@@ -108,6 +111,7 @@ type DescribeNetworkInterfacesResponse struct {
 	TotalCount           int                  `json:"TotalCount" xml:"TotalCount"`
 	PageNumber           int                  `json:"PageNumber" xml:"PageNumber"`
 	PageSize             int                  `json:"PageSize" xml:"PageSize"`
+	NextToken            string               `json:"NextToken" xml:"NextToken"`
 	NetworkInterfaceSets NetworkInterfaceSets `json:"NetworkInterfaceSets" xml:"NetworkInterfaceSets"`
 }
 

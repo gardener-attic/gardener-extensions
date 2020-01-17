@@ -77,19 +77,20 @@ func (client *Client) DescribeVSwitchesWithCallback(request *DescribeVSwitchesRe
 type DescribeVSwitchesRequest struct {
 	*requests.RpcRequest
 	ResourceOwnerId      requests.Integer        `position:"Query" name:"ResourceOwnerId"`
-	ResourceOwnerAccount string                  `position:"Query" name:"ResourceOwnerAccount"`
-	OwnerAccount         string                  `position:"Query" name:"OwnerAccount"`
-	OwnerId              requests.Integer        `position:"Query" name:"OwnerId"`
 	PageNumber           requests.Integer        `position:"Query" name:"PageNumber"`
-	VSwitchId            string                  `position:"Query" name:"VSwitchId"`
 	ResourceGroupId      string                  `position:"Query" name:"ResourceGroupId"`
-	VpcId                string                  `position:"Query" name:"VpcId"`
-	VSwitchName          string                  `position:"Query" name:"VSwitchName"`
 	PageSize             requests.Integer        `position:"Query" name:"PageSize"`
-	ZoneId               string                  `position:"Query" name:"ZoneId"`
 	Tag                  *[]DescribeVSwitchesTag `position:"Query" name:"Tag"  type:"Repeated"`
 	IsDefault            requests.Boolean        `position:"Query" name:"IsDefault"`
 	RouteTableId         string                  `position:"Query" name:"RouteTableId"`
+	DryRun               requests.Boolean        `position:"Query" name:"DryRun"`
+	ResourceOwnerAccount string                  `position:"Query" name:"ResourceOwnerAccount"`
+	OwnerAccount         string                  `position:"Query" name:"OwnerAccount"`
+	OwnerId              requests.Integer        `position:"Query" name:"OwnerId"`
+	VSwitchId            string                  `position:"Query" name:"VSwitchId"`
+	VpcId                string                  `position:"Query" name:"VpcId"`
+	VSwitchName          string                  `position:"Query" name:"VSwitchName"`
+	ZoneId               string                  `position:"Query" name:"ZoneId"`
 }
 
 // DescribeVSwitchesTag is a repeated param struct in DescribeVSwitchesRequest
