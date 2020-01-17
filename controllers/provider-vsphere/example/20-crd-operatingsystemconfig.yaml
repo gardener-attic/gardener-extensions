@@ -2,7 +2,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: controlplanes.extensions.gardener.cloud
+  name: operatingsystemconfigs.extensions.gardener.cloud
 spec:
   group: extensions.gardener.cloud
   versions:
@@ -12,15 +12,15 @@ spec:
   version: v1alpha1
   scope: Namespaced
   names:
-    plural: controlplanes
-    singular: controlplane
-    kind: ControlPlane
+    plural: operatingsystemconfigs
+    singular: operatingsystemconfig
+    kind: OperatingSystemConfig
     shortNames:
-    - cp
+    - osc
   additionalPrinterColumns:
   - name: Type
     type: string
-    description: The control plane type.
+    description: The type of the operating system configuration.
     JSONPath: .spec.type
   - name: State
     type: string

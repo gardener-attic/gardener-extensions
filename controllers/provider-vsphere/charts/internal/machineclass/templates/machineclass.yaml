@@ -6,7 +6,7 @@ metadata:
   name: {{ $machineClass.name }}
   namespace: {{ $.Release.Namespace }}
   labels:
-    garden.sapcloud.io/purpose: machineclass
+    gardener.cloud/purpose: machineclass
 type: Opaque
 data:
   userData: {{ $machineClass.secret.cloudConfig | b64enc }}

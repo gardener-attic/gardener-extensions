@@ -5,7 +5,7 @@ metadata:
   name: vsphere-csi-controller
   namespace: {{ .Release.Namespace }}
 labels:
-  garden.sapcloud.io/role: controlplane
+  gardener.cloud/role: controlplane
   app: kubernetes
   role: csi-plugin-controller
 spec:
@@ -24,7 +24,7 @@ spec:
 {{ toYaml .Values.podAnnotations | indent 8 }}
 {{- end }}
       labels:
-        garden.sapcloud.io/role: controlplane
+        gardener.cloud/role: controlplane
         app: kubernetes
         role: csi-plugin-controller
         networking.gardener.cloud/to-dns: allowed

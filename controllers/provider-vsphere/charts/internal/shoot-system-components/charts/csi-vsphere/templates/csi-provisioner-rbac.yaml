@@ -1,7 +1,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: garden.sapcloud.io:csi-provisioner
+  name: gardener.cloud:csi-provisioner
 rules:
 - apiGroups: [""]
   resources: ["persistentvolumes"]
@@ -37,13 +37,13 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: garden.sapcloud.io:csi-provisioner
+  name: gardener.cloud:csi-provisioner
 subjects:
 - kind: User
   name: system:csi-provisioner
 roleRef:
   kind: ClusterRole
-  name: garden.sapcloud.io:csi-provisioner
+  name: gardener.cloud:csi-provisioner
   apiGroup: rbac.authorization.k8s.io
 
 {{- if semverCompare ">= 1.14" .Values.kubernetesVersion }}

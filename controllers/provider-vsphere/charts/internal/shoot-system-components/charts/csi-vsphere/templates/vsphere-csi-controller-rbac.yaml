@@ -2,7 +2,7 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: garden.sapcloud.io:vsphere-csi-controller
+  name: gardener.cloud:vsphere-csi-controller
 rules:
   - apiGroups: [""]
     resources: ["nodes", "persistentvolumeclaims", "pods"]
@@ -26,11 +26,11 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: garden.sapcloud.io:vsphere-csi-controller
+  name: gardener.cloud:vsphere-csi-controller
 subjects:
   - kind: User
     name: system:vsphere-csi-controller
 roleRef:
   kind: ClusterRole
-  name: garden.sapcloud.io:vsphere-csi-controller
+  name: gardener.cloud:vsphere-csi-controller
   apiGroup: rbac.authorization.k8s.io
