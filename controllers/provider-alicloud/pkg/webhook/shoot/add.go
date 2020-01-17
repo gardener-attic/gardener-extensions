@@ -12,16 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package controlplaneexposure
+package shoot
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/alicloud"
-	"github.com/gardener/gardener-extensions/controllers/provider-alicloud/pkg/apis/config"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
-	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
+	"github.com/gardener/gardener-extensions/pkg/webhook/shoot"
 
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -33,22 +29,17 @@ var (
 	DefaultAddOptions = AddOptions{}
 )
 
-// AddOptions are options to apply when adding the Alicloud exposure webhook to the manager.
-type AddOptions struct {
-	// ETCDStorage is the etcd storage configuration.
-	ETCDStorage config.ETCDStorage
-}
+// AddOptions are options to apply when adding the Alicloud shoot webhook to the manager.
+type AddOptions struct{}
 
-var logger = log.Log.WithName("alicloud-controlplaneexposure-webhook")
+var logger = log.Log.WithName("alicloud-shoot-webhook")
 
 // AddToManagerWithOptions creates a webhook with the given options and adds it to the manager.
 func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (*extensionswebhook.Webhook, error) {
 	logger.Info("Adding webhook to manager")
-	return controlplane.Add(mgr, controlplane.AddArgs{
-		Kind:     controlplane.KindSeed,
-		Provider: alicloud.Type,
-		Types:    []runtime.Object{&appsv1.Deployment{}, &appsv1.StatefulSet{}, &corev1.Service{}},
-		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, nil, logger),
+	return shoot.Add(mgr, shoot.AddArgs{
+		Types:   []runtime.Object{&corev1.Service{}},
+		Mutator: NewMutator(),
 	})
 }
 
