@@ -1,0 +1,6 @@
+run:
+  deadline: 7m
+
+linters:
+  disable:
+  - unused
