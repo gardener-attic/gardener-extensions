@@ -1,0 +1,11 @@
+images:
+  csi-driver-registrar: image-repository:image-tag
+  vsphere-csi-node: image-repository:image-tag
+  liveness-probe: image-repository:image-tag
+serverName: my.vcenter.server.ip.or.fqdn
+clusterID: shoot--foo--bar
+username: myuser
+password: mypassword
+port: 443
+datacenters: dc1
+insecureFlag: true

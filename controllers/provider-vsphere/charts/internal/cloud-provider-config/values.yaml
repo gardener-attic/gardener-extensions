@@ -1,0 +1,29 @@
+# see https://cloud-provider-vsphere.sigs.k8s.io/cloud_config.html
+soapRoundtripCount: 1  # number of retries for API requests = value-1
+serverName: my.vcenter.server.ip.or.fqdn
+serverPort: 443
+insecureFlag: 1 # set to 1 if the vCenter uses a self-signed cert
+username: admin
+password: super-secret
+# caFile: /etc/kubernetes/vcenter-ca.crt # optional path to vCenter certificate
+# thumbprint: "xyz" # optional vCenter certificate thumbprint
+datacenters: dc
+
+#labelRegion: k8s-region
+#labelZone: k8s-zone
+
+loadbalancer:
+  ipPoolName: gardener_lb_ip_pool
+  size: MEDIUM
+  logicalRouterId: my.logical.t1.router
+  
+  classes:
+    - name: public
+    - name: private
+  tags: {}
+    # myscope: mytagvalue
+nsxt:
+  host: my.nsxt.server.ip.or.fqdn
+  username: admin
+  password: super-secret
+  insecureFlag: 1

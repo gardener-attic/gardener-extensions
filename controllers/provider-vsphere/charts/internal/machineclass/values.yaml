@@ -1,0 +1,30 @@
+machineClasses:
+- name: class-1
+  region: myregion
+  datacenter: dc1
+  #hostSystem: esxi1
+  #resourcePool: pool1
+  computeCluster: cluster1
+  network: network1
+  folder: gardener
+  datastore: datastore1
+  #datastoreCluster: ds-cluster
+  templateVM: "gardener/templates/coreos-2191.5.0"
+  guestId: coreos64Guest
+  numCpus: 2
+  memory: 4096
+  systemDisk:
+    size: 20
+  description: An optional description for machines created by that class.
+  machineType: t1.small
+  sshKeys:
+  - 12345-abcd567-aaf2
+  secret:
+    cloudConfig: abc
+    host: "a_host"
+    username: "a_user"
+    password: "a_password"
+    insecureSSL: "true"
+  tags:
+  - kubernetes.io/cluster/foo
+  - kubernetes.io/role/node

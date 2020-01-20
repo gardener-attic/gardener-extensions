@@ -1,0 +1,10 @@
+---
+apiVersion: {{ include "storageclassversion" . }}
+kind: StorageClass
+metadata:
+  name: default-class
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: csi.vsphere.vmware.com
+parameters:
+  storagePolicyName: "{{ .Values.storagePolicyName }}"

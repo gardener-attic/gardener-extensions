@@ -34,6 +34,9 @@ extensions:
 - name: provider-packet
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-packet
+- name: provider-vsphere
+  gitHubRepo: https://github.com/gardener/gardener-extensions
+  path: controllers/provider-vsphere
 - name: dns-external
   gitHubRepo: https://github.com/gardener/external-dns-management
   examplePath: examples/gardener-controllerregistration.yaml

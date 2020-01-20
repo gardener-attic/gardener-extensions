@@ -1,0 +1,183 @@
+---
+kind: StatefulSet
+apiVersion: apps/v1
+metadata:
+  name: vsphere-csi-controller
+  namespace: {{ .Release.Namespace }}
+labels:
+  gardener.cloud/role: controlplane
+  app: kubernetes
+  role: csi-plugin-controller
+spec:
+  serviceName: vsphere-csi-controller
+  replicas: {{ .Values.replicas }}
+  updateStrategy:
+    type: "RollingUpdate"
+  selector:
+    matchLabels:
+      app: kubernetes
+      role: csi-plugin-controller
+  template:
+    metadata:
+{{- if .Values.podAnnotations }}
+      annotations:
+{{ toYaml .Values.podAnnotations | indent 8 }}
+{{- end }}
+      labels:
+        gardener.cloud/role: controlplane
+        app: kubernetes
+        role: csi-plugin-controller
+        networking.gardener.cloud/to-dns: allowed
+        networking.gardener.cloud/to-public-networks: allowed
+        networking.gardener.cloud/to-private-networks: allowed
+        networking.gardener.cloud/to-shoot-apiserver: allowed
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: csi-attacher
+          image: {{ index .Values.images "csi-attacher" }}
+          args:
+            - "--v=4"
+            - "--timeout=300s"
+            - "--csi-address=$(ADDRESS)"
+            - "--kubeconfig=/var/lib/csi-attacher/kubeconfig"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+{{- if .Values.attacherResources }}
+          resources:
+{{ toYaml .Values.attacherResources | indent 12 }}
+{{- end }}
+          volumeMounts:
+            - name: csi-attacher
+              mountPath: /var/lib/csi-attacher
+            - name: socket-dir
+              mountPath: /csi
+        - name: vsphere-csi-controller
+          image: {{ index .Values.images "vsphere-csi-controller" }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /var/lib/csi/sockets/pluginproxy/csi.vsphere.vmware.com"]
+          args:
+            - "--kubeconfig=/var/lib/vsphere-csi-controller/kubeconfig"
+            - "--v=4"
+          imagePullPolicy: "Always"
+          env:
+            - name: CSI_ENDPOINT
+              value: unix:///var/lib/csi/sockets/pluginproxy/csi.sock
+            - name: X_CSI_MODE
+              value: "controller"
+            - name: VSPHERE_CSI_CONFIG
+              value: "/etc/cloud/csi-vsphere.conf"
+{{- if .Values.controllerResources }}
+          resources:
+{{ toYaml .Values.controllerResources | indent 12 }}
+{{- end }}
+          volumeMounts:
+            - name: vsphere-csi-controller
+              mountPath: /var/lib/vsphere-csi-controller
+            - name: vsphere-config-volume
+              mountPath: /etc/cloud
+              readOnly: true
+            - name: socket-dir
+              mountPath: /var/lib/csi/sockets/pluginproxy/
+          ports:
+            - name: healthz
+              containerPort: 9808
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: healthz
+            initialDelaySeconds: 10
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+        - name: liveness-probe
+          image: {{ index .Values.images "liveness-probe" }}
+          args:
+            - "--csi-address=$(ADDRESS)"
+          env:
+            - name: ADDRESS
+              value: /var/lib/csi/sockets/pluginproxy/csi.sock
+{{- if .Values.livenessResources }}
+          resources:
+{{ toYaml .Values.livenessResources | indent 12 }}
+{{- end }}
+          volumeMounts:
+            - mountPath: /var/lib/csi/sockets/pluginproxy/
+              name: socket-dir
+        - name: vsphere-csi-syncer
+          image: {{ index .Values.images "vsphere-csi-syncer" }}
+          args:
+            - "--kubeconfig=/var/lib/vsphere-csi-syncer/kubeconfig"
+            - "--v=2"
+          imagePullPolicy: "Always"
+          env:
+            - name: FULL_SYNC_INTERVAL_MINUTES
+              value: "30"
+            - name: VSPHERE_CSI_CONFIG
+              value: "/etc/cloud/csi-vsphere.conf"
+{{- if .Values.syncerResources }}
+          resources:
+{{ toYaml .Values.syncerResources | indent 12 }}
+{{- end }}
+          volumeMounts:
+            - name: vsphere-csi-syncer
+              mountPath: /var/lib/vsphere-csi-syncer
+            - mountPath: /etc/cloud
+              name: vsphere-config-volume
+              readOnly: true
+        - name: csi-provisioner
+          image: {{ index .Values.images "csi-provisioner" }}
+          args:
+            - "--v=4"
+            - "--timeout=300s"
+            - "--csi-address=$(ADDRESS)"
+            - "--feature-gates=Topology=true"
+            - "--strict-topology"
+            - "--kubeconfig=/var/lib/csi-provisioner/kubeconfig"
+            - "--enable-leader-election=true"
+            - "--leader-election-type=leases"
+            - "--leader-election-namespace=kube-system"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+{{- if .Values.provisionerResources }}
+          resources:
+{{ toYaml .Values.provisionerResources | indent 12 }}
+{{- end }}
+          volumeMounts:
+            - name: csi-provisioner
+              mountPath: /var/lib/csi-provisioner
+            - name: socket-dir
+              mountPath: /csi
+      volumes:
+        - name: vsphere-csi-controller
+          secret:
+            secretName: vsphere-csi-controller
+        - name: vsphere-csi-syncer
+          secret:
+            secretName: vsphere-csi-syncer
+        - name: csi-attacher
+          secret:
+            secretName: csi-attacher
+        - name: csi-provisioner
+          secret:
+            secretName: csi-provisioner
+        - name: vsphere-config-volume
+          secret:
+            secretName: csi-vsphere-config-secret
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/csi/sockets/pluginproxy/csi.vsphere.vmware.com
+            type: DirectoryOrCreate
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: CSIDriver
+metadata:
+  name: csi.vsphere.vmware.com
+spec:
+  attachRequired: true
+  podInfoOnMount: false

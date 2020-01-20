@@ -1,0 +1,54 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloud-provider-config
+  namespace: {{ .Release.Namespace }}
+data:
+  cloudprovider.conf: |
+    [Global]
+    soap-roundtrip-count = "{{ .Values.soapRoundtripCount }}"
+    ip-family = "ipv4"
+    {{- if .Values.caFile }}
+    ca-file="{{ .Values.caFile }}"
+    {{- end }}
+    {{- if .Values.caFile }}
+    thumbprint="{{ .Values.thumbprint }}"
+    {{- end }}
+
+    [VirtualCenter "{{ .Values.serverName }}"]
+    port = "{{ .Values.serverPort }}"
+    datacenters = "{{ .Values.datacenters }}"
+    user = "{{ .Values.username }}"
+    password = "{{ .Values.password }}"
+    insecure-flag = "{{ .Values.insecureFlag }}"
+
+    [Labels]
+    {{- if .Values.labelRegion }}
+    region = "{{ .Values.labelRegion }}"
+    {{- end }}
+    {{- if .Values.labelZone }}
+    zone = "{{ .Values.labelZone }}"
+    {{- end }}
+  lb-cloudprovider.conf: |
+    [LoadBalancer]
+    ipPoolName = "{{ .Values.loadbalancer.ipPoolName }}"
+    size = {{ .Values.loadbalancer.size }}
+    logicalRouterId = "{{ .Values.loadbalancer.logicalRouterId }}"
+
+    {{- range $i, $class := .Values.loadbalancer.classes }}
+    [LoadBalancerClass {{ $class.name | quote }}]
+    {{- if $class.ipPoolName }}
+    ipPoolName="{{ $class.ipPoolName }}"
+    {{- end }}
+    {{- end }}
+
+    [Tags]
+    {{- range $scope, $tag := .Values.loadbalancer.tags }}
+    {{ $scope }} = "{{ $tag }}"
+    {{- end }}
+
+    [NSX-T]
+    user = "{{ .Values.nsxt.username }}"
+    password = "{{ .Values.nsxt.password }}"
+    host = "{{ .Values.nsxt.host }}"
+    insecure-flag = "{{ .Values.nsxt.insecureFlag }}"
