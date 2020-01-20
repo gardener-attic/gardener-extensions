@@ -38,14 +38,13 @@ spec:
       containers:
       - name: cmi-plugin
         image: {{ index .Values.images "machine-controller-manager-provider-vsphere" }}
-        imagePullPolicy: Always
-        #imagePullPolicy: IfNotPresent
+        imagePullPolicy: IfNotPresent
         command:
           - ./cmi-plugin
           - --endpoint=tcp://127.0.0.1:8080
       - name: machine-controller-manager
         image: {{ index .Values.images "machine-controller-manager" }}
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         command:
         - ./machine-controller-manager
         - --control-kubeconfig=inClusterConfig

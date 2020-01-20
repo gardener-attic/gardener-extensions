@@ -63,7 +63,7 @@ func (w *workerDelegate) GetMachineImages(ctx context.Context) (runtime.Object, 
 }
 
 func (w *workerDelegate) findMachineImage(name, version string) (string, string, error) {
-	region := apisvspherehelper.FindRegion(w.cluster.Shoot.Spec.Region, w.profileConfig)
+	region := apisvspherehelper.FindRegion(w.cluster.Shoot.Spec.Region, w.cloudProfileConfig)
 	if region != nil && len(region.MachineImages) != 0 {
 		path, guestID, err := helper.FindImage(region.MachineImages, name, version)
 		if err == nil {
@@ -71,8 +71,8 @@ func (w *workerDelegate) findMachineImage(name, version string) (string, string,
 		}
 	}
 
-	if w.profileConfig != nil {
-		path, guestID, err := helper.FindImage(w.profileConfig.MachineImages, name, version)
+	if w.cloudProfileConfig != nil {
+		path, guestID, err := helper.FindImage(w.cloudProfileConfig.MachineImages, name, version)
 		if err == nil {
 			return path, guestID, nil
 		}

@@ -5,6 +5,10 @@ image:
 
 replicaCount: 1
 resources: {}
+vpa:
+  enabled: true
+  updatePolicy:
+    updateMode: "Auto"
 
 controllers:
   controlplane:

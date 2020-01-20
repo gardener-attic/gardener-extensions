@@ -112,7 +112,7 @@ var controlPlaneSecrets = &secrets.Secrets{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
 					Name:         "vsphere-csi-controller",
-					CommonName:   "system:vsphere-csi-controller",
+					CommonName:   "gardener.cloud:vsphere-csi-controller",
 					Organization: []string{user.SystemPrivilegedGroup},
 					CertType:     secrets.ClientCert,
 					SigningCA:    cas[v1alpha1constants.SecretNameCACluster],
@@ -125,7 +125,7 @@ var controlPlaneSecrets = &secrets.Secrets{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
 					Name:         "vsphere-csi-syncer",
-					CommonName:   "system:vsphere-csi-syncer",
+					CommonName:   "gardener.cloud:vsphere-csi-syncer",
 					Organization: []string{user.SystemPrivilegedGroup},
 					CertType:     secrets.ClientCert,
 					SigningCA:    cas[v1alpha1constants.SecretNameCACluster],
@@ -189,7 +189,7 @@ var controlPlaneShootChart = &chart.Chart{
 			Objects: []*chart.Object{
 				{Type: &corev1.ServiceAccount{}, Name: "cloud-controller-manager"},
 				{Type: &rbacv1.ClusterRole{}, Name: "system:cloud-controller-manager"},
-				{Type: &rbacv1.RoleBinding{}, Name: "servicecatalog.k8s.io:apiserver-authentication-reader"},
+				{Type: &rbacv1.RoleBinding{}, Name: "system:cloud-controller-manager:apiserver-authentication-reader"},
 				{Type: &rbacv1.ClusterRoleBinding{}, Name: "system:cloud-controller-manager"},
 			},
 		},
@@ -307,7 +307,7 @@ func (vp *valuesProvider) GetStorageClassesChartValues(
 	}
 
 	return map[string]interface{}{
-		"storagepolicyname": cloudProfileConfig.DefaultClassStoragePolicyName,
+		"storagePolicyName": cloudProfileConfig.DefaultClassStoragePolicyName,
 	}, nil
 }
 
@@ -378,7 +378,7 @@ outer:
 		lbClass := map[string]interface{}{
 			"name": cpClass.Name,
 		}
-		if cpClass.IPPoolName == "" {
+		if cpClass.IPPoolName == nil || *cpClass.IPPoolName == "" {
 			for _, class := range cloudProfileConfig.Constraints.LoadBalancerConfig.Classes {
 				if class.Name == cpClass.Name {
 					if class.IPPoolName != "" {
@@ -390,7 +390,7 @@ outer:
 			}
 			return nil, fmt.Errorf("load balancer class %q not found in cloud profile", cpClass.Name)
 		} else {
-			lbClass["ipPoolName"] = cpClass.IPPoolName
+			lbClass["ipPoolName"] = *cpClass.IPPoolName
 			loadBalancersClasses = append(loadBalancersClasses, lbClass)
 		}
 	}
@@ -425,11 +425,11 @@ outer:
 		},
 	}
 
-	if region.CaFile != "" {
-		values["caFile"] = region.CaFile
+	if region.CaFile != nil && *region.CaFile != "" {
+		values["caFile"] = *region.CaFile
 	}
-	if region.Thumbprint != "" {
-		values["thumbprint"] = region.Thumbprint
+	if region.Thumbprint != nil && *region.Thumbprint != "" {
+		values["thumbprint"] = *region.Thumbprint
 	}
 	if cloudProfileConfig.FailureDomainLabels != nil {
 		values["labelRegion"] = cloudProfileConfig.FailureDomainLabels.Region

@@ -78,25 +78,20 @@ type RegionSpec struct {
 	SNATIPPool string
 
 	// Datacenter is the name of the vSphere data center (data center can either be defined at region or zone level)
-	// +optional
-	Datacenter string
+	Datacenter *string
 
 	// Datastore is the vSphere datastore to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
-	// +optional
-	Datastore string
+	Datastore *string
 	// DatastoreCluster is the vSphere  datastore cluster to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
-	// +optional
-	DatastoreCluster string
+	DatastoreCluster *string
 
 	// Zones is the list of zone specifications of the region.
 	Zones []ZoneSpec
 
 	// CaFile is the optional CA file to be trusted when connecting to vCenter. If not set, the node's CA certificates will be used. Only relevant if InsecureFlag=0
-	// +optional
-	CaFile string
+	CaFile *string
 	// Thumbprint is the optional vCenter certificate thumbprint, this ensures the correct certificate is used
-	// +optional
-	Thumbprint string
+	Thumbprint *string
 
 	// DNSServers is a optional list of IPs of DNS servers used while creating subnets. If provided, it overwrites the global
 	// DNSServers of the CloudProfileConfig
@@ -113,25 +108,19 @@ type ZoneSpec struct {
 	// Nmae is the name of the zone
 	Name string
 	// Datacenter is the name of the vSphere data center (data center can either be defined at region or zone level)
-	// +optional
-	Datacenter string
+	Datacenter *string
 
 	// ComputeCluster is the name of the vSphere compute cluster. Either ComputeCluster or ResourcePool or HostSystem must be specified
-	// +optional
-	ComputeCluster string
+	ComputeCluster *string
 	// ResourcePool is the name of the vSphere resource pool. Either ComputeCluster or ResourcePool or HostSystem must be specified
-	// +optional
-	ResourcePool string
+	ResourcePool *string
 	// HostSystem is the name of the vSphere host system. Either ComputeCluster or ResourcePool or HostSystem must be specified
-	// +optional
-	HostSystem string
+	HostSystem *string
 
 	// Datastore is the vSphere datastore to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
-	// +optional
-	Datastore string
+	Datastore *string
 	// DatastoreCluster is the vSphere  datastore cluster to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
-	// +optional
-	DatastoreCluster string
+	DatastoreCluster *string
 }
 
 // Constraints is an object containing constraints for the shoots.

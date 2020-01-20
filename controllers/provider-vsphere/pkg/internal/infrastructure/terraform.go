@@ -160,25 +160,28 @@ func ComputeStatus(tf terraformer.Terraformer, cloudProfileConfig *vsphere.Cloud
 	zoneConfigs := map[string]vsphere.ZoneConfig{}
 	for _, z := range region.Zones {
 		datacenter := region.Datacenter
-		if z.Datacenter != "" {
+		if z.Datacenter != nil {
 			datacenter = z.Datacenter
+		}
+		if datacenter == nil {
+			return nil, fmt.Errorf("datacenter not set in zone %s", z.Name)
 		}
 		datastore := region.Datastore
 		datastoreCluster := region.DatastoreCluster
-		if z.Datastore != "" {
+		if z.Datastore != nil {
 			datastore = z.Datastore
-			datastoreCluster = ""
-		} else if z.DatastoreCluster != "" {
-			datastore = ""
+			datastoreCluster = nil
+		} else if z.DatastoreCluster != nil {
+			datastore = nil
 			datastoreCluster = z.DatastoreCluster
 		}
 		zoneConfigs[z.Name] = vsphere.ZoneConfig{
-			Datacenter:       datacenter,
-			ComputeCluster:   z.ComputeCluster,
-			ResourcePool:     z.ResourcePool,
-			HostSystem:       z.HostSystem,
-			Datastore:        datastore,
-			DatastoreCluster: datastoreCluster,
+			Datacenter:       safe(datacenter),
+			ComputeCluster:   safe(z.ComputeCluster),
+			ResourcePool:     safe(z.ResourcePool),
+			HostSystem:       safe(z.HostSystem),
+			Datastore:        safe(datastore),
+			DatastoreCluster: safe(datastoreCluster),
 		}
 	}
 
@@ -197,4 +200,11 @@ func ComputeStatus(tf terraformer.Terraformer, cloudProfileConfig *vsphere.Cloud
 		},
 	}
 	return status, nil
+}
+
+func safe(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

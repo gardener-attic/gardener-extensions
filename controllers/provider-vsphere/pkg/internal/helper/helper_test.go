@@ -46,6 +46,9 @@ var _ = Describe("Helper", func() {
 			panic(err)
 		}
 
+		dc := "scc01-DC"
+		ds := "A800_VMwareB"
+		cc := "scc01w01-DEV"
 		cluster = &controller.Cluster{
 			Shoot: &gardencorevbeta1.Shoot{
 				ObjectMeta: v1.ObjectMeta{Name: "test"},
@@ -109,12 +112,12 @@ machineImages:
 					LogicalTier0Router: "lt0router",
 					EdgeCluster:        "edgecluster",
 					SNATIPPool:         "snatIpPool",
-					Datacenter:         "scc01-DC",
-					Datastore:          "A800_VMwareB",
+					Datacenter:         &dc,
+					Datastore:          &ds,
 					Zones: []vsphere.ZoneSpec{
 						{
 							Name:           "testzone",
-							ComputeCluster: "scc01w01-DEV",
+							ComputeCluster: &cc,
 						},
 					},
 				},

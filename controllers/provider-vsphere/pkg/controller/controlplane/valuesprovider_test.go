@@ -83,6 +83,9 @@ var _ = Describe("ValuesProvider", func() {
 		}
 
 		cidr    = "10.250.0.0/19"
+		dc      = "scc01-DC"
+		ds      = "A800_VMwareB"
+		cc      = "scc01w01-DEV"
 		cluster = &extensionscontroller.Cluster{
 			CloudProfile: &gardencorev1beta1.CloudProfile{
 				Spec: gardencorev1beta1.CloudProfileSpec{
@@ -102,12 +105,12 @@ var _ = Describe("ValuesProvider", func() {
 										LogicalTier0Router: "lt0router",
 										EdgeCluster:        "edgecluster",
 										SNATIPPool:         "snatIpPool",
-										Datacenter:         "scc01-DC",
-										Datastore:          "A800_VMwareB",
+										Datacenter:         &dc,
+										Datastore:          &ds,
 										Zones: []apisvsphere.ZoneSpec{
 											{
 												Name:           "testzone",
-												ComputeCluster: "scc01w01-DEV",
+												ComputeCluster: &cc,
 											},
 										},
 									},

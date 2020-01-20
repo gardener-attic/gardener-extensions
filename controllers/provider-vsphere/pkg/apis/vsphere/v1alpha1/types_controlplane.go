@@ -45,5 +45,5 @@ type CPLoadBalancerClass struct {
 	Name string `json:"name"`
 	// IPPoolName is the name of the NSX-T IP pool.
 	// +optional
-	IPPoolName string `json:"ipPoolName,omitempty"`
+	IPPoolName *string `json:"ipPoolName,omitempty"`
 }

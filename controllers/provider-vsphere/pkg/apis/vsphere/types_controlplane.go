@@ -40,5 +40,5 @@ type CloudControllerManagerConfig struct {
 type CPLoadBalancerClass struct {
 	Name string
 	// IPPoolName is the name of the NSX-T IP pool.
-	IPPoolName string
+	IPPoolName *string
 }

@@ -17,7 +17,7 @@ metadata:
   name: gardener.cloud:vsphere-csi-syncer
 subjects:
   - kind: User
-    name: system:vsphere-csi-syncer
+    name: gardener.cloud:vsphere-csi-syncer
 roleRef:
   kind: ClusterRole
   name: gardener.cloud:vsphere-csi-syncer

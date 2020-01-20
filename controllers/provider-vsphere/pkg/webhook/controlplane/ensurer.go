@@ -59,62 +59,34 @@ func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx generi
 	ps := &template.Spec
 	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-apiserver"); c != nil {
 		ensureKubeAPIServerCommandLineArgs(c)
-		ensureVolumeMounts(c)
 	}
-	ensureVolumes(ps)
 	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
 // EnsureKubeControllerManagerDeployment ensures that the kube-controller-manager deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeControllerManagerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
-	template := &dep.Spec.Template
-	ps := &template.Spec
-	if c := extensionswebhook.ContainerWithName(ps.Containers, "kube-controller-manager"); c != nil {
-		ensureKubeControllerManagerCommandLineArgs(c)
-		ensureVolumeMounts(c)
-	}
-	ensureKubeControllerManagerAnnotations(template)
-	ensureVolumes(ps)
+	ensureKubeControllerManagerAnnotations(&dep.Spec.Template)
 	return e.ensureChecksumAnnotations(ctx, &dep.Spec.Template, dep.Namespace)
 }
 
 func ensureKubeAPIServerCommandLineArgs(c *corev1.Container) {
-	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
+	// Ensure CSI-related admission plugins
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--enable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
-	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--disable-admission-plugins=",
+	c.Command = extensionswebhook.EnsureStringWithPrefixContains(c.Command, "--disable-admission-plugins=",
 		"PersistentVolumeLabel", ",")
-}
 
-func ensureKubeControllerManagerCommandLineArgs(c *corev1.Container) {
+	// Ensure CSI-related feature gates
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"CSINodeInfo=false", ",")
+	c.Command = extensionswebhook.EnsureNoStringWithPrefixContains(c.Command, "--feature-gates=",
+		"CSIDriverRegistry=false", ",")
 }
 
 func ensureKubeControllerManagerAnnotations(t *corev1.PodTemplateSpec) {
 	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, v1alpha1constants.LabelNetworkPolicyToPublicNetworks, v1alpha1constants.LabelNetworkPolicyAllowed)
 	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, v1alpha1constants.LabelNetworkPolicyToPrivateNetworks, v1alpha1constants.LabelNetworkPolicyAllowed)
 	t.Labels = extensionswebhook.EnsureAnnotationOrLabel(t.Labels, v1alpha1constants.LabelNetworkPolicyToBlockedCIDRs, v1alpha1constants.LabelNetworkPolicyAllowed)
-}
-
-var (
-	cloudProviderConfigKubeControllerManagerVolumeMount = corev1.VolumeMount{
-		Name:      vsphere.CloudProviderConfig,
-		MountPath: "/etc/kubernetes/cloudprovider",
-	}
-	cloudProviderConfigKubeControllerManagerVolume = corev1.Volume{
-		Name: vsphere.CloudProviderConfig,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{Name: vsphere.CloudProviderConfig},
-			},
-		},
-	}
-)
-
-func ensureVolumeMounts(c *corev1.Container) {
-	c.VolumeMounts = extensionswebhook.EnsureVolumeMountWithName(c.VolumeMounts, cloudProviderConfigKubeControllerManagerVolumeMount)
-}
-
-func ensureVolumes(ps *corev1.PodSpec) {
-	ps.Volumes = extensionswebhook.EnsureVolumeWithName(ps.Volumes, cloudProviderConfigKubeControllerManagerVolume)
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace string) error {

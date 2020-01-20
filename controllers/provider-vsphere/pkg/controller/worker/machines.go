@@ -75,7 +75,7 @@ func (w *workerDelegate) generateMachineClassSecretData(ctx context.Context) (ma
 		return nil, err
 	}
 
-	region := helper.FindRegion(w.cluster.Shoot.Spec.Region, w.profileConfig)
+	region := helper.FindRegion(w.cluster.Shoot.Spec.Region, w.cloudProfileConfig)
 	if region == nil {
 		return nil, fmt.Errorf("region %q not found", w.cluster.Shoot.Spec.Region)
 	}

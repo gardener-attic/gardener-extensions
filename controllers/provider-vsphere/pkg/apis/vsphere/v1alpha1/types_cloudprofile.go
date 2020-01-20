@@ -81,24 +81,24 @@ type RegionSpec struct {
 
 	// Datacenter is the name of the vSphere data center (data center can either be defined at region or zone level)
 	// +optional
-	Datacenter string `json:"datacenter,omitempty"`
+	Datacenter *string `json:"datacenter,omitempty"`
 
 	// Datastore is the vSphere datastore to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
 	// +optional
-	Datastore string `json:"datastore,omitempty"`
+	Datastore *string `json:"datastore,omitempty"`
 	// DatastoreCluster is the vSphere  datastore cluster to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
 	// +optional
-	DatastoreCluster string `json:"datastoreCluster,omitempty"`
+	DatastoreCluster *string `json:"datastoreCluster,omitempty"`
 
 	// Zones is the list of zone specifications of the region.
 	Zones []ZoneSpec `json:"zones"`
 
 	// CaFile is the optional CA file to be trusted when connecting to vCenter. If not set, the node's CA certificates will be used. Only relevant if InsecureFlag=0
 	// +optional
-	CaFile string `json:"caFile,omitempty"`
+	CaFile *string `json:"caFile,omitempty"`
 	// Thumbprint is the optional vCenter certificate thumbprint, this ensures the correct certificate is used
 	// +optional
-	Thumbprint string `json:"thumbprint,omitempty"`
+	Thumbprint *string `json:"thumbprint,omitempty"`
 
 	// DNSServers is a optional list of IPs of DNS servers used while creating subnets. If provided, it overwrites the global
 	// DNSServers of the CloudProfileConfig
@@ -118,24 +118,24 @@ type ZoneSpec struct {
 	Name string `json:"name"`
 	// Datacenter is the name of the vSphere data center (data center can either be defined at region or zone level)
 	// +optional
-	Datacenter string `json:"datacenter,omitempty"`
+	Datacenter *string `json:"datacenter,omitempty"`
 
 	// ComputeCluster is the name of the vSphere compute cluster. Either ComputeCluster or ResourcePool or HostSystem must be specified
 	// +optional
-	ComputeCluster string `json:"computeCluster,omitempty"`
+	ComputeCluster *string `json:"computeCluster,omitempty"`
 	// ResourcePool is the name of the vSphere resource pool. Either ComputeCluster or ResourcePool or HostSystem must be specified
 	// +optional
-	ResourcePool string `json:"resourcePool,omitempty"`
+	ResourcePool *string `json:"resourcePool,omitempty"`
 	// HostSystem is the name of the vSphere host system. Either ComputeCluster or ResourcePool or HostSystem must be specified
 	// +optional
-	HostSystem string `json:"hostSystem,omitempty"`
+	HostSystem *string `json:"hostSystem,omitempty"`
 
 	// Datastore is the vSphere datastore to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
 	// +optional
-	Datastore string `json:"datastore,omitempty"`
+	Datastore *string `json:"datastore,omitempty"`
 	// DatastoreCluster is the vSphere  datastore cluster to store the cloned machine VM. Either Datastore or DatastoreCluster must be specified at region or zones level.
 	// +optional
-	DatastoreCluster string `json:"datastoreCluster,omitempty"`
+	DatastoreCluster *string `json:"datastoreCluster,omitempty"`
 }
 
 // Constraints is an object containing constraints for the shoots.

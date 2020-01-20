@@ -480,6 +480,10 @@ func expectGetSecretCallToWork(c *mockclient.MockClient, username, password stri
 }
 
 func createCluster(cloudProfileName, shootVersion string, images []apiv1alpha1.MachineImages) *extensionscontroller.Cluster {
+	dc := "scc01-DC"
+	ds := "A800_VMwareB"
+	ccA := "scc01w01-DEV-A"
+	ccB := "scc01w01-DEV-B"
 	cloudProfileConfig := &apiv1alpha1.CloudProfileConfig{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: apiv1alpha1.SchemeGroupVersion.String(),
@@ -499,16 +503,16 @@ func createCluster(cloudProfileName, shootVersion string, images []apiv1alpha1.M
 				LogicalTier0Router: "lt0router",
 				EdgeCluster:        "edgecluster",
 				SNATIPPool:         "snatIpPool",
-				Datacenter:         "scc01-DC",
-				Datastore:          "A800_VMwareB",
+				Datacenter:         &dc,
+				Datastore:          &ds,
 				Zones: []apiv1alpha1.ZoneSpec{
 					{
 						Name:           "testregion-a",
-						ComputeCluster: "scc01w01-DEV-A",
+						ComputeCluster: &ccA,
 					},
 					{
 						Name:           "testregion-b",
-						ComputeCluster: "scc01w01-DEV-B",
+						ComputeCluster: &ccB,
 					},
 				},
 			},

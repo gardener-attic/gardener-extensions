@@ -28,6 +28,9 @@ const someGuestId = "linux64"
 
 var _ = Describe("Helper", func() {
 	var barMachine = api.MachineImage{Name: "bar", Version: "1.2.3", Path: "/x/y"}
+	dc1 := "dc1"
+	dcz1 := "dcz1"
+	dcz2 := "dcz2"
 
 	DescribeTable("#FindMachineImage",
 		func(configImages []api.MachineImage, name, version string, expectedMachineImage *api.MachineImage, expectErr bool) {
@@ -72,7 +75,7 @@ var _ = Describe("Helper", func() {
 
 		Entry("DCs defined in region", api.RegionSpec{
 			Name:       "test",
-			Datacenter: "dc1",
+			Datacenter: &dc1,
 			Zones: []api.ZoneSpec{
 				{Name: "zone1"},
 				{Name: "zone2"},
@@ -80,11 +83,11 @@ var _ = Describe("Helper", func() {
 		}, []string{"dc1"}),
 		Entry("DCs defined in zones", api.RegionSpec{
 			Name:       "test",
-			Datacenter: "dc1",
+			Datacenter: &dc1,
 			Zones: []api.ZoneSpec{
-				{Name: "zone1", Datacenter: "dcz1"},
-				{Name: "zone2", Datacenter: "dcz2"},
-				{Name: "zone3", Datacenter: "dcz2"},
+				{Name: "zone1", Datacenter: &dcz1},
+				{Name: "zone2", Datacenter: &dcz2},
+				{Name: "zone3", Datacenter: &dcz2},
 			},
 		}, []string{"dc1", "dcz1", "dcz2"}),
 	)

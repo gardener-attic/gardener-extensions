@@ -65,12 +65,12 @@ func FindRegion(name string, cloudProfileConfig *api.CloudProfileConfig) *api.Re
 // CollectDatacenters collects all datacenters used in the region and its zones
 func CollectDatacenters(region *api.RegionSpec) []string {
 	dcSet := sets.NewString()
-	if region.Datacenter != "" {
-		dcSet.Insert(region.Datacenter)
+	if region.Datacenter != nil && *region.Datacenter != "" {
+		dcSet.Insert(*region.Datacenter)
 	}
 	for _, zone := range region.Zones {
-		if zone.Datacenter != "" {
-			dcSet.Insert(zone.Datacenter)
+		if zone.Datacenter != nil && *zone.Datacenter != "" {
+			dcSet.Insert(*zone.Datacenter)
 		}
 	}
 	return dcSet.List()

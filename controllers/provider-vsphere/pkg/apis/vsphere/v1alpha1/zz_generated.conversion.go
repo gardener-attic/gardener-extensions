@@ -220,7 +220,7 @@ func RegisterConversions(s *runtime.Scheme) error {
 
 func autoConvert_v1alpha1_CPLoadBalancerClass_To_vsphere_CPLoadBalancerClass(in *CPLoadBalancerClass, out *vsphere.CPLoadBalancerClass, s conversion.Scope) error {
 	out.Name = in.Name
-	out.IPPoolName = in.IPPoolName
+	out.IPPoolName = (*string)(unsafe.Pointer(in.IPPoolName))
 	return nil
 }
 
@@ -231,7 +231,7 @@ func Convert_v1alpha1_CPLoadBalancerClass_To_vsphere_CPLoadBalancerClass(in *CPL
 
 func autoConvert_vsphere_CPLoadBalancerClass_To_v1alpha1_CPLoadBalancerClass(in *vsphere.CPLoadBalancerClass, out *CPLoadBalancerClass, s conversion.Scope) error {
 	out.Name = in.Name
-	out.IPPoolName = in.IPPoolName
+	out.IPPoolName = (*string)(unsafe.Pointer(in.IPPoolName))
 	return nil
 }
 
@@ -540,12 +540,12 @@ func autoConvert_v1alpha1_RegionSpec_To_vsphere_RegionSpec(in *RegionSpec, out *
 	out.LogicalTier0Router = in.LogicalTier0Router
 	out.EdgeCluster = in.EdgeCluster
 	out.SNATIPPool = in.SNATIPPool
-	out.Datacenter = in.Datacenter
-	out.Datastore = in.Datastore
-	out.DatastoreCluster = in.DatastoreCluster
+	out.Datacenter = (*string)(unsafe.Pointer(in.Datacenter))
+	out.Datastore = (*string)(unsafe.Pointer(in.Datastore))
+	out.DatastoreCluster = (*string)(unsafe.Pointer(in.DatastoreCluster))
 	out.Zones = *(*[]vsphere.ZoneSpec)(unsafe.Pointer(&in.Zones))
-	out.CaFile = in.CaFile
-	out.Thumbprint = in.Thumbprint
+	out.CaFile = (*string)(unsafe.Pointer(in.CaFile))
+	out.Thumbprint = (*string)(unsafe.Pointer(in.Thumbprint))
 	out.DNSServers = *(*[]string)(unsafe.Pointer(&in.DNSServers))
 	out.MachineImages = *(*[]vsphere.MachineImages)(unsafe.Pointer(&in.MachineImages))
 	return nil
@@ -566,12 +566,12 @@ func autoConvert_vsphere_RegionSpec_To_v1alpha1_RegionSpec(in *vsphere.RegionSpe
 	out.LogicalTier0Router = in.LogicalTier0Router
 	out.EdgeCluster = in.EdgeCluster
 	out.SNATIPPool = in.SNATIPPool
-	out.Datacenter = in.Datacenter
-	out.Datastore = in.Datastore
-	out.DatastoreCluster = in.DatastoreCluster
+	out.Datacenter = (*string)(unsafe.Pointer(in.Datacenter))
+	out.Datastore = (*string)(unsafe.Pointer(in.Datastore))
+	out.DatastoreCluster = (*string)(unsafe.Pointer(in.DatastoreCluster))
 	out.Zones = *(*[]ZoneSpec)(unsafe.Pointer(&in.Zones))
-	out.CaFile = in.CaFile
-	out.Thumbprint = in.Thumbprint
+	out.CaFile = (*string)(unsafe.Pointer(in.CaFile))
+	out.Thumbprint = (*string)(unsafe.Pointer(in.Thumbprint))
 	out.DNSServers = *(*[]string)(unsafe.Pointer(&in.DNSServers))
 	out.MachineImages = *(*[]MachineImages)(unsafe.Pointer(&in.MachineImages))
 	return nil
@@ -658,12 +658,12 @@ func Convert_vsphere_ZoneConfig_To_v1alpha1_ZoneConfig(in *vsphere.ZoneConfig, o
 
 func autoConvert_v1alpha1_ZoneSpec_To_vsphere_ZoneSpec(in *ZoneSpec, out *vsphere.ZoneSpec, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Datacenter = in.Datacenter
-	out.ComputeCluster = in.ComputeCluster
-	out.ResourcePool = in.ResourcePool
-	out.HostSystem = in.HostSystem
-	out.Datastore = in.Datastore
-	out.DatastoreCluster = in.DatastoreCluster
+	out.Datacenter = (*string)(unsafe.Pointer(in.Datacenter))
+	out.ComputeCluster = (*string)(unsafe.Pointer(in.ComputeCluster))
+	out.ResourcePool = (*string)(unsafe.Pointer(in.ResourcePool))
+	out.HostSystem = (*string)(unsafe.Pointer(in.HostSystem))
+	out.Datastore = (*string)(unsafe.Pointer(in.Datastore))
+	out.DatastoreCluster = (*string)(unsafe.Pointer(in.DatastoreCluster))
 	return nil
 }
 
@@ -674,12 +674,12 @@ func Convert_v1alpha1_ZoneSpec_To_vsphere_ZoneSpec(in *ZoneSpec, out *vsphere.Zo
 
 func autoConvert_vsphere_ZoneSpec_To_v1alpha1_ZoneSpec(in *vsphere.ZoneSpec, out *ZoneSpec, s conversion.Scope) error {
 	out.Name = in.Name
-	out.Datacenter = in.Datacenter
-	out.ComputeCluster = in.ComputeCluster
-	out.ResourcePool = in.ResourcePool
-	out.HostSystem = in.HostSystem
-	out.Datastore = in.Datastore
-	out.DatastoreCluster = in.DatastoreCluster
+	out.Datacenter = (*string)(unsafe.Pointer(in.Datacenter))
+	out.ComputeCluster = (*string)(unsafe.Pointer(in.ComputeCluster))
+	out.ResourcePool = (*string)(unsafe.Pointer(in.ResourcePool))
+	out.HostSystem = (*string)(unsafe.Pointer(in.HostSystem))
+	out.Datastore = (*string)(unsafe.Pointer(in.Datastore))
+	out.DatastoreCluster = (*string)(unsafe.Pointer(in.DatastoreCluster))
 	return nil
 }
 

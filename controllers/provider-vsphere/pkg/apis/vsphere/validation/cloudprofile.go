@@ -114,13 +114,13 @@ func ValidateCloudProfileConfig(cloudProfile *apisvsphere.CloudProfileConfig) fi
 			if zone.Name == "" {
 				allErrs = append(allErrs, field.Required(zonePath.Child("name"), fmt.Sprintf("must provide zone name in zones for region %s", region.Name)))
 			}
-			if zone.Datacenter == "" && region.Datacenter == "" {
+			if !isSet(zone.Datacenter) && !isSet(region.Datacenter) {
 				allErrs = append(allErrs, field.Required(zonePath.Child("datacenter"), fmt.Sprintf("must provide data center either for region %s or its zone %s", region.Name, zone.Name)))
 			}
-			if zone.Datastore == "" && zone.DatastoreCluster == "" && region.Datastore == "" && region.DatastoreCluster == "" {
+			if !isSet(zone.Datastore) && !isSet(zone.DatastoreCluster) && !isSet(region.Datastore) && !isSet(region.DatastoreCluster) {
 				allErrs = append(allErrs, field.Required(zonePath.Child("datastore"), fmt.Sprintf("must provide either data store or data store cluster for either region %s or its zone %s", region.Name, zone.Name)))
 			}
-			if zone.ComputeCluster == "" && zone.ResourcePool == "" && zone.HostSystem == "" {
+			if !isSet(zone.ComputeCluster) && !isSet(zone.ResourcePool) && !isSet(zone.HostSystem) {
 				allErrs = append(allErrs, field.Required(zonePath.Child("resourcePool"), fmt.Sprintf("must provide either compute cluster, resource pool, or hostsystem for region %s, zone %s", region.Name, zone.Name)))
 			}
 		}
@@ -130,4 +130,8 @@ func ValidateCloudProfileConfig(cloudProfile *apisvsphere.CloudProfileConfig) fi
 	}
 
 	return allErrs
+}
+
+func isSet(s *string) bool {
+	return s != nil && *s != ""
 }

@@ -27,6 +27,10 @@ import (
 var _ = Describe("ValidateCloudProfileConfig", func() {
 	Describe("#ValidateCloudProfileConfig", func() {
 		var cloudProfileConfig *apisvsphere.CloudProfileConfig
+		dc := "dc"
+		ds := "ds"
+		mypool := "mypool"
+		cc := "cc"
 
 		BeforeEach(func() {
 			cloudProfileConfig = &apisvsphere.CloudProfileConfig{
@@ -56,9 +60,9 @@ var _ = Describe("ValidateCloudProfileConfig", func() {
 						Zones: []apisvsphere.ZoneSpec{
 							{
 								Name:         "rz1",
-								Datacenter:   "dc",
-								Datastore:    "ds",
-								ResourcePool: "mypool",
+								Datacenter:   &dc,
+								Datastore:    &ds,
+								ResourcePool: &mypool,
 							},
 						},
 					},
@@ -161,13 +165,13 @@ var _ = Describe("ValidateCloudProfileConfig", func() {
 			})
 
 			It("should have a valid compute cluster/resource pool/host system", func() {
-				cloudProfileConfig.Regions[0].Zones[0].ResourcePool = ""
+				cloudProfileConfig.Regions[0].Zones[0].ResourcePool = nil
 
-				cloudProfileConfig.Regions[0].Zones[0].ComputeCluster = "cc"
+				cloudProfileConfig.Regions[0].Zones[0].ComputeCluster = &cc
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 				Expect(errorList).To(ConsistOf())
 
-				cloudProfileConfig.Regions[0].Zones[0].ComputeCluster = ""
+				cloudProfileConfig.Regions[0].Zones[0].ComputeCluster = nil
 				errorList = ValidateCloudProfileConfig(cloudProfileConfig)
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
@@ -176,7 +180,7 @@ var _ = Describe("ValidateCloudProfileConfig", func() {
 			})
 
 			It("should have a valid datastore", func() {
-				cloudProfileConfig.Regions[0].Zones[0].Datastore = ""
+				cloudProfileConfig.Regions[0].Zones[0].Datastore = nil
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 
@@ -187,13 +191,13 @@ var _ = Describe("ValidateCloudProfileConfig", func() {
 			})
 
 			It("should have a valid datacenter", func() {
-				cloudProfileConfig.Regions[0].Zones[0].Datacenter = ""
-				cloudProfileConfig.Regions[0].Datacenter = "dc"
+				cloudProfileConfig.Regions[0].Zones[0].Datacenter = nil
+				cloudProfileConfig.Regions[0].Datacenter = &dc
 
 				errorList := ValidateCloudProfileConfig(cloudProfileConfig)
 				Expect(errorList).To(ConsistOf())
 
-				cloudProfileConfig.Regions[0].Datacenter = ""
+				cloudProfileConfig.Regions[0].Datacenter = nil
 				errorList = ValidateCloudProfileConfig(cloudProfileConfig)
 				Expect(errorList).To(ConsistOf(PointTo(MatchFields(IgnoreExtras, Fields{
 					"Type":  Equal(field.ErrorTypeRequired),
