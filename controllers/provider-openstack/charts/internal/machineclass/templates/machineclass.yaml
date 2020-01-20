@@ -36,6 +36,9 @@ spec:
 {{- end }}
   networkID: {{ $machineClass.networkID }}
   podNetworkCidr: {{ $machineClass.podNetworkCidr }}
+{{- if $machienClass.rootDiskSize }}
+  rootDiskSize: {{ $machineClass.rootDiskSize }}
+{{- end}}
   securityGroups:
 {{ toYaml $machineClass.securityGroups | indent 2 }}
   secretRef:
