@@ -126,8 +126,7 @@ var _ = Describe("Ensurer", func() {
 										Command: []string{
 											"--cloud-provider=?",
 											"--cloud-config=?",
-											"--enable-admission-plugins=Priority,NamespaceLifecycle",
-											"--disable-admission-plugins=PersistentVolumeLabel",
+											"--enable-admission-plugins=Priority,NamespaceLifecycle,PersistentVolumeLabel",
 										},
 									},
 								},
@@ -303,8 +302,8 @@ func checkKubeAPIServerDeployment(dep *appsv1.Deployment, annotations map[string
 	// env vars, and volume mounts
 	c := extensionswebhook.ContainerWithName(dep.Spec.Template.Spec.Containers, "kube-apiserver")
 	Expect(c).To(Not(BeNil()))
-	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ","))
-	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ",")))
+	Expect(c.Command).To(Not(test.ContainElementWithPrefixContaining("--enable-admission-plugins=", "PersistentVolumeLabel", ",")))
+	Expect(c.Command).To(test.ContainElementWithPrefixContaining("--disable-admission-plugins=", "PersistentVolumeLabel", ","))
 
 	// Check that the Pod template contains all needed checksum annotations
 	Expect(dep.Spec.Template.Annotations).To(Equal(annotations))
