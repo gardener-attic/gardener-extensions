@@ -15,6 +15,7 @@
 package controlplaneexposure
 
 import (
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/config"
 	"github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/packet"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
@@ -46,7 +47,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) (*extensionsw
 	return controlplane.Add(mgr, controlplane.AddArgs{
 		Kind:     controlplane.KindSeed,
 		Provider: packet.Type,
-		Types:    []runtime.Object{&appsv1.Deployment{}, &appsv1.StatefulSet{}},
+		Types:    []runtime.Object{&appsv1.Deployment{}, &druidv1alpha1.Etcd{}},
 		Mutator:  genericmutator.NewMutator(NewEnsurer(&opts.ETCDStorage, logger), nil, nil, nil, logger),
 	})
 }

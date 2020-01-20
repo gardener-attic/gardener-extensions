@@ -23,6 +23,8 @@ import (
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
+
 	"github.com/coreos/go-systemd/unit"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
@@ -55,7 +57,7 @@ type Ensurer interface {
 	// EnsureKubeSchedulerDeployment ensures that the kube-scheduler deployment conforms to the provider requirements.
 	EnsureKubeSchedulerDeployment(context.Context, EnsurerContext, *appsv1.Deployment) error
 	// EnsureETCDStatefulSet ensures that the etcd stateful sets conform to the provider requirements.
-	EnsureETCDStatefulSet(context.Context, EnsurerContext, *appsv1.StatefulSet) error
+	EnsureETCD(context.Context, EnsurerContext, *druidv1alpha1.Etcd) error
 	// EnsureKubeletServiceUnitOptions ensures that the kubelet.service unit options conform to the provider requirements.
 	EnsureKubeletServiceUnitOptions(context.Context, EnsurerContext, []*unit.UnitOption) ([]*unit.UnitOption, error)
 	// EnsureKubeletConfiguration ensures that the kubelet configuration conforms to the provider requirements.
@@ -176,11 +178,11 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureKubeSchedulerDeployment(ctx, ectx, x)
 		}
-	case *appsv1.StatefulSet:
+	case *druidv1alpha1.Etcd:
 		switch x.Name {
-		case v1beta1constants.StatefulSetNameETCDMain, v1beta1constants.StatefulSetNameETCDEvents:
+		case v1beta1constants.ETCDMain, v1beta1constants.ETCDEvents:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
-			return m.ensurer.EnsureETCDStatefulSet(ctx, ectx, x)
+			return m.ensurer.EnsureETCD(ctx, ectx, x)
 		}
 	case *extensionsv1alpha1.OperatingSystemConfig:
 		if x.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeReconcile {

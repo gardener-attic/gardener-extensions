@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	packetinstall "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/apis/packet/install"
 	packetcmd "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/cmd"
 	packetcontrolplane "github.com/gardener/gardener-extensions/controllers/provider-packet/pkg/controller/controlplane"
@@ -127,6 +128,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			}
 
 			if err := packetinstall.AddToScheme(scheme); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
+			if err := druidv1alpha1.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 

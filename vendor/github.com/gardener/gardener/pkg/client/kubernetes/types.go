@@ -23,6 +23,7 @@ import (
 	gardenclientset "github.com/gardener/gardener/pkg/client/garden/clientset/versioned"
 	gardenscheme "github.com/gardener/gardener/pkg/client/garden/clientset/versioned/scheme"
 
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	dnsscheme "github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme"
 	resourcesscheme "github.com/gardener/gardener-resource-manager/pkg/apis/resources/v1alpha1"
 	hvpav1alpha1 "github.com/gardener/hvpa-controller/api/v1alpha1"
@@ -79,6 +80,7 @@ func init() {
 		gardenextensionsscheme.AddToScheme,
 		resourcesscheme.AddToScheme,
 		hvpav1alpha1.AddToScheme,
+		druidv1alpha1.AddToScheme,
 	)
 	utilruntime.Must(seedSchemeBuilder.AddToScheme(SeedScheme))
 

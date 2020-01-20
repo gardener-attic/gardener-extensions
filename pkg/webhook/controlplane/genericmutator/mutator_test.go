@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	mockclient "github.com/gardener/gardener-extensions/pkg/mock/controller-runtime/client"
 	mockcontrolplane "github.com/gardener/gardener-extensions/pkg/mock/gardener-extensions/webhook/controlplane"
@@ -216,10 +217,10 @@ var _ = Describe("Mutator", func() {
 			Expect(err).To(Not(HaveOccurred()))
 		})
 
-		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-main stateful set", func() {
+		It("should invoke ensurer.EnsureETCD with a etcd-main etcd", func() {
 			var (
-				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDMain, Namespace: namespace},
+				etcd = &druidv1alpha1.Etcd{
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain, Namespace: namespace},
 				}
 			)
 
@@ -229,7 +230,7 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureETCDStatefulSet(context.TODO(), gomock.Any(), ss).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) {
+			ensurer.EXPECT().EnsureETCD(context.TODO(), gomock.Any(), etcd).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, etcd *druidv1alpha1.Etcd) {
 				_, err := ectx.GetCluster(ctx)
 				if err != nil {
 					logger.Error(err, "failed to get cluster object")
@@ -242,14 +243,14 @@ var _ = Describe("Mutator", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), ss)
+			err = mutator.Mutate(context.TODO(), etcd)
 			Expect(err).To(Not(HaveOccurred()))
 		})
 
-		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-events stateful set", func() {
+		It("should invoke ensurer.EnsureETCD with a etcd-events etcd", func() {
 			var (
-				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents, Namespace: namespace},
+				etcd = &druidv1alpha1.Etcd{
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents, Namespace: namespace},
 				}
 			)
 
@@ -259,7 +260,7 @@ var _ = Describe("Mutator", func() {
 
 			// Create mock ensurer
 			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureETCDStatefulSet(context.TODO(), gomock.Any(), ss).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, ss *appsv1.StatefulSet) {
+			ensurer.EXPECT().EnsureETCD(context.TODO(), gomock.Any(), etcd).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, etcd *druidv1alpha1.Etcd) {
 				_, err := ectx.GetCluster(ctx)
 				if err != nil {
 					logger.Error(err, "failed to get cluster object")
@@ -272,13 +273,13 @@ var _ = Describe("Mutator", func() {
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), ss)
+			err = mutator.Mutate(context.TODO(), etcd)
 			Expect(err).To(Not(HaveOccurred()))
 		})
 
-		It("should ignore other stateful sets than etcd-main and etcd-events", func() {
+		It("should ignore other etcd than etcd-main and etcd-events", func() {
 			var (
-				ss = &appsv1.StatefulSet{
+				etcd = &druidv1alpha1.Etcd{
 					ObjectMeta: metav1.ObjectMeta{Name: "test"},
 				}
 			)
@@ -287,7 +288,7 @@ var _ = Describe("Mutator", func() {
 			mutator := genericmutator.NewMutator(nil, nil, nil, nil, logger)
 
 			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), ss)
+			err := mutator.Mutate(context.TODO(), etcd)
 			Expect(err).To(Not(HaveOccurred()))
 		})
 

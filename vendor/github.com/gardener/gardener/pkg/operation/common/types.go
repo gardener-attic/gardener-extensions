@@ -395,6 +395,12 @@ const (
 	// ETCDImageName is the name of the ETCD image.
 	ETCDImageName = "etcd"
 
+	// ETCDBackupRestoreImageName is the name of the ETCD backup-restore image.
+	ETCDBackupRestoreImageName = "etcd-backup-restore"
+
+	// EtcdDruidImageName is the name of Etcd Druid image
+	EtcdDruidImageName = "etcd-druid"
+
 	// CSINodeDriverRegistrarImageName is the name of driver registrar - https://github.com/kubernetes-csi/node-driver-registrar
 	CSINodeDriverRegistrarImageName = "csi-node-driver-registrar"
 
@@ -494,8 +500,8 @@ var (
 	// RequiredControlPlaneStatefulSets is a set of the required shoot control plane stateful
 	// sets running in the seed.
 	RequiredControlPlaneStatefulSets = sets.NewString(
-		v1beta1constants.StatefulSetNameETCDMain,
-		v1beta1constants.StatefulSetNameETCDEvents,
+		v1beta1constants.ETCDMain,
+		v1beta1constants.ETCDEvents,
 	)
 
 	// RequiredSystemComponentDeployments is a set of the required system components.

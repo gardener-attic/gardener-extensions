@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	azureinstall "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/apis/azure/install"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	azurecmd "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/cmd"
@@ -28,7 +29,6 @@ import (
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/healthcheck"
 	azureinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/infrastructure"
 	azureworker "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/controller/worker"
-	azurecontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplanebackup"
 	azurecontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -145,6 +145,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			if err := druidv1alpha1.AddToScheme(scheme); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
 			// add common meta types to schema for controller-runtime to use v1.ListOptions
 			metav1.AddToGroupVersion(scheme, machinev1alpha1.SchemeGroupVersion)
 			// add types required for Azure Health check
@@ -153,7 +157,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			)
 
 			configFileOpts.Completed().ApplyETCDStorage(&azurecontrolplaneexposure.DefaultAddOptions.ETCDStorage)
-			configFileOpts.Completed().ApplyETCDBackup(&azurecontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
 			healthCheckCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&azurebackupbucket.DefaultAddOptions.Controller)

@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	druidv1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	gcpinstall "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/apis/gcp/install"
 	gcpcmd "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/cmd"
 	gcpbackupbucket "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/backupbucket"
@@ -28,7 +29,6 @@ import (
 	gcpinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/infrastructure"
 	gcpworker "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/gcp"
-	gcpcontrolplanebackup "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplanebackup"
 	gcpcontrolplaneexposure "github.com/gardener/gardener-extensions/controllers/provider-gcp/pkg/webhook/controlplaneexposure"
 	"github.com/gardener/gardener-extensions/pkg/controller"
 	controllercmd "github.com/gardener/gardener-extensions/pkg/controller/cmd"
@@ -145,6 +145,10 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
+			if err := druidv1alpha1.AddToScheme(scheme); err != nil {
+				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
+			}
+
 			// add common meta types to schema for controller-runtime to use v1.ListOptions
 			metav1.AddToGroupVersion(scheme, machinev1alpha1.SchemeGroupVersion)
 			// add types required for Health check
@@ -153,7 +157,6 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			)
 
 			configFileOpts.Completed().ApplyETCDStorage(&gcpcontrolplaneexposure.DefaultAddOptions.ETCDStorage)
-			configFileOpts.Completed().ApplyETCDBackup(&gcpcontrolplanebackup.DefaultAddOptions.ETCDBackup)
 			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
 			healthCheckCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			backupBucketCtrlOpts.Completed().Apply(&gcpbackupbucket.DefaultAddOptions.Controller)
