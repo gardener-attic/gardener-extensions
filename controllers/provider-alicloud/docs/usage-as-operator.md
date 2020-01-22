@@ -18,10 +18,11 @@ apiVersion: alicloud.provider.extensions.gardener.cloud/v1alpha1
 kind: CloudProfileConfig
 machineImages:
 - name: coreos
-  version: 2023.4.0
-  regions:
-  - name: eu-central-1
-    id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
+  versions:
+  - version: 2023.4.0
+    regions:
+    - name: eu-central-1
+      id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
 ```
 
 ## Example `CloudProfile` manifest
@@ -29,7 +30,7 @@ machineImages:
 Please find below an example `CloudProfile` manifest:
 
 ```yaml
-apiVersion: core.gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1beta1
 kind: CloudProfile
 metadata:
   name: alicloud
@@ -64,10 +65,11 @@ spec:
     kind: CloudProfileConfig
     machineImages:
     - name: coreos
-      version: 2023.4.0
-      regions:
-      - name: eu-central-1
-        id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
+      versions:
+      - version: 2023.4.0
+        regions:
+        - name: eu-central-1
+          id: coreos_2023_4_0_64_30G_alibase_20190319.vhd
 ```
 
 ## Enable customized machine images for the Alicloud extension
@@ -101,7 +103,7 @@ As a result, a Secret named `machine-image-owner` by default will be created in 
 ## Example `ControllerRegistration` manifest for enabling customized machine images
 
 ```yaml
-apiVersion: core.gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1beta1
 kind: ControllerRegistration
 metadata:
   name: extension-provider-alicloud

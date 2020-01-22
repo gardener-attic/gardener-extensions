@@ -23,8 +23,9 @@ countFaultDomains:
   count: 3
 machineImages:
 - name: coreos
-  version: 2135.6.0
-  urn: "CoreOS:CoreOS:Stable:2135.6.0"
+  versions:
+  - version: 2135.6.0
+    urn: "CoreOS:CoreOS:Stable:2135.6.0"
 ```
 
 ## Example `CloudProfile` manifest
@@ -34,7 +35,7 @@ The possible values for `.spec.volumeTypes[].name` on Azure are `Standard_LRS`, 
 Please find below an example `CloudProfile` manifest:
 
 ```yaml
-apiVersion: core.gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1beta1
 kind: CloudProfile
 metadata:
   name: azure
@@ -77,6 +78,7 @@ spec:
       count: 3
     machineImages:
     - name: coreos
-      version: 2135.6.0
-      urn: "CoreOS:CoreOS:Stable:2135.6.0"
+      versions:
+      - version: 2135.6.0
+        urn: "CoreOS:CoreOS:Stable:2135.6.0"
 ```

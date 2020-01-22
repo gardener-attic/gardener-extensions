@@ -26,8 +26,9 @@ apiVersion: openstack.provider.extensions.gardener.cloud/v1alpha1
 kind: CloudProfileConfig
 machineImages:
 - name: coreos
-  version: 2135.6.0
-  image: coreos-2135.6.0
+  versions:
+  - version: 2135.6.0
+    image: coreos-2135.6.0
 # keystoneURL: https://url-to-keystone/v3/
 # keystoneURLs:
 # - region: europe
@@ -66,7 +67,7 @@ omit `keystoneURL` and always specify `region`.
 Please find below an example `CloudProfile` manifest:
 
 ```yaml
-apiVersion: core.gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1beta1
 kind: CloudProfile
 metadata:
   name: openstack
@@ -101,8 +102,9 @@ spec:
     kind: CloudProfileConfig
     machineImages:
     - name: coreos
-      version: 2135.6.0
-      image: coreos-2135.6.0
+      versions:
+      - version: 2135.6.0
+        image: coreos-2135.6.0
     keystoneURL: https://url-to-keystone/v3/
     constraints:
       floatingPools:
