@@ -161,6 +161,21 @@ var _ = Describe("Ensurer", func() {
 		})
 	})
 
+	Describe("#EnsureKubeAPIServerService", func() {
+		It("should set ExternalTrafficPolicy to Local for KubeAPIServer Service", func() {
+			svc = &corev1.Service{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "kube-apiserver",
+					Namespace: metav1.NamespaceSystem},
+				Spec: corev1.ServiceSpec{ExternalTrafficPolicy: "Cluster"}}
+
+			ensurer := NewEnsurer(etcdStorage, logger)
+			err := ensurer.EnsureKubeAPIServerService(context.TODO(), dummyContext, svc)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(string(svc.Spec.ExternalTrafficPolicy)).Should(Equal("Local"))
+		})
+	})
+
 	Describe("#EnsureETCDStatefulSet", func() {
 		It("should add or modify elements to etcd-main statefulset", func() {
 			var (

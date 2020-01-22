@@ -55,6 +55,12 @@ func (e *ensurer) InjectClient(client client.Client) error {
 	return nil
 }
 
+// EnsureKubeAPIServerService ensures that the kube-apiserver service conforms to the provider requirements.
+func (e *ensurer) EnsureKubeAPIServerService(ctx context.Context, ectx genericmutator.EnsurerContext, svc *corev1.Service) error {
+	svc.Spec.ExternalTrafficPolicy = "Local"
+	return nil
+}
+
 // EnsureKubeAPIServerDeployment ensures that the kube-apiserver deployment conforms to the provider requirements.
 func (e *ensurer) EnsureKubeAPIServerDeployment(ctx context.Context, ectx genericmutator.EnsurerContext, dep *appsv1.Deployment) error {
 	cluster, err := controller.GetCluster(ctx, e.client, dep.Namespace)
