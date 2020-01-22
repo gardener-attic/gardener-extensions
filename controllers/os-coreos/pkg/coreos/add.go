@@ -21,12 +21,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Type is the type of OperatingSystemConfigs the coreos actuator / predicate are built for.
-const Type = "coreos"
-
 var (
 	// DefaultAddOptions are the default controller.Options for AddToManager.
 	DefaultAddOptions = AddOptions{}
+	// Types is the type of OperatingSystemConfigs the coreos actuator / predicate are built for.
+	Types = []string{"coreos"}
 )
 
 // AddOptions are the options for adding the controller to the manager.
@@ -44,7 +43,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
 		Predicates:        operatingsystemconfig.DefaultPredicates(opts.IgnoreOperationAnnotation),
-		Type:              Type,
+		Types:             Types,
 	})
 }
 

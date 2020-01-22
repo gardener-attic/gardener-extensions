@@ -46,14 +46,15 @@ type AddArgs struct {
 	// Predicates are the predicates to use.
 	// If unset, GenerationChangedPredicate will be used.
 	Predicates []predicate.Predicate
-	// Type is the type of the resource considered for reconciliation.
-	Type string
+	// Types are the similar types which can be combined with a logic or,
+	// of the resource considered for reconciliation.
+	Types []string
 }
 
 // Add adds an operatingsystemconfig controller to the given manager using the given AddArgs.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(args.Actuator)
-	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+	predicates := extensionspredicate.AddTypePredicate(args.Predicates, args.Types...)
 	return add(mgr, args.ControllerOptions, predicates)
 }
 

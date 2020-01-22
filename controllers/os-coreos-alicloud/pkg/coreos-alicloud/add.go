@@ -21,12 +21,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-// Type is the type of operating system configs the CoreOS Alicloud controller monitors.
-const Type = "coreos-alicloud"
-
 var (
 	// DefaultAddOptions are the default controller.Options for AddToManager.
 	DefaultAddOptions = AddOptions{}
+	// Types is the type of operating system configs the CoreOS Alicloud controller monitors.
+	Types = []string{"coreos-alicloud"}
 )
 
 // AddOptions are the options for adding the controller to the manager.
@@ -44,7 +43,7 @@ func AddToManagerWithOptions(mgr manager.Manager, opts AddOptions) error {
 		Actuator:          NewActuator(),
 		ControllerOptions: opts.Controller,
 		Predicates:        operatingsystemconfig.DefaultPredicates(opts.IgnoreOperationAnnotation),
-		Type:              Type,
+		Types:             Types,
 	})
 }
 

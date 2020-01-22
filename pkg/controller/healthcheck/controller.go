@@ -160,7 +160,7 @@ func add(mgr manager.Manager, args AddArgs) error {
 	if err != nil {
 		return err
 	}
-	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+	predicates := extensionspredicate.AddTypePredicate(args.Predicates, args.Type)
 
 	log.Log.Info("Registered health check controller", "Kind", args.registeredExtension.groupVersionKind.Kind, "type", args.Type, "health check type", args.registeredExtension.healthConditionType, "sync period", args.SyncPeriod.Duration.String())
 

@@ -40,7 +40,7 @@ func AddToManagerWithOptions(mgr manager.Manager, os string, generator generator
 	return operatingsystemconfig.Add(mgr, operatingsystemconfig.AddArgs{
 		Actuator:          actuator.NewActuator(os, generator),
 		Predicates:        operatingsystemconfig.DefaultPredicates(opts.IgnoreOperationAnnotation),
-		Type:              os,
+		Types:             []string{os},
 		ControllerOptions: opts.Controller,
 	})
 }

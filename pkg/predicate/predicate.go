@@ -199,10 +199,23 @@ func IsDeleting() predicate.Predicate {
 }
 
 // AddTypePredicate returns a new slice which contains a type predicate and the given `predicates`.
-func AddTypePredicate(extensionType string, predicates []predicate.Predicate) []predicate.Predicate {
-	preds := make([]predicate.Predicate, 0, len(predicates)+1)
-	preds = append(preds, HasType(extensionType))
-	return append(preds, predicates...)
+// if more than one extensionTypes is given all given types are or combined
+func AddTypePredicate(predicates []predicate.Predicate, extensionTypes ...string) []predicate.Predicate {
+	resultPredicates := make([]predicate.Predicate, 0, len(predicates)+1)
+	resultPredicates = append(resultPredicates, predicates...)
+
+	if len(extensionTypes) == 1 {
+		resultPredicates = append(resultPredicates, HasType(extensionTypes[0]))
+		return resultPredicates
+	}
+
+	orPreds := make([]predicate.Predicate, 0, len(extensionTypes))
+	for _, extensionType := range extensionTypes {
+		orPreds = append(orPreds, HasType(extensionType))
+	}
+	orPred := Or(orPreds...)
+
+	return append(resultPredicates, orPred)
 }
 
 // HasPurpose filters the incoming Controlplanes  for the given spec.purpose
