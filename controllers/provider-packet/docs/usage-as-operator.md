@@ -16,8 +16,9 @@ apiVersion: packet.provider.extensions.gardener.cloud/v1alpha1
 kind: CloudProfileConfig
 machineImages:
 - name: coreos
-  version: 2135.6.0
-  id: coreos-2135.6.0-id
+  versions:
+  - version: 2135.6.0
+    id: coreos-2135.6.0-id
 ```
 
 ## Example `CloudProfile` manifest
@@ -25,7 +26,7 @@ machineImages:
 Please find below an example `CloudProfile` manifest:
 
 ```yaml
-apiVersion: core.gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1beta1
 kind: CloudProfile
 metadata:
   name: packet
@@ -60,6 +61,7 @@ spec:
     kind: CloudProfileConfig
     machineImages:
     - name: coreos
-      version: 2135.6.0
-      id: coreos-2135.6.0-id
+      versions:
+      - version: 2135.6.0
+        id: coreos-2135.6.0-id
 ```

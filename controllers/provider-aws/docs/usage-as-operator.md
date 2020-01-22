@@ -16,10 +16,11 @@ apiVersion: aws.provider.extensions.gardener.cloud/v1alpha1
 kind: CloudProfileConfig
 machineImages:
 - name: coreos
-  version: 2135.6.0
-  regions:
-  - name: eu-central-1
-    ami: ami-034fd8c3f4026eb39
+  versions:
+  - version: 2135.6.0
+    regions:
+    - name: eu-central-1
+      ami: ami-034fd8c3f4026eb39
 ```
 
 ## Example `CloudProfile` manifest
@@ -27,7 +28,7 @@ machineImages:
 Please find below an example `CloudProfile` manifest:
 
 ```yaml
-apiVersion: core.gardener.cloud/v1alpha1
+apiVersion: core.gardener.cloud/v1beta1
 kind: CloudProfile
 metadata:
   name: aws
@@ -66,8 +67,9 @@ spec:
     kind: CloudProfileConfig
     machineImages:
     - name: coreos
-      version: 2135.6.0
-      regions:
-      - name: eu-central-1
-        ami: ami-034fd8c3f4026eb39
+      versions:
+      - version: 2135.6.0
+        regions:
+        - name: eu-central-1
+          ami: ami-034fd8c3f4026eb39
 ```
