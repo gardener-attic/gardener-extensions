@@ -34,6 +34,13 @@ spec:
             - --poll-period-seconds=30
             - --v=2
             - --config-file=/etc/config/typha-autoscaler
+          resources:
+            requests:
+              cpu: 10m
+              memory: 50Mi
+            limits:
+              cpu: 10m
+              memory: 50Mi
           volumeMounts:
             - name: config
               mountPath: /etc/config

@@ -92,6 +92,16 @@ spec:
 #            value: "true"
 #          - name: TYPHA_PROMETHEUSMETRICSPORT
 #            value: "9093"
+        resources:
+          requests:
+            cpu: 200m
+            memory: 100Mi
+          limits:
+            cpu: 500m
+            memory: 700Mi
+        securityContext:
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
         livenessProbe:
           httpGet:
             path: /liveness
