@@ -147,7 +147,7 @@ func (r *reconciler) performHealthCheck(ctx context.Context, request reconcile.R
 			continue
 		}
 
-		r.logger.Info("Health check for extension resource successful.", "kind", r.registeredExtension.groupVersionKind.Kind, "health condition type", healthCheckResult.HealthConditionType, "name", request.Name, "Namespace", request.Namespace)
+		r.logger.V(6).Info("Health check for extension resource successful.", "kind", r.registeredExtension.groupVersionKind.Kind, "health condition type", healthCheckResult.HealthConditionType, "name", request.Name, "Namespace", request.Namespace)
 		if err := r.updateExtensionConditionToSuccessful(ctx, r.registeredExtension.extension, &rawExtension, healthCondition, healthCheckResult); err != nil {
 			return r.resultWithRequeue(), err
 		}
