@@ -124,6 +124,14 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 		}
 		machineImages = appendMachineImage(machineImages, *machineImage)
 
+		var volumeSize int
+		if pool.Volume != nil {
+			volumeSize, err = worker.DiskSize(pool.Volume.Size)
+			if err != nil {
+				return err
+			}
+		}
+
 		for zoneIndex, zone := range pool.Zones {
 			machineClassSpec := map[string]interface{}{
 				"region":           w.worker.Spec.Region,
@@ -140,6 +148,10 @@ func (w *workerDelegate) generateMachineConfig(ctx context.Context) error {
 				"secret": map[string]interface{}{
 					"cloudConfig": string(pool.UserData),
 				},
+			}
+
+			if volumeSize > 0 {
+				machineClassSpec["rootDiskSize"] = volumeSize
 			}
 
 			if machineImage.ID != "" {
