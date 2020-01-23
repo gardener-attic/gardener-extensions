@@ -91,19 +91,6 @@ const (
 	// BackupSecretName defines the name of the secret containing the credentials which are required to
 	// authenticate against the respective cloud provider (required to store the backups of Shoot clusters).
 	BackupSecretName = "etcd-backup"
-
-	// StorageProviderName is the name of the Openstack storage provider.
-	OpenstackStorageProviderName = "Swift"
-	// OpenstackAuthURL is a constant for the key in a cloud provider secret that holds the OpenStack auth url for EtcdBackup with Swift.
-	OpenstackAuthURL = "authURL"
-	// OpenstackDomainName is a constant for the key in a cloud provider secret that holds the OpenStack domain name for EtcdBackup with Swift.
-	OpenstackDomainName = "domainName"
-	// OpenstackTenantName is a constant for the key in a cloud provider secret that holds the OpenStack tenant name for EtcdBackup with Swift.
-	OpenstackTenantName = "tenantName"
-	// OpenstackUserName is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack username for EtcdBackup with Swift.
-	OpenstackUserName = "username"
-	// OpenstackPassword is a constant for the key in a cloud provider secret and backup secret that holds the OpenStack password for EtcdBackup with Swift.
-	OpenstackPassword = "password"
 )
 
 var (

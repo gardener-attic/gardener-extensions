@@ -126,6 +126,7 @@ func Convert_config_ETCD_To_v1alpha1_ETCD(in *config.ETCD, out *ETCD, s conversi
 func autoConvert_v1alpha1_ETCDStorage_To_config_ETCDStorage(in *ETCDStorage, out *config.ETCDStorage, s conversion.Scope) error {
 	out.ClassName = (*string)(unsafe.Pointer(in.ClassName))
 	out.Capacity = (*resource.Quantity)(unsafe.Pointer(in.Capacity))
+	out.StoragePolicyName = (*string)(unsafe.Pointer(in.StoragePolicyName))
 	return nil
 }
 
@@ -137,6 +138,7 @@ func Convert_v1alpha1_ETCDStorage_To_config_ETCDStorage(in *ETCDStorage, out *co
 func autoConvert_config_ETCDStorage_To_v1alpha1_ETCDStorage(in *config.ETCDStorage, out *ETCDStorage, s conversion.Scope) error {
 	out.ClassName = (*string)(unsafe.Pointer(in.ClassName))
 	out.Capacity = (*resource.Quantity)(unsafe.Pointer(in.Capacity))
+	out.StoragePolicyName = (*string)(unsafe.Pointer(in.StoragePolicyName))
 	return nil
 }
 
