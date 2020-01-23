@@ -6,6 +6,7 @@ metadata:
   name: calico-typha-horizontal-autoscaler
   namespace: kube-system
   labels:
+    origin: gardener
     k8s-app: calico-typha-autoscaler
 spec:
   revisionHistoryLimit: 0
@@ -18,6 +19,7 @@ spec:
       annotations:
         checksum/configmap-calico-typha-horizontal-autoscaler: {{ include (print $.Template.BasePath "/typha-cpha/configmap-typha-horizontal-autoscaling.yaml") . | sha256sum }}
       labels:
+        origin: gardener
         k8s-app: calico-typha-autoscaler
     spec:
       priorityClassName: system-cluster-critical
