@@ -24,8 +24,8 @@ import (
 var (
 	// DefaultAddOptions are the default controller.Options for AddToManager.
 	DefaultAddOptions = AddOptions{}
-	// Types is the type of OperatingSystemConfigs the coreos actuator / predicate are built for.
-	Types = []string{"coreos"}
+	// Types are the types of OperatingSystemConfigs the coreos actuator / predicate are built for.
+	Types = []string{"coreos", "flatcar"}
 )
 
 // AddOptions are the options for adding the controller to the manager.

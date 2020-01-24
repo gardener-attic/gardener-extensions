@@ -6,7 +6,9 @@ Project Gardener implements the automated management and operation of [Kubernete
 
 Recently, most of the vendor specific logic has been developed [in-tree](https://github.com/gardener/gardener). However, the project has grown to a size where it is very hard to extend, maintain, and test. With [GEP-1](https://github.com/gardener/gardener/blob/master/docs/proposals/01-extensibility.md) we have proposed how the architecture can be changed in a way to support external controllers that contain their very own vendor specifics. This way, we can keep Gardener core clean and independent.
 
-This controller operates on the `OperatingSystemConfig` resource in the `extensions.gardener.cloud/v1alpha1` API group. It manages those objects that are requesting [CoreOS container linux](https://coreos.com/os/docs/latest/) configuration (`.spec.type=coreos`):
+This controller operates on the `OperatingSystemConfig` resource in the `extensions.gardener.cloud/v1alpha1` API group. It supports [CoreOS Container Linux](https://coreos.com/os/docs/latest/) and [Flatcar Container Linux](https://www.flatcar-linux.org/) ("a friendly fork of CoreOS Container Linux").
+
+The controller manages those objects that are requesting [CoreOS Container Linux](https://coreos.com/os/docs/latest/) configuration (`.spec.type=coreos`) or [Flatcar Container Linux](https://www.flatcar-linux.org/) configuration (`.spec.type=flatcar`):
 
 ```yaml
 ---
