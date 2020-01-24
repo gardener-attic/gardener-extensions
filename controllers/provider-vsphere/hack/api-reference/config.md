@@ -158,6 +158,18 @@ k8s.io/apimachinery/pkg/api/resource.Quantity
 <p>Capacity is the storage capacity used in etcd-main volume claims.</p>
 </td>
 </tr>
+<tr>
+<td>
+<code>storagePolicyName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>StoragePolicyName is the name of the storage policy used in etcd-main volume claims.</p>
+</td>
+</tr>
 </tbody>
 </table>
 <hr/>

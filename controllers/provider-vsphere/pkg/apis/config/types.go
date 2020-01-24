@@ -47,4 +47,6 @@ type ETCDStorage struct {
 	ClassName *string
 	// Capacity is the storage capacity used in etcd-main volume claims.
 	Capacity *resource.Quantity
+	// StoragePolicyName is the name of the storage policy used in etcd-main volume claims.
+	StoragePolicyName *string
 }

@@ -5,8 +5,8 @@ metadata:
   name: {{ .Values.config.etcd.storage.className }}
   labels:
 {{ include "labels" . | indent 4 }}
-provisioner: kubernetes.io/vsphere-volume
+provisioner: csi.vsphere.vmware.com
 allowVolumeExpansion: true
 parameters:
-  plan: standard
+  storagePolicyName: {{ .Values.config.etcd.storage.storagePolicyName }}
 {{- end }}

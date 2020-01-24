@@ -51,4 +51,7 @@ type ETCDStorage struct {
 	// Capacity is the storage capacity used in etcd-main volume claims.
 	// +optional
 	Capacity *resource.Quantity `json:"capacity,omitempty"`
+	// StoragePolicyName is the name of the storage policy used in etcd-main volume claims.
+	// +optional
+	StoragePolicyName *string `json:"storagePolicyName,omitempty"`
 }
