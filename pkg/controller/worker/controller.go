@@ -74,7 +74,7 @@ func DefaultPredicates(ignoreOperationAnnotation bool) []predicate.Predicate {
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager, args AddArgs) error {
 	args.ControllerOptions.Reconciler = NewReconciler(mgr, args.Actuator)
-	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+	predicates := extensionspredicate.AddTypePredicate(args.Predicates, args.Type)
 	return add(mgr, args.ControllerOptions, predicates)
 }
 

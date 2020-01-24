@@ -99,7 +99,7 @@ func add(mgr manager.Manager, args AddArgs) error {
 		return err
 	}
 
-	predicates := extensionspredicate.AddTypePredicate(args.Type, args.Predicates)
+	predicates := extensionspredicate.AddTypePredicate(args.Predicates, args.Type)
 
 	if err := ctrl.Watch(&source.Kind{Type: &extensionsv1alpha1.Extension{}}, &handler.EnqueueRequestForObject{}, predicates...); err != nil {
 		return err
