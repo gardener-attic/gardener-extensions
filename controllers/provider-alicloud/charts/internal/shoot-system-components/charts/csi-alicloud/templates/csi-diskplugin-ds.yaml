@@ -23,8 +23,12 @@ spec:
       priorityClassName: system-node-critical
       serviceAccount: csi-disk-plugin-alicloud
       tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
+        - effect: NoSchedule
+          operator: Exists
+        - key: CriticalAddonsOnly
+          operator: Exists
+        - effect: NoExecute
+          operator: Exists
       containers:
       - name: driver-registrar
         image: {{ index .Values.images "csi-node-driver-registrar" }}
