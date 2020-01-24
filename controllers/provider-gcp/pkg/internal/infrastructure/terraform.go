@@ -104,7 +104,7 @@ func ComputeTerraformerChartValues(
 		workersCIDR = config.Networks.Worker
 	}
 
-	return map[string]interface{}{
+	values := map[string]interface{}{
 		"google": map[string]interface{}{
 			"region":  infra.Spec.Region,
 			"project": account.ProjectID,
@@ -133,6 +133,26 @@ func ComputeTerraformerChartValues(
 			"subnetInternal":      TerraformerOutputKeySubnetInternal,
 		},
 	}
+
+	if config.Networks.FlowLogs != nil {
+		fl := make(map[string]interface{})
+
+		if config.Networks.FlowLogs.AggregationInterval != nil {
+			fl["aggregationInterval"] = *config.Networks.FlowLogs.AggregationInterval
+		}
+
+		if config.Networks.FlowLogs.FlowSampling != nil {
+			fl["flowSampling"] = *config.Networks.FlowLogs.FlowSampling
+		}
+
+		if config.Networks.FlowLogs.Metadata != nil {
+			fl["metadata"] = *config.Networks.FlowLogs.Metadata
+		}
+
+		values["networks"].(map[string]interface{})["flowLogs"] = fl
+	}
+
+	return values
 }
 
 // RenderTerraformerChart renders the gcp-infra chart with the given values.
@@ -143,6 +163,7 @@ func RenderTerraformerChart(
 	config *api.InfrastructureConfig,
 	cluster *extensionscontroller.Cluster,
 ) (*TerraformFiles, error) {
+
 	values := ComputeTerraformerChartValues(infra, account, config, cluster)
 
 	release, err := renderer.Render(filepath.Join(internal.InternalChartsPath, "gcp-infra"), "gcp-infra", infra.Namespace, values)

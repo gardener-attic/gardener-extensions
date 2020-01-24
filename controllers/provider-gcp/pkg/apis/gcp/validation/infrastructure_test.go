@@ -141,6 +141,46 @@ var _ = Describe("InfrastructureConfig validation", func() {
 					"Detail": Equal("vpc name must not be empty when vpc key is provided"),
 				}))
 			})
+			It("should forbid empty VPC flow log config", func() {
+				infrastructureConfig.Networks.FlowLogs = &apisgcp.FlowLogs{}
+
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeRequired),
+					"Field":  Equal("networks.flowLogs"),
+					"Detail": Equal("at least one VPC flow log parameter must be specified when VPC flow log section is provided"),
+				}))
+			})
+			It("should forbid wrong VPC flow log config", func() {
+				aggregationInterval := "foo"
+				flowSampling := float32(1.2)
+				metadata := "foo"
+				infrastructureConfig.Networks.FlowLogs = &apisgcp.FlowLogs{AggregationInterval: &aggregationInterval, FlowSampling: &flowSampling, Metadata: &metadata}
+
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				Expect(errorList).To(ConsistOfFields(Fields{
+					"Type":   Equal(field.ErrorTypeNotSupported),
+					"Field":  Equal("networks.flowLogs.aggregationInterval"),
+					"Detail": Equal("supported values: \"INTERVAL_5_SEC\", \"INTERVAL_30_SEC\", \"INTERVAL_1_MIN\", \"INTERVAL_5_MIN\", \"INTERVAL_15_MIN\""),
+				}, Fields{
+					"Type":   Equal(field.ErrorTypeNotSupported),
+					"Field":  Equal("networks.flowLogs.metadata"),
+					"Detail": Equal("supported values: \"INCLUDE_ALL_METADATA\""),
+				}, Fields{
+					"Type":   Equal(field.ErrorTypeInvalid),
+					"Field":  Equal("networks.flowLogs.flowSampling"),
+					"Detail": Equal("must contain a valid value"),
+				}))
+			})
+			It("should allow correct VPC flow log config", func() {
+				aggregationInterval := "INTERVAL_1_MIN"
+				flowSampling := float32(0.5)
+				metadata := "INCLUDE_ALL_METADATA"
+				infrastructureConfig.Networks.FlowLogs = &apisgcp.FlowLogs{AggregationInterval: &aggregationInterval, FlowSampling: &flowSampling, Metadata: &metadata}
+
+				errorList := ValidateInfrastructureConfig(infrastructureConfig, &nodes, &pods, &services)
+				Expect(errorList).To(BeEmpty())
+			})
 		})
 	})
 

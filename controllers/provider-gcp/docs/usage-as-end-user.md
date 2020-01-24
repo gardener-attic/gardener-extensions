@@ -40,6 +40,10 @@ networks:
 # internal: 10.251.0.0/16
 # cloudNAT:
 #   minPortsPerVM: 2048
+# flowLogs:
+#   aggregationInterval: 0.5
+#   flowSampling: 0.2
+#   metadata: INCLUDE_ALL_METADATA
 ```
 
 The `networks.vpc` section describes whether you want to create the shoot cluster in an already existing VPC or whether to create a new one:
@@ -61,6 +65,14 @@ The `networks.cloudNAT.minPortsPerVM` is optional and is used to define the [min
 
 The specified CIDR ranges must be contained in the VPC CIDR specified above, or the VPC CIDR of your already existing VPC.
 You can freely choose these CIDRs and it is your responsibility to properly design the network layout to suit your needs.
+
+The `networks.flowLogs` section describes the configuration for the VPC flow logs. In order to enable the VPC flow logs at least one of the following parameters needs to be specified in the flow log section:
+
+* `networks.flowLogs.aggregationInterval` an optional parameter describing the aggregation interval for collecting flow logs.
+
+* `networks.flowLogs.flowSampling` an optional parameter describing the sampling rate of VPC flow logs within the subnetwork where 1.0 means all collected logs are reported and 0.0 means no logs are reported.
+
+* `networks.flowLogs.metadata` an optional parameter describing whether metadata fields should be added to the reported VPC flow logs.
 
 Apart from the VPC and the subnets the GCP extension will also create a dedicated service account for this shoot, and firewall rules.
 

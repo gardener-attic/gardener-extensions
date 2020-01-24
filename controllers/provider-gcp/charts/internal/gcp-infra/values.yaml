@@ -20,6 +20,10 @@ networks:
   pods: 100.96.0.0/11
   workers: 10.250.0.0/19
 # internal: 10.250.112.0/22
+# flowLogs:
+#   aggregationInterval: "INTERVAL_10_MIN"
+#   flowSampling: 0.2
+#   metadata: "INCLUDE_ALL_METADATA"
 
 outputKeys:
   vpcName: vpc_name

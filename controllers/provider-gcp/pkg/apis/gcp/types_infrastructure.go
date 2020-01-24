@@ -42,6 +42,8 @@ type NetworkConfig struct {
 	Worker string
 	// Workers is the worker subnet range to create (used for the VMs).
 	Workers string
+	// FlowLogs contains the flow log configuration for the subnet.
+	FlowLogs *FlowLogs
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -103,4 +105,14 @@ type CloudNAT struct {
 	// MinPortsPerVM is the minimum number of ports allocated to a VM in the NAT config.
 	// The default value is 2048 ports.
 	MinPortsPerVM *int32
+}
+
+// FlowLogs contains the configuration options for the vpc flow logs.
+type FlowLogs struct {
+	// AggregationInterval for collecting flow logs.
+	AggregationInterval *string
+	// FlowSampling sets the sampling rate of VPC flow logs within the subnetwork where 1.0 means all collected logs are reported and 0.0 means no logs are reported.
+	FlowSampling *float32
+	// Metadata configures whether metadata fields should be added to the reported VPC flow logs.
+	Metadata *string
 }

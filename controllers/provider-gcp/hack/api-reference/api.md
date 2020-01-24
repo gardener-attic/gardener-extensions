@@ -258,6 +258,61 @@ string
 </tr>
 </tbody>
 </table>
+<h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.FlowLogs">FlowLogs
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.NetworkConfig">NetworkConfig</a>)
+</p>
+<p>
+<p>FlowLogs contains the configuration options for the vpc flow logs.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>aggregationInterval</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>AggregationInterval for collecting flow logs.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flowSampling</code></br>
+<em>
+float32
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FlowSampling sets the sampling rate of VPC flow logs within the subnetwork where 1.0 means all collected logs are reported and 0.0 means no logs are reported.</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>metadata</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Metadata configures whether metadata fields should be added to the reported VPC flow logs.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="gcp.provider.extensions.gardener.cloud/v1alpha1.InfrastructureStatus">InfrastructureStatus
 </h3>
 <p>
@@ -511,6 +566,20 @@ string
 </td>
 <td>
 <p>Workers is the worker subnet range to create (used for the VMs).</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>flowLogs</code></br>
+<em>
+<a href="#gcp.provider.extensions.gardener.cloud/v1alpha1.FlowLogs">
+FlowLogs
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>FlowLogs contains the flow log configuration for the subnet.</p>
 </td>
 </tr>
 </tbody>
