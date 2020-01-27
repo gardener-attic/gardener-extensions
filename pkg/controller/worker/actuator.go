@@ -28,4 +28,7 @@ type Actuator interface {
 	Reconcile(context.Context, *extensionsv1alpha1.Worker, *extensionscontroller.Cluster) error
 	// Delete deletes the Worker.
 	Delete(context.Context, *extensionsv1alpha1.Worker, *extensionscontroller.Cluster) error
+	// Migrate delete the MCM, machineDeployments, mahicneClasees, machineClassSecrets,
+	// machineSets and the machines, then deletes the worker
+	Migrate(context.Context, *extensionsv1alpha1.Worker, *extensionscontroller.Cluster) error
 }

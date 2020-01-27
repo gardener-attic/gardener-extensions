@@ -175,6 +175,17 @@ func DeleteFinalizer(ctx context.Context, client client.Client, finalizerName st
 	return client.Update(ctx, obj)
 }
 
+// DeleteAllFinalizers removes all finalizers from the object and issues an update.
+func DeleteAllFinalizers(ctx context.Context, client client.Client, obj runtime.Object) error {
+	accessor, err := meta.Accessor(obj)
+	if err != nil {
+		return err
+	}
+
+	accessor.SetFinalizers([]string{})
+	return client.Update(ctx, obj)
+}
+
 // SecretReferenceToKey returns the key of the given SecretReference.
 func SecretReferenceToKey(ref *corev1.SecretReference) client.ObjectKey {
 	return kutil.Key(ref.Namespace, ref.Name)

@@ -16,6 +16,7 @@ package genericactuator
 
 import (
 	"context"
+	"fmt"
 
 	extensionscontroller "github.com/gardener/gardener-extensions/pkg/controller"
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
@@ -114,6 +115,21 @@ func (a *genericActuator) cleanupMachineDeployments(ctx context.Context, existin
 	return nil
 }
 
+func (a *genericActuator) shallowDeleteMachineDeployments(ctx context.Context, existingMachineDeployments *machinev1alpha1.MachineDeploymentList, wantedMachineDeployments worker.MachineDeployments) error {
+	if err := a.cleanupMachineDeployments(ctx, existingMachineDeployments, wantedMachineDeployments); err != nil {
+		return err
+	}
+
+	for _, existingMachineDeployment := range existingMachineDeployments.Items {
+		if !wantedMachineDeployments.HasDeployment(existingMachineDeployment.Name) {
+			if err := extensionscontroller.DeleteAllFinalizers(ctx, a.client, &existingMachineDeployment); err != nil {
+				return errors.Wrap(err, fmt.Sprintf("Error removing finalizer from MachineDeployment: %s/%s", existingMachineDeployment.Namespace, existingMachineDeployment.Name))
+			}
+		}
+	}
+	return nil
+}
+
 func (a *genericActuator) listMachineClassNames(ctx context.Context, namespace string, machineClassList runtime.Object) (sets.String, error) {
 	if err := a.client.List(ctx, machineClassList, client.InNamespace(namespace)); err != nil {
 		return nil, err
@@ -157,6 +173,30 @@ func (a *genericActuator) cleanupMachineClasses(ctx context.Context, namespace s
 	})
 }
 
+func (a *genericActuator) shallowDeleteMachineClasses(ctx context.Context, namespace string, machineClassList runtime.Object, wantedMachineDeployments worker.MachineDeployments) error {
+	if err := a.cleanupMachineClasses(ctx, namespace, machineClassList, wantedMachineDeployments); err != nil {
+		return err
+	}
+	if err := a.client.List(ctx, machineClassList, client.InNamespace(namespace)); err != nil {
+		return err
+	}
+
+	return meta.EachListItem(machineClassList, func(machineClass runtime.Object) error {
+		accessor, err := meta.Accessor(machineClass)
+		if err != nil {
+			return err
+		}
+
+		if !wantedMachineDeployments.HasClass(accessor.GetName()) {
+			if err := extensionscontroller.DeleteAllFinalizers(ctx, a.client, machineClass); err != nil {
+				return errors.Wrap(err, fmt.Sprintf("Error removing finalizer from MachineClass: %s/%s", accessor.GetNamespace(), accessor.GetName()))
+			}
+		}
+
+		return nil
+	})
+}
+
 func (a *genericActuator) listMachineClassSecrets(ctx context.Context, namespace string) (*corev1.SecretList, error) {
 	var (
 		secretList = &corev1.SecretList{}
@@ -191,6 +231,28 @@ func (a *genericActuator) cleanupMachineClassSecrets(ctx context.Context, namesp
 	return nil
 }
 
+// shallowDeleteMachineClassSecrets deletes all unused machine class secrets (i.e., those which are not part
+// of the provided list <usedSecrets>) without waiting for MCM to do this.
+func (a *genericActuator) shallowDeleteMachineClassSecrets(ctx context.Context, namespace string, wantedMachineDeployments worker.MachineDeployments) error {
+	if err := a.cleanupMachineClassSecrets(ctx, namespace, wantedMachineDeployments); err != nil {
+		return err
+	}
+	secretList, err := a.listMachineClassSecrets(ctx, namespace)
+	if err != nil {
+		return err
+	}
+	// Delete the finalizaers to all secrets which were used for machine classes that do not exist anymore.
+	for _, secret := range secretList.Items {
+		if !wantedMachineDeployments.HasSecret(secret.Name) {
+			if err := extensionscontroller.DeleteAllFinalizers(ctx, a.client, &secret); err != nil {
+				return errors.Wrap(err, fmt.Sprintf("Error removing finalizer from MachineClassSecret: %s/%s", secret.Namespace, secret.Name))
+			}
+		}
+	}
+
+	return nil
+}
+
 // cleanupMachineClassSecrets deletes MachineSets having number of desired and actual replicas equaling 0
 func (a *genericActuator) cleanupMachineSets(ctx context.Context, namespace string) error {
 	machineSetList := &machinev1alpha1.MachineSetList{}
@@ -207,6 +269,52 @@ func (a *genericActuator) cleanupMachineSets(ctx context.Context, namespace stri
 			if err := a.client.Delete(ctx, machineSet.DeepCopy()); client.IgnoreNotFound(err) != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+// shallowDeleteMachineSets deletes the existing machineSets in a given namespace
+// without waiting machine-controll-manager to do this
+func (a *genericActuator) shallowDeleteAllExistingMachineSets(ctx context.Context, namespace string) error {
+	machineSetList := &machinev1alpha1.MachineSetList{}
+	if err := a.client.List(ctx, machineSetList, client.InNamespace(namespace)); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	for _, machineSet := range machineSetList.Items {
+		machineSetDeepCopy := machineSet.DeepCopy()
+		if err := a.client.Delete(ctx, machineSetDeepCopy); client.IgnoreNotFound(err) != nil {
+			return err
+		}
+		if err := extensionscontroller.DeleteAllFinalizers(ctx, a.client, machineSetDeepCopy); err != nil {
+			return errors.Wrap(err, fmt.Sprintf("Error removing finalizer from MachineSet: %s/%s", machineSet.Namespace, machineSet.Name))
+		}
+	}
+	return nil
+}
+
+// shallowDeleteMachines deletes the existing machines in a given namespace
+// without waiting machine-controll-manager to do this
+func (a *genericActuator) shallowDeleteAllExistingMachines(ctx context.Context, namespace string) error {
+	machineList := &machinev1alpha1.MachineList{}
+	if err := a.client.List(ctx, machineList, client.InNamespace(namespace)); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	for _, machine := range machineList.Items {
+		machineDeepCopy := machine.DeepCopy()
+		if err := a.client.Delete(ctx, machineDeepCopy); client.IgnoreNotFound(err) != nil {
+			return err
+		}
+		if err := extensionscontroller.DeleteAllFinalizers(ctx, a.client, machineDeepCopy); err != nil {
+			return errors.Wrap(err, fmt.Sprintf("Error removing finalizer from Machine: %s/%s", machineDeepCopy.Namespace, machineDeepCopy.Name))
 		}
 	}
 	return nil

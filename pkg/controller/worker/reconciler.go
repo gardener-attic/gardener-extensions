@@ -23,6 +23,7 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/util"
 
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
+	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
 	gardencorev1beta1helper "github.com/gardener/gardener/pkg/apis/core/v1beta1/helper"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/go-logr/logr"
@@ -82,6 +83,37 @@ func (r *reconciler) Reconcile(request reconcile.Request) (reconcile.Result, err
 	cluster, err := extensionscontroller.GetCluster(r.ctx, r.client, worker.Namespace)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// Migration Flow
+	if worker.Annotations[v1beta1constants.GardenerOperation] == v1beta1constants.GardenerOperationMigrate {
+		//TODO: Remove code repetition for updatingStatus. It is the same logic for migrate, delete, reconcile
+		operationType := gardencorev1beta1helper.ComputeOperationType(worker.ObjectMeta, worker.Status.LastOperation)
+		if err := r.updateStatusProcessing(r.ctx, worker, operationType, "Migrating the worker"); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		r.logger.Info("Starting the migration of worker", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+		if err := r.actuator.Migrate(r.ctx, worker, cluster); err != nil {
+			msg := "Error migrating worker"
+			utilruntime.HandleError(r.updateStatusError(r.ctx, extensionscontroller.ReconcileErrCauseOrErr(err), worker, operationType, msg))
+			r.logger.Error(err, msg, "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+			return extensionscontroller.ReconcileErr(err)
+		}
+
+		msg := "Successfully deleted worker"
+		r.logger.Info(msg, "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+		if err := r.updateStatusSuccess(r.ctx, worker, operationType, msg); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		r.logger.Info("Removing finalizer.", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+		if err := extensionscontroller.DeleteFinalizer(r.ctx, r.client, FinalizerName, worker); err != nil {
+			r.logger.Error(err, "Error removing finalizer from Worker", "worker", fmt.Sprintf("%s/%s", worker.Namespace, worker.Name))
+			return reconcile.Result{}, err
+		}
+
+		return reconcile.Result{}, nil
 	}
 
 	// Deletion flow

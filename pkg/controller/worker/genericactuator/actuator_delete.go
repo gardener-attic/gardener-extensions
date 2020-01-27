@@ -97,6 +97,8 @@ func (a *genericActuator) Delete(ctx context.Context, worker *extensionsv1alpha1
 	return nil
 }
 
+//func (a *genericActuator) deleteMachineDeploymentsAndMAchineCla
+
 // Mark all existing machines to become forcefully deleted.
 func (a *genericActuator) markAllMachinesForcefulDeletion(ctx context.Context, namespace string) error {
 	// Mark all existing machines to become forcefully deleted.
