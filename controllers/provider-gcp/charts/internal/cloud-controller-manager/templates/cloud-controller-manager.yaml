@@ -68,7 +68,7 @@ spec:
         - --cluster-cidr={{ .Values.podNetwork }}
         - --cluster-name={{ .Values.clusterName }}
         - --concurrent-service-syncs=10
-        - --configure-cloud-routes=true
+        - --configure-cloud-routes=false
         {{- include "cloud-controller-manager.featureGates" . | trimSuffix "," | indent 8 }}
         - --kubeconfig=/var/lib/cloud-controller-manager/kubeconfig
         - --leader-elect=true
