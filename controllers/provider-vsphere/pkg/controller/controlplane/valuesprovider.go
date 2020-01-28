@@ -47,8 +47,7 @@ import (
 
 // Object names
 const (
-	cloudControllerManagerDeploymentName = "cloud-controller-manager"
-	cloudControllerManagerServerName     = "cloud-controller-manager-server"
+	cloudControllerManagerServerName = "cloud-controller-manager-server"
 )
 
 var controlPlaneSecrets = &secrets.Secrets{
@@ -63,7 +62,7 @@ var controlPlaneSecrets = &secrets.Secrets{
 		return []secrets.ConfigInterface{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
-					Name:         cloudControllerManagerDeploymentName,
+					Name:         vsphere.CloudControllerManagerName,
 					CommonName:   "system:serviceaccount:kube-system:cloud-controller-manager",
 					Organization: []string{user.SystemPrivilegedGroup},
 					CertType:     secrets.ClientCert,
@@ -77,8 +76,8 @@ var controlPlaneSecrets = &secrets.Secrets{
 			&secrets.ControlPlaneSecretConfig{
 				CertificateSecretConfig: &secrets.CertificateSecretConfig{
 					Name:       cloudControllerManagerServerName,
-					CommonName: cloudControllerManagerDeploymentName,
-					DNSNames:   controlplane.DNSNamesForService(cloudControllerManagerDeploymentName, clusterName),
+					CommonName: vsphere.CloudControllerManagerName,
+					DNSNames:   controlplane.DNSNamesForService(vsphere.CloudControllerManagerName, clusterName),
 					CertType:   secrets.ServerCert,
 					SigningCA:  cas[v1alpha1constants.SecretNameCACluster],
 				},
@@ -225,7 +224,7 @@ func NewValuesProvider(logger logr.Logger, gardenId string) genericactuator.Valu
 	}
 }
 
-// valuesProvider is a ValuesProvider that provides AWS-specific values for the 2 charts applied by the generic actuator.
+// valuesProvider is a ValuesProvider that provides vSphere-specific values for the 2 charts applied by the generic actuator.
 type valuesProvider struct {
 	genericactuator.NoopValuesProvider
 	common.ClientContext
@@ -477,7 +476,7 @@ func (vp *valuesProvider) getControlPlaneChartValues(
 			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"podNetwork":        extensionscontroller.GetPodNetwork(cluster),
 			"podAnnotations": map[string]interface{}{
-				"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
+				"checksum/secret-cloud-controller-manager":        checksums[vsphere.CloudControllerManagerName],
 				"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
 				"checksum/secret-cloudprovider":                   checksums[v1alpha1constants.SecretNameCloudProvider],
 				"checksum/configmap-cloud-provider-config":        checksums[vsphere.CloudProviderConfig],
@@ -488,7 +487,7 @@ func (vp *valuesProvider) getControlPlaneChartValues(
 			"clusterName":       clusterId,
 			"kubernetesVersion": cluster.Shoot.Spec.Kubernetes.Version,
 			"podAnnotations": map[string]interface{}{
-				"checksum/secret-cloud-controller-manager":        checksums[cloudControllerManagerDeploymentName],
+				"checksum/secret-cloud-controller-manager":        checksums[vsphere.CloudControllerManagerName],
 				"checksum/secret-cloud-controller-manager-server": checksums[cloudControllerManagerServerName],
 				"checksum/secret-cloudprovider":                   checksums[v1alpha1constants.SecretNameCloudProvider],
 				"checksum/configmap-cloud-provider-config":        checksums[vsphere.CloudProviderConfig],

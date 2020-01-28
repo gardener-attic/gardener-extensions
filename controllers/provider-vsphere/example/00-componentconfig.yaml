@@ -15,3 +15,5 @@ etcd:
     className: gardener.cloud-fast
     capacity: 25Gi
     storagePolicyName: vSAN Default Storage Policy
+#healthCheckConfig:
+#  syncPeriod: 30s

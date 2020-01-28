@@ -24,6 +24,7 @@ import (
 	vsphereinstall "github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/apis/vsphere/install"
 	vspherecmd "github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/cmd"
 	vspherecontrolplane "github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/controller/controlplane"
+	"github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/controller/healthcheck"
 	vsphereinfrastructure "github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/controller/infrastructure"
 	vsphereworker "github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/controllers/provider-vsphere/pkg/vsphere"
@@ -33,8 +34,10 @@ import (
 	"github.com/gardener/gardener-extensions/pkg/controller/worker"
 	"github.com/gardener/gardener-extensions/pkg/util"
 	webhookcmd "github.com/gardener/gardener-extensions/pkg/webhook/cmd"
+	machinev1alpha1 "github.com/gardener/machine-controller-manager/pkg/apis/machine/v1alpha1"
 
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
@@ -55,6 +58,11 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			MaxConcurrentReconciles: 5,
 		}
 		reconcileOpts = &controllercmd.ReconcilerOptions{}
+
+		// options for the health care controller
+		healthCareCtrlOpts = &controllercmd.ControllerOptions{
+			MaxConcurrentReconciles: 5,
+		}
 
 		// options for the control plane controller
 		controlPlaneCtrlOpts = &controllercmd.ControllerOptions{
@@ -85,6 +93,7 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 			controllercmd.PrefixOption("controlplane-", controlPlaneCtrlOpts),
 			controllercmd.PrefixOption("infrastructure-", infraCtrlOpts),
 			controllercmd.PrefixOption("worker-", &workerCtrlOptsUnprefixed),
+			controllercmd.PrefixOption("healthcheck-", healthCareCtrlOpts),
 			controllerSwitches,
 			configFileOpts,
 			reconcileOpts,
@@ -113,16 +122,26 @@ func NewControllerManagerCommand(ctx context.Context) *cobra.Command {
 				controllercmd.LogErrAndExit(err, "Could not instantiate manager")
 			}
 
-			if err := controller.AddToScheme(mgr.GetScheme()); err != nil {
+			scheme := mgr.GetScheme()
+			if err := controller.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
 
-			if err := vsphereinstall.AddToScheme(mgr.GetScheme()); err != nil {
+			if err := vsphereinstall.AddToScheme(scheme); err != nil {
 				controllercmd.LogErrAndExit(err, "Could not update manager scheme")
 			}
+
+			// add common meta types to schema for controller-runtime to use v1.ListOptions
+			metav1.AddToGroupVersion(scheme, machinev1alpha1.SchemeGroupVersion)
+			// add types required for vSphere Health check
+			scheme.AddKnownTypes(machinev1alpha1.SchemeGroupVersion,
+				&machinev1alpha1.MachineDeploymentList{},
+			)
 
 			configFileOpts.Completed().ApplyETCDStorage(&vspherecontrolplaneexposure.DefaultAddOptions.ETCDStorage)
 			configFileOpts.Completed().ApplyGardenId(&vspherecontrolplane.DefaultAddOptions.GardenId)
+			configFileOpts.Completed().ApplyHealthCheckConfig(&healthcheck.DefaultAddOptions.HealthCheckConfig)
+			healthCareCtrlOpts.Completed().Apply(&healthcheck.DefaultAddOptions.Controller)
 			controlPlaneCtrlOpts.Completed().Apply(&vspherecontrolplane.DefaultAddOptions.Controller)
 			infraCtrlOpts.Completed().Apply(&vsphereinfrastructure.DefaultAddOptions.Controller)
 			reconcileOpts.Completed().Apply(&vsphereinfrastructure.DefaultAddOptions.IgnoreOperationAnnotation)

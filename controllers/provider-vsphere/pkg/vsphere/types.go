@@ -32,8 +32,6 @@ const (
 	CloudControllerImageName = "vsphere-cloud-controller-manager"
 	// NsxtLbProviderImageName is the name of the external NSX-T Load Balancer Provider image.
 	NsxtLbProviderImageName = "nsxt-lb-provider-manager"
-	// ETCDBackupRestoreImageName is the name of the etcd backup and restore image.
-	ETCDBackupRestoreImageName = "etcd-backup-restore"
 
 	// CSIAttacherImageName is the name of the CSI attacher image.
 	CSIAttacherImageName = "csi-attacher"
@@ -50,11 +48,6 @@ const (
 	// CSINodeImageName is the name of the vsphere-csi-node image.
 	CSINodeImageName = "vsphere-csi-node"
 
-	// BucketName is a constant for the key in a backup secret that holds the bucket name.
-	// The bucket name is written to the backup secret by Gardener as a temporary solution.
-	// TODO In the future, the bucket name should come from a BackupBucket resource (see https://github.com/gardener/gardener/blob/master/docs/proposals/02-backupinfra.md)
-	BucketName = "bucketName"
-
 	// Host is a constant for the key in a cloud provider secret holding the VSphere host name
 	Host = "vsphereHost"
 	// Username is a constant for the key in a cloud provider secret holding the VSphere user name
@@ -64,14 +57,10 @@ const (
 	// InsecureSSL is a constant for the key in a cloud provider secret holding the boolean flag to allow insecure HTTPS connections to the VSphere host
 	InsecureSSL = "vsphereInsecureSSL"
 
-	// NSXTHost is a constant for the key in a cloud provider secret holding the NSX-T host name
-	NSXTHost = "nsxtHost"
 	// NSXTUsername is a constant for the key in a cloud provider secret holding the NSX-T user name
 	NSXTUsername = "nsxtUsername"
 	// Password is a constant for the key in a cloud provider secret holding the NSX-T password
 	NSXTPassword = "nsxtPassword"
-	// InsecureSSL is a constant for the key in a cloud provider secret holding the boolean flag to allow insecure HTTPS connections to the NSX-T host
-	NSXTInsecureSSL = "nsxtInsecureSSL"
 
 	// TerraformerPurposeInfra is a constant for the complete Terraform setup with purpose 'infrastructure'.
 	TerraformerPurposeInfra = "infra"
@@ -88,9 +77,9 @@ const (
 	MachineControllerManagerVpaName = "machine-controller-manager-vpa"
 	// MachineControllerManagerMonitoringConfigName is the name of the ConfigMap containing monitoring stack configurations for machine-controller-manager.
 	MachineControllerManagerMonitoringConfigName = "machine-controller-manager-monitoring-config"
-	// BackupSecretName defines the name of the secret containing the credentials which are required to
-	// authenticate against the respective cloud provider (required to store the backups of Shoot clusters).
-	BackupSecretName = "etcd-backup"
+
+	// CloudControllerManagerName is the constant for the name of the CloudController deployed by the control plane controller.
+	CloudControllerManagerName = "cloud-controller-manager"
 )
 
 var (
