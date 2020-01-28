@@ -163,6 +163,9 @@ var _ = Describe("Terraform", func() {
 						"serviceEndpoints": []string{testServiceEndpoint},
 					},
 				},
+				"identity": map[string]interface{}{
+					"enabled": false,
+				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
 					"worker": config.Networks.Workers,
@@ -205,6 +208,9 @@ var _ = Describe("Terraform", func() {
 					"subnet": map[string]interface{}{
 						"serviceEndpoints": []string{testServiceEndpoint},
 					},
+				},
+				"identity": map[string]interface{}{
+					"enabled": false,
 				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
@@ -255,6 +261,9 @@ var _ = Describe("Terraform", func() {
 						"serviceEndpoints": []string{testServiceEndpoint},
 					},
 				},
+				"identity": map[string]interface{}{
+					"enabled": false,
+				},
 				"clusterName": infra.Namespace,
 				"networks": map[string]interface{}{
 					"worker": config.Networks.Workers,
@@ -298,7 +307,7 @@ var _ = Describe("Terraform", func() {
 		})
 
 		It("should correctly compute the status for zoned cluster", func() {
-			status := StatusFromTerraformState(state)
+			status := StatusFromTerraformState(state, config)
 			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
 				ResourceGroup: apiv1alpha1.ResourceGroup{
@@ -329,7 +338,7 @@ var _ = Describe("Terraform", func() {
 		It("should correctly compute the status for non zoned cluster", func() {
 			state.AvailabilitySetID = availabilitySetID
 			state.AvailabilitySetName = availabilitySetName
-			status := StatusFromTerraformState(state)
+			status := StatusFromTerraformState(state, config)
 			Expect(status).To(Equal(&apiv1alpha1.InfrastructureStatus{
 				TypeMeta: StatusTypeMeta,
 				ResourceGroup: apiv1alpha1.ResourceGroup{

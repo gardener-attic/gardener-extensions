@@ -27,6 +27,8 @@ type InfrastructureConfig struct {
 	ResourceGroup *ResourceGroup
 	// Networks is the network configuration (VNets, subnets, etc.)
 	Networks NetworkConfig
+	// Identity containts configuration for the assigned managed identity.
+	Identity *IdentityConfig
 	// Zoned indicates whether the cluster uses zones
 	Zoned bool
 }
@@ -62,6 +64,8 @@ type InfrastructureStatus struct {
 	RouteTables []RouteTable
 	// SecurityGroups is a list of created security groups
 	SecurityGroups []SecurityGroup
+	// Identity is the status of the managed identity.
+	Identity *IdentityStatus
 	// Zoned indicates whether the cluster uses zones
 	Zoned bool
 }
@@ -134,4 +138,18 @@ type VNetStatus struct {
 	Name string
 	// ResourceGroup is the resource group where the existing vNet belongs to.
 	ResourceGroup *string
+}
+
+// IdentityConfig contains configuration for the managed identity.
+type IdentityConfig struct {
+	Name          string
+	ResourceGroup string
+	AcrAccess     *bool
+}
+
+// IdentityStatus contains the status information of the created managed identity.
+type IdentityStatus struct {
+	ID        string
+	ClientID  string
+	AcrAccess bool
 }

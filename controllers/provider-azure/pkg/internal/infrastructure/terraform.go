@@ -49,6 +49,10 @@ const (
 	TerraformerOutputKeyRouteTableName = "routeTableName"
 	// TerraformerOutputKeySecurityGroupName is the key for the securityGroupName output
 	TerraformerOutputKeySecurityGroupName = "securityGroupName"
+	// TerraformerOutputKeyIdentityID is the key for the identityID output
+	TerraformerOutputKeyIdentityID = "identityID"
+	// TerraformerOutputKeyIdentityClientID is the key for the identityClientID output
+	TerraformerOutputKeyIdentityClientID = "identityClientID"
 )
 
 var (
@@ -87,6 +91,9 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 			"subnetName":        TerraformerOutputKeySubnetName,
 			"routeTableName":    TerraformerOutputKeyRouteTableName,
 			"securityGroupName": TerraformerOutputKeySecurityGroupName,
+		}
+		identityConfig = map[string]interface{}{
+			"enabled": false,
 		}
 	)
 	// check if we should use an existing ResourceGroup or create a new one
@@ -134,6 +141,14 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		azure["countFaultDomains"] = countFaultDomains
 	}
 
+	if config.Identity != nil && config.Identity.Name != "" && config.Identity.ResourceGroup != "" {
+		identityConfig["enabled"] = true
+		identityConfig["name"] = config.Identity.Name
+		identityConfig["resourceGroupName"] = config.Identity.ResourceGroup
+		outputKeys["identityID"] = TerraformerOutputKeyIdentityID
+		outputKeys["identityClientID"] = TerraformerOutputKeyIdentityClientID
+	}
+
 	return map[string]interface{}{
 		"azure": azure,
 		"create": map[string]interface{}{
@@ -152,6 +167,7 @@ func ComputeTerraformerChartValues(infra *extensionsv1alpha1.Infrastructure, cli
 		"networks": map[string]interface{}{
 			"worker": config.Networks.Workers,
 		},
+		"identity":   identityConfig,
 		"outputKeys": outputKeys,
 	}, nil
 }
@@ -201,6 +217,10 @@ type TerraformState struct {
 	RouteTableName string
 	// SecurityGroupName is the name of the security group.
 	SecurityGroupName string
+	// IdentityID is the id of the identity.
+	IdentityID string
+	// IdentityClientID is the client id of the identity.
+	IdentityClientID string
 }
 
 // ExtractTerraformState extracts the TerraformState from the given Terraformer.
@@ -219,6 +239,10 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *api.Infrastructur
 
 	if !config.Zoned {
 		outputKeys = append(outputKeys, TerraformerOutputKeyAvailabilitySetID, TerraformerOutputKeyAvailabilitySetName)
+	}
+
+	if config.Identity != nil && config.Identity.Name != "" && config.Identity.ResourceGroup != "" {
+		outputKeys = append(outputKeys, TerraformerOutputKeyIdentityID, TerraformerOutputKeyIdentityClientID)
 	}
 
 	vars, err := tf.GetStateOutputVariables(outputKeys...)
@@ -242,12 +266,18 @@ func ExtractTerraformState(tf terraformer.Terraformer, config *api.Infrastructur
 		tfState.AvailabilitySetID = vars[TerraformerOutputKeyAvailabilitySetID]
 		tfState.AvailabilitySetName = vars[TerraformerOutputKeyAvailabilitySetName]
 	}
+
+	if config.Identity != nil && config.Identity.Name != "" && config.Identity.ResourceGroup != "" {
+		tfState.IdentityID = vars[TerraformerOutputKeyIdentityID]
+		tfState.IdentityClientID = vars[TerraformerOutputKeyIdentityClientID]
+	}
+
 	return &tfState, nil
 }
 
 // StatusFromTerraformState computes an InfrastructureStatus from the given
 // Terraform variables.
-func StatusFromTerraformState(state *TerraformState) *apiv1alpha1.InfrastructureStatus {
+func StatusFromTerraformState(state *TerraformState, config *api.InfrastructureConfig) *apiv1alpha1.InfrastructureStatus {
 	var tfState = apiv1alpha1.InfrastructureStatus{
 		TypeMeta: StatusTypeMeta,
 		ResourceGroup: apiv1alpha1.ResourceGroup{
@@ -277,6 +307,16 @@ func StatusFromTerraformState(state *TerraformState) *apiv1alpha1.Infrastructure
 		tfState.Networks.VNet.ResourceGroup = &state.VNetResourceGroupName
 	}
 
+	if state.IdentityID != "" && state.IdentityClientID != "" {
+		tfState.Identity = &apiv1alpha1.IdentityStatus{
+			ID:       state.IdentityID,
+			ClientID: state.IdentityClientID,
+		}
+		if config.Identity != nil && config.Identity.AcrAccess != nil && *config.Identity.AcrAccess {
+			tfState.Identity.AcrAccess = true
+		}
+	}
+
 	// If no AvailabilitySet was created then the Shoot uses zones.
 	if state.AvailabilitySetID == "" && state.AvailabilitySetName == "" {
 		tfState.Zoned = true
@@ -298,5 +338,5 @@ func ComputeStatus(tf terraformer.Terraformer, config *api.InfrastructureConfig)
 		return nil, err
 	}
 
-	return StatusFromTerraformState(state), nil
+	return StatusFromTerraformState(state, config), nil
 }

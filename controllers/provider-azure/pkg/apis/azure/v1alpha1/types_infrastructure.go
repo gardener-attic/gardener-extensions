@@ -29,6 +29,9 @@ type InfrastructureConfig struct {
 	ResourceGroup *ResourceGroup `json:"resourceGroup,omitempty"`
 	// Networks is the network configuration (VNet, subnets, etc.).
 	Networks NetworkConfig `json:"networks"`
+	// Identity containts configuration for the assigned managed identity.
+	// +optional
+	Identity *IdentityConfig `json:"identity,omitempty"`
 	// Zoned indicates whether the cluster uses availability zones.
 	// +optional
 	Zoned bool `json:"zoned,omitempty"`
@@ -66,6 +69,9 @@ type InfrastructureStatus struct {
 	RouteTables []RouteTable `json:"routeTables"`
 	// SecurityGroups is a list of created security groups
 	SecurityGroups []SecurityGroup `json:"securityGroups"`
+	// Identity is the status of the managed identity.
+	// +optional
+	Identity *IdentityStatus `json:"identity,omitempty"`
 	// Zoned indicates whether the cluster uses zones
 	// +optional
 	Zoned bool `json:"zoned,omitempty"`
@@ -144,4 +150,18 @@ type VNetStatus struct {
 	// ResourceGroup is the resource group where the existing vNet belongs to.
 	// +optional
 	ResourceGroup *string `json:"resourceGroup,omitempty"`
+}
+
+// IdentityConfig contains configuration for the managed identity.
+type IdentityConfig struct {
+	Name          string `json:"name"`
+	ResourceGroup string `json:"resourceGroupName"`
+	AcrAccess     *bool  `json:"acrAccess,omitempty"`
+}
+
+// IdentityStatus contains the status information of the created managed identity.
+type IdentityStatus struct {
+	ID        string `json:"id"`
+	ClientID  string `json:"clientID"`
+	AcrAccess bool   `json:"acrAccess"`
 }

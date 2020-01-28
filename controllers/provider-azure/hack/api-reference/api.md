@@ -196,6 +196,20 @@ NetworkConfig
 </tr>
 <tr>
 <td>
+<code>identity</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.IdentityConfig">
+IdentityConfig
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Identity containts configuration for the assigned managed identity.</p>
+</td>
+</tr>
+<tr>
+<td>
 <code>zoned</code></br>
 <em>
 bool
@@ -384,6 +398,104 @@ int
 </tr>
 </tbody>
 </table>
+<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.IdentityConfig">IdentityConfig
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.InfrastructureConfig">InfrastructureConfig</a>)
+</p>
+<p>
+<p>IdentityConfig contains configuration for the managed identity.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>name</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>resourceGroupName</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>acrAccess</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.IdentityStatus">IdentityStatus
+</h3>
+<p>
+(<em>Appears on:</em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.InfrastructureStatus">InfrastructureStatus</a>)
+</p>
+<p>
+<p>IdentityStatus contains the status information of the created managed identity.</p>
+</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code>id</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>clientID</code></br>
+<em>
+string
+</em>
+</td>
+<td>
+</td>
+</tr>
+<tr>
+<td>
+<code>acrAccess</code></br>
+<em>
+bool
+</em>
+</td>
+<td>
+</td>
+</tr>
+</tbody>
+</table>
 <h3 id="azure.provider.extensions.gardener.cloud/v1alpha1.InfrastructureStatus">InfrastructureStatus
 </h3>
 <p>
@@ -460,6 +572,20 @@ ResourceGroup
 </td>
 <td>
 <p>SecurityGroups is a list of created security groups</p>
+</td>
+</tr>
+<tr>
+<td>
+<code>identity</code></br>
+<em>
+<a href="#azure.provider.extensions.gardener.cloud/v1alpha1.IdentityStatus">
+IdentityStatus
+</a>
+</em>
+</td>
+<td>
+<em>(Optional)</em>
+<p>Identity is the status of the managed identity.</p>
 </td>
 </tr>
 <tr>

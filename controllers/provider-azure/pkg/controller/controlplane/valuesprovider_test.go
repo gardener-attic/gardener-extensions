@@ -30,8 +30,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/inject"
@@ -431,6 +433,11 @@ var _ = Describe("ValuesProvider", func() {
 			},
 		}
 
+		acrConfigMap = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: azure.CloudProviderAcrConfigName, Namespace: namespace},
+		}
+		errorAcrConfigMapNotFound = errors.NewNotFound(schema.GroupResource{}, azure.CloudProviderAcrConfigName)
+
 		checksums = map[string]string{
 			v1beta1constants.SecretNameCloudProvider: "8bafb35ff1ac60275d62e1cbd495aceb511fb354f74a20f7d06ecb48b3a68432",
 			azure.CloudProviderConfigName:            "08a7bc7fe8f59b055f173145e211760a83f02cf89635cef26ebb351378635606",
@@ -501,6 +508,7 @@ var _ = Describe("ValuesProvider", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+			client.EXPECT().Delete(context.TODO(), acrConfigMap).Return(errorAcrConfigMapNotFound)
 
 			// Create valuesProvider
 			vp := NewValuesProvider(logger)
@@ -521,6 +529,7 @@ var _ = Describe("ValuesProvider", func() {
 		// Create mock client
 		client := mockclient.NewMockClient(ctrl)
 		client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+		client.EXPECT().Delete(context.TODO(), acrConfigMap).Return(errorAcrConfigMapNotFound)
 
 		// Create valuesProvider
 		vp := NewValuesProvider(logger)
@@ -541,6 +550,7 @@ var _ = Describe("ValuesProvider", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+			client.EXPECT().Delete(context.TODO(), acrConfigMap).Return(errorAcrConfigMapNotFound)
 
 			// Create valuesProvider
 			vp := NewValuesProvider(logger)
@@ -561,6 +571,7 @@ var _ = Describe("ValuesProvider", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+			client.EXPECT().Delete(context.TODO(), acrConfigMap).Return(errorAcrConfigMapNotFound)
 
 			// Create valuesProvider
 			vp := NewValuesProvider(logger)
@@ -581,6 +592,7 @@ var _ = Describe("ValuesProvider", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+			client.EXPECT().Delete(context.TODO(), acrConfigMap).Return(errorAcrConfigMapNotFound)
 
 			// Create valuesProvider
 			vp := NewValuesProvider(logger)
@@ -601,6 +613,7 @@ var _ = Describe("ValuesProvider", func() {
 			// Create mock client
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), cpSecretKey, &corev1.Secret{}).DoAndReturn(clientGet(cpSecret))
+			client.EXPECT().Delete(context.TODO(), acrConfigMap).Return(errorAcrConfigMapNotFound)
 
 			// Create valuesProvider
 			vp := NewValuesProvider(logger)

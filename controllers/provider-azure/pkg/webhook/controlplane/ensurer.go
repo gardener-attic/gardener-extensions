@@ -18,9 +18,12 @@ import (
 	"context"
 
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
+	"github.com/gardener/gardener-extensions/pkg/controller/operatingsystemconfig/oscommon/cloudinit"
+	"github.com/gardener/gardener-extensions/pkg/util"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane"
 	"github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 
 	"github.com/coreos/go-systemd/unit"
 	v1beta1constants "github.com/gardener/gardener/pkg/apis/core/v1beta1/constants"
@@ -34,6 +37,8 @@ import (
 	kubeletconfigv1beta1 "k8s.io/kubelet/config/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+const acrConfigPath = "/var/lib/kubelet/acr.conf"
 
 // NewEnsurer creates a new controlplane ensurer.
 func NewEnsurer(logger logr.Logger) genericmutator.Ensurer {
@@ -180,15 +185,19 @@ func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev
 func (e *ensurer) EnsureKubeletServiceUnitOptions(ctx context.Context, ectx genericmutator.EnsurerContext, opts []*unit.UnitOption) ([]*unit.UnitOption, error) {
 	if opt := extensionswebhook.UnitOptionWithSectionAndName(opts, "Service", "ExecStart"); opt != nil {
 		command := extensionswebhook.DeserializeCommandLine(opt.Value)
-		command = ensureKubeletCommandLineArgs(command)
+		command = e.ensureKubeletCommandLineArgs(ctx, ectx, command)
 		opt.Value = extensionswebhook.SerializeCommandLine(command, 1, " \\\n    ")
 	}
 	return opts, nil
 }
 
-func ensureKubeletCommandLineArgs(command []string) []string {
+func (e *ensurer) ensureKubeletCommandLineArgs(ctx context.Context, ectx genericmutator.EnsurerContext, command []string) []string {
 	command = extensionswebhook.EnsureStringWithPrefix(command, "--cloud-provider=", "azure")
 	command = extensionswebhook.EnsureStringWithPrefix(command, "--cloud-config=", "/var/lib/kubelet/cloudprovider.conf")
+
+	if _, exists, _ := e.getAcrConfigMap(ctx, ectx); exists {
+		command = extensionswebhook.EnsureStringWithPrefix(command, "--azure-container-registry-config=", acrConfigPath)
+	}
 	return command
 }
 
@@ -228,4 +237,66 @@ func (e *ensurer) EnsureKubeletCloudProviderConfig(ctx context.Context, ectx gen
 	// Overwrite data variable
 	*data = cm.Data[azure.CloudProviderConfigMapKey]
 	return nil
+}
+
+// EnsureAdditionalFile ensures additional systemd files
+func (e *ensurer) EnsureAdditionalFiles(ctx context.Context, ectx genericmutator.EnsurerContext, files *[]extensionsv1alpha1.File) error {
+	if err := e.ensureAcrConfigFile(ctx, ectx, files); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *ensurer) ensureAcrConfigFile(ctx context.Context, ectx genericmutator.EnsurerContext, files *[]extensionsv1alpha1.File) error {
+	for _, f := range *files {
+		if f.Path == acrConfigPath {
+			return nil
+		}
+	}
+
+	cm, exists, err := e.getAcrConfigMap(ctx, ectx)
+	if err != nil {
+		return nil
+	}
+	if !exists {
+		return nil
+	}
+
+	// Write the content of the file.
+	fciCodec := controlplane.NewFileContentInlineCodec()
+	fci, err := fciCodec.Encode([]byte(cm.Data[azure.CloudProviderAcrConfigMapKey]), string(cloudinit.B64FileCodecID))
+	if err != nil {
+		return errors.Wrap(err, "could not encode acr cloud provider config")
+	}
+
+	*files = append(*files, extensionsv1alpha1.File{
+		Path:        acrConfigPath,
+		Permissions: util.Int32Ptr(0644),
+		Content: extensionsv1alpha1.FileContent{
+			Inline: fci,
+		},
+	})
+	return nil
+}
+
+func (e *ensurer) getAcrConfigMap(ctx context.Context, ectx genericmutator.EnsurerContext) (*corev1.ConfigMap, bool, error) {
+	cluster, err := ectx.GetCluster(ctx)
+	if err != nil {
+		return nil, false, err
+	}
+	if cluster == nil || cluster.Shoot == nil {
+		return nil, false, errors.Wrap(err, "could not get cluster resource or cluster resource is invalid")
+	}
+
+	var (
+		cm        corev1.ConfigMap
+		namespace = cluster.Shoot.Status.TechnicalID
+	)
+	if err := e.client.Get(ctx, kutil.Key(namespace, azure.CloudProviderAcrConfigName), &cm); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil, false, nil
+		}
+		return nil, false, errors.Wrapf(err, "could not get acr cloudprovider configmap '%s/%s'", namespace, azure.CloudProviderAcrConfigName)
+	}
+	return &cm, true, nil
 }
