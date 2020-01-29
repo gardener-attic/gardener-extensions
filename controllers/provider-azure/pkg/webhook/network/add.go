@@ -15,11 +15,11 @@
 package network
 
 import (
-	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/calico"
 	"github.com/gardener/gardener-extensions/controllers/provider-azure/pkg/azure"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 	"github.com/gardener/gardener-extensions/pkg/webhook/network"
 
+	"github.com/gardener/gardener-extension-networking-calico/pkg/calico"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log"

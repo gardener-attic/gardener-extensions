@@ -15,10 +15,10 @@
 package network
 
 import (
-	calicov1alpha1 "github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/apis/calico/v1alpha1"
-	"github.com/gardener/gardener-extensions/controllers/networking-calico/pkg/controller"
 	extensionswebhook "github.com/gardener/gardener-extensions/pkg/webhook"
 
+	calicov1alpha1 "github.com/gardener/gardener-extension-networking-calico/pkg/apis/calico/v1alpha1"
+	"github.com/gardener/gardener-extension-networking-calico/pkg/controller"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"

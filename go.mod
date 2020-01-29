@@ -12,9 +12,9 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.60.340
 	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
-	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
 	github.com/gardener/gardener v0.35.1-0.20200128130120-5b69a02f511a
+	github.com/gardener/gardener-extension-networking-calico v0.0.0-20200129184310-ca90704ba78e
 	github.com/gardener/gardener-resource-manager v0.9.1-0.20200124091350-6ea41bbae81f
 	github.com/gardener/machine-controller-manager v0.25.1-0.20200115123605-0510de7ddfca // master
 	github.com/go-logr/logr v0.1.0
@@ -24,9 +24,8 @@ require (
 	github.com/gophercloud/gophercloud v0.7.0
 	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/huandu/xstrings v1.3.0
-	github.com/json-iterator/go v1.1.9 // indirect
-	github.com/onsi/ginkgo v1.8.0
-	github.com/onsi/gomega v1.5.0
+	github.com/onsi/ginkgo v1.10.1
+	github.com/onsi/gomega v1.7.0
 	github.com/packethost/packngo v0.0.0-20181217122008-b3b45f1b4979
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
@@ -36,9 +35,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gomodules.xyz/jsonpatch/v2 v2.0.1
 	google.golang.org/api v0.9.0
-	google.golang.org/grpc v1.23.1 // indirect
-	gopkg.in/ini.v1 v1.51.1 // indirect
-	gopkg.in/yaml.v2 v2.2.7
 	k8s.io/api v0.0.0-20191010143144-fbf594f18f80
 	k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783
 	k8s.io/apimachinery v0.0.0-20191016060620-86f2f1b9c076

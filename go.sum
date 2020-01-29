@@ -139,6 +139,9 @@ github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13 h
 github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13/go.mod h1:Y3om11E865x4aQ7cmcHjknb8RMgCO153huRb/SvP+9o=
 github.com/gardener/gardener v0.35.1-0.20200128130120-5b69a02f511a h1:rLj4qh4PWFtlGo4PWjC4Mbovp9tQZjcHDoRrNcSdHK4=
 github.com/gardener/gardener v0.35.1-0.20200128130120-5b69a02f511a/go.mod h1:cu4WkHhpM9JLvqx76qSViagsPO4UH9Qx5i0h3AEIdiE=
+github.com/gardener/gardener-extension-networking-calico v0.0.0-20200129184310-ca90704ba78e h1:qoYA1gs9+Sv1C8N9IMp9S/fa9fEaHfLYffrFX/f+2Vo=
+github.com/gardener/gardener-extension-networking-calico v0.0.0-20200129184310-ca90704ba78e/go.mod h1:IY4O46FVVDcmmlTwTP8keIiD5G+4HRm+oMhKQ64Mdv4=
+github.com/gardener/gardener-extensions v1.2.1-0.20200129183102-afdd6bad562a/go.mod h1:qJHM2NaRCdCBKjnvWXpixWBq1866kqZR76kA7edk8I4=
 github.com/gardener/gardener-resource-manager v0.9.1-0.20200124091350-6ea41bbae81f h1:kaJJ2j6/uHTt6tDQiDO25HOq6Uit6Hu31hu47HfY/Lw=
 github.com/gardener/gardener-resource-manager v0.9.1-0.20200124091350-6ea41bbae81f/go.mod h1:0pKTHOhvU91eQB0EYr/6Ymd7lXc/5Hi8P8tF/gpV0VQ=
 github.com/gardener/hvpa-controller v0.0.0-20191014062307-fad3bdf06a25 h1:nOFITmV7vt4fcYPEXgj66Qs83FdDEMvL/LQcR0diRRE=
@@ -398,11 +401,15 @@ github.com/onsi/ginkgo v1.4.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+W
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.8.0 h1:VkHVNpR4iVnU8XQR6DBm8BqYjN7CRzw+xKUbVVbbW9w=
 github.com/onsi/ginkgo v1.8.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
+github.com/onsi/ginkgo v1.10.1 h1:q/mM8GF/n0shIN8SaAZ0V+jnLPzen6WIVZdiwrRlMlo=
+github.com/onsi/ginkgo v1.10.1/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v0.0.0-20170829124025-dcabb60a477c/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5uiA=
 github.com/onsi/gomega v1.3.0/go.mod h1:C1qb7wdrVGGVU+Z6iS04AVkA3Q65CEZX59MT0QO5uiA=
 github.com/onsi/gomega v1.4.2/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/onsi/gomega v1.5.0 h1:izbySO9zDPmjJ8rDjLvkA2zJHIo+HkYXHnf7eN7SSyo=
 github.com/onsi/gomega v1.5.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
+github.com/onsi/gomega v1.7.0 h1:XPnZz8VVBHjVsy1vzJmRwIcSwiUO+JFfrv/xGiigmME=
+github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
 github.com/packethost/packngo v0.0.0-20181217122008-b3b45f1b4979 h1:Ts8y7YbUMuHPAerXDOpnZWr7TeV2b3oTzKa6rP0erow=
 github.com/packethost/packngo v0.0.0-20181217122008-b3b45f1b4979/go.mod h1:otzZQXgoO96RTzDB/Hycg0qZcXZsWJGJRSXbmEIJ+4M=
 github.com/pborman/uuid v0.0.0-20170612153648-e790cca94e6c/go.mod h1:VyrYX9gd7irzKovcSS6BIIEwPRkP2Wm2m9ufcdFSJ34=
