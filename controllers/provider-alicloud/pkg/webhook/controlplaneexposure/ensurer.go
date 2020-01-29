@@ -97,7 +97,7 @@ func (e *ensurer) ensureVolumeClaimTemplates(spec *appsv1.StatefulSetSpec, name 
 }
 
 func (e *ensurer) getVolumeClaimTemplate(name string) *corev1.PersistentVolumeClaim {
-	if name == v1beta1constants.StatefulSetNameETCDMain {
+	if name == v1beta1constants.ETCDMain {
 		return controlplane.GetETCDVolumeClaimTemplate(controlplane.EtcdMainVolumeClaimTemplateName, e.etcdStorage.ClassName, e.etcdStorage.Capacity)
 	} else {
 		return controlplane.GetETCDVolumeClaimTemplate(name, nil, util.QuantityPtr(resource.MustParse("20Gi")))

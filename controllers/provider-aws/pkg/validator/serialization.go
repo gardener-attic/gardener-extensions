@@ -17,12 +17,13 @@ package validator
 import (
 	"github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	"github.com/gardener/gardener-extensions/pkg/util"
-	"github.com/gardener/gardener/pkg/apis/garden"
+
+	"github.com/gardener/gardener/pkg/apis/core"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
-func decodeWorkerConfig(decoder runtime.Decoder, worker *garden.ProviderConfig, fldPath *field.Path) (*aws.WorkerConfig, error) {
+func decodeWorkerConfig(decoder runtime.Decoder, worker *core.ProviderConfig, fldPath *field.Path) (*aws.WorkerConfig, error) {
 	workerConfig := &aws.WorkerConfig{}
 	if err := util.Decode(decoder, worker.Raw, workerConfig); err != nil {
 		return nil, field.Invalid(fldPath, string(worker.Raw), "isn't a supported version")
@@ -31,7 +32,7 @@ func decodeWorkerConfig(decoder runtime.Decoder, worker *garden.ProviderConfig, 
 	return workerConfig, nil
 }
 
-func decodeControlPlaneConfig(decoder runtime.Decoder, cp *garden.ProviderConfig, fldPath *field.Path) (*aws.ControlPlaneConfig, error) {
+func decodeControlPlaneConfig(decoder runtime.Decoder, cp *core.ProviderConfig, fldPath *field.Path) (*aws.ControlPlaneConfig, error) {
 	controlPlaneConfig := &aws.ControlPlaneConfig{}
 	if err := util.Decode(decoder, cp.Raw, controlPlaneConfig); err != nil {
 		return nil, field.Invalid(fldPath, string(cp.Raw), "isn't a supported version")
@@ -40,7 +41,7 @@ func decodeControlPlaneConfig(decoder runtime.Decoder, cp *garden.ProviderConfig
 	return controlPlaneConfig, nil
 }
 
-func decodeInfrastructureConfig(decoder runtime.Decoder, infra *garden.ProviderConfig, fldPath *field.Path) (*aws.InfrastructureConfig, error) {
+func decodeInfrastructureConfig(decoder runtime.Decoder, infra *core.ProviderConfig, fldPath *field.Path) (*aws.InfrastructureConfig, error) {
 	infraConfig := &aws.InfrastructureConfig{}
 	if err := util.Decode(decoder, infra.Raw, infraConfig); err != nil {
 		return nil, field.Invalid(fldPath, string(infra.Raw), "isn't a supported version")

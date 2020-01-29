@@ -124,7 +124,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain},
 				}
 			)
 
@@ -140,7 +140,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain},
 					Spec: appsv1.StatefulSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 							{
@@ -171,7 +171,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents},
 				}
 			)
 
@@ -187,7 +187,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents},
 					Spec: appsv1.StatefulSetSpec{
 						VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 							{
@@ -230,6 +230,6 @@ func checkETCDMainStatefulSet(ss *appsv1.StatefulSet) {
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
-	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, v1beta1constants.StatefulSetNameETCDEvents)
-	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(v1beta1constants.StatefulSetNameETCDEvents, nil, nil)))
+	pvc := extensionswebhook.PVCWithName(ss.Spec.VolumeClaimTemplates, v1beta1constants.ETCDEvents)
+	Expect(pvc).To(Equal(controlplane.GetETCDVolumeClaimTemplate(v1beta1constants.ETCDEvents, nil, nil)))
 }

@@ -76,7 +76,7 @@ func (e *ensurer) getBackupRestoreContainer(name string, cluster *extensionscont
 	var (
 		volumeClaimTemplateName = name
 	)
-	if name == v1beta1constants.StatefulSetNameETCDMain {
+	if name == v1beta1constants.ETCDMain {
 		volumeClaimTemplateName = controlplane.EtcdMainVolumeClaimTemplateName
 	}
 

@@ -164,6 +164,12 @@ const (
 	// GrafanaUsersPrefix is a constant for a prefix used for the users Grafana instance.
 	GrafanaUsersPrefix = "gu"
 
+	// GrafanaOperatorsRole is a constant for the operators role.
+	GrafanaOperatorsRole = "operators"
+
+	// GrafanaUsersRole is a constant for the users role.
+	GrafanaUsersRole = "users"
+
 	// PrometheusPrefix is a constant for a prefix used for the Prometheus instance.
 	PrometheusPrefix = "p"
 
@@ -208,6 +214,9 @@ const (
 
 	// NodeProblemDetectorDaemonSetName is the name of the node-problem-detector daemon set.
 	NodeProblemDetectorDaemonSetName = "node-problem-detector"
+
+	// BlackboxExporterDeploymentName is the name of the blackbox-exporter deployment.
+	BlackboxExporterDeploymentName = "blackbox-exporter"
 
 	// NodeExporterDaemonSetName is the name of the node-exporter daemon set.
 	NodeExporterDaemonSetName = "node-exporter"
@@ -395,15 +404,6 @@ const (
 	// ETCDImageName is the name of the ETCD image.
 	ETCDImageName = "etcd"
 
-	// CSINodeDriverRegistrarImageName is the name of driver registrar - https://github.com/kubernetes-csi/node-driver-registrar
-	CSINodeDriverRegistrarImageName = "csi-node-driver-registrar"
-
-	// CSIPluginAlicloudImageName is the name of csi plugin for Alicloud - https://github.com/AliyunContainerService/csi-plugin
-	CSIPluginAlicloudImageName = "csi-plugin-alicloud"
-
-	// CSIPluginPacketImageName is the name of csi plugin for Packet - https://github.com/packethost/csi-packet
-	CSIPluginPacketImageName = "packet-storage-interface"
-
 	// PauseContainerImageName is the name of the PauseContainer image.
 	PauseContainerImageName = "pause-container"
 
@@ -494,8 +494,8 @@ var (
 	// RequiredControlPlaneStatefulSets is a set of the required shoot control plane stateful
 	// sets running in the seed.
 	RequiredControlPlaneStatefulSets = sets.NewString(
-		v1beta1constants.StatefulSetNameETCDMain,
-		v1beta1constants.StatefulSetNameETCDEvents,
+		v1beta1constants.ETCDMain,
+		v1beta1constants.ETCDEvents,
 	)
 
 	// RequiredSystemComponentDeployments is a set of the required system components.
@@ -517,6 +517,11 @@ var (
 		v1beta1constants.DeploymentNameGrafanaUsers,
 		v1beta1constants.DeploymentNameKubeStateMetricsSeed,
 		v1beta1constants.DeploymentNameKubeStateMetricsShoot,
+	)
+
+	// RequiredMonitoringShootDeployments is a set of the required shoot monitoring deployments.
+	RequiredMonitoringShootDeployments = sets.NewString(
+		BlackboxExporterDeploymentName,
 	)
 
 	// RequiredMonitoringShootDaemonSets is a set of the required shoot monitoring daemon sets.
