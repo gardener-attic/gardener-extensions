@@ -2,18 +2,16 @@
 
 extensions:
 - name: os-coreos
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/os-coreos
+  gitHubRepo: https://github.com/gardener/gardener-extension-os-coreos
+- name: os-coreos-alicloud
+  gitHubRepo: https://github.com/gardener/gardener-extension-os-coreos-alicloud
+- name: os-ubuntu
+  gitHubRepo: https://github.com/gardener/gardener-extension-os-ubuntu
+- name: os-ubuntu-alicloud
+  gitHubRepo: https://github.com/gardener/gardener-extension-os-ubuntu-alicloud
 - name: os-suse-jeos
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/os-suse-jeos
-- name: os-coreos-alicloud
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/os-coreos-alicloud
-- name: os-ubuntu-alicloud
-  gitHubRepo: https://github.com/gardener/gardener-extension-os-ubuntu-alicloud
-- name: os-ubuntu
-  gitHubRepo: https://github.com/gardener/gardener-extension-os-ubuntu
 - name: provider-aws
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws

@@ -29,7 +29,7 @@ generate-controller-registration <name> <chart-dir> <dest> <kind-and-type> [kind
     <dest>            The destination file to write the registration YAML to.
     <kind-and-type>   A tuple of kind and type of the controller registration to generate.
                       Separated by ':'.
-                      Example: OperatingSystemConfig:os-coreos
+                      Example: OperatingSystemConfig:foobar
     <kinds-and-types> Further tuples of kind and type of the controller registration to generate.
                       Separated by ':'.
 EOM

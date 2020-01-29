@@ -6,8 +6,6 @@ import (
 	shootcertservice "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/cmd/app"
 	shootdnsservice "github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/cmd/app"
 	networkcalico "github.com/gardener/gardener-extensions/controllers/networking-calico/cmd/gardener-extension-networking-calico/app"
-	coreosalicloud "github.com/gardener/gardener-extensions/controllers/os-coreos-alicloud/cmd/gardener-extension-os-coreos-alicloud/app"
-	coreos "github.com/gardener/gardener-extensions/controllers/os-coreos/cmd/gardener-extension-os-coreos/app"
 	jeos "github.com/gardener/gardener-extensions/controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos/app"
 	provideralicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud/app"
 	provideraws "github.com/gardener/gardener-extensions/controllers/provider-aws/cmd/gardener-extension-provider-aws/app"
@@ -28,8 +26,6 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		coreos.NewControllerCommand(ctx),
-		coreosalicloud.NewControllerCommand(ctx),
 		jeos.NewControllerCommand(ctx),
 		provideraws.NewControllerManagerCommand(ctx),
 		providerazure.NewControllerManagerCommand(ctx),

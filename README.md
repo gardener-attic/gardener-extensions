@@ -10,11 +10,9 @@ Recently, most of the vendor specific logic has been developed [in-tree](https:/
 
 This repository contains utilities functions and common libraries meant to ease writing the actual extension controllers.
 
-:warning: In order to gain synergies from commonly developed packages we are maintaining all extensions in this repository for a short period of time. Once these libraries have matured we will move out the extension controllers into their own dedicated repositories, e.g. https://github.com/gardener/gardener-extension-os-coreos.
-
 ## Feedback and Support
 
-Feedback and contributions are always welcome. Please report bugs or suggestions as [GitHub issues](https://github.com/gardener/gardener-extensions/gardener-extension-os-coreos/issues) or join our [Slack channel #gardener](https://kubernetes.slack.com/messages/gardener) (please invite yourself to the Kubernetes workspace [here](http://slack.k8s.io)).
+Feedback and contributions are always welcome. Please report bugs or suggestions as [GitHub issues](https://github.com/gardener/gardener-extensions/gardener-extensions/issues) or join our [Slack channel #gardener](https://kubernetes.slack.com/messages/gardener) (please invite yourself to the Kubernetes workspace [here](http://slack.k8s.io)).
 
 ## Learn more!
 
