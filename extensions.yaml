@@ -11,6 +11,8 @@ extensions:
   gitHubRepo: https://github.com/gardener/gardener-extension-os-ubuntu-alicloud
 - name: os-suse-jeos
   gitHubRepo: https://github.com/gardener/gardener-extension-os-suse-jeos
+- name: networking-calico
+  gitHubRepo: https://github.com/gardener/gardener-extension-networking-calico
 - name: provider-aws
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws
@@ -35,6 +37,3 @@ extensions:
 - name: dns-external
   gitHubRepo: https://github.com/gardener/external-dns-management
   examplePath: examples/gardener-controllerregistration.yaml
-- name: networking-calico
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/networking-calico

@@ -186,16 +186,6 @@ start-provider-vsphere:
 		--webhook-config-mode=url \
 		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
-.PHONY: start-networking-calico
-start-networking-calico:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./controllers/networking-calico/cmd/gardener-extension-networking-calico \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
-		--config-file=./controllers/networking-calico/example/00-componentconfig.yaml
-
 .PHONY: start-shoot-dns-service
 start-shoot-dns-service:
 	@LEADER_ELECTION_NAMESPACE=garden go run \
