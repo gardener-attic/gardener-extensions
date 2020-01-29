@@ -10,8 +10,7 @@ extensions:
 - name: os-ubuntu-alicloud
   gitHubRepo: https://github.com/gardener/gardener-extension-os-ubuntu-alicloud
 - name: os-suse-jeos
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/os-suse-jeos
+  gitHubRepo: https://github.com/gardener/gardener-extension-os-suse-jeos
 - name: provider-aws
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws

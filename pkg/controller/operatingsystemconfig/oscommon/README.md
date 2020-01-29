@@ -58,12 +58,12 @@ When implemening a controller for a specific operating system, it is necessary t
 * A command line application for launching the controller
 * A template for translating the `cloud-config` to the format requried by the operating system.
 * Alternatively, a new generator can also be provided, in case the transformations required by
-the operating system requires more complex logic than provided by go templates. 
+the operating system requires more complex logic than provided by go templates.
 * A test that uses the test description provided in [`pkg/generator/test`]
 * A directory with test files
 * The [`helm`](https://github.com/helm/helm) Chart for operator registration and installation
 
-Please refer to the [`os-suse-jeos controller`](htpps://github.com/gardener/gardener-extensions/controllers/os-suse-jeos) for a concrete example.
+Please refer to the [`os-suse-jeos controller`](https://github.com/gardener/gardener-extension-os-suse-jeos) for a concrete example.
 
 ## Feedback and Support
 

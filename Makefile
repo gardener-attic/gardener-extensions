@@ -88,15 +88,6 @@ revendor:
 	@GO111MODULE=on go mod vendor
 	@GO111MODULE=on go mod tidy
 
-.PHONY: start-os-suse-jeos
-start-os-suse-jeos:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./controllers/os-suse-jeos/cmd/gardener-extension-os-suse-jeos \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=false
-
 .PHONY: start-provider-aws
 start-provider-aws:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
