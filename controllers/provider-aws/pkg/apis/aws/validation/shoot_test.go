@@ -17,7 +17,7 @@ package validation_test
 import (
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
-	"github.com/gardener/gardener/pkg/apis/garden"
+	"github.com/gardener/gardener/pkg/apis/core"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,7 +30,7 @@ var _ = Describe("Shoot validation", func() {
 		var networkingPath = field.NewPath("spec", "networking")
 
 		It("should return no error because nodes CIDR was provided", func() {
-			networking := garden.Networking{
+			networking := core.Networking{
 				Nodes: makeStringPointer("1.2.3.4/5"),
 			}
 
@@ -40,7 +40,7 @@ var _ = Describe("Shoot validation", func() {
 		})
 
 		It("should return an error because no nodes CIDR was provided", func() {
-			networking := garden.Networking{}
+			networking := core.Networking{}
 
 			errorList := ValidateNetworking(networking, networkingPath)
 
@@ -55,14 +55,14 @@ var _ = Describe("Shoot validation", func() {
 
 	Describe("#ValidateWorkerConfig", func() {
 		var (
-			workers  []garden.Worker
+			workers  []core.Worker
 			awsZones []apisaws.Zone
 		)
 
 		BeforeEach(func() {
-			workers = []garden.Worker{
+			workers = []core.Worker{
 				{
-					Volume: &garden.Volume{
+					Volume: &core.Volume{
 						Type: makeStringPointer("Volume"),
 						Size: "30G",
 					},
@@ -72,7 +72,7 @@ var _ = Describe("Shoot validation", func() {
 					},
 				},
 				{
-					Volume: &garden.Volume{
+					Volume: &core.Volume{
 						Type: makeStringPointer("Volume"),
 						Size: "20G",
 					},

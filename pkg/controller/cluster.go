@@ -20,7 +20,8 @@ import (
 	gardencoreinstall "github.com/gardener/gardener/pkg/apis/core/install"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
-	"github.com/gardener/gardener/pkg/apis/garden"
+
+	"github.com/gardener/gardener/pkg/apis/core"
 	kutil "github.com/gardener/gardener/pkg/utils/kubernetes"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
@@ -72,7 +73,7 @@ func GetCluster(ctx context.Context, c client.Client, namespace string) (*Cluste
 // CloudProfileFromCluster returns the CloudProfile resource inside the Cluster resource.
 func CloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1beta1.CloudProfile, error) {
 	var (
-		cloudProfileInternal = &garden.CloudProfile{}
+		cloudProfileInternal = &core.CloudProfile{}
 		cloudProfile         = &gardencorev1beta1.CloudProfile{}
 	)
 
@@ -92,7 +93,7 @@ func CloudProfileFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha
 // SeedFromCluster returns the Seed resource inside the Cluster resource.
 func SeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1beta1.Seed, error) {
 	var (
-		seedInternal = &garden.Seed{}
+		seedInternal = &core.Seed{}
 		seed         = &gardencorev1beta1.Seed{}
 	)
 
@@ -112,7 +113,7 @@ func SeedFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluste
 // ShootFromCluster returns the Shoot resource inside the Cluster resource.
 func ShootFromCluster(decoder runtime.Decoder, cluster *extensionsv1alpha1.Cluster) (*gardencorev1beta1.Shoot, error) {
 	var (
-		shootInternal = &garden.Shoot{}
+		shootInternal = &core.Shoot{}
 		shoot         = &gardencorev1beta1.Shoot{}
 	)
 

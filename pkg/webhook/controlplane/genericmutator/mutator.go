@@ -178,7 +178,7 @@ func (m *mutator) Mutate(ctx context.Context, obj runtime.Object) error {
 		}
 	case *appsv1.StatefulSet:
 		switch x.Name {
-		case v1beta1constants.StatefulSetNameETCDMain, v1beta1constants.StatefulSetNameETCDEvents:
+		case v1beta1constants.ETCDMain, v1beta1constants.ETCDEvents:
 			extensionswebhook.LogMutation(m.logger, x.Kind, x.Namespace, x.Name)
 			return m.ensurer.EnsureETCDStatefulSet(ctx, ectx, x)
 		}

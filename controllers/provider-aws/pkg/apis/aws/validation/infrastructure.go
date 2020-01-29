@@ -18,8 +18,8 @@ import (
 	"fmt"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
+	"github.com/gardener/gardener/pkg/apis/core"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/gardener/gardener/pkg/apis/garden"
 	cidrvalidation "github.com/gardener/gardener/pkg/utils/validation/cidr"
 
 	apivalidation "k8s.io/apimachinery/pkg/api/validation"
@@ -28,7 +28,7 @@ import (
 )
 
 // ValidateInfrastructureConfigAgainstCloudProfile validates the given `InfrastructureConfig` against the given `CloudProfile`.
-func ValidateInfrastructureConfigAgainstCloudProfile(infra *apisaws.InfrastructureConfig, shoot *garden.Shoot, cloudProfile *gardencorev1beta1.CloudProfile, fldPath *field.Path) field.ErrorList {
+func ValidateInfrastructureConfigAgainstCloudProfile(infra *apisaws.InfrastructureConfig, shoot *core.Shoot, cloudProfile *gardencorev1beta1.CloudProfile, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	shootRegion := shoot.Spec.Region

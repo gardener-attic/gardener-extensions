@@ -82,7 +82,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.ETCDMain},
 				}
 			)
 
@@ -98,7 +98,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.ETCDMain},
 					Spec: appsv1.StatefulSetSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -125,7 +125,7 @@ var _ = Describe("Ensurer", func() {
 		It("should not modify elements to same etcd-main statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.StatefulSetNameETCDMain},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.ETCDMain},
 				}
 			)
 
@@ -145,7 +145,7 @@ var _ = Describe("Ensurer", func() {
 
 			// Re-ensure on new statefulset request
 			newSS := &appsv1.StatefulSet{
-				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.StatefulSetNameETCDEvents},
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.ETCDEvents},
 			}
 			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, newSS)
 
@@ -156,7 +156,7 @@ var _ = Describe("Ensurer", func() {
 		It("should add or modify elements to etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents},
 				}
 			)
 
@@ -172,7 +172,7 @@ var _ = Describe("Ensurer", func() {
 		It("should modify existing elements of etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents},
 					Spec: appsv1.StatefulSetSpec{
 						Template: corev1.PodTemplateSpec{
 							Spec: corev1.PodSpec{
@@ -199,7 +199,7 @@ var _ = Describe("Ensurer", func() {
 		It("should not modify elements to same etcd-events statefulset", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.StatefulSetNameETCDEvents},
+					ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.ETCDEvents},
 				}
 			)
 
@@ -219,7 +219,7 @@ var _ = Describe("Ensurer", func() {
 
 			// Re-ensure on new statefulset request
 			newSS := &appsv1.StatefulSet{
-				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.StatefulSetNameETCDEvents},
+				ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: v1beta1constants.ETCDEvents},
 			}
 			err = ensurer.EnsureETCDStatefulSet(context.TODO(), dummyContext, newSS)
 
@@ -231,13 +231,13 @@ var _ = Describe("Ensurer", func() {
 
 func checkETCDMainStatefulSet(ss *appsv1.StatefulSet, annotations map[string]string) {
 	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
-	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(v1beta1constants.StatefulSetNameETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "", "", "",
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(v1beta1constants.ETCDMain, controlplane.EtcdMainVolumeClaimTemplateName, "", "", "",
 		"test-repository:test-tag", nil, nil, nil)))
 	Expect(ss.Spec.Template.Annotations).To(Equal(annotations))
 }
 
 func checkETCDEventsStatefulSet(ss *appsv1.StatefulSet) {
 	c := extensionswebhook.ContainerWithName(ss.Spec.Template.Spec.Containers, "backup-restore")
-	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(v1beta1constants.StatefulSetNameETCDEvents, v1beta1constants.StatefulSetNameETCDEvents, "", "", "",
+	Expect(c).To(Equal(controlplane.GetBackupRestoreContainer(v1beta1constants.ETCDEvents, v1beta1constants.ETCDEvents, "", "", "",
 		"test-repository:test-tag", nil, nil, nil)))
 }

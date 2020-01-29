@@ -219,7 +219,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-main stateful set", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDMain, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain, Namespace: namespace},
 				}
 			)
 
@@ -249,7 +249,7 @@ var _ = Describe("Mutator", func() {
 		It("should invoke ensurer.EnsureETCDStatefulSet with a etcd-events stateful set", func() {
 			var (
 				ss = &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.StatefulSetNameETCDEvents, Namespace: namespace},
+					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents, Namespace: namespace},
 				}
 			)
 

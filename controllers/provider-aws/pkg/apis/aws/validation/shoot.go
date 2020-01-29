@@ -18,14 +18,14 @@ import (
 	"fmt"
 
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
-	"github.com/gardener/gardener/pkg/apis/garden"
 
+	"github.com/gardener/gardener/pkg/apis/core"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 )
 
 // ValidateNetworking validates the network settings of a Shoot.
-func ValidateNetworking(networking garden.Networking, fldPath *field.Path) field.ErrorList {
+func ValidateNetworking(networking core.Networking, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	if networking.Nodes == nil {
@@ -36,7 +36,7 @@ func ValidateNetworking(networking garden.Networking, fldPath *field.Path) field
 }
 
 // ValidateWorkers validates the workers of a Shoot.
-func ValidateWorkers(workers []garden.Worker, zones []apisaws.Zone, fldPath *field.Path) field.ErrorList {
+func ValidateWorkers(workers []core.Worker, zones []apisaws.Zone, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 
 	awsZones := sets.NewString()
@@ -72,7 +72,7 @@ func validateZones(zones []string, allowedZones sets.String, fldPath *field.Path
 	return allErrs
 }
 
-func validateVolume(vol *garden.Volume, fldPath *field.Path) field.ErrorList {
+func validateVolume(vol *core.Volume, fldPath *field.Path) field.ErrorList {
 	allErrs := field.ErrorList{}
 	if vol.Type == nil {
 		allErrs = append(allErrs, field.Required(fldPath.Child("type"), "must not be empty"))

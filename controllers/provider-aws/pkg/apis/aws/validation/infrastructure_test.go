@@ -17,8 +17,8 @@ package validation_test
 import (
 	apisaws "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws"
 	. "github.com/gardener/gardener-extensions/controllers/provider-aws/pkg/apis/aws/validation"
+	"github.com/gardener/gardener/pkg/apis/core"
 	gardencorev1beta1 "github.com/gardener/gardener/pkg/apis/core/v1beta1"
-	"github.com/gardener/gardener/pkg/apis/garden"
 	. "github.com/gardener/gardener/pkg/utils/validation/gomega"
 
 	. "github.com/onsi/ginkgo"
@@ -68,7 +68,7 @@ var _ = Describe("InfrastructureConfig validation", func() {
 	Describe("#ValidateInfrastructureConfigAgainstCloudProfile", func() {
 		var (
 			cloudProfile *gardencorev1beta1.CloudProfile
-			shoot        *garden.Shoot
+			shoot        *core.Shoot
 			region       = "eu-west"
 			region2      = "us-west"
 		)
@@ -102,8 +102,8 @@ var _ = Describe("InfrastructureConfig validation", func() {
 						},
 					},
 				}
-				shoot = &garden.Shoot{
-					Spec: garden.ShootSpec{
+				shoot = &core.Shoot{
+					Spec: core.ShootSpec{
 						Region: region,
 					},
 				}

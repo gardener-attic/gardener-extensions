@@ -84,7 +84,7 @@ func (e *ensurer) ensureContainers(ps *corev1.PodSpec, name string, cluster *ext
 }
 
 func (e *ensurer) ensureChecksumAnnotations(ctx context.Context, template *corev1.PodTemplateSpec, namespace, name string, backupConfigured bool) error {
-	if name == v1beta1constants.StatefulSetNameETCDMain && backupConfigured {
+	if name == v1beta1constants.ETCDMain && backupConfigured {
 		return controlplane.EnsureSecretChecksumAnnotation(ctx, template, e.client, namespace, gcp.BackupSecretName)
 	}
 	return nil
@@ -111,7 +111,7 @@ func (e *ensurer) ensureBackupRestoreContainer(existingContainer *corev1.Contain
 		volumeMounts            []corev1.VolumeMount
 		volumeClaimTemplateName = name
 	)
-	if name == v1beta1constants.StatefulSetNameETCDMain {
+	if name == v1beta1constants.ETCDMain {
 		if cluster.Seed.Spec.Backup == nil {
 			e.logger.Info("Backup profile is not configured; backup will not be taken for etcd-main")
 		} else {
@@ -159,7 +159,7 @@ func (e *ensurer) ensureBackupRestoreContainer(existingContainer *corev1.Contain
 }
 
 func (e *ensurer) ensureVolumes(ps *corev1.PodSpec, name string, backupConfigured bool) {
-	if name == v1beta1constants.StatefulSetNameETCDMain && backupConfigured {
+	if name == v1beta1constants.ETCDMain && backupConfigured {
 		etcdBackupSecretVolume := corev1.Volume{
 			Name: gcp.BackupSecretName,
 			VolumeSource: corev1.VolumeSource{
