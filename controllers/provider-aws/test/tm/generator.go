@@ -43,7 +43,7 @@ var (
 
 func main() {
 	log.SetLogger(zap.Logger(false))
-	logger := log.Log.WithName("gcp-generator")
+	logger := log.Log.WithName("aws-generator")
 	flag.Parse()
 	if err := validate(); err != nil {
 		logger.Error(err, "error validating input flags")

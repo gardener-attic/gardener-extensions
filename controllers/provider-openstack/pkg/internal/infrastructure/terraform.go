@@ -127,7 +127,7 @@ func ComputeTerraformerChartValues(
 	}, nil
 }
 
-// RenderTerraformerChart renders the gcp-infra chart with the given values.
+// RenderTerraformerChart renders the openstack-infra chart with the given values.
 func RenderTerraformerChart(
 	renderer chartrenderer.Interface,
 	infra *extensionsv1alpha1.Infrastructure,

@@ -26,8 +26,7 @@ extensions:
 - name: provider-azure
   gitHubRepo: https://github.com/gardener/gardener-extension-provider-azure
 - name: provider-gcp
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/provider-gcp
+  gitHubRepo: https://github.com/gardener/gardener-extension-provider-gcp
 - name: provider-openstack
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-openstack
