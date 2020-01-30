@@ -1,7 +1,0 @@
-images:
-  csi-driver-registrar: image-repository:image-tag
-  csi-plugin-alicloud: image-repository:image-tag
-credential:
-  accessKeyID: keyID
-  accessKeySecret: secret
-kubernetesVersion: v1.14.0

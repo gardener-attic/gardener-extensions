@@ -20,6 +20,8 @@ extensions:
   gitHubRepo: https://github.com/gardener/gardener-extension-shoot-cert-service
 - name: shoot-dns-service
   gitHubRepo: https://github.com/gardener/gardener-extension-shoot-dns-service
+- name: provider-alicloud
+  gitHubRepo: https://github.com/gardener/gardener-extension-provider-alicloud
 - name: provider-aws
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws
@@ -28,11 +30,7 @@ extensions:
 - name: provider-gcp
   gitHubRepo: https://github.com/gardener/gardener-extension-provider-gcp
 - name: provider-openstack
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/provider-openstack
-- name: provider-alicloud
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/provider-alicloud
+  gitHubRepo: https://github.com/gardener/gardener-extension-provider-openstack
 - name: provider-packet
   gitHubRepo: https://github.com/gardener/gardener-extension-provider-packet
 - name: provider-vsphere

@@ -5,10 +5,7 @@ go 1.13
 require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.5
-	github.com/aliyun/alibaba-cloud-sdk-go v1.60.340
-	github.com/aliyun/aliyun-oss-go-sdk v2.0.1+incompatible
 	github.com/aws/aws-sdk-go v1.21.10
-	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
 	github.com/gardener/gardener v0.35.1-0.20200128130120-5b69a02f511a
 	github.com/gardener/gardener-resource-manager v0.9.1-0.20200124091350-6ea41bbae81f
