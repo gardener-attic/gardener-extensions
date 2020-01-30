@@ -31,7 +31,6 @@ COPY controllers/provider-azure/charts /controllers/provider-azure/charts
 COPY controllers/provider-gcp/charts /controllers/provider-gcp/charts
 COPY controllers/provider-openstack/charts /controllers/provider-openstack/charts
 COPY controllers/provider-alicloud/charts /controllers/provider-alicloud/charts
-COPY controllers/provider-packet/charts /controllers/provider-packet/charts
 COPY controllers/provider-vsphere/charts /controllers/provider-vsphere/charts
 
 COPY --from=builder /go/bin/gardener-extension-hyper /gardener-extension-hyper

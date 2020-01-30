@@ -36,8 +36,7 @@ extensions:
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-alicloud
 - name: provider-packet
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/provider-packet
+  gitHubRepo: https://github.com/gardener/gardener-extension-provider-packet
 - name: provider-vsphere
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-vsphere

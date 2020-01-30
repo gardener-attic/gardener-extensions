@@ -158,20 +158,6 @@ start-provider-alicloud:
 		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
 		$(WEBHOOK_PARAM)
 
-.PHONY: start-provider-packet
-start-provider-packet:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./controllers/provider-packet/cmd/gardener-extension-provider-packet \
-		--config-file=./controllers/provider-packet/example/00-componentconfig.yaml \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-server-host=0.0.0.0 \
-		--webhook-config-server-port=8443 \
-		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
-		$(WEBHOOK_PARAM)
-
 .PHONY: start-provider-vsphere
 start-provider-vsphere:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
