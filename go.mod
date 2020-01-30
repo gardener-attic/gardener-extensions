@@ -17,8 +17,6 @@ require (
 	github.com/gobuffalo/packr v1.25.0
 	github.com/gobuffalo/packr/v2 v2.1.0
 	github.com/golang/mock v1.3.1
-	github.com/gophercloud/gophercloud v0.7.0
-	github.com/gophercloud/utils v0.0.0-20190527093828-25f1b77b8c03
 	github.com/huandu/xstrings v1.3.0
 	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/onsi/ginkgo v1.10.1
