@@ -23,7 +23,7 @@ source "$DIRNAME/common.sh"
 SKIP_NETWORKPOLICY_TESTS=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack,packet,vsphere}/test/e2e/networkpolicies | sed 's/ /,/g')
 
 #skip integration tests
-SKIP_INTEGRATION_TESTS+=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack,packet,vsphere}/test/integration controllers/extension-shoot-{cert-service,dns-service}/test/integration | sed 's/ /,/g')
+SKIP_INTEGRATION_TESTS+=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack,packet,vsphere}/test/integration controllers/extension-shoot-dns-service/test/integration | sed 's/ /,/g')
 
 header_text "Test"
 echo ${SKIP_INTEGRATION_TESTS}

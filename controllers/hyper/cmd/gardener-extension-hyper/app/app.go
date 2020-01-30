@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 
-	shootcertservice "github.com/gardener/gardener-extensions/controllers/extension-shoot-cert-service/cmd/app"
 	shootdnsservice "github.com/gardener/gardener-extensions/controllers/extension-shoot-dns-service/cmd/app"
 	provideralicloud "github.com/gardener/gardener-extensions/controllers/provider-alicloud/cmd/gardener-extension-provider-alicloud/app"
 	provideraws "github.com/gardener/gardener-extensions/controllers/provider-aws/cmd/gardener-extension-provider-aws/app"
@@ -32,7 +31,6 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		providerpacket.NewControllerManagerCommand(ctx),
 		providervsphere.NewControllerManagerCommand(ctx),
 		shootdnsservice.NewServiceControllerCommand(ctx),
-		shootcertservice.NewServiceControllerCommand(ctx),
 		validatoraws.NewValidatorCommand(ctx),
 	)
 

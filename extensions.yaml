@@ -13,6 +13,8 @@ extensions:
   gitHubRepo: https://github.com/gardener/gardener-extension-os-suse-jeos
 - name: networking-calico
   gitHubRepo: https://github.com/gardener/gardener-extension-networking-calico
+- name: shoot-cert-service
+  gitHubRepo: https://github.com/gardener/gardener-extension-shoot-cert-service
 - name: provider-aws
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws
