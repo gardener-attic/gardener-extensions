@@ -222,6 +222,10 @@ var _ = Describe("Machines", func() {
 					},
 				})
 			})
+
+			It("when adding addionalData", func() {
+				v, err = WorkerPoolHash(*p, cluster, "some-addional-data")
+			})
 		})
 	})
 
