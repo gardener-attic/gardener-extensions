@@ -102,20 +102,6 @@ start-provider-aws:
 		--webhook-config-mode=$(WEBHOOK_CONFIG_MODE) \
 		$(WEBHOOK_PARAM)
 
-.PHONY: start-provider-azure
-start-provider-azure:
-	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
-		-mod=vendor \
-		-ldflags $(LD_FLAGS) \
-		./controllers/provider-azure/cmd/gardener-extension-provider-azure \
-		--config-file=./controllers/provider-azure/example/00-componentconfig.yaml \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
-		--webhook-config-server-host=0.0.0.0 \
-		--webhook-config-server-port=8443 \
-		--webhook-config-namespace=$(EXTENSION_NAMESPACE)
-		$(WEBHOOK_PARAM)
-
 .PHONY: start-provider-gcp
 start-provider-gcp:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \

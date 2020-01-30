@@ -4,9 +4,6 @@ go 1.13
 
 require (
 	cloud.google.com/go v0.43.0
-	github.com/Azure/azure-sdk-for-go v32.6.0+incompatible
-	github.com/Azure/azure-storage-blob-go v0.7.0
-	github.com/Azure/go-autorest/autorest/azure/auth v0.3.0
 	github.com/Masterminds/semver v1.4.2
 	github.com/ahmetb/gen-crd-api-reference-docs v0.1.5
 	github.com/aliyun/alibaba-cloud-sdk-go v1.60.340
@@ -53,7 +50,6 @@ require (
 )
 
 replace (
-	github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.2.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
 	k8s.io/api => k8s.io/api v0.0.0-20190918155943-95b840bb6a1f // kubernetes-1.16.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783 // kubernetes-1.16.0

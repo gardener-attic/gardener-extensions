@@ -24,8 +24,7 @@ extensions:
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws
 - name: provider-azure
-  gitHubRepo: https://github.com/gardener/gardener-extensions
-  path: controllers/provider-azure
+  gitHubRepo: https://github.com/gardener/gardener-extension-provider-azure
 - name: provider-gcp
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-gcp

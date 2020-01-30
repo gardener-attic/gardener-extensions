@@ -20,10 +20,10 @@ DIRNAME="$(echo "$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd
 source "$DIRNAME/common.sh"
 
 # Network policies tests must only be ran separately.
-SKIP_NETWORKPOLICY_TESTS=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack}/test/e2e/networkpolicies | sed 's/ /,/g')
+SKIP_NETWORKPOLICY_TESTS=$(echo controllers/provider-{alicloud,aws,gcp,openstack}/test/e2e/networkpolicies | sed 's/ /,/g')
 
 #skip integration tests
-SKIP_INTEGRATION_TESTS+=$(echo controllers/provider-{alicloud,aws,azure,gcp,openstack}/test/integration | sed 's/ /,/g')
+SKIP_INTEGRATION_TESTS+=$(echo controllers/provider-{alicloud,aws,gcp,openstack}/test/integration | sed 's/ /,/g')
 
 header_text "Test"
 echo ${SKIP_INTEGRATION_TESTS}
