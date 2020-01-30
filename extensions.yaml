@@ -1,6 +1,9 @@
 # List of extensions that are required for local Gardener development setup.
 
 extensions:
+- name: dns-external
+  gitHubRepo: https://github.com/gardener/external-dns-management
+  examplePath: examples/gardener-controllerregistration.yaml
 - name: os-coreos
   gitHubRepo: https://github.com/gardener/gardener-extension-os-coreos
 - name: os-coreos-alicloud
@@ -15,6 +18,8 @@ extensions:
   gitHubRepo: https://github.com/gardener/gardener-extension-networking-calico
 - name: shoot-cert-service
   gitHubRepo: https://github.com/gardener/gardener-extension-shoot-cert-service
+- name: shoot-dns-service
+  gitHubRepo: https://github.com/gardener/gardener-extension-shoot-dns-service
 - name: provider-aws
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-aws
@@ -36,6 +41,3 @@ extensions:
 - name: provider-vsphere
   gitHubRepo: https://github.com/gardener/gardener-extensions
   path: controllers/provider-vsphere
-- name: dns-external
-  gitHubRepo: https://github.com/gardener/external-dns-management
-  examplePath: examples/gardener-controllerregistration.yaml

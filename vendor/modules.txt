@@ -147,7 +147,7 @@ github.com/gardener/controller-manager-library/pkg/kutil
 github.com/gardener/controller-manager-library/pkg/logger
 github.com/gardener/controller-manager-library/pkg/resources
 github.com/gardener/controller-manager-library/pkg/utils
-# github.com/gardener/external-dns-management v0.7.3 => github.com/gardener/external-dns-management v0.0.0-20190927090840-6659f5a46d13
+# github.com/gardener/external-dns-management v0.7.3
 github.com/gardener/external-dns-management/pkg/apis/dns
 github.com/gardener/external-dns-management/pkg/apis/dns/v1alpha1
 github.com/gardener/external-dns-management/pkg/client/dns/clientset/versioned/scheme

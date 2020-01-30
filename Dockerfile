@@ -34,8 +34,6 @@ COPY controllers/provider-alicloud/charts /controllers/provider-alicloud/charts
 COPY controllers/provider-packet/charts /controllers/provider-packet/charts
 COPY controllers/provider-vsphere/charts /controllers/provider-vsphere/charts
 
-COPY controllers/extension-shoot-dns-service/charts /controllers/extension-shoot-dns-service/charts
-
 COPY --from=builder /go/bin/gardener-extension-hyper /gardener-extension-hyper
 
 ENTRYPOINT ["/gardener-extension-hyper"]

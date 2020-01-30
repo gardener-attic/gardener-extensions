@@ -186,16 +186,6 @@ start-provider-vsphere:
 		--webhook-config-mode=url \
 		--webhook-config-url=$(WEBHOOK_CONFIG_URL)
 
-.PHONY: start-shoot-dns-service
-start-shoot-dns-service:
-	@LEADER_ELECTION_NAMESPACE=garden go run \
-		-ldflags $(LD_FLAGS) \
-		./controllers/extension-shoot-dns-service/cmd \
-		--ignore-operation-annotation=$(IGNORE_OPERATION_ANNOTATION) \
-		--leader-election=$(LEADER_ELECTION) \
-		--garden-id=garden \
-		--seed-id=seed
-
 .PHONY: start-validator-aws
 start-validator-aws:
 	@LEADER_ELECTION_NAMESPACE=garden GO111MODULE=on go run \
