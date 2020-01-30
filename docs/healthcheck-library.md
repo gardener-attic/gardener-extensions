@@ -18,7 +18,7 @@ Health check functions for commonly used dependent objects can be reused and reg
 - StatefulSet
 - ManagedResource (Gardener specific)
 
-See below example [taken from the provider-aws](https://github.com/gardener/gardener-extensions/blob/master/controllers/provider-aws/pkg/controller/healthcheck/add.go).
+See below example [taken from the provider-aws](https://github.com/gardener/gardener-extension-provider-aws/blob/master/pkg/controller/healthcheck/add.go).
 ```go
 health.DefaultRegisterExtensionForHealthCheck(
                aws.Type,

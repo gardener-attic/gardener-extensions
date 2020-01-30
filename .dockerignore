@@ -3,7 +3,6 @@
 
 # Exclude folders relevant for build
 !pkg/
-!controllers/
 !hack/
 !tools/
 !vendor/

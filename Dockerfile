@@ -26,8 +26,6 @@ WORKDIR /
 #############      gardener-extension-hyper                 #############
 FROM base AS gardener-extension-hyper
 
-COPY controllers/provider-aws/charts /controllers/provider-aws/charts
-
 COPY --from=builder /go/bin/gardener-extension-hyper /gardener-extension-hyper
 
 ENTRYPOINT ["/gardener-extension-hyper"]

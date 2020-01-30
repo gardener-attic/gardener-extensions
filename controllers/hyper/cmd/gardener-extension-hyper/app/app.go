@@ -3,9 +3,6 @@ package app
 import (
 	"context"
 
-	provideraws "github.com/gardener/gardener-extensions/controllers/provider-aws/cmd/gardener-extension-provider-aws/app"
-	validatoraws "github.com/gardener/gardener-extensions/controllers/provider-aws/cmd/gardener-extension-validator-aws/app"
-
 	"github.com/spf13/cobra"
 )
 
@@ -15,10 +12,7 @@ func NewHyperCommand(ctx context.Context) *cobra.Command {
 		Use: "gardener-extension-hyper",
 	}
 
-	cmd.AddCommand(
-		provideraws.NewControllerManagerCommand(ctx),
-		validatoraws.NewValidatorCommand(ctx),
-	)
+	cmd.AddCommand()
 
 	return cmd
 }
