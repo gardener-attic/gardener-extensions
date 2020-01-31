@@ -1,3 +1,5 @@
-#!/usr/bin/env bash -e
+#!/usr/bin/env bash
+
+set -e
 
 cp "${BASE_DEFINITION_PATH}" "${COMPONENT_DESCRIPTOR_PATH}"
