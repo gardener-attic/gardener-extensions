@@ -42,10 +42,6 @@ install-requirements:
 	@go install -mod=vendor ./vendor/github.com/onsi/ginkgo/ginkgo
 	@./hack/install-requirements.sh
 
-.PHONY: install
-install:
-	@./hack/install.sh ./...
-
 .PHONY: revendor
 revendor:
 	@GO111MODULE=on go mod vendor
