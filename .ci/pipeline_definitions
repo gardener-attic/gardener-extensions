@@ -5,7 +5,9 @@ gardener-extensions:
     traits:
       version:
         preprocess: 'inject-commit-hash'
-    steps: ~
+    steps:
+      verify:
+        image: 'golang:1.13'
   jobs:
     head-update:
       traits:
