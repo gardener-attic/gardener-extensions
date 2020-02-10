@@ -5,8 +5,8 @@ go 1.13
 require (
 	github.com/Masterminds/semver v1.4.2
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/gardener v0.35.1-0.20200128130120-5b69a02f511a
-	github.com/gardener/gardener-resource-manager v0.9.1-0.20200124091350-6ea41bbae81f
+	github.com/gardener/gardener v1.0.1
+	github.com/gardener/gardener-resource-manager v0.10.0
 	github.com/gardener/machine-controller-manager v0.25.1-0.20200115123605-0510de7ddfca // master
 	github.com/go-logr/logr v0.1.0
 	github.com/gobuffalo/packr v1.25.0
