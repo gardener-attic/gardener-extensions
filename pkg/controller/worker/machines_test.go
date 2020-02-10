@@ -223,8 +223,8 @@ var _ = Describe("Machines", func() {
 				})
 			})
 
-			It("when adding addionalData", func() {
-				v, err = WorkerPoolHash(*p, cluster, "some-addional-data")
+			It("when adding additionalData", func() {
+				v, err = WorkerPoolHash(*p, cluster, "some-additional-data")
 			})
 		})
 	})
