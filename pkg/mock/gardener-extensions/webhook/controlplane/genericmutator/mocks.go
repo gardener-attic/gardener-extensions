@@ -7,8 +7,9 @@ package genericmutator
 import (
 	context "context"
 	unit "github.com/coreos/go-systemd/unit"
+	v1alpha1 "github.com/gardener/etcd-druid/api/v1alpha1"
 	genericmutator "github.com/gardener/gardener-extensions/pkg/webhook/controlplane/genericmutator"
-	v1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+	v1alpha10 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
@@ -40,7 +41,7 @@ func (m *MockEnsurer) EXPECT() *MockEnsurerMockRecorder {
 }
 
 // EnsureAdditionalFiles mocks base method
-func (m *MockEnsurer) EnsureAdditionalFiles(arg0 context.Context, arg1 genericmutator.EnsurerContext, arg2 *[]v1alpha1.File) error {
+func (m *MockEnsurer) EnsureAdditionalFiles(arg0 context.Context, arg1 genericmutator.EnsurerContext, arg2 *[]v1alpha10.File) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnsureAdditionalFiles", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -54,7 +55,7 @@ func (mr *MockEnsurerMockRecorder) EnsureAdditionalFiles(arg0, arg1, arg2 interf
 }
 
 // EnsureAdditionalUnits mocks base method
-func (m *MockEnsurer) EnsureAdditionalUnits(arg0 context.Context, arg1 genericmutator.EnsurerContext, arg2 *[]v1alpha1.Unit) error {
+func (m *MockEnsurer) EnsureAdditionalUnits(arg0 context.Context, arg1 genericmutator.EnsurerContext, arg2 *[]v1alpha10.Unit) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnsureAdditionalUnits", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -67,18 +68,18 @@ func (mr *MockEnsurerMockRecorder) EnsureAdditionalUnits(arg0, arg1, arg2 interf
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureAdditionalUnits", reflect.TypeOf((*MockEnsurer)(nil).EnsureAdditionalUnits), arg0, arg1, arg2)
 }
 
-// EnsureETCDStatefulSet mocks base method
-func (m *MockEnsurer) EnsureETCDStatefulSet(arg0 context.Context, arg1 genericmutator.EnsurerContext, arg2 *v1.StatefulSet) error {
+// EnsureETCD mocks base method
+func (m *MockEnsurer) EnsureETCD(arg0 context.Context, arg1 genericmutator.EnsurerContext, arg2 *v1alpha1.Etcd) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "EnsureETCDStatefulSet", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "EnsureETCD", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// EnsureETCDStatefulSet indicates an expected call of EnsureETCDStatefulSet
-func (mr *MockEnsurerMockRecorder) EnsureETCDStatefulSet(arg0, arg1, arg2 interface{}) *gomock.Call {
+// EnsureETCD indicates an expected call of EnsureETCD
+func (mr *MockEnsurerMockRecorder) EnsureETCD(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureETCDStatefulSet", reflect.TypeOf((*MockEnsurer)(nil).EnsureETCDStatefulSet), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnsureETCD", reflect.TypeOf((*MockEnsurer)(nil).EnsureETCD), arg0, arg1, arg2)
 }
 
 // EnsureKubeAPIServerDeployment mocks base method
