@@ -130,20 +130,6 @@ func (mr *MockTerraformerMockRecorder) InitializeWith(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeWith", reflect.TypeOf((*MockTerraformer)(nil).InitializeWith), arg0)
 }
 
-// SetActiveDeadlineSeconds mocks base method
-func (m *MockTerraformer) SetActiveDeadlineSeconds(arg0 int64) terraformer.Terraformer {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetActiveDeadlineSeconds", arg0)
-	ret0, _ := ret[0].(terraformer.Terraformer)
-	return ret0
-}
-
-// SetActiveDeadlineSeconds indicates an expected call of SetActiveDeadlineSeconds
-func (mr *MockTerraformerMockRecorder) SetActiveDeadlineSeconds(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetActiveDeadlineSeconds", reflect.TypeOf((*MockTerraformer)(nil).SetActiveDeadlineSeconds), arg0)
-}
-
 // SetDeadlineCleaning mocks base method
 func (m *MockTerraformer) SetDeadlineCleaning(arg0 time.Duration) terraformer.Terraformer {
 	m.ctrl.T.Helper()
@@ -170,6 +156,20 @@ func (m *MockTerraformer) SetDeadlinePod(arg0 time.Duration) terraformer.Terrafo
 func (mr *MockTerraformerMockRecorder) SetDeadlinePod(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeadlinePod", reflect.TypeOf((*MockTerraformer)(nil).SetDeadlinePod), arg0)
+}
+
+// SetTerminationGracePeriodSeconds mocks base method
+func (m *MockTerraformer) SetTerminationGracePeriodSeconds(arg0 int64) terraformer.Terraformer {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetTerminationGracePeriodSeconds", arg0)
+	ret0, _ := ret[0].(terraformer.Terraformer)
+	return ret0
+}
+
+// SetTerminationGracePeriodSeconds indicates an expected call of SetTerminationGracePeriodSeconds
+func (mr *MockTerraformerMockRecorder) SetTerminationGracePeriodSeconds(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTerminationGracePeriodSeconds", reflect.TypeOf((*MockTerraformer)(nil).SetTerminationGracePeriodSeconds), arg0)
 }
 
 // SetVariablesEnvironment mocks base method
