@@ -43,8 +43,9 @@ type DropIn struct {
 
 // OperatingSystemConfig is the data required to create a cloud init script.
 type OperatingSystemConfig struct {
-	Files     []*File
-	Units     []*Unit
-	Bootstrap bool
-	Path      *string
+	Files               []*File
+	Units               []*Unit
+	Bootstrap           bool
+	Path                *string
+	IsContainerDEnabled bool
 }
