@@ -114,7 +114,7 @@ func New(
 		variablesName: prefix + TerraformerVariablesSuffix,
 		stateName:     prefix + TerraformerStateSuffix,
 
-		activeDeadlineSeconds: int64(3600),
+		terminationGracePeriodSeconds: int64(3600),
 
 		deadlineCleaning: 10 * time.Minute,
 		deadlinePod:      20 * time.Minute,
@@ -336,13 +336,11 @@ func (t *terraformer) podSpec(scriptName string) *corev1.PodSpec {
 		tfStateVolumeMountPath = "tf-state-in"
 	)
 
-	activeDeadlineSeconds := t.activeDeadlineSeconds
-	terminationGracePeriodSeconds := t.activeDeadlineSeconds
+	terminationGracePeriodSeconds := t.terminationGracePeriodSeconds
 	shCommand := fmt.Sprintf("sh /terraform.sh %s 2>&1; [[ -f /success ]] && exit 0 || exit 1", scriptName)
 
 	return &corev1.PodSpec{
-		RestartPolicy:         corev1.RestartPolicyNever,
-		ActiveDeadlineSeconds: &activeDeadlineSeconds,
+		RestartPolicy: corev1.RestartPolicyNever,
 		Containers: []corev1.Container{
 			{
 				Name:            "terraform",
