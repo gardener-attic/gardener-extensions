@@ -67,10 +67,11 @@ func CloudConfigFromOperatingSystemConfig(ctx context.Context, cli runtimeclient
 	}
 
 	return generator.Generate(&commonosgenerator.OperatingSystemConfig{
-		Bootstrap: config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeProvision,
-		Files:     files,
-		Units:     units,
-		Path:      config.Spec.ReloadConfigFilePath,
+		Bootstrap:           config.Spec.Purpose == extensionsv1alpha1.OperatingSystemConfigPurposeProvision,
+		Files:               files,
+		Units:               units,
+		Path:                config.Spec.ReloadConfigFilePath,
+		IsContainerDEnabled: config.Spec.CRIConfig != nil && config.Spec.CRIConfig.Name == extensionsv1alpha1.CRINameContainerD,
 	})
 }
 
