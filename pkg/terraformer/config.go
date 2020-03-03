@@ -45,9 +45,9 @@ func (t *terraformer) SetVariablesEnvironment(tfvarsEnvironment map[string]strin
 	return t
 }
 
-// SetActiveDeadlineSeconds configures the active deadline seconds for the Terraformer pod.
-func (t *terraformer) SetActiveDeadlineSeconds(adl int64) Terraformer {
-	t.activeDeadlineSeconds = adl
+// SetTerminationGracePeriodSeconds configures the .spec.terminationGracePeriodSeconds for the Terraformer pod.
+func (t *terraformer) SetTerminationGracePeriodSeconds(terminationGracePeriodSeconds int64) Terraformer {
+	t.terminationGracePeriodSeconds = terminationGracePeriodSeconds
 	return t
 }
 

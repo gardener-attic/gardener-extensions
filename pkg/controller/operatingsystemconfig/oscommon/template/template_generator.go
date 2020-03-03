@@ -52,16 +52,18 @@ type dropInData struct {
 }
 
 type initScriptData struct {
-	Files     []*fileData
-	Units     []*unitData
-	Bootstrap bool
+	Files               []*fileData
+	Units               []*unitData
+	Bootstrap           bool
+	IsContainerDEnabled bool
 }
 
 // CloudInitGenerator generates cloud-init scripts.
 type CloudInitGenerator struct {
-	cloudInitTemplate *template.Template
-	unitsPath         string
-	cmd               string
+	cloudInitTemplate   *template.Template
+	unitsPath           string
+	cmd                 string
+	isContainerDEnabled bool
 }
 
 func b64(data []byte) string {
@@ -117,9 +119,10 @@ func (t *CloudInitGenerator) Generate(data *generator.OperatingSystemConfig) ([]
 
 	var buf bytes.Buffer
 	if err := t.cloudInitTemplate.Execute(&buf, &initScriptData{
-		Files:     tFiles,
-		Units:     tUnits,
-		Bootstrap: data.Bootstrap,
+		Files:               tFiles,
+		Units:               tUnits,
+		Bootstrap:           data.Bootstrap,
+		IsContainerDEnabled: data.IsContainerDEnabled,
 	}); err != nil {
 		return nil, nil, err
 	}
