@@ -60,10 +60,9 @@ type initScriptData struct {
 
 // CloudInitGenerator generates cloud-init scripts.
 type CloudInitGenerator struct {
-	cloudInitTemplate   *template.Template
-	unitsPath           string
-	cmd                 string
-	isContainerDEnabled bool
+	cloudInitTemplate *template.Template
+	unitsPath         string
+	cmd               string
 }
 
 func b64(data []byte) string {
