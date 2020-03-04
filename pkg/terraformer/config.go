@@ -26,6 +26,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -115,7 +116,7 @@ func (t *terraformer) GetRawState(ctx context.Context) (*RawState, error) {
 
 func createOrUpdateConfigMap(ctx context.Context, c client.Client, namespace, name string, values map[string]string) (*corev1.ConfigMap, error) {
 	configMap := &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
-	return configMap, kutil.CreateOrUpdate(ctx, c, configMap, func() error {
+	_, err := controllerutil.CreateOrUpdate(ctx, c, configMap, func() error {
 		if configMap.Data == nil {
 			configMap.Data = make(map[string]string)
 		}
@@ -124,6 +125,7 @@ func createOrUpdateConfigMap(ctx context.Context, c client.Client, namespace, na
 		}
 		return nil
 	})
+	return configMap, err
 }
 
 // CreateOrUpdateConfigurationConfigMap creates or updates the Terraform configuration ConfigMap
@@ -150,13 +152,14 @@ func CreateStateConfigMap(ctx context.Context, c client.Client, namespace, name,
 // CreateOrUpdateTFVarsSecret creates or updates the Terraformer variables Secret with the given tfvars.
 func CreateOrUpdateTFVarsSecret(ctx context.Context, c client.Client, namespace, name string, tfvars []byte) (*corev1.Secret, error) {
 	secret := &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name}}
-	return secret, kutil.CreateOrUpdate(ctx, c, secret, func() error {
+	_, err := controllerutil.CreateOrUpdate(ctx, c, secret, func() error {
 		if secret.Data == nil {
 			secret.Data = make(map[string][]byte)
 		}
 		secret.Data[TFVarsKey] = tfvars
 		return nil
 	})
+	return secret, err
 }
 
 // initializerFunc implements Initializer.
