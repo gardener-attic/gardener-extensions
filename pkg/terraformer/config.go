@@ -85,7 +85,7 @@ func (t *terraformer) initializerConfig() *InitializerConfig {
 		ConfigurationName: t.configName,
 		VariablesName:     t.variablesName,
 		StateName:         t.stateName,
-		InitializeState:   t.isStateEmpty(),
+		InitializeState:   t.IsStateEmpty(),
 	}
 }
 
@@ -99,18 +99,6 @@ func (t *terraformer) InitializeWith(initializer Initializer) Terraformer {
 	}
 	t.configurationDefined = true
 	return t
-}
-
-//GetRawState returns the conten of terraform state config map
-func (t *terraformer) GetRawState(ctx context.Context) (*RawState, error) {
-	configMap := &corev1.ConfigMap{}
-	if err := t.client.Get(ctx, kutil.Key(t.namespace, t.stateName), configMap); err != nil {
-		return nil, err
-	}
-	return &RawState{
-		Data:     configMap.Data[StateKey],
-		Encoding: NoneEncoding,
-	}, nil
 }
 
 func createOrUpdateConfigMap(ctx context.Context, c client.Client, namespace, name string, values map[string]string) (*corev1.ConfigMap, error) {
@@ -192,7 +180,7 @@ func DefaultInitializer(c client.Client, main, variables string, tfvars []byte, 
 // prepare checks whether all required ConfigMaps and Secrets exist. It returns the number of
 // existing ConfigMaps/Secrets, or the error in case something unexpected happens.
 func (t *terraformer) prepare(ctx context.Context) (int, error) {
-	numberOfExistingResources, err := t.verifyConfigExists(ctx)
+	numberOfExistingResources, err := t.NumberOfResources(ctx)
 	if err != nil {
 		return -1, err
 	}
@@ -209,7 +197,8 @@ func (t *terraformer) prepare(ctx context.Context) (int, error) {
 	return numberOfExistingResources, nil
 }
 
-func (t *terraformer) verifyConfigExists(ctx context.Context) (int, error) {
+// NumberOfResources returns the number of existing Terraform resources or an error in case something went wrong.
+func (t *terraformer) NumberOfResources(ctx context.Context) (int, error) {
 	numberOfExistingResources := 0
 
 	if err := t.client.Get(ctx, kutil.Key(t.namespace, t.stateName), &corev1.ConfigMap{}); err == nil {
@@ -235,13 +224,13 @@ func (t *terraformer) verifyConfigExists(ctx context.Context) (int, error) {
 
 // ConfigExists returns true if all three Terraform configuration secrets/configmaps exist, and false otherwise.
 func (t *terraformer) ConfigExists() (bool, error) {
-	numberOfExistingResources, err := t.verifyConfigExists(context.TODO())
+	numberOfExistingResources, err := t.NumberOfResources(context.TODO())
 	return numberOfExistingResources == numberOfConfigResources, err
 }
 
-// cleanupConfiguration deletes the two ConfigMaps which store the Terraform configuration and state. It also deletes
+// CleanupConfiguration deletes the two ConfigMaps which store the Terraform configuration and state. It also deletes
 // the Secret which stores the Terraform variables.
-func (t *terraformer) cleanupConfiguration(ctx context.Context) error {
+func (t *terraformer) CleanupConfiguration(ctx context.Context) error {
 	t.logger.Debugf("Deleting Terraform variables Secret '%s'", t.variablesName)
 	if err := t.client.Delete(ctx, &corev1.Secret{ObjectMeta: metav1.ObjectMeta{Namespace: t.namespace, Name: t.variablesName}}); err != nil && !apierrors.IsNotFound(err) {
 		return err

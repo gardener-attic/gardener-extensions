@@ -134,7 +134,7 @@ func (t *terraformer) Destroy() error {
 	if err := t.execute(context.TODO(), "destroy"); err != nil {
 		return err
 	}
-	return t.cleanupConfiguration(context.TODO())
+	return t.CleanupConfiguration(context.TODO())
 }
 
 // execute creates a Terraform Pod which runs the provided scriptName (apply or destroy), waits for the Pod to be completed
@@ -175,7 +175,7 @@ func (t *terraformer) execute(ctx context.Context, scriptName string) error {
 	// because of syntax errors. In this case, we want to skip the Terraform destroy pod (as it wouldn't do anything
 	// anyway) and just delete the related ConfigMaps/Secrets.
 	if scriptName == "destroy" {
-		skipApplyOrDestroyPod = t.isStateEmpty()
+		skipApplyOrDestroyPod = t.IsStateEmpty()
 	}
 
 	if !skipApplyOrDestroyPod {
