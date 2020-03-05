@@ -159,6 +159,20 @@ func (mr *MockTerraformerMockRecorder) InitializeWith(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeWith", reflect.TypeOf((*MockTerraformer)(nil).InitializeWith), arg0)
 }
 
+// IsStateEmpty mocks base method
+func (m *MockTerraformer) IsStateEmpty() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsStateEmpty")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsStateEmpty indicates an expected call of IsStateEmpty
+func (mr *MockTerraformerMockRecorder) IsStateEmpty() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsStateEmpty", reflect.TypeOf((*MockTerraformer)(nil).IsStateEmpty))
+}
+
 // NumberOfResources mocks base method
 func (m *MockTerraformer) NumberOfResources(arg0 context.Context) (int, error) {
 	m.ctrl.T.Helper()

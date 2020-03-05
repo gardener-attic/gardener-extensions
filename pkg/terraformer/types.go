@@ -97,6 +97,7 @@ type Terraformer interface {
 	Destroy() error
 	GetRawState(context.Context) (*RawState, error)
 	GetState() ([]byte, error)
+	IsStateEmpty() bool
 	CleanupConfiguration(ctx context.Context) error
 	GetStateOutputVariables(variables ...string) (map[string]string, error)
 	ConfigExists() (bool, error)
