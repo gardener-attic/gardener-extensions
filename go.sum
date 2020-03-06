@@ -113,6 +113,7 @@ github.com/gardener/etcd-druid v0.1.12/go.mod h1:yZrUQY9clD8/ZXK+MmEq8OS1TaKJeip
 github.com/gardener/external-dns-management v0.7.3 h1:SAW9ur2mjZ+x89xbmcplJgqNUmFGYIZLI2E+PaBhhG0=
 github.com/gardener/external-dns-management v0.7.3/go.mod h1:Y3om11E865x4aQ7cmcHjknb8RMgCO153huRb/SvP+9o=
 github.com/gardener/gardener v1.1.2/go.mod h1:CP9I0tCDVXTLPkJv/jUtXVUh948kSNKEGUg0haLz9gk=
+github.com/gardener/gardener v1.2.0 h1:VMCwCUHQataXSrbe9BlijzgtLWczpUyoTqa81T0dqOs=
 github.com/gardener/gardener v1.2.1-0.20200402092110-3e4c4917c83f h1:ZHdCrWpKNc6IRtLJEOBMA6ST3dqqtzgTXjKcTDS8Wsg=
 github.com/gardener/gardener v1.2.1-0.20200402092110-3e4c4917c83f/go.mod h1:/MJQRKKNZsujwABEspRiq9+V9u3Frvtii6zBoAZXh8Q=
 github.com/gardener/gardener-resource-manager v0.10.0 h1:6OUKoWI3oha42F0oJN8OEo3UR+D3onOCel4Th+zgotU=
