@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
-	github.com/gardener/etcd-druid v0.1.1-0.20200206100633-e7606e1225d7
+	github.com/gardener/etcd-druid v0.1.3
 	github.com/gardener/gardener v1.1.1-0.20200306090858-1aa0c7eb14d1
 	github.com/gardener/gardener-resource-manager v0.10.0
 	github.com/gardener/machine-controller-manager v0.25.1-0.20200115123605-0510de7ddfca // master

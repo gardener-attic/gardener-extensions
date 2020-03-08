@@ -63,38 +63,5 @@ var DescribeTest = func(g generator.Generator, box packr.Box) func() {
 			gomega.Expect(err).NotTo(gomega.HaveOccurred())
 			gomega.Expect(cloudInit).To(gomega.Equal(expectedCloudInit))
 		})
-
-		ginkgo.It("should render correctly with Containerd enabled", func() {
-			expectedCloudInit, err := box.Find("cloud-init-containerd")
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-
-			cloudInit, _, err := g.Generate(&generator.OperatingSystemConfig{
-				Files: []*generator.File{
-					{
-						Path:        "/foo",
-						Content:     []byte("bar"),
-						Permissions: &onlyOwnerPerm,
-					},
-				},
-
-				Units: []*generator.Unit{
-					{
-						Name:    "docker.service",
-						Content: []byte("unit"),
-						DropIns: []*generator.DropIn{
-							{
-								Name:    "10-docker-opts.conf",
-								Content: []byte("override"),
-							},
-						},
-					},
-				},
-				IsContainerDEnabled: true,
-			})
-
-			gomega.Expect(err).NotTo(gomega.HaveOccurred())
-			gomega.Expect(cloudInit).To(gomega.Equal(expectedCloudInit))
-		})
-
 	}
 }
