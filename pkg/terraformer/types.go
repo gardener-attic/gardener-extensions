@@ -95,9 +95,13 @@ type Terraformer interface {
 	InitializeWith(initializer Initializer) Terraformer
 	Apply() error
 	Destroy() error
+	GetRawState(context.Context) (*RawState, error)
+	GetState() ([]byte, error)
+	IsStateEmpty() bool
+	CleanupConfiguration(ctx context.Context) error
 	GetStateOutputVariables(variables ...string) (map[string]string, error)
 	ConfigExists() (bool, error)
-	GetRawState(context.Context) (*RawState, error)
+	NumberOfResources(context.Context) (int, error)
 }
 
 // Initializer can initialize a Terraformer.

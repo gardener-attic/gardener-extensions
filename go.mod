@@ -6,7 +6,7 @@ require (
 	github.com/Masterminds/semver v1.5.0
 	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f
 	github.com/gardener/etcd-druid v0.1.1-0.20200206100633-e7606e1225d7
-	github.com/gardener/gardener v1.0.1-0.20200213093126-7a6123b6ae21
+	github.com/gardener/gardener v1.1.1-0.20200306090858-1aa0c7eb14d1
 	github.com/gardener/gardener-resource-manager v0.10.0
 	github.com/gardener/machine-controller-manager v0.25.1-0.20200115123605-0510de7ddfca // master
 	github.com/go-logr/logr v0.1.0
@@ -40,6 +40,7 @@ require (
 
 replace (
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
+	github.com/prometheus/client_golang => github.com/prometheus/client_golang v0.9.2
 	k8s.io/api => k8s.io/api v0.0.0-20190918155943-95b840bb6a1f // kubernetes-1.16.0
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190918161926-8f644eb6e783 // kubernetes-1.16.0
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190913080033-27d36303b655 // kubernetes-1.16.0

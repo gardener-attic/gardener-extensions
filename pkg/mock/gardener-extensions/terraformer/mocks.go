@@ -53,6 +53,20 @@ func (mr *MockTerraformerMockRecorder) Apply() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Apply", reflect.TypeOf((*MockTerraformer)(nil).Apply))
 }
 
+// CleanupConfiguration mocks base method
+func (m *MockTerraformer) CleanupConfiguration(arg0 context.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanupConfiguration", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CleanupConfiguration indicates an expected call of CleanupConfiguration
+func (mr *MockTerraformerMockRecorder) CleanupConfiguration(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanupConfiguration", reflect.TypeOf((*MockTerraformer)(nil).CleanupConfiguration), arg0)
+}
+
 // ConfigExists mocks base method
 func (m *MockTerraformer) ConfigExists() (bool, error) {
 	m.ctrl.T.Helper()
@@ -97,6 +111,21 @@ func (mr *MockTerraformerMockRecorder) GetRawState(arg0 interface{}) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRawState", reflect.TypeOf((*MockTerraformer)(nil).GetRawState), arg0)
 }
 
+// GetState mocks base method
+func (m *MockTerraformer) GetState() ([]byte, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetState")
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetState indicates an expected call of GetState
+func (mr *MockTerraformerMockRecorder) GetState() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetState", reflect.TypeOf((*MockTerraformer)(nil).GetState))
+}
+
 // GetStateOutputVariables mocks base method
 func (m *MockTerraformer) GetStateOutputVariables(arg0 ...string) (map[string]string, error) {
 	m.ctrl.T.Helper()
@@ -128,6 +157,35 @@ func (m *MockTerraformer) InitializeWith(arg0 terraformer.Initializer) terraform
 func (mr *MockTerraformerMockRecorder) InitializeWith(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InitializeWith", reflect.TypeOf((*MockTerraformer)(nil).InitializeWith), arg0)
+}
+
+// IsStateEmpty mocks base method
+func (m *MockTerraformer) IsStateEmpty() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsStateEmpty")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsStateEmpty indicates an expected call of IsStateEmpty
+func (mr *MockTerraformerMockRecorder) IsStateEmpty() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsStateEmpty", reflect.TypeOf((*MockTerraformer)(nil).IsStateEmpty))
+}
+
+// NumberOfResources mocks base method
+func (m *MockTerraformer) NumberOfResources(arg0 context.Context) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NumberOfResources", arg0)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// NumberOfResources indicates an expected call of NumberOfResources
+func (mr *MockTerraformerMockRecorder) NumberOfResources(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NumberOfResources", reflect.TypeOf((*MockTerraformer)(nil).NumberOfResources), arg0)
 }
 
 // SetDeadlineCleaning mocks base method
