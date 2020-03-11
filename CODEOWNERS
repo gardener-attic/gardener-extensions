@@ -1,2 +1,5 @@
 # gardener-extensions maintainers
 *   @gardener/gardener-maintainers
+
+# test-related directory maintainers
+/test   @gardener/gardener-maintainers @gardener/test-infra-maintainers
