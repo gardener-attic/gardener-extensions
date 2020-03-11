@@ -14,6 +14,10 @@
 
 package generator
 
+import (
+	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
+)
+
 // Generator renders an OperatingSystemConfig into a
 // representation suitable for an specific OS
 // also returns the os specific command for applying this configuration
@@ -43,9 +47,9 @@ type DropIn struct {
 
 // OperatingSystemConfig is the data required to create a cloud init script.
 type OperatingSystemConfig struct {
-	Files               []*File
-	Units               []*Unit
-	Bootstrap           bool
-	Path                *string
-	IsContainerDEnabled bool
+	CRI       *extensionsv1alpha1.CRIConfig
+	Files     []*File
+	Units     []*Unit
+	Bootstrap bool
+	Path      *string
 }
