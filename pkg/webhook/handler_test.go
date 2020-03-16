@@ -55,15 +55,7 @@ var _ = Describe("Handler", func() {
 			ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		}
 
-		req = admission.Request{
-			AdmissionRequest: admissionv1beta1.AdmissionRequest{
-				Kind:      metav1.GroupVersionKind{Group: "", Version: "v1", Kind: "Service"},
-				Name:      name,
-				Namespace: namespace,
-				Operation: admissionv1beta1.Create,
-				Object:    runtime.RawExtension{Raw: encode(svc)},
-			},
-		}
+		req admission.Request
 	)
 
 	BeforeEach(func() {
@@ -79,6 +71,17 @@ var _ = Describe("Handler", func() {
 
 		decoder, err = admission.NewDecoder(scheme)
 		Expect(err).NotTo(HaveOccurred())
+
+		req = admission.Request{
+			AdmissionRequest: admissionv1beta1.AdmissionRequest{
+				Kind:      metav1.GroupVersionKind{Group: "", Version: "v1", Kind: "Service"},
+				Name:      name,
+				Namespace: namespace,
+				Operation: admissionv1beta1.Create,
+				Object:    runtime.RawExtension{Raw: encode(svc)},
+			},
+		}
+
 	})
 
 	AfterEach(func() {
@@ -89,7 +92,7 @@ var _ = Describe("Handler", func() {
 		It("should return an allowing response if the resource wasn't changed by mutator", func() {
 			// Create mock mutator
 			mutator := mockwebhook.NewMockMutator(ctrl)
-			mutator.EXPECT().Mutate(context.TODO(), svc).Return(nil)
+			mutator.EXPECT().Mutate(context.TODO(), svc, nil).Return(nil)
 
 			// Create handler
 			h, err := NewHandler(mgr, objTypes, mutator, logger)
@@ -109,10 +112,40 @@ var _ = Describe("Handler", func() {
 			}))
 		})
 
+		It("should return an allowing response if the resource wasn't changed by mutator and it's update", func() {
+			// Create mock mutator
+			mutator := mockwebhook.NewMockMutator(ctrl)
+
+			oldSvc := svc.DeepCopy()
+			oldSvc.ObjectMeta.Generation = 2
+
+			mutator.EXPECT().Mutate(context.TODO(), svc, oldSvc).Return(nil)
+
+			// Create handler
+			h, err := NewHandler(mgr, objTypes, mutator, logger)
+			Expect(err).NotTo(HaveOccurred())
+			err = h.InjectDecoder(decoder)
+			Expect(err).NotTo(HaveOccurred())
+
+			req.AdmissionRequest.Operation = admissionv1beta1.Update
+			req.AdmissionRequest.OldObject = runtime.RawExtension{Raw: encode(oldSvc)}
+
+			// Call Handle and check response
+			resp := h.Handle(context.TODO(), req)
+			Expect(resp).To(Equal(admission.Response{
+				AdmissionResponse: admissionv1beta1.AdmissionResponse{
+					Allowed: true,
+					Result: &metav1.Status{
+						Code: 200,
+					},
+				},
+			}))
+		})
+
 		It("should return a patch response if the resource was changed by mutator", func() {
 			// Create mock mutator
 			mutator := mockwebhook.NewMockMutator(ctrl)
-			mutator.EXPECT().Mutate(context.TODO(), svc).DoAndReturn(func(ctx context.Context, obj runtime.Object) error {
+			mutator.EXPECT().Mutate(context.TODO(), svc, nil).DoAndReturn(func(ctx context.Context, obj, oldOjb runtime.Object) error {
 				accessor, _ := meta.Accessor(obj)
 				accessor.SetAnnotations(map[string]string{"foo": "bar"})
 				return nil
@@ -145,7 +178,7 @@ var _ = Describe("Handler", func() {
 		It("should return an error response if the mutator returned an error", func() {
 			// Create mock mutator
 			mutator := mockwebhook.NewMockMutator(ctrl)
-			mutator.EXPECT().Mutate(context.TODO(), svc).Return(errors.New("test error"))
+			mutator.EXPECT().Mutate(context.TODO(), svc, nil).Return(errors.New("test error"))
 
 			// Create handler
 			h, err := NewHandler(mgr, objTypes, mutator, logger)
