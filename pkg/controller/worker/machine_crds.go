@@ -17,6 +17,9 @@ package worker
 import (
 	"context"
 
+	"github.com/gardener/gardener/pkg/operation/common"
+	"github.com/gardener/gardener/pkg/utils"
+	"github.com/gardener/gardener/pkg/utils/flow"
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsscheme "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +36,11 @@ const (
 )
 
 var (
-	machineCRDs         []*apiextensionsv1beta1.CustomResourceDefinition
-	apiextensionsScheme = runtime.NewScheme()
+	machineCRDs              []*apiextensionsv1beta1.CustomResourceDefinition
+	apiextensionsScheme      = runtime.NewScheme()
+	deletionProtectionLabels = map[string]string{
+		common.GardenerDeletionProtected: "true",
+	}
 )
 
 func init() {
@@ -315,8 +321,9 @@ func ApplyMachineResourcesForConfig(ctx context.Context, config *rest.Config) er
 }
 
 // ApplyMachineResources ensures that all well-known machine CRDs are created or updated.
-// TODO: Use github.com/gardener/gardener/pkg/utils/flow.Parallel as soon as we can vendor a new Gardener version again.
 func ApplyMachineResources(ctx context.Context, c client.Client) error {
+	fns := make([]flow.TaskFn, 0, len(machineCRDs))
+
 	for _, crd := range machineCRDs {
 		obj := &apiextensionsv1beta1.CustomResourceDefinition{
 			ObjectMeta: metav1.ObjectMeta{
@@ -324,13 +331,15 @@ func ApplyMachineResources(ctx context.Context, c client.Client) error {
 			},
 		}
 
-		if _, err := controllerutil.CreateOrUpdate(ctx, c, obj, func() error {
-			obj.Spec = crd.Spec
-			return nil
-		}); err != nil {
+		fns = append(fns, func(ctx context.Context) error {
+			_, err := controllerutil.CreateOrUpdate(ctx, c, obj, func() error {
+				obj.Labels = utils.MergeStringMaps(obj.Labels, deletionProtectionLabels)
+				obj.Spec = crd.Spec
+				return nil
+			})
 			return err
-		}
+		})
 	}
 
-	return nil
+	return flow.Parallel(fns...)(ctx)
 }
