@@ -34,6 +34,7 @@ import (
 	extensionsv1alpha1 "github.com/gardener/gardener/pkg/apis/extensions/v1alpha1"
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -46,14 +47,17 @@ import (
 )
 
 const (
-	oldServiceContent = "old kubelet.service content"
-	newServiceContent = "new kubelet.service content"
+	oldServiceContent     = "new kubelet.service content"
+	newServiceContent     = "old kubelet.service content"
+	mutatedServiceContent = "mutated kubelet.service content"
 
-	oldKubeletConfigData = "old kubelet config data"
-	newKubeletConfigData = "new kubelet config data"
+	oldKubeletConfigData     = "old kubelet config data"
+	newKubeletConfigData     = "new kubelet config data"
+	mutatedKubeletConfigData = "mutated kubelet config data"
 
-	oldKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1"
-	newKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# Provider specific settings"
+	oldKubernetesGeneralConfigData     = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# OLD Settings"
+	newKubernetesGeneralConfigData     = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1"
+	mutatedKubernetesGeneralConfigData = "# Increase the tcp-time-wait buckets pool size to prevent simple DOS attacks\nnet.ipv4.tcp_tw_reuse = 1\n# Provider specific settings"
 
 	encoding                 = "b64"
 	cloudproviderconf        = "[Global]\nauth-url: whatever-url/keystone"
@@ -111,197 +115,166 @@ var _ = Describe("Mutator", func() {
 	})
 
 	Describe("#Mutate", func() {
-		It("should invoke ensurer.EnsureKubeAPIServerService with a kube-apiserver service", func() {
-			var (
-				svc = &corev1.Service{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer},
-				}
-			)
+		var (
+			mutator  extensionswebhook.Mutator
+			kcc      *mockcontrolplane.MockKubeletConfigCodec
+			ensurer  *mockgenericmutator.MockEnsurer
+			us       *mockcontrolplane.MockUnitSerializer
+			fcic     *mockcontrolplane.MockFileContentInlineCodec
+			old, new runtime.Object
+		)
 
-			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeAPIServerService(context.TODO(), gomock.Any(), svc).Return(nil)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), svc)
-			Expect(err).To(Not(HaveOccurred()))
+		BeforeEach(func() {
+			ensurer = mockgenericmutator.NewMockEnsurer(ctrl)
+			kcc = mockcontrolplane.NewMockKubeletConfigCodec(ctrl)
+			us = mockcontrolplane.NewMockUnitSerializer(ctrl)
+			fcic = mockcontrolplane.NewMockFileContentInlineCodec(ctrl)
+			mutator = genericmutator.NewMutator(ensurer, us, kcc, fcic, logger)
+			old = nil
+			new = nil
 		})
 
-		It("should ignore other services than kube-apiserver", func() {
-			var (
-				svc = &corev1.Service{
-					ObjectMeta: metav1.ObjectMeta{Name: "test"},
-				}
-			)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(nil, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), svc)
+		DescribeTable("Should ignore", func(new, old runtime.Object) {
+			err := mutator.Mutate(context.TODO(), new, old)
 			Expect(err).To(Not(HaveOccurred()))
-		})
+		},
+			Entry(
+				"other services than kube-apiserver",
+				&corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: "test"}},
+				nil,
+			),
+			Entry(
+				"other deployments than kube-apiserver, kube-controller-manager, and kube-scheduler",
+				&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: "test"}},
+				nil,
+			),
+			Entry(
+				"other etcds than etcd-main and etcd-events",
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: "test"}},
+				nil,
+			),
+		)
 
-		It("should invoke ensurer.EnsureKubeAPIServerDeployment with a kube-apiserver deployment", func() {
-			var (
-				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer},
-				}
-			)
+		DescribeTable("Should ensure", func(ensureFunc func()) {
+			ensureFunc()
 
-			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeAPIServerDeployment(context.TODO(), gomock.Any(), dep).Return(nil)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
+			err := mutator.Mutate(context.TODO(), new, old)
 			Expect(err).To(Not(HaveOccurred()))
-		})
+		},
+			Entry(
+				"EnsureKubeAPIServerService with a kube-apiserver service",
+				func() {
+					new = &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer}}
+					ensurer.EXPECT().EnsureKubeAPIServerService(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeAPIServerService with a kube-apiserver service and existing service",
+				func() {
+					new = &corev1.Service{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer}}
+					old = new.DeepCopyObject()
+					ensurer.EXPECT().EnsureKubeAPIServerService(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeAPIServerDeployment with a kube-apiserver deployment",
+				func() {
+					new = &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer}}
+					ensurer.EXPECT().EnsureKubeAPIServerDeployment(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeAPIServerDeployment with a kube-apiserver deployment and existing deployment",
+				func() {
+					new = &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeAPIServer}}
+					old = new.DeepCopyObject()
+					ensurer.EXPECT().EnsureKubeAPIServerDeployment(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeControllerManagerDeployment with a kube-controller-manager deployment",
+				func() {
+					new = &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeControllerManager}}
+					ensurer.EXPECT().EnsureKubeControllerManagerDeployment(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeControllerManagerDeployment with a kube-controller-manager deployment and existing deployment",
+				func() {
+					new = &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeControllerManager}}
+					old = new.DeepCopyObject()
+					ensurer.EXPECT().EnsureKubeControllerManagerDeployment(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeSchedulerDeployment with a kube-scheduler deployment",
+				func() {
+					new = &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeScheduler}}
+					ensurer.EXPECT().EnsureKubeSchedulerDeployment(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+			Entry(
+				"EnsureKubeSchedulerDeployment with a kube-scheduler deployment and existing deployment",
+				func() {
+					new = &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeScheduler}}
+					old = new.DeepCopyObject()
+					ensurer.EXPECT().EnsureKubeSchedulerDeployment(context.TODO(), gomock.Any(), new, old).Return(nil)
+				},
+			),
+		)
 
-		It("should invoke ensurer.EnsureKubeControllerManagerDeployment with a kube-controller-manager deployment", func() {
-			var (
-				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeControllerManager},
-				}
-			)
-
-			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeControllerManagerDeployment(context.TODO(), gomock.Any(), dep).Return(nil)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
-			Expect(err).To(Not(HaveOccurred()))
-		})
-
-		It("should invoke ensurer.EnsureKubeSchedulerDeployment with a kube-scheduler deployment", func() {
-			var (
-				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.DeploymentNameKubeScheduler},
-				}
-			)
-
-			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeSchedulerDeployment(context.TODO(), gomock.Any(), dep).Return(nil)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
-			Expect(err).To(Not(HaveOccurred()))
-		})
-
-		It("should ignore other deployments than kube-apiserver, kube-controller-manager, and kube-scheduler", func() {
-			var (
-				dep = &appsv1.Deployment{
-					ObjectMeta: metav1.ObjectMeta{Name: "test"},
-				}
-			)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(nil, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), dep)
-			Expect(err).To(Not(HaveOccurred()))
-		})
-
-		It("should invoke ensurer.EnsureETCD with a etcd-main", func() {
-			var (
-				etcd = &druidv1alpha1.Etcd{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain, Namespace: namespace},
-				}
-			)
-
-			// Create mock client
+		DescribeTable("EnsureETCD", func(new, old *druidv1alpha1.Etcd) {
 			client := mockclient.NewMockClient(ctrl)
 			client.EXPECT().Get(context.TODO(), clusterKey, &extensionsv1alpha1.Cluster{}).DoAndReturn(clientGet(clusterObject(cluster)))
 
-			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureETCD(context.TODO(), gomock.Any(), etcd).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, etcd *druidv1alpha1.Etcd) {
+			ensurer.EXPECT().EnsureETCD(context.TODO(), gomock.Any(), new, old).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, new, old *druidv1alpha1.Etcd) {
 				_, err := ectx.GetCluster(ctx)
 				if err != nil {
 					logger.Error(err, "failed to get cluster object")
 				}
 			})
 
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
 			err := mutator.(inject.Client).InjectClient(client)
 			Expect(err).To(Not(HaveOccurred()))
 
 			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), etcd)
+			err = mutator.Mutate(context.TODO(), new, old)
 			Expect(err).To(Not(HaveOccurred()))
-		})
+		},
+			Entry(
+				"with a etcd-main",
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain, Namespace: namespace}},
+				nil,
+			),
+			Entry(
+				"with a etcd-main and existing druid",
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain, Namespace: namespace}},
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDMain, Namespace: namespace}},
+			),
+			Entry(
+				"with a etcd-events",
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents, Namespace: namespace}},
+				nil,
+			),
+			Entry(
+				"with a etcd-events and existing druid",
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents, Namespace: namespace}},
+				&druidv1alpha1.Etcd{ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents, Namespace: namespace}},
+			),
+		)
 
-		It("should invoke ensurer.EnsureETCD with a etcd-events", func() {
-			var (
-				etcd = &druidv1alpha1.Etcd{
-					ObjectMeta: metav1.ObjectMeta{Name: v1beta1constants.ETCDEvents, Namespace: namespace},
-				}
-			)
-
-			// Create mock client
-			client := mockclient.NewMockClient(ctrl)
-			client.EXPECT().Get(context.TODO(), clusterKey, &extensionsv1alpha1.Cluster{}).DoAndReturn(clientGet(clusterObject(cluster)))
-
-			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureETCD(context.TODO(), gomock.Any(), etcd).Return(nil).Do(func(ctx context.Context, ectx genericmutator.EnsurerContext, etcd *druidv1alpha1.Etcd) {
-				_, err := ectx.GetCluster(ctx)
-				if err != nil {
-					logger.Error(err, "failed to get cluster object")
-				}
-			})
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, nil, nil, nil, logger)
-			err := mutator.(inject.Client).InjectClient(client)
-			Expect(err).To(Not(HaveOccurred()))
-
-			// Call Mutate method and check the result
-			err = mutator.Mutate(context.TODO(), etcd)
-			Expect(err).To(Not(HaveOccurred()))
-		})
-
-		It("should ignore other etcds than etcd-main and etcd-events", func() {
-			var (
-				etcd = &druidv1alpha1.Etcd{
-					ObjectMeta: metav1.ObjectMeta{Name: "test"},
-				}
-			)
-
-			// Create mutator
-			mutator := genericmutator.NewMutator(nil, nil, nil, nil, logger)
-
-			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), etcd)
-			Expect(err).To(Not(HaveOccurred()))
-		})
-
+		// DescribeTable("should invoke appropriate ensurer methods with OperatingSystemConfig", func() {
 		It("should invoke appropriate ensurer methods with OperatingSystemConfig", func() {
+
 			var (
-				osc = &extensionsv1alpha1.OperatingSystemConfig{
+				newOSC = &extensionsv1alpha1.OperatingSystemConfig{
 					ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "test"},
 					Spec: extensionsv1alpha1.OperatingSystemConfigSpec{
 						Purpose: extensionsv1alpha1.OperatingSystemConfigPurposeReconcile,
 						Units: []extensionsv1alpha1.Unit{
 							{
 								Name:    v1beta1constants.OperatingSystemConfigUnitNameKubeletService,
-								Content: util.StringPtr(oldServiceContent),
+								Content: util.StringPtr(newServiceContent),
 							},
 						},
 						Files: []extensionsv1alpha1.File{
@@ -309,7 +282,7 @@ var _ = Describe("Mutator", func() {
 								Path: v1beta1constants.OperatingSystemConfigFilePathKubeletConfig,
 								Content: extensionsv1alpha1.FileContent{
 									Inline: &extensionsv1alpha1.FileContentInline{
-										Data: oldKubeletConfigData,
+										Data: newKubeletConfigData,
 									},
 								},
 							},
@@ -317,36 +290,46 @@ var _ = Describe("Mutator", func() {
 								Path: v1beta1constants.OperatingSystemConfigFilePathKernelSettings,
 								Content: extensionsv1alpha1.FileContent{
 									Inline: &extensionsv1alpha1.FileContentInline{
-										Data: oldKubernetesGeneralConfigData,
+										Data: newKubernetesGeneralConfigData,
 									},
 								},
 							},
 						},
 					},
 				}
-
 				oldUnitOptions = []*unit.UnitOption{
 					{
 						Section: "Service",
 						Name:    "Foo",
-						Value:   "bar",
+						Value:   "old",
 					},
 				}
 				newUnitOptions = []*unit.UnitOption{
 					{
 						Section: "Service",
 						Name:    "Foo",
+						Value:   "bar",
+					},
+				}
+				mutatedUnitOptions = []*unit.UnitOption{
+					{
+						Section: "Service",
+						Name:    "Foo",
 						Value:   "baz",
 					},
 				}
-
 				oldKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
+					FeatureGates: map[string]bool{
+						"Old": true,
+					},
+				}
+				newKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
 					FeatureGates: map[string]bool{
 						"Foo": true,
 						"Bar": true,
 					},
 				}
-				newKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
+				mutatedKubeletConfig = &kubeletconfigv1beta1.KubeletConfiguration{
 					FeatureGates: map[string]bool{
 						"Foo": true,
 					},
@@ -355,71 +338,70 @@ var _ = Describe("Mutator", func() {
 				additionalFile = extensionsv1alpha1.File{Path: "/test/path"}
 			)
 
+			oldOSC := newOSC.DeepCopy()
+			oldOSC.Spec.Units[0].Content = util.StringPtr(oldServiceContent)
+			oldOSC.Spec.Files[0].Content.Inline.Data = oldKubeletConfigData
+			oldOSC.Spec.Files[1].Content.Inline.Data = oldKubernetesGeneralConfigData
+
 			// Create mock ensurer
-			ensurer := mockgenericmutator.NewMockEnsurer(ctrl)
-			ensurer.EXPECT().EnsureKubeletServiceUnitOptions(context.TODO(), gomock.Any(), oldUnitOptions).Return(newUnitOptions, nil)
-			ensurer.EXPECT().EnsureKubeletConfiguration(context.TODO(), gomock.Any(), oldKubeletConfig).DoAndReturn(
-				func(ctx context.Context, ectx genericmutator.EnsurerContext, kubeletConfig *kubeletconfigv1beta1.KubeletConfiguration) error {
-					*kubeletConfig = *newKubeletConfig
+			ensurer.EXPECT().EnsureKubeletServiceUnitOptions(context.TODO(), gomock.Any(), newUnitOptions, oldUnitOptions).Return(mutatedUnitOptions, nil)
+			ensurer.EXPECT().EnsureKubeletConfiguration(context.TODO(), gomock.Any(), newKubeletConfig, oldKubeletConfig).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, kubeletConfig, newKubeletConfig *kubeletconfigv1beta1.KubeletConfiguration) error {
+					*kubeletConfig = *mutatedKubeletConfig
 					return nil
 				},
 			)
-			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(context.TODO(), gomock.Any(), util.StringPtr(oldKubernetesGeneralConfigData)).DoAndReturn(
-				func(ctx context.Context, ectx genericmutator.EnsurerContext, data *string) error {
-					*data = newKubernetesGeneralConfigData
+			ensurer.EXPECT().EnsureKubernetesGeneralConfiguration(context.TODO(), gomock.Any(), util.StringPtr(newKubernetesGeneralConfigData), util.StringPtr(oldKubernetesGeneralConfigData)).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, data, newData *string) error {
+					*data = mutatedKubernetesGeneralConfigData
 					return nil
 				},
 			)
-			ensurer.EXPECT().EnsureAdditionalUnits(context.TODO(), gomock.Any(), &osc.Spec.Units).DoAndReturn(
-				func(ctx context.Context, ectx genericmutator.EnsurerContext, oscUnits *[]extensionsv1alpha1.Unit) error {
+			ensurer.EXPECT().EnsureAdditionalUnits(context.TODO(), gomock.Any(), &newOSC.Spec.Units, &oldOSC.Spec.Units).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, oscUnits, oldOSCUnits *[]extensionsv1alpha1.Unit) error {
 					*oscUnits = append(*oscUnits, additionalUnit)
 					return nil
 				})
-			ensurer.EXPECT().EnsureAdditionalFiles(context.TODO(), gomock.Any(), &osc.Spec.Files).DoAndReturn(
-				func(ctx context.Context, ectx genericmutator.EnsurerContext, oscFiles *[]extensionsv1alpha1.File) error {
+			ensurer.EXPECT().EnsureAdditionalFiles(context.TODO(), gomock.Any(), &newOSC.Spec.Files, &oldOSC.Spec.Files).DoAndReturn(
+				func(ctx context.Context, ectx genericmutator.EnsurerContext, oscFiles, oldOSCFiles *[]extensionsv1alpha1.File) error {
 					*oscFiles = append(*oscFiles, additionalFile)
 					return nil
 				})
 
 			ensurer.EXPECT().ShouldProvisionKubeletCloudProviderConfig().Return(true)
-			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), gomock.Any(), util.StringPtr(""), osc.Namespace).DoAndReturn(
+			ensurer.EXPECT().EnsureKubeletCloudProviderConfig(context.TODO(), gomock.Any(), gomock.Any(), newOSC.Namespace).DoAndReturn(
 				func(ctx context.Context, ectx genericmutator.EnsurerContext, data *string, _ string) error {
 					*data = cloudproviderconf
 					return nil
 				},
 			)
 
-			// Create mock UnitSerializer
-			us := mockcontrolplane.NewMockUnitSerializer(ctrl)
+			us.EXPECT().Deserialize(newServiceContent).Return(newUnitOptions, nil)
 			us.EXPECT().Deserialize(oldServiceContent).Return(oldUnitOptions, nil)
-			us.EXPECT().Serialize(newUnitOptions).Return(newServiceContent, nil)
+			us.EXPECT().Serialize(mutatedUnitOptions).Return(mutatedServiceContent, nil)
 
-			// Create mock KubeletConfigCodec
-			kcc := mockcontrolplane.NewMockKubeletConfigCodec(ctrl)
+			kcc.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}).Return(newKubeletConfig, nil)
 			kcc.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: oldKubeletConfigData}).Return(oldKubeletConfig, nil)
-			kcc.EXPECT().Encode(newKubeletConfig, "").Return(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}, nil)
+			kcc.EXPECT().Encode(mutatedKubeletConfig, "").Return(&extensionsv1alpha1.FileContentInline{Data: mutatedKubeletConfigData}, nil)
 
-			// Create mock FileContentInlineCodec
-			fcic := mockcontrolplane.NewMockFileContentInlineCodec(ctrl)
+			fcic.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}).Return([]byte(newKubernetesGeneralConfigData), nil)
 			fcic.EXPECT().Decode(&extensionsv1alpha1.FileContentInline{Data: oldKubernetesGeneralConfigData}).Return([]byte(oldKubernetesGeneralConfigData), nil)
-			fcic.EXPECT().Encode([]byte(newKubernetesGeneralConfigData), "").Return(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}, nil)
+			fcic.EXPECT().Encode([]byte(mutatedKubernetesGeneralConfigData), "").Return(&extensionsv1alpha1.FileContentInline{Data: mutatedKubernetesGeneralConfigData}, nil)
 			fcic.EXPECT().Encode([]byte(cloudproviderconf), encoding).Return(&extensionsv1alpha1.FileContentInline{Data: cloudproviderconfEncoded, Encoding: encoding}, nil)
 
-			// Create mutator
-			mutator := genericmutator.NewMutator(ensurer, us, kcc, fcic, logger)
-
 			// Call Mutate method and check the result
-			err := mutator.Mutate(context.TODO(), osc)
+			err := mutator.Mutate(context.TODO(), newOSC, oldOSC)
 			Expect(err).To(Not(HaveOccurred()))
-			checkOperatingSystemConfig(osc)
-		})
+			checkOperatingSystemConfig(newOSC)
+		},
+		)
 	})
 })
 
 func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
 	kubeletUnit := extensionswebhook.UnitWithName(osc.Spec.Units, v1beta1constants.OperatingSystemConfigUnitNameKubeletService)
 	Expect(kubeletUnit).To(Not(BeNil()))
-	Expect(kubeletUnit.Content).To(Equal(util.StringPtr(newServiceContent)))
+	Expect(kubeletUnit.Content).To(Equal(util.StringPtr(mutatedServiceContent)))
 
 	customMTU := extensionswebhook.UnitWithName(osc.Spec.Units, "custom-mtu.service")
 	Expect(customMTU).To(Not(BeNil()))
@@ -429,11 +411,11 @@ func checkOperatingSystemConfig(osc *extensionsv1alpha1.OperatingSystemConfig) {
 
 	kubeletFile := extensionswebhook.FileWithPath(osc.Spec.Files, v1beta1constants.OperatingSystemConfigFilePathKubeletConfig)
 	Expect(kubeletFile).To(Not(BeNil()))
-	Expect(kubeletFile.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubeletConfigData}))
+	Expect(kubeletFile.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: mutatedKubeletConfigData}))
 
 	general := extensionswebhook.FileWithPath(osc.Spec.Files, v1beta1constants.OperatingSystemConfigFilePathKernelSettings)
 	Expect(general).To(Not(BeNil()))
-	Expect(general.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: newKubernetesGeneralConfigData}))
+	Expect(general.Content.Inline).To(Equal(&extensionsv1alpha1.FileContentInline{Data: mutatedKubernetesGeneralConfigData}))
 
 	cloudProvider := extensionswebhook.FileWithPath(osc.Spec.Files, genericmutator.CloudProviderConfigPath)
 	Expect(cloudProvider).To(Not(BeNil()))

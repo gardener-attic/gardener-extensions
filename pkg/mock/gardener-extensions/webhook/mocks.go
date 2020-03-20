@@ -35,15 +35,15 @@ func (m *MockMutator) EXPECT() *MockMutatorMockRecorder {
 }
 
 // Mutate mocks base method
-func (m *MockMutator) Mutate(arg0 context.Context, arg1 runtime.Object) error {
+func (m *MockMutator) Mutate(arg0 context.Context, arg1, arg2 runtime.Object) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Mutate", arg0, arg1)
+	ret := m.ctrl.Call(m, "Mutate", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Mutate indicates an expected call of Mutate
-func (mr *MockMutatorMockRecorder) Mutate(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockMutatorMockRecorder) Mutate(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mutate", reflect.TypeOf((*MockMutator)(nil).Mutate), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mutate", reflect.TypeOf((*MockMutator)(nil).Mutate), arg0, arg1, arg2)
 }
