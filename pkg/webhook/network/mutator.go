@@ -71,7 +71,7 @@ func (m *mutator) Mutate(ctx context.Context, new, old runtime.Object) error {
 		return fmt.Errorf("could not mutate, object is not of type \"Network\"")
 	}
 
-	if old == nil {
+	if old != nil {
 		oldNetwork, ok = old.(*extensionsv1alpha1.Network)
 		if !ok {
 			return fmt.Errorf("could not cast old object to extensionsv1alpha1.Network")
