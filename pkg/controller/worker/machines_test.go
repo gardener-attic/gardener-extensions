@@ -246,7 +246,7 @@ var _ = Describe("Machines", func() {
 
 	DescribeTable("#DistributeOverZones",
 		func(zoneIndex, size, zoneSize, expectation int) {
-			Expect(DistributeOverZones(zoneIndex, size, zoneSize)).To(Equal(expectation))
+			Expect(DistributeOverZones(int32(zoneIndex), int32(size), int32(zoneSize))).To(Equal(int32(expectation)))
 		},
 
 		Entry("one zone, size 5", 0, 5, 1, 5),
@@ -264,7 +264,7 @@ var _ = Describe("Machines", func() {
 
 	DescribeTable("#DistributePercentOverZones",
 		func(zoneIndex int, percent string, zoneSize, total int, expectation string) {
-			Expect(DistributePercentOverZones(zoneIndex, percent, zoneSize, total)).To(Equal(expectation))
+			Expect(DistributePercentOverZones(int32(zoneIndex), percent, int32(zoneSize), int32(total))).To(Equal(expectation))
 		},
 
 		Entry("even size, size 2", 0, "10%", 2, 8, "10%"),
@@ -278,7 +278,7 @@ var _ = Describe("Machines", func() {
 
 	DescribeTable("#DistributePositiveIntOrPercent",
 		func(zoneIndex int, intOrPercent intstr.IntOrString, zoneSize, total int, expectation intstr.IntOrString) {
-			Expect(DistributePositiveIntOrPercent(zoneIndex, intOrPercent, zoneSize, total)).To(Equal(expectation))
+			Expect(DistributePositiveIntOrPercent(int32(zoneIndex), intOrPercent, int32(zoneSize), int32(total))).To(Equal(expectation))
 		},
 
 		Entry("percent", 2, intstr.FromString("75%"), 3, 5, intstr.FromString("45%")),
