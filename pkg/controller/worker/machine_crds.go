@@ -330,11 +330,12 @@ func ApplyMachineResources(ctx context.Context, c client.Client) error {
 				Name: crd.Name,
 			},
 		}
+		spec := crd.Spec.DeepCopy()
 
 		fns = append(fns, func(ctx context.Context) error {
 			_, err := controllerutil.CreateOrUpdate(ctx, c, obj, func() error {
 				obj.Labels = utils.MergeStringMaps(obj.Labels, deletionProtectionLabels)
-				obj.Spec = crd.Spec
+				obj.Spec = *spec
 				return nil
 			})
 			return err
